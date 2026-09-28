@@ -1,0 +1,124 @@
+{
+  "name": "Azure",
+  "description": "A pure bright blue, close to the iOS system blue.",
+  "light": {
+    "bg": "#F5F9FD",
+    "surface": "#FFFFFF",
+    "surface2": "#EAF1F8",
+    "line": "#DFE8F1",
+    "fieldLine": "#848F9D",
+    "scrim": "rgba(0,38,77,0.40)",
+    "heading": "#00264D",
+    "ink": "#0F1A26",
+    "ink2": "#54606E",
+    "ink3": "#667281",
+    "accent": "#0B6BCB",
+    "accentPressed": "#0956A3",
+    "accentDisabled": "#AFCDEF",
+    "onAccent": "#FFFFFF",
+    "onAccentDisabled": "#FFFFFF",
+    "accentSoft": "#DCEBFC",
+    "accentGradient": [
+      "#3A93F0",
+      "#0B6BCB"
+    ],
+    "chipSelected": "#1E2A38",
+    "onChipSelected": "#FFFFFF",
+    "danger": "#CF2F3C",
+    "dangerSoft": "#FFE5E7",
+    "warn": "#D98A12",
+    "warnSoft": "#FDF0DB",
+    "low": "#5E93AE",
+    "lowSoft": "#E3F0F6",
+    "success": "#12A07A",
+    "successSoft": "#DDF5EC",
+    "unreadBg": "#EAF3FD",
+    "unreadDot": "#0B6BCB",
+    "tagDefault": "#8E8E93",
+    "toastBg": "#1E2A38",
+    "toastInk": "#F2F6F8",
+    "toastAction": "#8EC3FA",
+    "avatars": [
+      [
+        "#DFF6FE",
+        "#0B6F94"
+      ],
+      [
+        "#DDF5EC",
+        "#0E7A5C"
+      ],
+      [
+        "#FDEEDB",
+        "#9A5B06"
+      ],
+      [
+        "#F1E8FD",
+        "#6B3FB5"
+      ],
+      [
+        "#FFE5E7",
+        "#B42C37"
+      ]
+    ]
+  },
+  "dark": {
+    "bg": "#08121D",
+    "surface": "#0F1B29",
+    "surface2": "#172536",
+    "line": "#1C2B3D",
+    "fieldLine": "#53667C",
+    "scrim": "rgba(0,0,0,0.55)",
+    "heading": "#EEF5FC",
+    "ink": "#E2EBF5",
+    "ink2": "#9DAEC1",
+    "ink3": "#7C8EA3",
+    "accent": "#5AA9F5",
+    "accentPressed": "#7BBAF7",
+    "accentDisabled": "#1D3A5C",
+    "onAccent": "#041A30",
+    "onAccentDisabled": "#6F97A6",
+    "accentSoft": "#0E2C4D",
+    "accentGradient": [
+      "#6CB6F8",
+      "#2A84E0"
+    ],
+    "chipSelected": "#E6EEF2",
+    "onChipSelected": "#0B141A",
+    "danger": "#FF6B74",
+    "dangerSoft": "#3A1D22",
+    "warn": "#F0AE4A",
+    "warnSoft": "#35290F",
+    "low": "#7FB4CF",
+    "lowSoft": "#16303D",
+    "success": "#3CC79C",
+    "successSoft": "#10332A",
+    "unreadBg": "#0C2136",
+    "unreadDot": "#5AA9F5",
+    "tagDefault": "#8E8E93",
+    "toastBg": "#E6EEF2",
+    "toastInk": "#0B141A",
+    "toastAction": "#0B6BCB",
+    "avatars": [
+      [
+        "#0F3242",
+        "#7FD0EE"
+      ],
+      [
+        "#10332A",
+        "#6FDDB8"
+      ],
+      [
+        "#35290F",
+        "#F0C06A"
+      ],
+      [
+        "#2A1F42",
+        "#C4A6F5"
+      ],
+      [
+        "#3A1D22",
+        "#FF9AA2"
+      ]
+    ]
+  }
+}

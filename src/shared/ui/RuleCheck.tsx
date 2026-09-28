@@ -14,7 +14,7 @@ export function RuleCheck({ met, label }: { met: boolean; label: string }) {
   return (
     <View style={[styles.row, { gap: space.xs + 2 }]} accessibilityLiveRegion="polite" accessibilityState={{ checked: met }}>
       <View style={[styles.dot, { borderColor: color, backgroundColor: met ? color : 'transparent' }]}>
-        {met && <Feather name="check" size={10} color="#FFFFFF" />}
+        {met && <Feather name="check" size={10} color={colors.surface} />}
       </View>
       <Text variant="footnote" style={{ color }}>
         {label}

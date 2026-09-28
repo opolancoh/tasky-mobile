@@ -35,6 +35,17 @@ module.exports = defineConfig([
     },
   },
   {
+    // Colors come only from src/shared/ui/palettes (JSON) through useTheme().
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'Literal[value=/^#[0-9A-Fa-f]{3,8}$/]', message: 'No hard-coded colors: use useTheme().colors (palettes live in src/shared/ui/palettes).' },
+        { selector: 'Literal[value=/^rgba?\\(/]', message: 'No hard-coded colors: use useTheme().colors (palettes live in src/shared/ui/palettes).' },
+      ],
+    },
+  },
+  {
     files: ['src/core/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [

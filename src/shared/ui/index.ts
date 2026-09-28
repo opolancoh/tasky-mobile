@@ -7,3 +7,4 @@ export { Text, type TextProps } from './Text';
 export { TextField, type TextFieldProps } from './TextField';
 export { ThemeProvider, useTheme, type Theme } from './theme';
 export * from './tokens';
+export { defaultPalette, palettes, type Palette, type PaletteColors, type PaletteId } from './palettes';
