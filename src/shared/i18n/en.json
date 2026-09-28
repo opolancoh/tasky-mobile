@@ -1,0 +1,68 @@
+{
+  "common": {
+    "show": "Show",
+    "hide": "Hide",
+    "retry": "Try again",
+    "back": "Back"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Sign in",
+      "subtitle": "Welcome back.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "newHere": "New to Tasky?",
+      "createAccount": "Create an account"
+    },
+    "validation": {
+      "emailRequired": "Enter your email.",
+      "emailInvalid": "Enter a valid email, like name@example.com.",
+      "passwordRequired": "Enter your password.",
+      "nameRequired": "Enter your name.",
+      "passwordTooShort": "Use at least 8 characters.",
+      "codeIncomplete": "Enter all 6 digits."
+    },
+    "signUp": {
+      "title": "Create your account",
+      "subtitle": "We'll email you a code to confirm it's you.",
+      "name": "Your name",
+      "email": "Email",
+      "password": "Password",
+      "passwordHint": "At least 8 characters",
+      "timeZone": "Time zone",
+      "language": "Language",
+      "invited": "Invited to a workspace? Sign up with the email the invitation went to and you'll join it.",
+      "submit": "Create account"
+    },
+    "verify": {
+      "title": "Check your email",
+      "subtitle": "Enter the 6-digit code we sent to {{email}}. It expires in 15 minutes.",
+      "code": "6-digit code",
+      "submit": "Verify",
+      "noCode": "Didn't get it?",
+      "resend": "Resend code",
+      "resent": "We sent a new code to {{email}}.",
+      "signingIn": "Email verified. Signing you in…"
+    }
+  },
+  "today": {
+    "title": "Today",
+    "empty": "Nothing due today.",
+    "signOut": "Sign out"
+  },
+  "errors": {
+    "auth.invalid_credentials": "The email or password is incorrect.",
+    "email-not-verified": "Verify your email before signing in. We sent you a code when you signed up.",
+    "auth.account_deactivated": "This account has been deactivated. Contact your administrator.",
+    "auth.account_setup_pending": "Your account is still being set up. Try again in a moment.",
+    "network": "Can't reach Tasky. Check your connection and try again.",
+    "timeout": "Tasky is taking too long to answer. Try again.",
+    "unknown": "Something went wrong. Try again.",
+    "auth.invalid_code": "The code is wrong or has expired. Check the latest email or ask for a new code."
+  },
+  "languages": {
+    "en": "English",
+    "es": "Spanish"
+  }
+}

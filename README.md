@@ -1,61 +1,33 @@
-# Starter Template with React Navigation
+# Tasky mobile
 
-This is a minimal starter template for React Native apps using Expo and React Navigation.
+Expo (React Native, TypeScript) app for Tasky. v1 is online-only with email + password sign-in.
 
-## Launch your own
+Spec: [`tasky-docs/design/clients/apps/06-mobile.md`](../tasky-docs/design/clients/apps/06-mobile.md) (stack, folders, import rules, navigation, data, session). Look: the Calm ocean direction of the [prototype](https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh).
 
-[![Launch with Expo](https://github.com/expo/examples/blob/master/.gh-assets/launch.svg?raw=true)](https://launch.expo.dev/?github=https://github.com/expo/examples/tree/master/with-react-navigation)
+## Run
 
-It includes the following:
+Needs Node LTS and `tasky-api` running (`http://localhost:5186`).
 
-- Example [Native Stack](https://reactnavigation.org/docs/native-stack-navigator) with a nested [Bottom Tab](https://reactnavigation.org/docs/bottom-tab-navigator)
-- Web support with [React Native for Web](https://necolas.github.io/react-native-web/)
-- TypeScript support and configured for React Navigation
-- Automatic [deep link](https://reactnavigation.org/docs/deep-linking) and [URL handling configuration](https://reactnavigation.org/docs/configuring-links)
-- Theme support [based on system appearance](https://reactnavigation.org/docs/themes/#using-the-operating-system-preferences)
-- Expo [Development Build](https://docs.expo.dev/develop/development-builds/introduction/) with [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)
-- Edge-to-edge configured on Android with [`react-native-edge-to-edge`](https://www.npmjs.com/package/react-native-edge-to-edge)
+```bash
+npm install
+npm run ios        # or: npm run android, npm start
+```
 
-## Getting Started
+Another API address: copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_API_URL` (Android emulator: `http://10.0.2.2:5186/api/v1`).
 
-1. Create a new project using this template:
+## Check
 
-   ```sh
-   npx create-expo-app --example with-react-navigation
-   yarn create expo-app --example with-react-navigation
-   pnpm create expo-app --example with-react-navigation
-   bun create expo-app --example with-react-navigation
-   ```
+```bash
+npm run check      # TypeScript + ESLint, including the folder import rules
+npx expo install --check   # package versions match the Expo SDK
+```
 
-## Running the app
+## Layout
 
-- Install the dependencies:
-
-  ```sh
-  npx expo install
-  ```
-
-- Start the development server:
-
-  ```sh
-  npx expo start
-  ```
-
-- Build and run iOS and Android development builds:
-
-  ```sh
-  npm run ios
-  # or
-  npm run android
-  ```
-
-- In the terminal running the development server, press `i` to open the iOS simulator, `a` to open the Android device or emulator, or `w` to open the web browser.
-
-## Resources
-
-- [React Navigation documentation](https://reactnavigation.org/)
-- [Expo documentation](https://docs.expo.dev/)
-
----
-
-Demo assets are from [lucide.dev](https://lucide.dev/)
+| Folder | Holds |
+|---|---|
+| `src/app` | Startup, providers, navigation, service wiring |
+| `src/core` | Plain TypeScript: HTTP client, tokens, dates. No React or Expo |
+| `src/data` | One folder per API module: endpoints, types, query keys and hooks |
+| `src/features` | One folder per product area: screens and their parts |
+| `src/shared` | Design system (`ui`), session, i18n, shared components |

@@ -1,0 +1,68 @@
+{
+  "common": {
+    "show": "Mostrar",
+    "hide": "Ocultar",
+    "retry": "Reintentar",
+    "back": "Atrás"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Iniciar sesión",
+      "subtitle": "Qué bueno verte de nuevo.",
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "newHere": "¿Nuevo en Tasky?",
+      "createAccount": "Crear una cuenta"
+    },
+    "validation": {
+      "emailRequired": "Escribe tu correo.",
+      "emailInvalid": "Escribe un correo válido, como nombre@ejemplo.com.",
+      "passwordRequired": "Escribe tu contraseña.",
+      "nameRequired": "Escribe tu nombre.",
+      "passwordTooShort": "Usa al menos 8 caracteres.",
+      "codeIncomplete": "Escribe los 6 dígitos."
+    },
+    "signUp": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Te enviaremos un código por correo para confirmar que eres tú.",
+      "name": "Tu nombre",
+      "email": "Correo",
+      "password": "Contraseña",
+      "passwordHint": "Al menos 8 caracteres",
+      "timeZone": "Zona horaria",
+      "language": "Idioma",
+      "invited": "¿Te invitaron a un espacio? Regístrate con el correo al que llegó la invitación y entrarás en él.",
+      "submit": "Crear cuenta"
+    },
+    "verify": {
+      "title": "Revisa tu correo",
+      "subtitle": "Escribe el código de 6 dígitos que enviamos a {{email}}. Vence en 15 minutos.",
+      "code": "Código de 6 dígitos",
+      "submit": "Verificar",
+      "noCode": "¿No te llegó?",
+      "resend": "Reenviar código",
+      "resent": "Enviamos un código nuevo a {{email}}.",
+      "signingIn": "Correo verificado. Iniciando sesión…"
+    }
+  },
+  "today": {
+    "title": "Hoy",
+    "empty": "No hay nada para hoy.",
+    "signOut": "Cerrar sesión"
+  },
+  "errors": {
+    "auth.invalid_credentials": "El correo o la contraseña no son correctos.",
+    "email-not-verified": "Verifica tu correo antes de iniciar sesión. Te enviamos un código al registrarte.",
+    "auth.account_deactivated": "Esta cuenta está desactivada. Contacta a tu administrador.",
+    "auth.account_setup_pending": "Tu cuenta aún se está configurando. Inténtalo en un momento.",
+    "network": "No podemos conectar con Tasky. Revisa tu conexión e inténtalo de nuevo.",
+    "timeout": "Tasky está tardando en responder. Inténtalo de nuevo.",
+    "unknown": "Algo salió mal. Inténtalo de nuevo.",
+    "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo."
+  },
+  "languages": {
+    "en": "Inglés",
+    "es": "Español"
+  }
+}
