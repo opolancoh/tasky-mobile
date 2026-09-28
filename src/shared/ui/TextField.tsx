@@ -43,7 +43,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
             setFocused(false);
             onBlur?.(e);
           }}
-          style={[styles.input, type.body, { color: colors.ink }, style]}
+          // Font and size only: a lineHeight on an iOS TextInput clips descenders (g, p, @) while editing.
+          style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }, style]}
           {...rest}
         />
         {secureToggle && (

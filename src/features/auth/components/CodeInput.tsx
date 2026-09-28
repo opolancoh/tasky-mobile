@@ -35,7 +35,7 @@ export function CodeInput({ value, onChange, length, hasError, onFilled, accessi
           const border = hasError ? colors.danger : current ? colors.accent : colors.line;
           return (
             <View key={i} style={[styles.cell, { borderBottomColor: border, borderBottomWidth: current || hasError ? 2 : 1.5, borderRadius: radius.sm }]}>
-              <Text style={{ fontFamily: fonts.semibold, fontSize: 26, color: colors.ink }}>{value[i] ?? ''}</Text>
+              <Text style={{ fontFamily: fonts.semibold, fontSize: 26, lineHeight: 34, color: colors.ink }}>{value[i] ?? ''}</Text>
             </View>
           );
         })}
