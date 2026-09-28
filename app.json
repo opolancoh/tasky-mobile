@@ -9,7 +9,10 @@
     "newArchEnabled": true,
     "scheme": "tasky",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIDesignRequiresCompatibility": true
+      }
     },
     "android": {
       "adaptiveIcon": {
