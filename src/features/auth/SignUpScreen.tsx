@@ -5,16 +5,21 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type TextInput } from 'react-native';
 
 import { limits } from '@/core/validation/limits';
+import { isFilled, isPassword } from '@/core/validation/rules';
 import { identityApi } from '@/data/identity/api';
 import type { RegisterRequest } from '@/data/identity/types';
 import { errorMessage, fieldErrors } from '@/shared/i18n/errors';
 import { deviceLanguage, deviceTimeZone } from '@/shared/i18n/i18n';
-import { Button, Notice, Screen, Text, TextField, useTheme } from '@/shared/ui';
+import { Button, Notice, RuleCheck, Screen, Text, TextField, useTheme } from '@/shared/ui';
 
 import { signUpDraft } from './signUpDraft';
-import { validateSignUp, type SignUpField } from './validation';
+import { useEmailField } from './useEmailField';
 
-/** POST /auth/register with the device's time zone and language, then Verify code. */
+/**
+ * POST /auth/register with the device's time zone and language, then Verify code.
+ * HIG: the email is checked when you leave it, the password rule as you type, and Create account
+ * waits until the form is complete.
+ */
 export function SignUpScreen() {
   const { t } = useTranslation();
   const { space } = useTheme();
@@ -23,9 +28,9 @@ export function SignUpScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   const [displayName, setDisplayName] = useState('');
-  const [email, setEmail] = useState('');
+  const [nameLeft, setNameLeft] = useState(false);
+  const email = useEmailField();
   const [password, setPassword] = useState('');
-  const [localErrors, setLocalErrors] = useState<Partial<Record<SignUpField, string>>>({});
   const timeZone = deviceTimeZone();
   const language = deviceLanguage();
 
@@ -39,19 +44,20 @@ export function SignUpScreen() {
   const serverFields = fieldErrors(mutation.error);
   const formError = mutation.error && Object.keys(serverFields).length === 0 ? errorMessage(mutation.error) : undefined;
 
-  const fieldError = (field: SignUpField) =>
-    localErrors[field] ? t(`auth.validation.${localErrors[field]}`) : serverFields[field];
+  const nameError = nameLeft && !isFilled(displayName) ? t('auth.validation.nameRequired') : serverFields.displayName;
+  const emailError = email.errorKey ? t(`auth.validation.${email.errorKey}`) : serverFields.email;
+  const complete = isFilled(displayName) && email.valid && isPassword(password);
 
   function submit() {
-    const errors = validateSignUp(displayName, email, password);
-    setLocalErrors(errors);
-    if (Object.keys(errors).length > 0 || mutation.isPending) return;
-    mutation.mutate({ displayName: displayName.trim(), email: email.trim(), password, timeZone, language });
+    if (!complete) {
+      setNameLeft(true);
+      email.reveal();
+      return;
+    }
+    if (!mutation.isPending) mutation.mutate({ displayName: displayName.trim(), email: email.trimmed, password, timeZone, language });
   }
 
-  function edit(field: SignUpField, set: (v: string) => void, value: string) {
-    set(value);
-    if (localErrors[field]) setLocalErrors((e) => ({ ...e, [field]: undefined }));
+  function clearServerError() {
     if (mutation.error) mutation.reset();
   }
 
@@ -70,8 +76,12 @@ export function SignUpScreen() {
         <TextField
           label={t('auth.signUp.name')}
           value={displayName}
-          onChangeText={(v) => edit('displayName', setDisplayName, v)}
-          error={fieldError('displayName')}
+          onChangeText={(v) => {
+            setDisplayName(v);
+            clearServerError();
+          }}
+          onBlur={() => setNameLeft(true)}
+          error={nameError}
           autoComplete="name"
           textContentType="name"
           maxLength={limits.displayNameMax}
@@ -82,9 +92,13 @@ export function SignUpScreen() {
         <TextField
           ref={emailRef}
           label={t('auth.signUp.email')}
-          value={email}
-          onChangeText={(v) => edit('email', setEmail, v)}
-          error={fieldError('email')}
+          value={email.value}
+          onChangeText={(v) => {
+            email.onChangeText(v);
+            clearServerError();
+          }}
+          onBlur={email.onBlur}
+          error={emailError}
           autoCapitalize="none"
           autoCorrect={false}
           autoComplete="email"
@@ -99,9 +113,12 @@ export function SignUpScreen() {
           ref={passwordRef}
           label={t('auth.signUp.password')}
           value={password}
-          onChangeText={(v) => edit('password', setPassword, v)}
-          error={fieldError('password')}
-          hint={t('auth.signUp.passwordHint')}
+          onChangeText={(v) => {
+            setPassword(v);
+            clearServerError();
+          }}
+          error={serverFields.password}
+          footer={<RuleCheck met={isPassword(password)} label={t('auth.signUp.passwordHint')} />}
           secureToggle={{ show: t('common.show'), hide: t('common.hide') }}
           autoCapitalize="none"
           autoComplete="new-password"
@@ -124,7 +141,7 @@ export function SignUpScreen() {
         <Notice tone="info">{t('auth.signUp.invited')}</Notice>
 
         <View style={{ marginTop: space.xs, marginBottom: space.xl }}>
-          <Button title={t('auth.signUp.submit')} onPress={submit} loading={mutation.isPending} />
+          <Button title={t('auth.signUp.submit')} onPress={submit} disabled={!complete} loading={mutation.isPending} />
         </View>
       </View>
     </Screen>

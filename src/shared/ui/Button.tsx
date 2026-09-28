@@ -16,7 +16,7 @@ export function Button({ title, variant = 'primary', loading = false, disabled, 
 
   if (variant === 'link') {
     return (
-      <Pressable accessibilityRole="button" hitSlop={8} disabled={inactive} {...rest}>
+      <Pressable accessibilityRole="button" disabled={inactive} style={styles.link} {...rest}>
         {({ pressed }) => (
           <Text variant="label" style={{ fontSize: 14, color: pressed ? colors.accentPressed : colors.accent }}>
             {title}
@@ -51,5 +51,7 @@ export function Button({ title, variant = 'primary', loading = false, disabled, 
 }
 
 const styles = StyleSheet.create({
+  /** 44 pt tall touch target (HIG), however short the label. */
+  link: { minHeight: 44, justifyContent: 'center' },
   primary: { height: 52, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
 });

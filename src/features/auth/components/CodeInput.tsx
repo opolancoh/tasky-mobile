@@ -61,6 +61,6 @@ export function CodeInput({ value, onChange, length, hasError, onFilled, accessi
 
 const styles = StyleSheet.create({
   cells: { flexDirection: 'row', gap: 10 },
-  cell: { flex: 1, height: 58, alignItems: 'center', justifyContent: 'center' },
+  cell: { flex: 1, minHeight: 58, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },   // grows with larger text sizes
   hidden: { position: 'absolute', width: 1, height: 1, opacity: 0 },
 });

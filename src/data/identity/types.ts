@@ -24,6 +24,13 @@ export interface VerifyEmailRequest {
   code: string;
 }
 
+/** POST /auth/reset-password: the new password takes effect and every session ends. */
+export interface ResetPasswordRequest {
+  requestId: string;
+  code: string;
+  newPassword: string;
+}
+
 /** Error codes from Identity that screens handle. */
 export const IdentityErrorCodes = {
   invalidCredentials: 'auth.invalid_credentials',

@@ -1,6 +1,9 @@
 import { createStaticNavigation, type StaticParamList } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { ForgotPasswordScreen } from '@/features/auth/ForgotPasswordScreen';
+import { NewPasswordScreen } from '@/features/auth/NewPasswordScreen';
+import { ResetCodeScreen } from '@/features/auth/ResetCodeScreen';
 import { SignInScreen } from '@/features/auth/SignInScreen';
 import { SignUpScreen } from '@/features/auth/SignUpScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
@@ -22,6 +25,9 @@ const RootStack = createNativeStackNavigator({
         SignIn: SignInScreen,
         SignUp: { screen: SignUpScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('auth.signIn.title') }) },
         VerifyCode: { screen: VerifyCodeScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('common.back') }) },
+        ForgotPassword: { screen: ForgotPasswordScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('auth.signIn.title') }) },
+        ResetCode: { screen: ResetCodeScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('common.back') }) },
+        NewPassword: { screen: NewPasswordScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('common.back') }) },
       },
     },
     SignedIn: {

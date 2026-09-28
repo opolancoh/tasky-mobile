@@ -1,6 +1,7 @@
 export { Button, type ButtonProps } from './Button';
 export { Logo } from './Logo';
 export { Notice } from './Notice';
+export { RuleCheck } from './RuleCheck';
 export { Screen, type ScreenProps } from './Screen';
 export { Text, type TextProps } from './Text';
 export { TextField, type TextFieldProps } from './TextField';

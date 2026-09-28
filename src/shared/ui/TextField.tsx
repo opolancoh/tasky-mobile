@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Text } from './Text';
@@ -11,17 +11,19 @@ export interface TextFieldProps extends TextInputProps {
   hint?: string;
   /** Hides the text and adds a Show / Hide button with these labels. */
   secureToggle?: { show: string; hide: string };
+  /** Replaces the hint line, e.g. a live password rule. */
+  footer?: ReactNode;
 }
 
 /** Calm style: a label and an underlined input; the line turns accent on focus and red on error. */
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, hint, secureToggle, onFocus, onBlur, style, ...rest },
+  { label, error, hint, secureToggle, footer, onFocus, onBlur, style, ...rest },
   ref,
 ) {
   const { colors, type, space } = useTheme();
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
-  const lineColor = error ? colors.danger : focused ? colors.accent : colors.line;
+  const lineColor = error ? colors.danger : focused ? colors.accent : colors.fieldLine;
 
   return (
     <View style={{ gap: space.xs }}>
@@ -55,7 +57,8 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           </Pressable>
         )}
       </View>
-      {(error || hint) && (
+      {error ? null : footer}
+      {(error || (hint && !footer)) && (
         <Text variant="footnote" color={error ? 'danger' : 'ink3'} accessibilityLiveRegion="polite">
           {error ?? hint}
         </Text>
@@ -67,5 +70,5 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
   input: { flex: 1, paddingVertical: 12, paddingHorizontal: 2 },
-  toggle: { paddingLeft: 12, paddingVertical: 8 },
+  toggle: { paddingLeft: 12, minHeight: 44, justifyContent: 'center' },   // 44 pt touch target (HIG)
 });

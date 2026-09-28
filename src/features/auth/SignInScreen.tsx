@@ -9,6 +9,7 @@ import { errorMessage, fieldErrors } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { Button, Logo, Notice, Screen, Text, TextField, useTheme } from '@/shared/ui';
 
+import { useEmailField } from './useEmailField';
 import { validateSignIn, type SignInField } from './validation';
 
 /** POST /auth/login, then /me and /workspaces (06-mobile.md, Session). */
@@ -19,7 +20,8 @@ export function SignInScreen() {
   const navigation = useNavigation();
   const passwordRef = useRef<TextInput>(null);
 
-  const [email, setEmail] = useState('');
+  const emailField = useEmailField();
+  const email = emailField.value;
   const [password, setPassword] = useState('');
   const [localErrors, setLocalErrors] = useState<Partial<Record<SignInField, string>>>({});
 
@@ -27,8 +29,10 @@ export function SignInScreen() {
   const serverFields = fieldErrors(mutation.error);
   const formError = mutation.error && Object.keys(serverFields).length === 0 ? errorMessage(mutation.error) : undefined;
 
-  const fieldError = (field: SignInField) =>
-    localErrors[field] ? t(`auth.validation.${localErrors[field]}`) : serverFields[field];
+  const fieldError = (field: SignInField) => {
+    const key = localErrors[field] ?? (field === 'email' ? emailField.errorKey : undefined);   // email: checked on leaving the field
+    return key ? t(`auth.validation.${key}`) : serverFields[field];
+  };
 
   function submit() {
     const errors = validateSignIn(email, password);
@@ -38,7 +42,7 @@ export function SignInScreen() {
   }
 
   function edit(field: SignInField, value: string) {
-    (field === 'email' ? setEmail : setPassword)(value);
+    (field === 'email' ? emailField.onChangeText : setPassword)(value);
     if (localErrors[field]) setLocalErrors((e) => ({ ...e, [field]: undefined }));
     if (mutation.error) mutation.reset();
   }
@@ -63,6 +67,7 @@ export function SignInScreen() {
           label={t('auth.signIn.email')}
           value={email}
           onChangeText={(v) => edit('email', v)}
+          onBlur={emailField.onBlur}
           error={fieldError('email')}
           autoCapitalize="none"
           autoCorrect={false}
@@ -88,7 +93,11 @@ export function SignInScreen() {
           onSubmitEditing={submit}
         />
 
-        <View style={{ marginTop: space.sm }}>
+        <View style={styles.forgot}>
+          <Button variant="link" title={t('auth.signIn.forgot')} onPress={() => navigation.navigate('ForgotPassword', { email: emailField.trimmed || undefined })} />
+        </View>
+
+        <View>
           <Button title={t('auth.signIn.submit')} onPress={submit} loading={mutation.isPending} />
         </View>
       </View>
@@ -105,5 +114,6 @@ export function SignInScreen() {
 
 const styles = StyleSheet.create({
   brand: { alignItems: 'center' },
+  forgot: { alignItems: 'flex-end', marginTop: -12, marginBottom: -8 },
   footer: { marginTop: 'auto', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
 });

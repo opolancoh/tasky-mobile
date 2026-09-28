@@ -1,5 +1,7 @@
 /**
- * Calm ocean design tokens, from the prototype (https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh).
+ * Calm ocean · HIG design tokens, from the prototype (https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh):
+ * Calm ocean after a pass with Apple's Human Interface Guidelines. Text colors meet WCAG AA (4.5:1) on
+ * the background; field edges meet 3:1.
  * Components use these through `useTheme()`; never hard-code a color in a screen.
  */
 
@@ -8,16 +10,20 @@ export const palette = {
     bg: '#F7F9FA',
     surface: '#FFFFFF',
     surface2: '#EEEFF1',
+    /** Dividers between content. */
     line: '#E4E7EA',
+    /** Text field edges: visible before tapping (3:1). */
+    fieldLine: '#8A9198',
     scrim: 'rgba(0,39,51,0.40)',
 
     heading: '#002733',
     ink: '#101823',
     ink2: '#5F646A',
-    ink3: '#9A9FA5',
+    ink3: '#6B7178',
 
-    accent: '#1089B4',
-    accentPressed: '#0B6F94',
+    /** Text, links and the main button (4.6:1). The gradient keeps the brighter ocean blue. */
+    accent: '#0B7AA3',
+    accentPressed: '#08617F',
     accentDisabled: '#A9D6E8',
     onAccent: '#FFFFFF',
     onAccentDisabled: '#FFFFFF',
@@ -27,7 +33,7 @@ export const palette = {
     chipSelected: '#1E2A38',
     onChipSelected: '#FFFFFF',
 
-    danger: '#E8404C',
+    danger: '#D12F3B',
     dangerSoft: '#FFE5E7',
     warn: '#D98A12',
     warnSoft: '#FDF0DB',
@@ -37,7 +43,7 @@ export const palette = {
     successSoft: '#DDF5EC',
 
     unreadBg: '#EAF8FE',
-    unreadDot: '#1089B4',
+    unreadDot: '#0B7AA3',
     tagDefault: '#8E8E93',
     toastBg: '#1E2A38',
     toastInk: '#F2F6F8',
@@ -48,12 +54,13 @@ export const palette = {
     surface: '#111D25',
     surface2: '#18262F',
     line: '#1D2C35',
+    fieldLine: '#5A6E79',
     scrim: 'rgba(0,0,0,0.55)',
 
     heading: '#F2F8FA',
     ink: '#E6EEF2',
     ink2: '#9DAEB8',
-    ink3: '#647782',
+    ink3: '#7F929C',
 
     accent: '#3DB2DB',
     accentPressed: '#2A9CC4',

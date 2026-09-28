@@ -13,15 +13,14 @@
       "password": "Contraseña",
       "submit": "Iniciar sesión",
       "newHere": "¿Nuevo en Tasky?",
-      "createAccount": "Crear una cuenta"
+      "createAccount": "Crear una cuenta",
+      "forgot": "¿Olvidaste tu contraseña?"
     },
     "validation": {
       "emailRequired": "Escribe tu correo.",
       "emailInvalid": "Escribe un correo válido, como nombre@ejemplo.com.",
       "passwordRequired": "Escribe tu contraseña.",
-      "nameRequired": "Escribe tu nombre.",
-      "passwordTooShort": "Usa al menos 8 caracteres.",
-      "codeIncomplete": "Escribe los 6 dígitos."
+      "nameRequired": "Escribe tu nombre."
     },
     "signUp": {
       "title": "Crea tu cuenta",
@@ -44,6 +43,20 @@
       "resend": "Reenviar código",
       "resent": "Enviamos un código nuevo a {{email}}.",
       "signingIn": "Correo verificado. Iniciando sesión…"
+    },
+    "forgot": {
+      "title": "Restablece tu contraseña",
+      "subtitle": "Escribe el correo de tu cuenta y te enviaremos un código de 6 dígitos.",
+      "submit": "Enviar código",
+      "note": "Si hay una cuenta con este correo, el código llega en menos de un minuto. Revisa también la carpeta de spam."
+    },
+    "reset": {
+      "continue": "Continuar",
+      "title": "Elige una contraseña nueva",
+      "subtitle": "Para {{email}}. Iniciarás sesión aquí; tus otros dispositivos cerrarán sesión.",
+      "newPassword": "Contraseña nueva",
+      "submit": "Guardar e iniciar sesión",
+      "startOver": "Pedir un código nuevo"
     }
   },
   "today": {
