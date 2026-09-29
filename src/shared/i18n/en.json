@@ -84,7 +84,7 @@
     "empty": "Search your tasks by title, notes and steps."
   },
   "quickAdd": {
-    "row": "Add a task",
+    "add": "Add a task",
     "title": "New task",
     "cancel": "Cancel",
     "comingSoon": "Adding tasks comes in the next update."

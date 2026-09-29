@@ -84,7 +84,7 @@
     "empty": "Busca tus tareas por título, notas y pasos."
   },
   "quickAdd": {
-    "row": "Añadir una tarea",
+    "add": "Añadir una tarea",
     "title": "Nueva tarea",
     "cancel": "Cancelar",
     "comingSoon": "Podrás añadir tareas en la próxima actualización."

@@ -16,14 +16,24 @@ import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
 import { useIsSignedIn, useIsSignedOut } from '@/shared/session/SessionProvider';
 
-import { tab, tabScreenOptions } from './tabs';
+import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
-/** The signed-in home: stock bottom tabs; the list tabs show an "Add a task" row above the bar (M11). */
+/** The signed-in home: stock bottom tabs with a + in the middle that opens Quick add (M11). */
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
     Today: { screen: TodayScreen, options: tab('sun', 'tabs.today') },
     Upcoming: { screen: UpcomingScreen, options: tab('calendar', 'tabs.upcoming') },
+    Add: {
+      screen: AddTabScreen,
+      options: addTabOptions,
+      listeners: ({ navigation }) => ({
+        tabPress: (e) => {
+          e.preventDefault();
+          navigation.navigate('QuickAdd');
+        },
+      }),
+    },
     Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
     Search: { screen: SearchScreen, options: tab('search', 'tabs.search') },
   },
