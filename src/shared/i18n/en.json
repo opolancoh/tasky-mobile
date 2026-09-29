@@ -59,6 +59,12 @@
       "startOver": "Get a new code"
     }
   },
+  "session": {
+    "unreachable": {
+      "title": "Can't reach Tasky",
+      "body": "Check your connection and try again. You're still signed in."
+    }
+  },
   "tabs": {
     "today": "Today",
     "upcoming": "Upcoming",

@@ -8,17 +8,24 @@ export interface TokenPair {
   refreshTokenExpiresAt: IsoDateTime;
 }
 
-/** Where the refresh token survives restarts: Keychain / Keystore on mobile. */
-export interface RefreshTokenStore {
-  get(): Promise<string | null>;
-  set(token: string): Promise<void>;
+/**
+ * Where the tokens survive restarts: Keychain / Keystore on mobile. The access token is kept too, so
+ * reopening or reloading the app within its 15 minutes needs no refresh (M12): each refresh rotates the
+ * refresh token, and the API ends the session if an already-used one comes back.
+ */
+export interface TokenStore {
+  get(): Promise<TokenPair | null>;
+  set(tokens: TokenPair): Promise<void>;
   clear(): Promise<void>;
 }
 
 export interface TokenManager {
   /** A valid access token: refreshed first when it expires within a minute. Null when signed out. */
   accessToken(): Promise<string | null>;
-  /** Renews both tokens. One refresh at a time; concurrent callers share it. False when the session is over. */
+  /**
+   * Renews both tokens. One refresh at a time; concurrent callers share it. False when there is no
+   * session or the server ended it; throws when the server can't be reached (the session is kept).
+   */
   refresh(): Promise<boolean>;
   set(tokens: TokenPair): Promise<void>;
   /** The stored refresh token, for sign-out. */
@@ -29,35 +36,43 @@ export interface TokenManager {
 const EARLY_MS = 60_000;
 
 /**
- * Access token in memory, refresh token in the store (02-api-integration.md, Authentication).
- * `callRefresh` calls POST /auth/refresh; a rejection with `ended` true means the session is over.
- * `onEnded` runs once when a refresh fails that way, so the app can sign out.
+ * Tokens in memory, backed by the store (02-api-integration.md, Authentication).
+ * `callRefresh` calls POST /auth/refresh; `isSessionEnded` tells a refusal (the session is over) from
+ * being offline. `onEnded` runs once when a refresh is refused, so the app can sign out.
  */
 export function createTokenManager(deps: {
-  store: RefreshTokenStore;
+  store: TokenStore;
   callRefresh: (refreshToken: string) => Promise<TokenPair>;
   isSessionEnded: (error: unknown) => boolean;
   onEnded: () => void;
 }): TokenManager {
-  let access: { token: string; expiresAt: number } | null = null;
+  let current: TokenPair | null = null;
+  let loaded: Promise<void> | null = null;
   let inFlight: Promise<boolean> | null = null;
 
+  /** Reads the store once per app start. */
+  const load = () =>
+    (loaded ??= deps.store.get().then((stored) => {
+      current ??= stored;
+    }));
+
   async function set(tokens: TokenPair) {
-    access = { token: tokens.accessToken, expiresAt: Date.parse(tokens.accessTokenExpiresAt) };
-    await deps.store.set(tokens.refreshToken);
+    current = tokens;
+    await deps.store.set(tokens);
   }
 
   async function clear() {
-    access = null;
+    await load();   // so a late read of the store can't bring the old tokens back
+    current = null;
     await deps.store.clear();
   }
 
   function refresh(): Promise<boolean> {
     inFlight ??= (async () => {
       try {
-        const stored = await deps.store.get();
-        if (!stored) return false;
-        await set(await deps.callRefresh(stored));
+        await load();
+        if (!current) return false;
+        await set(await deps.callRefresh(current.refreshToken));
         return true;
       } catch (e) {
         if (!deps.isSessionEnded(e)) throw e;   // offline: keep the session, the caller shows the error
@@ -73,13 +88,17 @@ export function createTokenManager(deps: {
 
   return {
     async accessToken() {
-      if (access && access.expiresAt - Date.now() > EARLY_MS) return access.token;
-      if (!(await deps.store.get())) return null;
-      return (await refresh()) ? access!.token : null;
+      await load();
+      if (!current) return null;
+      if (Date.parse(current.accessTokenExpiresAt) - Date.now() > EARLY_MS) return current.accessToken;
+      return (await refresh()) ? current!.accessToken : null;
     },
     refresh,
     set,
-    refreshToken: () => deps.store.get(),
+    async refreshToken() {
+      await load();
+      return current?.refreshToken ?? null;
+    },
     clear,
   };
 }

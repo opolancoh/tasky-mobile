@@ -7,6 +7,7 @@ import { NewPasswordScreen } from '@/features/auth/NewPasswordScreen';
 import { ResetCodeScreen } from '@/features/auth/ResetCodeScreen';
 import { SignInScreen } from '@/features/auth/SignInScreen';
 import { SignUpScreen } from '@/features/auth/SignUpScreen';
+import { UnreachableScreen } from '@/features/auth/UnreachableScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
@@ -14,7 +15,7 @@ import { SearchScreen } from '@/features/search/SearchScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
 import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
-import { useIsSignedIn, useIsSignedOut } from '@/shared/session/SessionProvider';
+import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/session/SessionProvider';
 
 import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
@@ -57,6 +58,11 @@ const RootStack = createNativeStackNavigator({
         ResetCode: { screen: ResetCodeScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('common.back') }) },
         NewPassword: { screen: NewPasswordScreen, options: () => ({ headerShown: true, headerBackTitle: i18n.t('common.back') }) },
       },
+    },
+    // A stored session the API can't confirm right now (offline, timeout, 5xx): kept, with Retry (M12).
+    Unreachable: {
+      if: useIsUnreachable,
+      screens: { Unreachable: UnreachableScreen },
     },
     SignedIn: {
       if: useIsSignedIn,

@@ -1,10 +1,13 @@
 import { useWorkspaces } from '@/data/workspaces/queries';
 
+import { useSessionStore } from './sessionStore';
+
 /**
- * The workspace every view shows. v1 for now: the personal workspace (first in /workspaces).
- * Choosing a team workspace comes with the workspace switcher.
+ * The workspace every view shows: the one this user last chose on this device (saved), else the
+ * personal workspace (first in /workspaces). The workspace switcher calls `chooseWorkspace`.
  */
 export function useCurrentWorkspace() {
   const { data } = useWorkspaces();
-  return data?.[0];
+  const chosen = useSessionStore((s) => (s.userId ? s.workspaceByUser[s.userId] : undefined));
+  return data?.find((w) => w.id === chosen) ?? data?.[0];
 }

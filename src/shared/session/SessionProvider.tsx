@@ -1,63 +1,81 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { AppState } from 'react-native';
 
 import type { TokenManager } from '@/core/auth/tokens';
+import { isApiError } from '@/core/http/problem';
 import { identityApi } from '@/data/identity/api';
 import type { LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
 import { workspacesQuery } from '@/data/workspaces/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
 
-export type SessionStatus = 'loading' | 'signedOut' | 'signedIn';
+import { useSessionStore, type SessionStatus } from './sessionStore';
+
+export type { SessionStatus } from './sessionStore';
 
 interface SessionContextValue {
   status: SessionStatus;
   signIn(credentials: LoginRequest): Promise<void>;
   signOut(): Promise<void>;
+  /** From the "Can't reach Tasky" screen: checks the stored session again. */
+  retry(): Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
+/** Only a refused session means signed out; being offline, a timeout or a 5xx keep it (M12). */
+const sessionRefused = (e: unknown) => isApiError(e) && (e.status === 401 || e.status === 403);
+
 /**
- * Owns the signed-in state (06-mobile.md, Session). On launch, a stored refresh token is renewed;
- * sign-in stores the tokens and loads /me and /workspaces; sign-out ends the session and clears the cache.
- * `onEnded` of the token manager must call `markSignedOut` (see src/app/services.ts).
+ * Owns the signed-in state (06-mobile.md, Session; status lives in `useSessionStore`).
+ * Launch: no stored session → Sign in. A stored one → a valid access token (saved, or refreshed) and
+ * /me + /workspaces → the tabs, which open on Today. Refused (401/403) → Sign in. Unreachable → Retry.
  */
 export function SessionProvider({ tokens, children }: { tokens: TokenManager; children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SessionStatus>('loading');
+  const status = useSessionStore((s) => s.status);
 
   const loadAccount = useCallback(async () => {
     const [me] = await Promise.all([queryClient.fetchQuery(meQuery), queryClient.fetchQuery(workspacesQuery)]);
+    useSessionStore.getState().setUser(me.id);
     if ((languages as readonly string[]).includes(me.language)) await i18n.changeLanguage(me.language);   // the profile's language wins
   }, [queryClient]);
 
-  useEffect(() => {
-    sessionEnded = () => {
-      queryClient.clear();
-      setStatus('signedOut');
-    };
-    let cancelled = false;
-    (async () => {
-      try {
-        if (!(await tokens.refreshToken()) || !(await tokens.refresh())) throw new Error('no session');
-        await loadAccount();
-        if (!cancelled) setStatus('signedIn');
-      } catch {
-        // Offline at launch or the session is over: sign in again. (Offline start comes with offline support.)
-        if (!cancelled) setStatus('signedOut');
+  const resume = useCallback(async () => {
+    const { setStatus } = useSessionStore.getState();
+    try {
+      if (!(await tokens.accessToken())) {
+        setStatus('signedOut');   // no stored session, or the server refused it
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [tokens, loadAccount, queryClient]);
+      await loadAccount();
+      setStatus('signedIn');
+    } catch (e) {
+      if (useSessionStore.getState().status === 'signedOut') return;   // the token manager already ended it
+      if (sessionRefused(e)) await tokens.clear();
+      setStatus(sessionRefused(e) ? 'signedOut' : 'unreachable');
+    }
+  }, [tokens, loadAccount]);
+
+  // Launch.
+  useEffect(() => {
+    resume();
+  }, [resume]);
+
+  // Back in the foreground while unreachable: try again on its own.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active' && useSessionStore.getState().status === 'unreachable') resume();
+    });
+    return () => sub.remove();
+  }, [resume]);
 
   const signIn = useCallback(
     async (credentials: LoginRequest) => {
       await tokens.set(await identityApi.login(credentials));
       await loadAccount();
-      setStatus('signedIn');
+      useSessionStore.getState().setStatus('signedIn');
     },
     [tokens, loadAccount],
   );
@@ -68,17 +86,13 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
     await tokens.clear();
     queryClient.clear();
     await i18n.changeLanguage(deviceLanguage());
-    setStatus('signedOut');
+    useSessionStore.getState().setUser(null);
+    useSessionStore.getState().setStatus('signedOut');
   }, [tokens, queryClient]);
 
-  const value = useMemo(() => ({ status, signIn, signOut }), [status, signIn, signOut]);
+  const value = useMemo(() => ({ status, signIn, signOut, retry: resume }), [status, signIn, signOut, resume]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
-
-let sessionEnded: () => void = () => undefined;
-
-/** For the token manager: the server ended the session (refresh refused). */
-export const markSignedOut = () => sessionEnded();
 
 export function useSession(): SessionContextValue {
   const value = useContext(SessionContext);
@@ -86,5 +100,6 @@ export function useSession(): SessionContextValue {
   return value;
 }
 
-export const useIsSignedIn = () => useSession().status === 'signedIn';
-export const useIsSignedOut = () => useSession().status === 'signedOut';
+export const useIsSignedIn = () => useSessionStore((s) => s.status === 'signedIn');
+export const useIsSignedOut = () => useSessionStore((s) => s.status === 'signedOut');
+export const useIsUnreachable = () => useSessionStore((s) => s.status === 'unreachable');

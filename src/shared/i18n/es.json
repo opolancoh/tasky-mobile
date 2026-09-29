@@ -59,6 +59,12 @@
       "startOver": "Pedir un código nuevo"
     }
   },
+  "session": {
+    "unreachable": {
+      "title": "No se puede conectar con Tasky",
+      "body": "Revisa tu conexión e inténtalo de nuevo. Tu sesión sigue abierta."
+    }
+  },
   "tabs": {
     "today": "Hoy",
     "upcoming": "Próximo",
