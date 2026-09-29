@@ -59,10 +59,35 @@
       "startOver": "Get a new code"
     }
   },
+  "tabs": {
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "browse": "Browse",
+    "search": "Search"
+  },
   "today": {
     "title": "Today",
     "empty": "Nothing due today.",
     "signOut": "Sign out"
+  },
+  "upcoming": {
+    "eyebrow": "Next 7 days, then later",
+    "title": "Upcoming",
+    "empty": "Nothing planned for the next few days."
+  },
+  "browse": {
+    "title": "Browse",
+    "empty": "Your Inbox, collections and tags will be here."
+  },
+  "search": {
+    "title": "Search",
+    "empty": "Search your tasks by title, notes and steps."
+  },
+  "quickAdd": {
+    "row": "Add a task",
+    "title": "New task",
+    "cancel": "Cancel",
+    "comingSoon": "Adding tasks comes in the next update."
   },
   "errors": {
     "auth.invalid_credentials": "The email or password is incorrect.",

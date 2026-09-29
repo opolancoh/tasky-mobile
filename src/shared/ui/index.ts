@@ -1,3 +1,4 @@
+export { AddTaskRow, type AddTaskRowProps } from './AddTaskRow';
 export { Button, type ButtonProps } from './Button';
 export { Logo } from './Logo';
 export { Notice } from './Notice';

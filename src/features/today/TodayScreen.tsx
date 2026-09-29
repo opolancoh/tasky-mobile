@@ -1,10 +1,11 @@
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { formatLocalDate, todayIn } from '@/core/dates/localDate';
 import { useMe } from '@/data/tenancy/queries';
 import { useSession } from '@/shared/session/SessionProvider';
-import { Button, Screen, Text, useTheme } from '@/shared/ui';
+import { AddTaskRow, Button, Screen, Text, useTheme } from '@/shared/ui';
 
 /**
  * Today (GET /views/today). For now a shell that proves the session: the date in the profile's
@@ -14,12 +15,13 @@ export function TodayScreen() {
   const { t, i18n } = useTranslation();
   const { space } = useTheme();
   const { signOut } = useSession();
+  const navigation = useNavigation();
   const me = useMe().data;
 
   const today = me ? formatLocalDate(todayIn(me.timeZone), i18n.language, { weekday: 'long', month: 'long', day: 'numeric' }) : '';
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <View style={{ paddingTop: space.xl, gap: space.xxs }}>
         <Text variant="label" color="ink3">
           {today}
@@ -29,9 +31,10 @@ export function TodayScreen() {
       <Text variant="callout" color="ink2" style={{ marginTop: space.xxl }}>
         {t('today.empty')}
       </Text>
-      <View style={{ marginTop: 'auto', paddingBottom: space.lg, alignItems: 'center' }}>
+      <View style={{ marginTop: 'auto', paddingBottom: space.sm, alignItems: 'center' }}>
         <Button variant="link" title={t('today.signOut')} onPress={signOut} />
       </View>
+      <AddTaskRow label={t('quickAdd.row')} onPress={() => navigation.navigate('QuickAdd')} />
     </Screen>
   );
 }

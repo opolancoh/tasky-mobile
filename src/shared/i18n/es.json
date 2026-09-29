@@ -59,10 +59,35 @@
       "startOver": "Pedir un código nuevo"
     }
   },
+  "tabs": {
+    "today": "Hoy",
+    "upcoming": "Próximo",
+    "browse": "Explorar",
+    "search": "Buscar"
+  },
   "today": {
     "title": "Hoy",
     "empty": "No hay nada para hoy.",
     "signOut": "Cerrar sesión"
+  },
+  "upcoming": {
+    "eyebrow": "Los próximos 7 días y después",
+    "title": "Próximo",
+    "empty": "No hay nada planeado para los próximos días."
+  },
+  "browse": {
+    "title": "Explorar",
+    "empty": "Aquí verás tu Bandeja de entrada, colecciones y etiquetas."
+  },
+  "search": {
+    "title": "Buscar",
+    "empty": "Busca tus tareas por título, notas y pasos."
+  },
+  "quickAdd": {
+    "row": "Añadir una tarea",
+    "title": "Nueva tarea",
+    "cancel": "Cancelar",
+    "comingSoon": "Podrás añadir tareas en la próxima actualización."
   },
   "errors": {
     "auth.invalid_credentials": "El correo o la contraseña no son correctos.",
