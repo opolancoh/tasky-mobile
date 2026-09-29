@@ -1,0 +1,60 @@
+[Tasky mobile](../../README.md) › [Structure](README.md) › shared
+
+# `src/shared`
+
+What several features use: the design system, the session and translations.
+
+```
+src/shared/
+├── ui/                    The design system; import from '@/shared/ui'
+│   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen
+│   ├── theme.tsx          ThemeProvider, useTheme()
+│   ├── tokens.ts          Spacing, radius, type scale, fonts
+│   └── palettes/          One JSON file per palette; active.json names the one in use
+├── session/
+│   ├── sessionStore.ts    App-wide state (Zustand)
+│   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
+│   └── useCurrentWorkspace.ts
+└── i18n/
+    ├── i18n.ts            i18next setup, device language and time zone
+    ├── en.json  es.json   Every string
+    └── errors.ts          errorMessage(), fieldErrors()
+```
+
+Planned: `components/` (task rows, avatars and other domain pieces used by several features) and `hooks/`.
+
+## ui/
+
+Knows nothing about tasks; takes variants, not colors (`<Button variant="primary">`).
+
+| Piece | Purpose |
+|---|---|
+| `Text` | Every text, by variant (`largeTitle`, `title`, `body`, `callout`, `label`…) and color role |
+| `Button` | `primary` (one per screen) or `link`; 44 pt minimum touch target |
+| `TextField` | Label above, error or footer below, optional Show/Hide for passwords |
+| `Notice` | A message above a form: error or info |
+| `RuleCheck` | A rule that turns green as you type (password length) |
+| `Logo` | The Tasky mark and name |
+| `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
+
+**Colors live only in `palettes/`** ([M10](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): `azure.json` (light and dark), checked against `PaletteColors` in `types.ts`, which also lists the contrast minimums. `useTheme()` gives the active palette, light or dark from the OS. Lint rejects color literals anywhere else.
+
+## session/
+
+| Piece | Purpose |
+|---|---|
+| `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`), the current user, and the workspace each user last chose (saved in AsyncStorage). Readable outside React ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `SessionProvider.tsx` | Launch, sign in, sign out, retry; `useIsSignedIn()` and friends pick the navigation group |
+| `useCurrentWorkspace.ts` | The workspace every view shows: the saved choice, else the personal one |
+
+How they're used: [Auth](../auth/README.md).
+
+## i18n/
+
+- English and Spanish. The profile's language wins once signed in; before that, the device's.
+- Every string is in `en.json` and `es.json`; screens use `t('area.key')`.
+- API errors are shown by their `code` (`errors.<code>`), never by the API's text.
+
+---
+
+← [features](features.md) · ↑ [Structure](README.md)
