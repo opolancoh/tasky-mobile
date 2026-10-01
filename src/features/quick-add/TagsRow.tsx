@@ -8,9 +8,9 @@ import type { TagItem } from './tags';
 
 /**
  * The form's Tags row: the tag icon, the picked tags as chips (tinted with each tag's color, wrapping
- * onto more lines), a chevron. "None" when empty.
+ * onto more lines), a ✕ that clears them (a chevron when none). "None" when empty.
  */
-export function TagsRow({ tags, onPress, divider = true }: { tags: TagItem[]; onPress(): void; divider?: boolean }) {
+export function TagsRow({ tags, onPress, onClear, divider = true }: { tags: TagItem[]; onPress(): void; onClear?(): void; divider?: boolean }) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
   return (
@@ -41,7 +41,13 @@ export function TagsRow({ tags, onPress, divider = true }: { tags: TagItem[]; on
             )}
           </View>
           {tags.length === 0 && <Text variant="body" color="ink2">{t('quickAdd.none')}</Text>}
-          <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
+          {onClear ? (
+            <Pressable onPress={onClear} accessibilityRole="button" accessibilityLabel={t('quickAdd.clearTags')} hitSlop={12} style={styles.clear}>
+              {({ pressed }) => <Feather name="x" size={18} color={pressed ? colors.ink : colors.ink3} />}
+            </Pressable>
+          ) : (
+            <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
+          )}
         </View>
       )}
     </Pressable>
@@ -55,5 +61,7 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, maxWidth: '100%' },
   dot: { width: 8, height: 8, borderRadius: 4 },
   name: { flexShrink: 1 },
+  /** 44 pt wide, drawn like the 20 pt chevron it replaces (same as ListRow's ✕). */
+  clear: { width: 44, height: 44, marginVertical: -12, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
   trailing: { width: 20, textAlign: 'center' },
 });

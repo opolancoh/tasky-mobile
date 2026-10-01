@@ -96,7 +96,6 @@
     "submit": "Añadir",
     "placeholder": "Añade una tarea",
     "task": "Tarea",
-    "done": "Listo",
     "close": "Cerrar",
     "fields": {
       "title": "Título",
@@ -134,6 +133,7 @@
     },
     "notesPlaceholder": "Añade notas",
     "clearPriority": "Quitar prioridad",
+    "clearTags": "Quitar etiquetas",
     "clearDue": "Quitar la fecha límite",
     "reminder": {
       "auto": "Con la fecha límite",

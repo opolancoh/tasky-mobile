@@ -123,13 +123,14 @@ function QuickAddForm() {
       ? update({ title: removeTypedTag(draft.title, name), tags: draft.tags.filter((n) => n !== name) })
       : update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
 
+  const clearTags = () => update({ title: typedTags.reduce(removeTypedTag, draft.title), tags: [] });
+
   const pick = (changes: Partial<Draft>) => {
     update(changes);
     setPage('form');
   };
 
   const back = { icon: 'chevron-left' as const, label: t('quickAdd.task'), onPress: () => setPage('form') };
-  const done = { label: t('quickAdd.done'), emphasis: true, onPress: () => setPage('form') };
   const titles: Record<Exclude<Page, 'form'>, string> = {
     collection: t('quickAdd.fields.collection'),
     priority: t('quickAdd.fields.priority'),
@@ -140,7 +141,7 @@ function QuickAddForm() {
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
     page === 'form'
       ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd, onPress: submit } }
-      : { title: titles[page], left: back, right: page === 'tags' || page === 'reminder' || page === 'due' ? done : undefined };
+      : { title: titles[page], left: back };
 
   return (
     <Sheet visible={open} onDismiss={hide} dismissLabel={t('quickAdd.close')} {...header}>
@@ -204,7 +205,7 @@ function QuickAddForm() {
               onClear={reminder ? () => update({ reminder: null }) : undefined}
               clearLabel={t('quickAdd.reminder.remove')}
             />
-            <TagsRow tags={tagItems} onPress={() => setPage('tags')} />
+            <TagsRow tags={tagItems} onPress={() => setPage('tags')} onClear={tags.length ? clearTags : undefined} />
           </View>
 
           {/* Notes, typed in place under its label (plain text for now). */}

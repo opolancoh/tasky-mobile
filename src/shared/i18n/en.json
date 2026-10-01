@@ -96,7 +96,6 @@
     "submit": "Add",
     "placeholder": "Add a task",
     "task": "Task",
-    "done": "Done",
     "close": "Close",
     "fields": {
       "title": "Title",
@@ -134,6 +133,7 @@
     },
     "notesPlaceholder": "Add notes",
     "clearPriority": "Remove priority",
+    "clearTags": "Remove tags",
     "clearDue": "Remove due date",
     "reminder": {
       "auto": "With the due date",
