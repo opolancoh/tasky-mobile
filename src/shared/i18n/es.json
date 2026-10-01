@@ -120,10 +120,31 @@
       "today": "Hoy",
       "tomorrow": "Mañana",
       "nextWeek": "La próxima semana",
-      "none": "Sin fecha"
+      "none": "Sin fecha",
+      "custom": "Elegir una fecha"
     },
     "tagsHint": "Escribe #nombre en el título para crear una etiqueta.",
-    "notesPlaceholder": "Añade notas"
+    "notesPlaceholder": "Añade notas",
+    "clearDue": "Quitar la fecha límite",
+    "reminder": {
+      "auto": "Con la fecha límite",
+      "laterToday": "Hoy más tarde",
+      "tomorrow": "Mañana",
+      "thisWeekend": "Este fin de semana",
+      "nextWeek": "La próxima semana",
+      "custom": "Personalizado",
+      "date": "Fecha",
+      "time": "Hora",
+      "remove": "Quitar recordatorio"
+    }
+  },
+  "wheels": {
+    "day": "Día",
+    "month": "Mes",
+    "year": "Año",
+    "hour": "Hora",
+    "minute": "Minuto",
+    "period": "a. m. o p. m."
   },
   "errors": {
     "auth.invalid_credentials": "El correo o la contraseña no son correctos.",

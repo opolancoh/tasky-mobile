@@ -12,4 +12,7 @@ export const tasksApi = {
 
   /** POST /collections/{id}/tasks: a new task at the bottom of the collection (201). */
   createTask: (collectionId: Id, body: CreateTaskRequest) => http().post<Task>(`/collections/${collectionId}/tasks`, { body }),
+
+  /** DELETE /tasks/{id}/reminder: removes the caller's reminder (204). */
+  removeReminder: (taskId: Id) => http().delete(`/tasks/${taskId}/reminder`),
 };

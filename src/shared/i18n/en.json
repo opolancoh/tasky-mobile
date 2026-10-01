@@ -120,10 +120,31 @@
       "today": "Today",
       "tomorrow": "Tomorrow",
       "nextWeek": "Next week",
-      "none": "No date"
+      "none": "No date",
+      "custom": "Pick a date"
     },
     "tagsHint": "Type #name in the title to create a new tag.",
-    "notesPlaceholder": "Add notes"
+    "notesPlaceholder": "Add notes",
+    "clearDue": "Remove due date",
+    "reminder": {
+      "auto": "With the due date",
+      "laterToday": "Later today",
+      "tomorrow": "Tomorrow",
+      "thisWeekend": "This weekend",
+      "nextWeek": "Next week",
+      "custom": "Custom",
+      "date": "Date",
+      "time": "Time",
+      "remove": "Remove reminder"
+    }
+  },
+  "wheels": {
+    "day": "Day",
+    "month": "Month",
+    "year": "Year",
+    "hour": "Hour",
+    "minute": "Minute",
+    "period": "AM or PM"
   },
   "errors": {
     "auth.invalid_credentials": "The email or password is incorrect.",
