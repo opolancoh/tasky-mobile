@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { ListRow, SearchField, Text, useTheme } from '@/shared/ui';
 
-import { newTagName, type TagItem } from './tags';
+import { newTagName, stripInvalidTagChars, TAG_NAME_MAX, type TagItem } from './tags';
 
 interface TagsPageProps {
   /** The workspace's tags, already sorted (last used first). */
@@ -42,7 +42,7 @@ export function TagsPage({ tags, selected, onToggle }: TagsPageProps) {
 
   return (
     <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
-      <SearchField value={query} onChangeText={setQuery} onSubmit={create} placeholder={t('quickAdd.tags.search')} clearLabel={t('quickAdd.tags.clearSearch')} />
+      <SearchField value={query} onChangeText={(text) => setQuery(stripInvalidTagChars(text))} onSubmit={create} maxLength={TAG_NAME_MAX} placeholder={t('quickAdd.tags.search')} clearLabel={t('quickAdd.tags.clearSearch')} />
 
       {canCreate && (
         <View style={{ marginTop: space.sm }}>
@@ -50,6 +50,7 @@ export function TagsPage({ tags, selected, onToggle }: TagsPageProps) {
             label={t('quickAdd.tags.create', { name })}
             icon={<Feather name="plus-circle" size={20} color={colors.accent} />}
             onPress={create}
+            chevron={false}
             divider={false}
           />
         </View>

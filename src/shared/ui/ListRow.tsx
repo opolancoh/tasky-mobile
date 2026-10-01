@@ -20,6 +20,8 @@ export interface ListRowProps {
   /** Shows ✕ instead of the chevron: clears the value (e.g. a due date). Needs `clearLabel`. */
   onClear?(): void;
   clearLabel?: string;
+  /** Tappable rows get a chevron unless this is false (the icon already says what a tap does). */
+  chevron?: boolean;
   /** Label in medium weight, for rows that are chosen. */
   strong?: boolean;
   /** A line under the row; off for the last row of a list. */
@@ -28,7 +30,7 @@ export interface ListRowProps {
 }
 
 /** A settings-style row: icon, label, value or detail, chevron. At least 44 pt tall; grows with the text size. */
-export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, divider = true, accessibilityLabel }: ListRowProps) {
+export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, chevron = true, divider = true, accessibilityLabel }: ListRowProps) {
   const { colors, space } = useTheme();
   const valueNode = typeof value === 'string' ? <Text variant="body" color="ink2" numberOfLines={1}>{value}</Text> : value;
 
@@ -59,7 +61,7 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
       ) : selected !== undefined ? (
         <View style={styles.trailing}>{selected && <Feather name="check" size={20} color={colors.accent} />}</View>
       ) : (
-        onPress && <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
+        onPress && chevron && <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
       )}
     </View>
   );

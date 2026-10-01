@@ -10,10 +10,11 @@ export interface SearchFieldProps {
   /** Label of the ✕ that empties the field. */
   clearLabel: string;
   onSubmit?(): void;
+  maxLength?: number;
 }
 
 /** A rounded search box: magnifier, text, ✕ when there is text. 44 pt tall. */
-export function SearchField({ value, onChangeText, placeholder, clearLabel, onSubmit }: SearchFieldProps) {
+export function SearchField({ value, onChangeText, placeholder, clearLabel, onSubmit, maxLength }: SearchFieldProps) {
   const { colors, radius, space, type } = useTheme();
   return (
     <View style={[styles.box, { backgroundColor: colors.surface2, borderRadius: radius.md, paddingHorizontal: space.md, gap: space.sm }]}>
@@ -26,6 +27,7 @@ export function SearchField({ value, onChangeText, placeholder, clearLabel, onSu
         placeholderTextColor={colors.ink3}
         selectionColor={colors.accent}
         accessibilityLabel={placeholder}
+        maxLength={maxLength}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="done"
