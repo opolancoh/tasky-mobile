@@ -5,6 +5,7 @@ export { Logo } from './Logo';
 export { Notice } from './Notice';
 export { RuleCheck } from './RuleCheck';
 export { Screen, type ScreenProps } from './Screen';
+export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
 export { Text, type TextProps } from './Text';
 export { TimeWheel, type TimeWheelProps } from './TimeWheel';

@@ -40,6 +40,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Sheet` | A bottom sheet over the screen: optional title, optional left and right actions (text, an icon, or both), dismissed by tapping outside; rises above the keyboard |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
+| `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |
 | `TimeWheel` | Hour, minute (15-minute steps by default), AM/PM when the locale uses it; value always 24-hour `"09:00"` |
 

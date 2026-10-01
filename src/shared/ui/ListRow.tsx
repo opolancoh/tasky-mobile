@@ -20,13 +20,15 @@ export interface ListRowProps {
   /** Shows ✕ instead of the chevron: clears the value (e.g. a due date). Needs `clearLabel`. */
   onClear?(): void;
   clearLabel?: string;
+  /** Label in medium weight, for rows that are chosen. */
+  strong?: boolean;
   /** A line under the row; off for the last row of a list. */
   divider?: boolean;
   accessibilityLabel?: string;
 }
 
 /** A settings-style row: icon, label, value or detail, chevron. At least 44 pt tall; grows with the text size. */
-export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, divider = true, accessibilityLabel }: ListRowProps) {
+export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, divider = true, accessibilityLabel }: ListRowProps) {
   const { colors, space } = useTheme();
   const valueNode = typeof value === 'string' ? <Text variant="body" color="ink2" numberOfLines={1}>{value}</Text> : value;
 
@@ -41,7 +43,7 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
     >
       {icon !== undefined && <View style={styles.icon}>{icon}</View>}
       <View style={[styles.main, detail ? null : styles.inline]}>
-        <Text variant="body">{label}</Text>
+        <Text variant={strong ? 'bodyMedium' : 'body'}>{label}</Text>
         {detail ? (
           <Text variant="subhead" color="ink2" numberOfLines={2}>
             {detail}

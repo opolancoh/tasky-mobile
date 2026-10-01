@@ -123,8 +123,17 @@
       "none": "Sin fecha",
       "custom": "Elegir una fecha"
     },
-    "tagsHint": "Escribe #nombre en el título para crear una etiqueta.",
+    "tags": {
+      "search": "Busca o crea una etiqueta",
+      "clearSearch": "Borrar búsqueda",
+      "create": "Crear \"#{{name}}\"",
+      "selected": "Seleccionadas · {{count}}",
+      "all": "Todas las etiquetas",
+      "empty": "Aún no hay etiquetas. Escribe un nombre para crear una.",
+      "noMatch": "Ninguna etiqueta coincide."
+    },
     "notesPlaceholder": "Añade notas",
+    "clearPriority": "Quitar prioridad",
     "clearDue": "Quitar la fecha límite",
     "reminder": {
       "auto": "Con la fecha límite",

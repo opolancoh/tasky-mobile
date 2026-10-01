@@ -15,7 +15,11 @@ import { DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } fr
 
 import { useQuickAdd } from './quickAddStore';
 import { effectiveReminder, type ReminderAt, type ReminderChoice } from './reminder';
+import { useRecentTags } from './recentTagsStore';
 import { ReminderPage } from './ReminderPage';
+import { removeTypedTag, sortByRecent, typedTags as typedTagsOf, type TagItem } from './tags';
+import { TagsPage } from './TagsPage';
+import { TagsRow } from './TagsRow';
 
 type Page = 'form' | 'collection' | 'priority' | 'tags' | 'due' | 'reminder';
 
@@ -33,9 +37,7 @@ interface Draft {
 
 const EMPTY: Draft = { title: '', notes: '', priority: 'none', reminder: 'auto', tags: [] };
 const PRIORITIES: Priority[] = ['high', 'medium', 'low', 'none'];
-/** The API's #tag rule (TagNames.cs): a # at the start or after a space, then up to 50 characters without spaces or #. */
-const TAG = /(?<=^|\s)#([^\s#]{1,50})(?=\s|$)/g;
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const NO_NAMES: string[] = [];
 
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
@@ -59,6 +61,7 @@ function QuickAddForm() {
   const me = useMe().data;
   const collections = useCollections(workspace?.id).data ?? [];
   const workspaceTags = useTags(workspace?.id).data ?? [];
+  const recent = useRecentTags((s) => (workspace ? s.byWorkspace[workspace.id] : undefined)) ?? NO_NAMES;
   const create = useCreateTask(workspace?.id);
 
   const [draft, setDraft] = useState<Draft>(EMPTY);
@@ -74,9 +77,9 @@ function QuickAddForm() {
   const today = now?.date;
   const inbox = collections.find((c) => c.isInbox);
   const collection = collections.find((c) => c.id === draft.collectionId) ?? inbox;
-  const typedTags = [...draft.title.matchAll(TAG)].map((m) => m[1]!.toLowerCase());
+  const typedTags = typedTagsOf(draft.title);
   const tags = [...new Set([...draft.tags, ...typedTags])];
-  const titleText = draft.title.replace(TAG, '').trim();
+  const titleText = [...typedTags].reduce(removeTypedTag, draft.title).trim();
   const reminder = effectiveReminder(draft.reminder, draft.dueDate);
   const canAdd = titleText.length > 0 && !!collection && !create.isPending;
 
@@ -85,6 +88,8 @@ function QuickAddForm() {
     : today && date === addDays(today, 1) ? t('quickAdd.due.tomorrow')
     : formatLocalDate(date, locale, { weekday: 'short', month: 'short', day: 'numeric' });
   const reminderText = (r: ReminderAt) => `${formatLocalDate(r.date, locale, { weekday: 'short' })}, ${formatLocalTime(r.time, locale)}`;
+  const sortedTags = sortByRecent(workspaceTags, recent);
+  const tagItems: TagItem[] = tags.map((n) => sortedTags.find((g) => g.name === n) ?? { name: n, color: null });
   const priorityColor = (p: Priority) => ({ high: colors.danger, medium: colors.warn, low: colors.low, none: colors.ink3 })[p];
 
   function submit() {
@@ -104,13 +109,18 @@ function QuickAddForm() {
         },
         withoutReminder: draft.reminder === null && !!draft.dueDate,
       },
-      { onSuccess: hide },
+      {
+        onSuccess: () => {
+          if (workspace) useRecentTags.getState().used(workspace.id, tags);
+          hide();
+        },
+      },
     );
   }
 
   const toggleTag = (name: string) =>
     typedTags.includes(name)
-      ? update({ title: draft.title.replace(new RegExp(`(^|\\s)#${escapeRegExp(name)}(?=\\s|$)`, 'i'), '$1').replace(/\s+/g, ' ').trim(), tags: draft.tags.filter((n) => n !== name) })
+      ? update({ title: removeTypedTag(draft.title, name), tags: draft.tags.filter((n) => n !== name) })
       : update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
 
   const pick = (changes: Partial<Draft>) => {
@@ -156,7 +166,7 @@ function QuickAddForm() {
             </View>
           )}
 
-          <View style={{ marginBottom: space.lg }}>
+          <View>
             <ListRow
               label={t('quickAdd.fields.collection')}
               icon={collection?.isInbox ? <Feather name="inbox" size={20} color={colors.ink3} /> : <View style={[styles.dot, { backgroundColor: collection?.color ?? colors.ink3 }]} />}
@@ -165,20 +175,12 @@ function QuickAddForm() {
             />
             <ListRow
               label={t('quickAdd.fields.priority')}
-              icon={<Feather name="flag" size={20} color={priorityColor(draft.priority)} />}
-              value={t(`quickAdd.priority.${draft.priority}`)}
+              icon={<Feather name="flag" size={20} color={draft.priority === 'none' ? colors.ink3 : colors.accent} />}
+              value={draft.priority === 'none' ? t('quickAdd.priority.none') : <Text variant="bodyMedium" color="accent">{t(`quickAdd.priority.${draft.priority}`)}</Text>}
               onPress={() => setPage('priority')}
+              onClear={draft.priority !== 'none' ? () => update({ priority: 'none' }) : undefined}
+              clearLabel={t('quickAdd.clearPriority')}
             />
-            <ListRow
-              label={t('quickAdd.fields.tags')}
-              icon={<Feather name="tag" size={20} color={colors.ink3} />}
-              value={tags.length ? tags.map((n) => `#${n}`).join(' ') : t('quickAdd.none')}
-              onPress={() => setPage('tags')}
-              divider={false}
-            />
-          </View>
-
-          <View style={{ marginBottom: space.lg }}>
             <ListRow
               label={t('quickAdd.fields.dueDate')}
               icon={<Feather name="calendar" size={20} color={draft.dueDate ? colors.accent : colors.ink3} />}
@@ -201,8 +203,8 @@ function QuickAddForm() {
               onPress={() => setPage('reminder')}
               onClear={reminder ? () => update({ reminder: null }) : undefined}
               clearLabel={t('quickAdd.reminder.remove')}
-              divider={false}
             />
+            <TagsRow tags={tagItems} onPress={() => setPage('tags')} />
           </View>
 
           {/* Notes, typed in place under its label (plain text for now). */}
@@ -256,16 +258,7 @@ function QuickAddForm() {
           />
         ))}
 
-      {page === 'tags' && (
-        <ScrollView>
-          {[...new Set([...workspaceTags.map((g) => g.name.toLowerCase()), ...tags])].map((name, i, all) => (
-            <ListRow key={name} label={`#${name}`} selected={tags.includes(name)} onPress={() => toggleTag(name)} divider={i < all.length - 1} />
-          ))}
-          <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>
-            {t('quickAdd.tagsHint')}
-          </Text>
-        </ScrollView>
-      )}
+      {page === 'tags' && <TagsPage tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
         <ScrollView bounces={false}>

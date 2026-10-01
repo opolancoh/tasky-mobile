@@ -123,8 +123,17 @@
       "none": "No date",
       "custom": "Pick a date"
     },
-    "tagsHint": "Type #name in the title to create a new tag.",
+    "tags": {
+      "search": "Search or create a tag",
+      "clearSearch": "Clear search",
+      "create": "Create \"#{{name}}\"",
+      "selected": "Selected · {{count}}",
+      "all": "All tags",
+      "empty": "No tags yet. Type a name to create one.",
+      "noMatch": "No tags match."
+    },
     "notesPlaceholder": "Add notes",
+    "clearPriority": "Remove priority",
     "clearDue": "Remove due date",
     "reminder": {
       "auto": "With the due date",
