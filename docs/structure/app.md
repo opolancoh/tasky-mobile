@@ -26,7 +26,7 @@ Providers, outermost first:
 | `QueryClientProvider` | The server-data cache |
 | `SessionProvider` | `useSession()`: sign in, sign out, retry; runs the [launch](../auth/launch.md) |
 
-`Root` loads the Figtree fonts, keeps the splash up until the fonts are loaded and the session is checked, builds React Navigation's theme from the palette, and renders `Navigation`.
+`Root` loads the Figtree fonts, keeps the splash up until the fonts are loaded and the session is checked, builds React Navigation's theme from the palette, and renders `Navigation`. While signed in it also mounts the Quick add sheet once, above every screen.
 
 ## config.ts
 
@@ -59,11 +59,11 @@ Created once at startup:
 |---|---|---|
 | SignedOut | `signedOut` | SignIn, SignUp, VerifyCode, ForgotPassword, ResetCode, NewPassword |
 | Unreachable | `unreachable` | Unreachable |
-| SignedIn | `signedIn` | Tabs; QuickAdd (form sheet) |
+| SignedIn | `signedIn` | Tabs |
 
 Params carry ids only; route types come from the config (`RootStackParamList`), so `navigation.navigate(...)` is type-checked.
 
-**tabs.tsx:** the bottom tabs: Today · Upcoming · + · Browse · Search ([M11](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)). The + is a stand-in `Add` tab that opens QuickAdd instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
+**tabs.tsx:** the bottom tabs: Today · Upcoming · + · Browse · Search ([M11](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)). The + is a stand-in `Add` tab that opens Quick add (`useQuickAdd().show()`) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
 
 ---
 

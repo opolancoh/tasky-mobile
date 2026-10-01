@@ -69,5 +69,5 @@ Why each: [06-mobile.md › Stack](../tasky-docs/design/clients/apps/06-mobile.m
 |---|---|
 | Auth | Built: sign in, sign up with a code, password reset, session kept across restarts and bad connections |
 | Tabs | Today · Upcoming · + · Browse · Search; Today shows the date, the others are shells |
-| Quick add | The sheet opens from the +; the form comes with its design (options in the hub) |
-| Next | Account settings, Today's tasks, Quick add, Task detail |
+| Quick add | Built: the new-task form in a sheet from the + (collection, priority, reminder, due date, tags, notes) |
+| Next | Today's tasks, Task detail, account settings |

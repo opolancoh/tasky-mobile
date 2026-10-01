@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { fonts, ThemeProvider, useTheme } from '@/shared/ui';
 
@@ -68,6 +69,7 @@ function Root() {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Navigation theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['tasky://'] }} />
+      {status === 'signedIn' && <QuickAddSheet />}
     </>
   );
 }

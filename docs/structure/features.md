@@ -18,7 +18,7 @@ src/features/
 ├── upcoming/       UpcomingScreen.tsx
 ├── browse/         BrowseScreen.tsx
 ├── search/         SearchScreen.tsx
-└── quick-add/      QuickAddSheet.tsx
+└── quick-add/      QuickAddSheet.tsx  quickAddStore.ts
 ```
 
 ## Areas
@@ -28,7 +28,7 @@ src/features/
 | `auth` | Sign in, Sign up, Verify code, Forgot password, Reset code, New password, Can't reach Tasky | Built ([Auth docs](../auth/README.md)) |
 | `today` | Today | Shell: the date and Sign out |
 | `upcoming`, `browse`, `search` | One tab each | Shells, waiting for their designs |
-| `quick-add` | Quick add (form sheet from the +) | Shell; options A and B in the design hub |
+| `quick-add` | Quick add: the new-task form in a sheet, from the + | Built: title, collection, priority, reminder (automatic 9:00 with a due date), due date, tags, notes ([M14](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 
 Planned (06-mobile.md): `task`, `assignments`, `workspace`, `notifications`, `settings`.
 

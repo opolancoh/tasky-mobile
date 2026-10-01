@@ -12,11 +12,13 @@ src/data/
 │   └── types.ts
 ├── tenancy/             GET /me
 │   ├── api.ts  keys.ts  queries.ts  types.ts
-└── workspaces/          GET /workspaces
-    ├── api.ts  keys.ts  queries.ts  types.ts
+├── workspaces/          GET /workspaces
+│   ├── api.ts  keys.ts  queries.ts  types.ts
+└── tasks/               Collections, tags, creating tasks (views, steps and search come with their screens)
+    ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
 ```
 
-Coming with their screens: `tasks/` (views, collections, tasks, steps, tags, search) and `collaboration/` (notifications).
+Coming with its screens: `collaboration/` (notifications).
 
 ## Files in a module
 

@@ -93,7 +93,37 @@
     "add": "Add a task",
     "title": "New task",
     "cancel": "Cancel",
-    "comingSoon": "Adding tasks comes in the next update."
+    "submit": "Add",
+    "placeholder": "Add a task",
+    "task": "Task",
+    "done": "Done",
+    "close": "Close",
+    "fields": {
+      "title": "Title",
+      "collection": "Collection",
+      "priority": "Priority",
+      "reminder": "Reminder",
+      "dueDate": "Due date",
+      "tags": "Tags",
+      "notes": "Notes"
+    },
+    "none": "None",
+    "reminderAt": "{{date}}, 9:00",
+    "onlyYou": "Only you get it",
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "none": "None"
+    },
+    "due": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "nextWeek": "Next week",
+      "none": "No date"
+    },
+    "tagsHint": "Type #name in the title to create a new tag.",
+    "notesPlaceholder": "Add notes"
   },
   "errors": {
     "auth.invalid_credentials": "The email or password is incorrect.",
@@ -103,7 +133,8 @@
     "network": "Can't reach Tasky. Check your connection and try again.",
     "timeout": "Tasky is taking too long to answer. Try again.",
     "unknown": "Something went wrong. Try again.",
-    "auth.invalid_code": "The code is wrong or has expired. Check the latest email or ask for a new code."
+    "auth.invalid_code": "The code is wrong or has expired. Check the latest email or ask for a new code.",
+    "task.title_only_tags": "Add some words besides #tags."
   },
   "languages": {
     "en": "English",

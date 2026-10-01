@@ -93,7 +93,37 @@
     "add": "Añadir una tarea",
     "title": "Nueva tarea",
     "cancel": "Cancelar",
-    "comingSoon": "Podrás añadir tareas en la próxima actualización."
+    "submit": "Añadir",
+    "placeholder": "Añade una tarea",
+    "task": "Tarea",
+    "done": "Listo",
+    "close": "Cerrar",
+    "fields": {
+      "title": "Título",
+      "collection": "Colección",
+      "priority": "Prioridad",
+      "reminder": "Recordatorio",
+      "dueDate": "Fecha límite",
+      "tags": "Etiquetas",
+      "notes": "Notas"
+    },
+    "none": "Ninguna",
+    "reminderAt": "{{date}}, 9:00",
+    "onlyYou": "Solo lo recibes tú",
+    "priority": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja",
+      "none": "Ninguna"
+    },
+    "due": {
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "nextWeek": "La próxima semana",
+      "none": "Sin fecha"
+    },
+    "tagsHint": "Escribe #nombre en el título para crear una etiqueta.",
+    "notesPlaceholder": "Añade notas"
   },
   "errors": {
     "auth.invalid_credentials": "El correo o la contraseña no son correctos.",
@@ -103,7 +133,8 @@
     "network": "No podemos conectar con Tasky. Revisa tu conexión e inténtalo de nuevo.",
     "timeout": "Tasky está tardando en responder. Inténtalo de nuevo.",
     "unknown": "Algo salió mal. Inténtalo de nuevo.",
-    "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo."
+    "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo.",
+    "task.title_only_tags": "Añade algo de texto además de las #etiquetas."
   },
   "languages": {
     "en": "Inglés",

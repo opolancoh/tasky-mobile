@@ -10,7 +10,7 @@ import { SignUpScreen } from '@/features/auth/SignUpScreen';
 import { UnreachableScreen } from '@/features/auth/UnreachableScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
-import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
+import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
 import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
@@ -28,12 +28,12 @@ const Tabs = createBottomTabNavigator({
     Add: {
       screen: AddTabScreen,
       options: addTabOptions,
-      listeners: ({ navigation }) => ({
+      listeners: {
         tabPress: (e) => {
-          e.preventDefault();
-          navigation.navigate('QuickAdd');
+          e.preventDefault();   // stay on the current tab; the sheet opens over it
+          useQuickAdd.getState().show();
         },
-      }),
+      },
     },
     Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
     Search: { screen: SearchScreen, options: tab('search', 'tabs.search') },
@@ -68,7 +68,6 @@ const RootStack = createNativeStackNavigator({
       if: useIsSignedIn,
       screens: {
         Tabs,
-        QuickAdd: { screen: QuickAddSheet, options: { presentation: 'formSheet', sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true } },
       },
     },
   },
