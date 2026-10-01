@@ -96,6 +96,8 @@ export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, 
   );
 });
 
+const ORIGIN = { left: 'left center', center: 'center', right: 'right center' } as const;
+
 /** Columns side by side over one selection band: the frame every wheel picker uses. */
 export function WheelFrame({ children }: { children: ReactNode }) {
   const { colors, radius } = useTheme();
@@ -114,7 +116,8 @@ const WheelRow = memo(function WheelRow({ label, position, scrollY, align }: { l
   const opacity = scrollY.interpolate({ inputRange, outputRange: [0.25, 0.55, 1, 0.55, 0.25], extrapolate: 'clamp' });
   const scale = scrollY.interpolate({ inputRange, outputRange: [0.86, 0.93, 1.06, 0.93, 0.86], extrapolate: 'clamp' });
   return (
-    <Animated.View style={[styles.row, { opacity, transform: [{ scale }] }]} importantForAccessibility="no-hide-descendants">
+    // Scale from the aligned edge, so left- or right-aligned labels don't drift sideways as they grow.
+    <Animated.View style={[styles.row, { opacity, transform: [{ scale }], transformOrigin: ORIGIN[align] }]} importantForAccessibility="no-hide-descendants">
       <Text style={[type.title, styles.label, { textAlign: align, fontSize: 21, lineHeight: 26 }]} numberOfLines={1}>
         {label}
       </Text>
