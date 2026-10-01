@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
-import { Animated, Dimensions, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Dimensions, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from './Text';
@@ -51,6 +51,7 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
     });
   }, [visible, progress]);
 
+  const keyboard = useKeyboardHeight();
   const offscreen = Dimensions.get('window').height;
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [offscreen, 0] });
   const hasHeader = !!(title || left || right);
@@ -71,8 +72,8 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
               borderTopLeftRadius: radius.xl,
               borderTopRightRadius: radius.xl,
               paddingHorizontal: space.lg,
-              paddingBottom: Math.max(insets.bottom, space.lg),
-              maxHeight: offscreen - insets.top - space.xxl,
+              paddingBottom: keyboard > 0 ? space.lg : Math.max(insets.bottom, space.lg),
+              maxHeight: offscreen - keyboard - insets.top - space.sm,   // never taller than the room above the keyboard; the content scrolls
               transform: [{ translateY }],
             },
           ]}
@@ -92,6 +93,22 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
       </KeyboardAvoidingView>
     </Modal>
   );
+}
+
+/** The keyboard's height while it's open, 0 otherwise. */
+function useKeyboardHeight() {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const ios = Platform.OS === 'ios';
+    if (!ios) return;   // Android resizes the window for the keyboard itself
+    const show = Keyboard.addListener('keyboardWillShow', (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardWillHide', () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return height;
 }
 
 function HeaderAction({ action }: { action: SheetAction }) {
