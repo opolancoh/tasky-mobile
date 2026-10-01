@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "lint": "expo lint",
-    "typecheck": "tsc --noEmit",
+    "ts": "tsc --noEmit",
     "check": "tsc --noEmit && expo lint"
   },
   "dependencies": {
