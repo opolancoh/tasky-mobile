@@ -144,7 +144,7 @@ function QuickAddForm() {
       : { title: titles[page], left: back };
 
   return (
-    <Sheet visible={open} onDismiss={hide} dismissLabel={t('quickAdd.close')} {...header}>
+    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} dismissLabel={t('quickAdd.close')} {...header}>
       {page === 'form' && (
         <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
           <TextInput
