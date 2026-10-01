@@ -170,8 +170,8 @@ function QuickAddForm() {
           <View>
             <ListRow
               label={t('quickAdd.fields.collection')}
-              icon={collection?.isInbox ? <Feather name="inbox" size={20} color={colors.ink3} /> : <View style={[styles.dot, { backgroundColor: collection?.color ?? colors.ink3 }]} />}
-              value={collection?.name ?? '…'}
+              icon={collection?.isInbox ? <Feather name="inbox" size={20} color={colors.accent} /> : <View style={[styles.dot, { backgroundColor: collection?.color ?? colors.ink3 }]} />}
+              value={collection ? <Text variant="bodyMedium" color="accent">{collection.name}</Text> : '…'}
               onPress={() => setPage('collection')}
             />
             <ListRow
