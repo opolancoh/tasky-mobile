@@ -10,7 +10,7 @@ import type { CreateTaskRequest } from './types';
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
  * views, the collections' counts and the tags (a #tag may have created one) are refetched.
  * `withoutReminder`: a task created with a due date gets the caller's 9:00 reminder (D31); this
- * removes it right away, for someone who cleared the reminder.
+ * removes it right away, for someone who set a due date without a reminder (M19).
  */
 export function useCreateTask(workspaceId: Id | undefined) {
   const queryClient = useQueryClient();

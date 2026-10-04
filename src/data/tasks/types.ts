@@ -1,7 +1,6 @@
 import type { Id, LocalDate, Version } from '@/core/types';
 
-export type Priority = 'none' | 'low' | 'medium' | 'high';
-export type SortMode = 'manual' | 'dueDate' | 'priority' | 'title' | 'created';
+export type SortMode = 'manual' | 'dueDate' | 'important' | 'title' | 'created';
 
 /** An item of GET /workspaces/{id}/collections: Inbox first, then the sidebar order. */
 export interface Collection {
@@ -34,7 +33,8 @@ export interface CreateTaskRequest {
   title: string;
   notes?: string;
   dueDate?: LocalDate;
-  priority?: Priority;
+  /** The Important flag; omitted = not important. */
+  isImportant?: boolean;
   /** The caller's reminder; both or neither. Omitted with a due date: 9:00 on the due date (D31). */
   reminderDate?: LocalDate;
   reminderTime?: string;
@@ -47,7 +47,7 @@ export interface Task {
   collectionId: Id;
   title: string;
   notes: string | null;
-  priority: Priority;
+  isImportant: boolean;
   dueDate: LocalDate | null;
   tagIds: Id[];
   version: Version;

@@ -8,40 +8,40 @@ import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
 import { useCreateTask } from '@/data/tasks/mutations';
 import { useCollections, useTags } from '@/data/tasks/queries';
-import { taskLimits, type Priority } from '@/data/tasks/types';
+import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
 import { DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
 import { useQuickAdd } from './quickAddStore';
-import { effectiveReminder, type ReminderAt, type ReminderChoice } from './reminder';
+import { type ReminderAt, type ReminderChoice } from './reminder';
 import { useRecentTags } from './recentTagsStore';
 import { ReminderPage } from './ReminderPage';
 import { removeTypedTag, sortByRecent, typedTags as typedTagsOf, type TagItem } from './tags';
 import { TagsPage } from './TagsPage';
 import { TagsRow } from './TagsRow';
 
-type Page = 'form' | 'collection' | 'priority' | 'tags' | 'due' | 'reminder';
+type Page = 'form' | 'collection' | 'tags' | 'due' | 'reminder';
 
 interface Draft {
   title: string;
   notes: string;
   /** Undefined: the Inbox. */
   collectionId?: string;
-  priority: Priority;
+  /** The Important flag (a toggle row on the form, no page). */
+  isImportant: boolean;
   dueDate?: LocalDate;
   reminder: ReminderChoice;
   /** Picked in the Tags page; sent as #name in the title, which the API applies (and creates when new). */
   tags: string[];
 }
 
-const EMPTY: Draft = { title: '', notes: '', priority: 'none', reminder: 'auto', tags: [] };
-const PRIORITIES: Priority[] = ['high', 'medium', 'low', 'none'];
+const EMPTY: Draft = { title: '', notes: '', isImportant: false, reminder: null, tags: [] };
 const NO_NAMES: string[] = [];
 
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
- * Collection, Priority, Tags · Due date, Reminder · Notes typed in place (plain text; a separate notes
+ * Collection, Important, Tags · Due date, Reminder · Notes typed in place (plain text; a separate notes
  * editor comes with formatted notes, see pending-decisions.md). The pickers and Reminder are pages
  * inside the same sheet. Add creates the task (POST /collections/{id}/tasks) and closes the sheet.
  */
@@ -80,7 +80,7 @@ function QuickAddForm() {
   const typedTags = typedTagsOf(draft.title);
   const tags = [...new Set([...draft.tags, ...typedTags])];
   const titleText = [...typedTags].reduce(removeTypedTag, draft.title).trim();
-  const reminder = effectiveReminder(draft.reminder, draft.dueDate);
+  const reminder = draft.reminder;
   const canAdd = titleText.length > 0 && !!collection && !create.isPending;
 
   const dayText = (date: LocalDate) =>
@@ -90,24 +90,23 @@ function QuickAddForm() {
   const reminderText = (r: ReminderAt) => `${formatLocalDate(r.date, locale, { weekday: 'short' })}, ${formatLocalTime(r.time, locale)}`;
   const sortedTags = sortByRecent(workspaceTags, recent);
   const tagItems: TagItem[] = tags.map((n) => sortedTags.find((g) => g.name === n) ?? { name: n, color: null });
-  const priorityColor = (p: Priority) => ({ high: colors.danger, medium: colors.warn, low: colors.low, none: colors.ink3 })[p];
 
   function submit() {
     if (!canAdd || !collection) return;
     const picked = draft.tags.filter((n) => !typedTags.includes(n)).map((n) => `#${n}`);
-    const chosen = draft.reminder !== 'auto' && draft.reminder ? draft.reminder : undefined;
+    const chosen = draft.reminder ?? undefined;
     create.mutate(
       {
         collectionId: collection.id,
         body: {
           title: [draft.title.trim(), ...picked].join(' '),
           notes: draft.notes.trim() || undefined,
-          priority: draft.priority,
+          isImportant: draft.isImportant || undefined,
           dueDate: draft.dueDate,
           reminderDate: chosen?.date,
           reminderTime: chosen?.time,
         },
-        withoutReminder: draft.reminder === null && !!draft.dueDate,
+        withoutReminder: !draft.reminder && !!draft.dueDate,
       },
       {
         onSuccess: () => {
@@ -133,7 +132,6 @@ function QuickAddForm() {
   const back = { icon: 'chevron-left' as const, label: t('quickAdd.task'), onPress: () => setPage('form') };
   const titles: Record<Exclude<Page, 'form'>, string> = {
     collection: t('quickAdd.fields.collection'),
-    priority: t('quickAdd.fields.priority'),
     tags: t('quickAdd.fields.tags'),
     due: t('quickAdd.fields.dueDate'),
     reminder: t('quickAdd.fields.reminder'),
@@ -175,12 +173,11 @@ function QuickAddForm() {
               onPress={() => setPage('collection')}
             />
             <ListRow
-              label={t('quickAdd.fields.priority')}
-              icon={<Feather name="flag" size={20} color={draft.priority === 'none' ? colors.ink3 : colors.accent} />}
-              value={draft.priority === 'none' ? t('quickAdd.priority.none') : <Text variant="bodyMedium" color="accent">{t(`quickAdd.priority.${draft.priority}`)}</Text>}
-              onPress={() => setPage('priority')}
-              onClear={draft.priority !== 'none' ? () => update({ priority: 'none' }) : undefined}
-              clearLabel={t('quickAdd.clearPriority')}
+              label={t('quickAdd.fields.important')}
+              icon={<Feather name="flag" size={20} color={draft.isImportant ? colors.danger : colors.ink3} />}
+              selected={draft.isImportant}
+              onPress={() => update({ isImportant: !draft.isImportant })}
+              strong={draft.isImportant}
             />
             <ListRow
               label={t('quickAdd.fields.dueDate')}
@@ -197,7 +194,6 @@ function QuickAddForm() {
                 reminder ? (
                   <View style={styles.end}>
                     <Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>
-                    {draft.reminder === 'auto' && <Text variant="caption" color="ink3">{t('quickAdd.reminder.auto')}</Text>}
                   </View>
                 ) : t('quickAdd.none')
               }
@@ -246,18 +242,6 @@ function QuickAddForm() {
           ))}
         </ScrollView>
       )}
-
-      {page === 'priority' &&
-        PRIORITIES.map((p, i) => (
-          <ListRow
-            key={p}
-            label={t(`quickAdd.priority.${p}`)}
-            icon={<Feather name="flag" size={20} color={priorityColor(p)} />}
-            selected={p === draft.priority}
-            onPress={() => pick({ priority: p })}
-            divider={i < PRIORITIES.length - 1}
-          />
-        ))}
 
       {page === 'tags' && <TagsPage tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
 

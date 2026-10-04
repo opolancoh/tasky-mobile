@@ -46,13 +46,13 @@ export interface PaletteColors {
   chipSelected: string;
   onChipSelected: string;
 
-  /** Overdue, High priority, errors, delete. */
+  /** Overdue, Important, errors, delete. */
   danger: string;
   dangerSoft: string;
-  /** Medium priority, pending. */
+  /** Pending. */
   warn: string;
   warnSoft: string;
-  /** Low priority. */
+  /** Spare: it marked Low priority before the Important flag (M18). */
   low: string;
   lowSoft: string;
   /** Completed, accepted, rules met. */

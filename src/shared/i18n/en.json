@@ -100,7 +100,7 @@
     "fields": {
       "title": "Title",
       "collection": "Collection",
-      "priority": "Priority",
+      "important": "Important",
       "reminder": "Reminder",
       "dueDate": "Due date",
       "tags": "Tags",
@@ -109,12 +109,6 @@
     "none": "None",
     "reminderAt": "{{date}}, 9:00",
     "onlyYou": "Only you get it",
-    "priority": {
-      "high": "High",
-      "medium": "Medium",
-      "low": "Low",
-      "none": "None"
-    },
     "due": {
       "today": "Today",
       "tomorrow": "Tomorrow",
@@ -132,11 +126,9 @@
       "noMatch": "No tags match."
     },
     "notesPlaceholder": "Add notes",
-    "clearPriority": "Remove priority",
     "clearTags": "Remove tags",
     "clearDue": "Remove due date",
     "reminder": {
-      "auto": "With the due date",
       "laterToday": "Later today",
       "tomorrow": "Tomorrow",
       "thisWeekend": "This weekend",

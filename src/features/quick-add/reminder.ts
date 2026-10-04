@@ -8,22 +8,14 @@ export interface ReminderAt {
 }
 
 /**
- * What the form holds:
- * - 'auto': nothing chosen; with a due date the API adds 9:00 on that day (D31), without one there's none
- * - a date and time: chosen by the person
- * - null: removed; with a due date the app deletes the automatic one right after creating the task
+ * What the form holds: the reminder the person chose, or null for none. A due date doesn't set one
+ * (M19); with a due date and no reminder the app removes the 9:00 one the API adds (D31) right after
+ * creating the task.
  */
-export type ReminderChoice = ReminderAt | 'auto' | null;
+export type ReminderChoice = ReminderAt | null;
 
-export const AUTO_TIME: LocalTime = '09:00';
 const MORNING: LocalTime = '09:00';
 const EVENING: LocalTime = '18:00';
-
-/** The reminder the task will actually have. */
-export function effectiveReminder(choice: ReminderChoice, dueDate: LocalDate | undefined): ReminderAt | null {
-  if (choice === 'auto') return dueDate ? { date: dueDate, time: AUTO_TIME } : null;
-  return choice;
-}
 
 export const sameReminder = (a: ReminderAt | null, b: ReminderAt | null) => !!a && !!b && a.date === b.date && a.time === b.time;
 

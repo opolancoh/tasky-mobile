@@ -100,7 +100,7 @@
     "fields": {
       "title": "Título",
       "collection": "Colección",
-      "priority": "Prioridad",
+      "important": "Importante",
       "reminder": "Recordatorio",
       "dueDate": "Fecha límite",
       "tags": "Etiquetas",
@@ -109,12 +109,6 @@
     "none": "Ninguna",
     "reminderAt": "{{date}}, 9:00",
     "onlyYou": "Solo lo recibes tú",
-    "priority": {
-      "high": "Alta",
-      "medium": "Media",
-      "low": "Baja",
-      "none": "Ninguna"
-    },
     "due": {
       "today": "Hoy",
       "tomorrow": "Mañana",
@@ -132,11 +126,9 @@
       "noMatch": "Ninguna etiqueta coincide."
     },
     "notesPlaceholder": "Añade notas",
-    "clearPriority": "Quitar prioridad",
     "clearTags": "Quitar etiquetas",
     "clearDue": "Quitar la fecha límite",
     "reminder": {
-      "auto": "Con la fecha límite",
       "laterToday": "Hoy más tarde",
       "tomorrow": "Mañana",
       "thisWeekend": "Este fin de semana",
