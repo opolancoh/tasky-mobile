@@ -28,6 +28,9 @@ export interface TagItem {
   color: string | null;
 }
 
+/** One collator for every sort: String.localeCompare builds one per call in Hermes. */
+const collator = new Intl.Collator();
+
 /** Last used first (most recent at the front of `recent`), then the rest A–Z. */
 export function sortByRecent(tags: Tag[], recent: string[]): TagItem[] {
   const rank = (name: string) => {
@@ -36,5 +39,5 @@ export function sortByRecent(tags: Tag[], recent: string[]): TagItem[] {
   };
   return tags
     .map((g) => ({ name: g.name.toLowerCase(), color: g.color }))
-    .sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));
+    .sort((a, b) => rank(a.name) - rank(b.name) || collator.compare(a.name, b.name));
 }

@@ -1,7 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
-import { Animated, Dimensions, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, { interpolate, useAnimatedKeyboard, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
@@ -37,49 +39,71 @@ export interface SheetProps {
 const DURATION = 220;
 
 /**
- * A bottom sheet over the current screen: a dimmed backdrop that closes it when tapped, a grabber, an
- * optional header (title, left and right actions), and the content. It rises above the keyboard.
- * `visible` false plays the closing animation before the sheet leaves.
+ * A bottom sheet over the whole app: a dimmed backdrop that closes it when tapped, a grabber, an
+ * optional header (title, left and right actions), the content and an optional footer kept above the
+ * keyboard. Mount it at the app root (after the navigator), like QuickAddSheet: it draws as an overlay,
+ * not a native Modal. Opening, closing and following the keyboard run on the UI thread (Reanimated), with
+ * no re-render per frame (docs/performance.md). `visible` false plays the closing animation before it leaves.
  */
-export function Sheet({ visible, onDismiss, onBackdropPress, dismissLabel, title, left, right, children, footer }: SheetProps) {
+export function Sheet(props: SheetProps) {
+  const [mounted, setMounted] = useState(props.visible);
+  if (props.visible && !mounted) setMounted(true);   // opening: mount first, then the panel animates in
+  // Mounted only while shown: the keyboard tracking (and, on Android, the window not resizing) lasts as long as the sheet.
+  return mounted ? <SheetPanel {...props} onClosed={() => setMounted(false)} /> : null;
+}
+
+function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, left, right, children, footer, onClosed }: SheetProps & { onClosed(): void }) {
   const { colors, radius, space } = useTheme();
   const insets = useSafeAreaInsets();
-  const [mounted, setMounted] = useState(visible);
-  const [progress] = useState(() => new Animated.Value(0));   // 0 closed → 1 open
-
-  if (visible && !mounted) setMounted(true);   // opening: mount first, then the effect animates in
+  const { height: windowHeight } = useWindowDimensions();
+  const progress = useSharedValue(0);   // 0 closed → 1 open
+  // Keyboard height as a shared value. Expo Go ships Reanimated but not react-native-keyboard-controller, which
+  // Reanimated suggests instead; this hook is the Expo Go way. Android: edge-to-edge, so no extra bar margins.
+  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true, isNavigationBarTranslucentAndroid: true });
 
   useEffect(() => {
-    Animated.timing(progress, { toValue: visible ? 1 : 0, duration: DURATION, useNativeDriver: true }).start(({ finished }) => {
-      if (finished && !visible) setMounted(false);
+    progress.value = withTiming(visible ? 1 : 0, { duration: DURATION }, (finished) => {
+      if (finished && !visible) scheduleOnRN(onClosed);
     });
-  }, [visible, progress]);
+  }, [visible, progress, onClosed]);
 
-  const keyboard = useKeyboardHeight();
-  const offscreen = Dimensions.get('window').height;
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [offscreen, 0] });
+  // Android's back button acts like the caller's dismiss while the sheet is up.
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onDismiss();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onDismiss]);
+
+  // Plain numbers and booleans only inside worklets (they are copied to the UI thread).
+  const hasFooter = !!footer;
+  const gap = space.lg;
+  const safeBottom = insets.bottom;
+  const bottomInset = Math.max(safeBottom, gap);
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  // The room under the sheet is the keyboard's height; the panel shrinks to what is left above it and its content scrolls.
+  const frameStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
+  const panelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(progress.value, [0, 1], [windowHeight, 0]) }],
+    paddingBottom: hasFooter ? 0 : keyboard.height.value > 0 ? gap : bottomInset,
+  }));
+  const footerStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value > 0 ? 0 : safeBottom }));
   const hasHeader = !!(title || left || right);
 
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={onDismiss} statusBarTranslucent>
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim, opacity: progress }]}>
+    <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, backdropStyle]}>
         <Pressable style={styles.fill} onPress={onBackdropPress ?? onDismiss} accessibilityRole="button" accessibilityLabel={dismissLabel} />
       </Animated.View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.bottom} pointerEvents="box-none">
+      <Animated.View style={[styles.frame, { paddingTop: insets.top + space.sm }, frameStyle]} pointerEvents="box-none">
         <Animated.View
-          accessibilityViewIsModal
           style={[
             styles.panel,
-            {
-              backgroundColor: colors.surface,
-              borderTopLeftRadius: radius.xl,
-              borderTopRightRadius: radius.xl,
-              paddingHorizontal: space.lg,
-              paddingBottom: footer ? 0 : keyboard > 0 ? space.lg : Math.max(insets.bottom, space.lg),
-              maxHeight: offscreen - keyboard - insets.top - space.sm,   // never taller than the room above the keyboard; the content scrolls
-              transform: [{ translateY }],
-            },
+            { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg },
+            panelStyle,
           ]}
         >
           <View style={[styles.grabber, { backgroundColor: colors.line, marginVertical: space.sm }]} />
@@ -93,27 +117,11 @@ export function Sheet({ visible, onDismiss, onBackdropPress, dismissLabel, title
             </View>
           )}
           {children}
-          {footer && <View style={{ marginHorizontal: -space.lg, paddingBottom: keyboard > 0 ? 0 : insets.bottom }}>{footer}</View>}
+          {footer && <Animated.View style={[{ marginHorizontal: -space.lg }, footerStyle]}>{footer}</Animated.View>}
         </Animated.View>
-      </KeyboardAvoidingView>
-    </Modal>
+      </Animated.View>
+    </View>
   );
-}
-
-/** The keyboard's height while it's open, 0 otherwise. */
-function useKeyboardHeight() {
-  const [height, setHeight] = useState(0);
-  useEffect(() => {
-    const ios = Platform.OS === 'ios';
-    if (!ios) return;   // Android resizes the window for the keyboard itself
-    const show = Keyboard.addListener('keyboardWillShow', (e) => setHeight(e.endCoordinates.height));
-    const hide = Keyboard.addListener('keyboardWillHide', () => setHeight(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-  return height;
 }
 
 function HeaderAction({ action }: { action: SheetAction }) {
@@ -144,8 +152,9 @@ function HeaderAction({ action }: { action: SheetAction }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  bottom: { flex: 1, justifyContent: 'flex-end' },
-  panel: { width: '100%' },
+  /** Fills the screen above the keyboard and puts the panel at its bottom; the panel never grows past it. */
+  frame: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'flex-end' },
+  panel: { width: '100%', flexShrink: 1 },
   grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3 },
   /** 44 pt tall: every action is a full touch target (HIG). */
   header: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: 4 },

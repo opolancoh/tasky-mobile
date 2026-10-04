@@ -37,7 +37,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `RuleCheck` | A rule that turns green as you type (password length) |
 | `Logo` | The Tasky mark and name |
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
-| `Sheet` | A bottom sheet over the screen: optional title, optional left and right actions (text, an icon, or both), dismissed by tapping outside; rises above the keyboard |
+| `Sheet` | A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props |

@@ -35,6 +35,9 @@
       "expo-status-bar",
       "expo-secure-store",
       "expo-localization"
-    ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    }
   }
 }
