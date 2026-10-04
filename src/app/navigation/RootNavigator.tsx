@@ -24,7 +24,7 @@ const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
     Home: { screen: HomeScreen, options: tab('home', 'tabs.home') },
-    Upcoming: { screen: UpcomingScreen, options: tab('calendar', 'tabs.upcoming') },
+    Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
     Add: {
       screen: AddTabScreen,
       options: addTabOptions,
@@ -35,7 +35,7 @@ const Tabs = createBottomTabNavigator({
         },
       },
     },
-    Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
+    Upcoming: { screen: UpcomingScreen, options: tab('calendar', 'tabs.upcoming') },
     Search: { screen: SearchScreen, options: tab('search', 'tabs.search') },
   },
 });
