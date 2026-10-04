@@ -20,8 +20,10 @@ export interface SheetAction {
 
 export interface SheetProps {
   visible: boolean;
-  /** Tapping outside the sheet, Android's back button, or the caller's own Cancel. */
+  /** Tapping outside the sheet (unless `onBackdropPress` is set), Android's back button, or the caller's own Cancel. */
   onDismiss(): void;
+  /** Tapping outside the sheet, when it should differ from Android's back (e.g. discard a page's changes). */
+  onBackdropPress?(): void;
   /** Read by screen readers for the area outside the sheet, e.g. "Close". */
   dismissLabel: string;
   title?: string;
@@ -39,7 +41,7 @@ const DURATION = 220;
  * optional header (title, left and right actions), and the content. It rises above the keyboard.
  * `visible` false plays the closing animation before the sheet leaves.
  */
-export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, children, footer }: SheetProps) {
+export function Sheet({ visible, onDismiss, onBackdropPress, dismissLabel, title, left, right, children, footer }: SheetProps) {
   const { colors, radius, space } = useTheme();
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
@@ -61,7 +63,7 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onDismiss} statusBarTranslucent>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim, opacity: progress }]}>
-        <Pressable style={styles.fill} onPress={onDismiss} accessibilityRole="button" accessibilityLabel={dismissLabel} />
+        <Pressable style={styles.fill} onPress={onBackdropPress ?? onDismiss} accessibilityRole="button" accessibilityLabel={dismissLabel} />
       </Animated.View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.bottom} pointerEvents="box-none">

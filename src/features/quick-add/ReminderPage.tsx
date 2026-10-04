@@ -13,16 +13,18 @@ interface ReminderPageProps {
   /** The current reminder, or null for none; changes are reported as they happen. */
   value: ReminderAt | null;
   onChange(value: ReminderAt): void;
+  /** A quick choice: sets it and returns to the form (like Due date's quick choices). */
+  onPick(value: ReminderAt): void;
   onRemove(): void;
   /** "Now" in the profile's time zone. */
   now: { date: LocalDate; time: LocalTime };
 }
 
 /**
- * Reminder, a page of the Quick add sheet: four quick choices, then a custom date and time with the
+ * Reminder, a page of the Quick add sheet: four quick choices (a tap returns to the form), then a custom date and time with the
  * shared DateWheel and TimeWheel (one open at a time), and Remove reminder.
  */
-export function ReminderPage({ value, onChange, onRemove, now }: ReminderPageProps) {
+export function ReminderPage({ value, onChange, onPick, onRemove, now }: ReminderPageProps) {
   const { t, i18n } = useTranslation();
   const { colors, radius, space } = useTheme();
   const [open, setOpen] = useState<'date' | 'time' | null>(null);
@@ -42,7 +44,7 @@ export function ReminderPage({ value, onChange, onRemove, now }: ReminderPagePro
             label={t(`quickAdd.reminder.${id}`)}
             detail={id === 'laterToday' ? formatLocalTime(at.time, locale) : `${formatLocalDate(at.date, locale, { weekday: 'short' })}, ${formatLocalTime(at.time, locale)}`}
             selected={sameReminder(at, value)}
-            onPress={() => onChange(at)}
+            onPress={() => onPick(at)}
           />
         ))}
       </View>
