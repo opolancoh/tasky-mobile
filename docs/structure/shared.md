@@ -18,7 +18,7 @@ src/shared/
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 │   └── useCurrentWorkspace.ts
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── CollectionIcon.tsx   ReminderPicker.tsx
+│   ├── CollectionIcon.tsx   ReminderPicker.tsx   TaskRow.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
@@ -62,6 +62,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 | Piece | Purpose |
 |---|---|
 | `CollectionIcon` | The Inbox tray or the collection's color dot |
+| `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (collection, due, steps, repeat), red flag when important |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `ReminderPicker` | Four quick choices, a custom date and time (wheels), Remove ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |

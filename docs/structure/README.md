@@ -85,7 +85,7 @@ Colors are also checked: a hex or `rgb()` literal anywhere in `src/` outside `sh
 | Components, screens | `PascalCase.tsx` | `SignInScreen.tsx`, `TextField.tsx` |
 | Everything else | `camelCase.ts` | `tokens.ts`, `signUpDraft.ts` |
 | Hooks | `use…` | `useEmailField.ts`, `useCurrentWorkspace.ts` |
-| Screens | `…Screen`; sheets `…Sheet` | `TodayScreen`, `QuickAddSheet` |
+| Screens | `…Screen`; sheets `…Sheet` | `HomeScreen`, `QuickAddSheet` |
 | Imports across folders | The `@/` alias | `import { Button } from '@/shared/ui'` |
 | Imports inside a folder | Relative | `import { resetDraft } from './resetDraft'` |
 

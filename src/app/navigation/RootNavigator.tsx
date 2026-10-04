@@ -3,6 +3,7 @@ import { createStaticNavigation, type StaticParamList } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ForgotPasswordScreen } from '@/features/auth/ForgotPasswordScreen';
+import { HomeScreen } from '@/features/home/HomeScreen';
 import { NewPasswordScreen } from '@/features/auth/NewPasswordScreen';
 import { ResetCodeScreen } from '@/features/auth/ResetCodeScreen';
 import { SignInScreen } from '@/features/auth/SignInScreen';
@@ -12,7 +13,6 @@ import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
-import { TodayScreen } from '@/features/today/TodayScreen';
 import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
 import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/session/SessionProvider';
@@ -23,7 +23,7 @@ import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
-    Today: { screen: TodayScreen, options: tab('sun', 'tabs.today') },
+    Home: { screen: HomeScreen, options: tab('home', 'tabs.home') },
     Upcoming: { screen: UpcomingScreen, options: tab('calendar', 'tabs.upcoming') },
     Add: {
       screen: AddTabScreen,

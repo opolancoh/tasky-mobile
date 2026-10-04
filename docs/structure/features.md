@@ -14,7 +14,7 @@ src/features/
 │   ├── signUpDraft.ts  resetDraft.ts
 │   ├── useEmailField.ts
 │   └── validation.ts
-├── today/          TodayScreen.tsx
+├── home/           HomeScreen.tsx
 ├── upcoming/       UpcomingScreen.tsx
 ├── browse/         BrowseScreen.tsx
 ├── search/         SearchScreen.tsx
@@ -26,7 +26,7 @@ src/features/
 | Area | Screens | State |
 |---|---|---|
 | `auth` | Sign in, Sign up, Verify code, Forgot password, Reset code, New password, Can't reach Tasky | Built ([Auth docs](../auth/README.md)) |
-| `today` | Today | Shell: the date and Sign out |
+| `home` | Home (first tab) | Built ([M23](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): greeting and summary; Needs attention (overdue with Move to today, assignments with Accept / Reject; hidden when empty); Today (shared `TaskRow`, complete with the circle); Important (up to 3 not due today); Coming up by day, then Later (→ Upcoming); Inbox to sort (→ Browse); pull to refresh. One FlashList. Sign out until Settings exists |
 | `upcoming`, `browse`, `search` | One tab each | Shells, waiting for their designs |
 | `quick-add` | Quick add: the new-task form in a sheet, from the + | Built: title; a summary of Collection plus a row per set field (Important, due date, reminder, tags, notes; each with ✕) and a bottom icon bar, style E, that sets them (`QuickAddBar`, Sheet `footer` slot); due date and reminder pages (quick choices or a custom date and time); Notes page (`NotesPage`); the Tags and Reminder pages are the shared `TagPicker` and `ReminderPicker`; tags page with search, create and last-used order ([M14, M15, M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 

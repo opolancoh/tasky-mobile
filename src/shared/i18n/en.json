@@ -3,7 +3,8 @@
     "show": "Show",
     "hide": "Hide",
     "retry": "Try again",
-    "back": "Back"
+    "back": "Back",
+    "signOut": "Sign out"
   },
   "auth": {
     "signIn": {
@@ -41,8 +42,7 @@
       "submit": "Verify",
       "noCode": "Didn't get it?",
       "resend": "Resend code",
-      "resent": "We sent a new code to {{email}}.",
-      "signingIn": "Email verified. Signing you in…"
+      "resent": "We sent a new code to {{email}}."
     },
     "forgot": {
       "title": "Reset your password",
@@ -66,15 +66,43 @@
     }
   },
   "tabs": {
-    "today": "Today",
+    "home": "Home",
     "upcoming": "Upcoming",
     "browse": "Browse",
     "search": "Search"
   },
-  "today": {
-    "title": "Today",
-    "empty": "Nothing due today.",
-    "signOut": "Sign out"
+  "home": {
+    "morning": "Good morning, {{name}}",
+    "afternoon": "Good afternoon, {{name}}",
+    "evening": "Good evening, {{name}}",
+    "forToday": "{{count}} for today",
+    "overdueCount": "{{count}} overdue",
+    "toAccept": "{{count}} to accept",
+    "attention": "Needs attention",
+    "today": "Today",
+    "important": "Important",
+    "comingUp": "Coming up",
+    "seeAll": "See all",
+    "later": "Later",
+    "after": "After {{date}}",
+    "andMore": "{{title}} +{{count}} more",
+    "nothingToday": "Nothing due today",
+    "next": "Next: {{when}}, {{title}}",
+    "nothingPlanned": "Nothing planned",
+    "nothingPlannedBody": "Enjoy the day, or add a task with +.",
+    "overdueSince": "Overdue · {{date}}",
+    "assigned": "Assigned to you",
+    "assignedDue": "Assigned to you · {{date}}",
+    "moveToToday": "Move to today",
+    "accept": "Accept",
+    "reject": "Reject",
+    "inbox": "Inbox",
+    "toSort": "{{count}} to sort"
+  },
+  "taskRow": {
+    "complete": "Complete {{title}}",
+    "steps": "{{done}} of {{total}}",
+    "important": "Important"
   },
   "upcoming": {
     "eyebrow": "Next 7 days, then later",

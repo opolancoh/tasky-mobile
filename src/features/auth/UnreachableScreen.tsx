@@ -29,7 +29,7 @@ export function UnreachableScreen() {
       <View style={{ gap: space.sm, paddingBottom: space.lg }}>
         <Button title={t('common.retry')} onPress={() => retrying.mutate()} loading={retrying.isPending} />
         <View style={{ alignItems: 'center' }}>
-          <Button variant="link" title={t('today.signOut')} onPress={signOut} />
+          <Button variant="link" title={t('common.signOut')} onPress={signOut} />
         </View>
       </View>
     </Screen>

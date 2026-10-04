@@ -3,7 +3,8 @@
     "show": "Mostrar",
     "hide": "Ocultar",
     "retry": "Reintentar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "signOut": "Cerrar sesión"
   },
   "auth": {
     "signIn": {
@@ -41,8 +42,7 @@
       "submit": "Verificar",
       "noCode": "¿No te llegó?",
       "resend": "Reenviar código",
-      "resent": "Enviamos un código nuevo a {{email}}.",
-      "signingIn": "Correo verificado. Iniciando sesión…"
+      "resent": "Enviamos un código nuevo a {{email}}."
     },
     "forgot": {
       "title": "Restablece tu contraseña",
@@ -66,15 +66,43 @@
     }
   },
   "tabs": {
-    "today": "Hoy",
+    "home": "Inicio",
     "upcoming": "Próximo",
     "browse": "Explorar",
     "search": "Buscar"
   },
-  "today": {
-    "title": "Hoy",
-    "empty": "No hay nada para hoy.",
-    "signOut": "Cerrar sesión"
+  "home": {
+    "morning": "Buenos días, {{name}}",
+    "afternoon": "Buenas tardes, {{name}}",
+    "evening": "Buenas noches, {{name}}",
+    "forToday": "{{count}} para hoy",
+    "overdueCount": "{{count}} vencidas",
+    "toAccept": "{{count}} por aceptar",
+    "attention": "Requiere atención",
+    "today": "Hoy",
+    "important": "Importantes",
+    "comingUp": "Próximamente",
+    "seeAll": "Ver todo",
+    "later": "Más adelante",
+    "after": "Después del {{date}}",
+    "andMore": "{{title}} y {{count}} más",
+    "nothingToday": "Nada para hoy",
+    "next": "Lo siguiente: {{when}}, {{title}}",
+    "nothingPlanned": "Nada planeado",
+    "nothingPlannedBody": "Disfruta el día, o añade una tarea con +.",
+    "overdueSince": "Vencida · {{date}}",
+    "assigned": "Asignada a ti",
+    "assignedDue": "Asignada a ti · {{date}}",
+    "moveToToday": "Mover a hoy",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "inbox": "Bandeja de entrada",
+    "toSort": "{{count}} por ordenar"
+  },
+  "taskRow": {
+    "complete": "Completar {{title}}",
+    "steps": "{{done}} de {{total}}",
+    "important": "Importante"
   },
   "upcoming": {
     "eyebrow": "Los próximos 7 días y después",
