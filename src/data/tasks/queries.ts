@@ -15,14 +15,6 @@ export const useCollections = (workspaceId: Id | undefined) =>
 export const useTags = (workspaceId: Id | undefined) =>
   useQuery({ queryKey: taskKeys.tags(workspaceId ?? ''), queryFn: () => tasksApi.tags(workspaceId!), enabled: !!workspaceId });
 
-/** GET /views/today: overdue and due today. */
-export const useTodayView = (workspaceId: Id | undefined) =>
-  useQuery({ queryKey: taskKeys.today(workspaceId ?? ''), queryFn: () => tasksApi.today(workspaceId!), enabled: !!workspaceId });
-
-/** GET /views/upcoming: the next 7 days, then Later. */
-export const useUpcomingView = (workspaceId: Id | undefined) =>
-  useQuery({ queryKey: taskKeys.upcoming(workspaceId ?? ''), queryFn: () => tasksApi.upcoming(workspaceId!), enabled: !!workspaceId });
-
 /**
  * The first page of a task list (D51, D52) in a workspace, e.g. `{ important: true, due: ['upcoming', 'none'], limit: 3 }`;
  * add `collectionId` for one collection. Waits until there is a workspace.

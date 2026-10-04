@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Screen, Text, useTheme } from '@/shared/ui';
 
-/** Upcoming (GET /views/upcoming): the next 7 days, then Later. For now a shell for the tab bar. */
+/** Upcoming (GET /tasks?due=upcoming…, grouped by day; D53): the next 7 days, then Later. For now a shell for the tab bar. */
 export function UpcomingScreen() {
   const { t } = useTranslation();
   const { space } = useTheme();

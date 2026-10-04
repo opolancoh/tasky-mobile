@@ -29,14 +29,14 @@ sequenceDiagram
     participant C as HTTP client
     participant T as Token manager
     participant A as API
-    C->>A: GET /views/today (Bearer token)
+    C->>A: GET /tasks?workspaceId=… (Bearer token)
     A-->>C: 401
     C->>T: refresh()
     T->>A: POST /auth/refresh
     alt new tokens
         A-->>T: 200
         T-->>C: true
-        C->>A: GET /views/today (new token)
+        C->>A: GET /tasks?workspaceId=… (new token)
         A-->>C: 200
     else session refused
         A-->>T: 401 / 403

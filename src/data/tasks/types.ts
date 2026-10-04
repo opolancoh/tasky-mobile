@@ -78,18 +78,6 @@ export interface TaskSummary {
   version: Version;
 }
 
-/** A bounded list (views): whole up to 1,000, `truncated` beyond. */
-export interface TaskList {
-  items: TaskSummary[];
-  truncated: boolean;
-}
-
-/** GET /views/upcoming: the 7 days after today (each listed, even empty), then Later. */
-export interface UpcomingView {
-  days: { date: LocalDate; items: TaskSummary[] }[];
-  later: TaskList;
-}
-
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
 export interface TaskPage {
   items: TaskSummary[];

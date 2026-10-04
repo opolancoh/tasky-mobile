@@ -35,7 +35,7 @@ Coming with its screens: `collaboration/` (notifications).
 - **Keys start with the workspace** for anything workspace-scoped, so switching workspaces never shows another workspace's data.
 - **Writes send `If-Match`** with the version last read; a `412` refetches and says the item changed.
 - **Optimistic only where it should feel instant:** complete, reopen, tick a step, reorder. Everything else waits for the response.
-- **After a write,** invalidate the item, the views it can appear in, and `/views/counts`.
+- **After a write,** invalidate the item and every task list it can appear in (`taskKeys.views`).
 - **Types are written by hand** for now; generated from `/openapi/v1.json` once the contract settles ([M5](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
 
 Details: [06-mobile.md › Data](../../../tasky-docs/design/clients/apps/06-mobile.md#data).

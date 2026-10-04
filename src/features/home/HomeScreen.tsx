@@ -7,7 +7,7 @@ import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { addDays, formatLocalDate, nowIn } from '@/core/dates/localDate';
 import { useAnswerAssignment, useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
-import { useCollections, useTaskList, useTodayView, useUpcomingView } from '@/data/tasks/queries';
+import { useCollections, useTaskList } from '@/data/tasks/queries';
 import type { Collection, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
@@ -29,11 +29,14 @@ type Item =
   | { type: 'signOut'; key: string };
 
 const IMPORTANT_SHOWN = 3;
+const WEEK = 7;
+/** The largest page the API serves; Today and the week fit in one. */
+const LIST_MAX = 200;
 
 /**
  * Home (06-mobile.md, M23): the start of the day. Needs attention (overdue, assignments to answer; hidden
  * when empty), Today, Important (up to 3 not due today), Coming up (next 7 days by day, then Later), Inbox.
- * Data: /views/today, /views/upcoming and the filtered task list (D51).
+ * Data: the task list, GET /tasks (D51–D53); Coming up is grouped by day here.
  */
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -44,8 +47,13 @@ export function HomeScreen() {
   const workspace = useCurrentWorkspace();
   const wid = workspace?.id;
 
-  const todayView = useTodayView(wid);
-  const upcoming = useUpcomingView(wid);
+  const now = me ? nowIn(me.timeZone) : undefined;
+  const today = now?.date;
+  const weekEnd = today ? addDays(today, WEEK) : undefined;
+  // Overdue and today in one list (soonest first); the next 7 days; the first task after them (its total for "+N more").
+  const todayView = useTaskList(wid, { due: ['overdue', 'today'], limit: LIST_MAX });
+  const week = useTaskList(today ? wid : undefined, { due: ['upcoming'], dueTo: weekEnd, limit: LIST_MAX });
+  const later = useTaskList(today ? wid : undefined, { dueFrom: today ? addDays(today, WEEK + 1) : undefined, limit: 1 });
   const pending = useTaskList(wid, { assignee: 'me', assignment: 'pending' });
   const important = useTaskList(wid, { important: true, due: ['upcoming', 'none'], limit: IMPORTANT_SHOWN });
   const collections = useCollections(wid).data;
@@ -57,8 +65,6 @@ export function HomeScreen() {
   const answer = useAnswerAssignment(wid);
   const [refreshing, setRefreshing] = useState(false);
 
-  const now = me ? nowIn(me.timeZone) : undefined;
-  const today = now?.date;
   const labels = useDateLabels(today);
   const collectionOf = (task: TaskSummary): Collection | undefined => collections?.find((c) => c.id === task.collectionId);
 
@@ -66,9 +72,16 @@ export function HomeScreen() {
   const overdue = all.filter((x) => !!x.dueDate && !!today && x.dueDate < today);
   const dueToday = all.filter((x) => x.dueDate === today);
   const asks = pending.data?.items ?? [];
-  const days = (upcoming.data?.days ?? []).filter((d) => d.items.length > 0);
-  const later = upcoming.data?.later.items ?? [];
-  const error = todayView.error ?? upcoming.error ?? complete.error ?? update.error ?? answer.error;
+  // The next 7 days by date (the list comes soonest first), only days with tasks.
+  const days: { date: string; items: TaskSummary[] }[] = [];
+  for (const task of week.data?.items ?? []) {
+    const last = days[days.length - 1];
+    if (last?.date === task.dueDate) last.items.push(task);
+    else days.push({ date: task.dueDate!, items: [task] });
+  }
+  const laterFirst = later.data?.items[0];
+  const laterCount = later.data?.total ?? 0;
+  const error = todayView.error ?? week.error ?? complete.error ?? update.error ?? answer.error;
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
 
@@ -96,13 +109,13 @@ export function HomeScreen() {
     importantItems.forEach((task) => items.push({ type: 'task', key: `i-${task.id}`, task, showDue: true }));
   }
 
-  if (days.length || later.length) {
+  if (days.length || laterFirst) {
     const toUpcoming = () => navigation.navigate('Tabs', { screen: 'Upcoming' });
     items.push({
       type: 'section',
       key: 's-coming',
       title: t('home.comingUp'),
-      count: days.reduce((n, d) => n + d.items.length, 0) + later.length,
+      count: days.reduce((n, d) => n + d.items.length, 0) + laterCount,
       link: { label: t('home.seeAll'), onPress: toUpcoming },
     });
     days.forEach((d) =>
@@ -116,15 +129,15 @@ export function HomeScreen() {
         count: d.items.length,
       }),
     );
-    if (later.length && today)
+    if (laterFirst && weekEnd)
       items.push({
         type: 'day',
         key: 'd-later',
         label: t('home.later'),
-        date: t('home.after', { date: formatLocalDate(addDays(today, 7), i18n.language, { month: 'short', day: 'numeric' }) }),
-        first: later[0]!.title,
-        more: later.length - 1,
-        count: later.length,
+        date: t('home.after', { date: formatLocalDate(weekEnd, i18n.language, { month: 'short', day: 'numeric' }) }),
+        first: laterFirst.title,
+        more: laterCount - 1,
+        count: laterCount,
       });
   }
 
@@ -134,7 +147,7 @@ export function HomeScreen() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([todayView.refetch(), upcoming.refetch(), pending.refetch(), important.refetch(), toSort.refetch()]);
+    await Promise.all([todayView.refetch(), week.refetch(), later.refetch(), pending.refetch(), important.refetch(), toSort.refetch()]);
     setRefreshing(false);
   };
 
