@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { addDays, formatLocalDate, formatLocalTime, nextMonday, nowIn } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
@@ -67,6 +67,7 @@ function QuickAddForm() {
 
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [page, setPage] = useState<Page>('form');
+  const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(EMPTY);   // the draft when a page opened: tapping outside restores it
   const [customDue, setCustomDue] = useState(false);
   const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this Quick add, in the profile's zone
@@ -174,8 +175,8 @@ function QuickAddForm() {
           contentContainerStyle={{ paddingHorizontal: space.lg }}
         >
           <View style={styles.titleRow}>
-            <View style={[styles.circle, { borderColor: colors.ink3 }]} />
             <TextInput
+            ref={titleInput}
             value={draft.title}
             onChangeText={(title) => update({ title })}
             placeholder={t('quickAdd.placeholder')}
@@ -187,8 +188,21 @@ function QuickAddForm() {
             submitBehavior="blurAndSubmit"
             maxLength={taskLimits.titleMax}
             returnKeyType="done"
-            style={[styles.title, { fontFamily: type.title.fontFamily, color: colors.heading }]}
+            style={[styles.title, { fontFamily: type.headline.fontFamily, fontSize: type.headline.fontSize, color: colors.heading }]}
             />
+            {draft.title.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  update({ title: '' });
+                  titleInput.current?.focus();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('quickAdd.clearTitle')}
+                style={styles.clearTitle}
+              >
+                {({ pressed }) => <Feather name="x" size={20} color={pressed ? colors.ink : colors.ink3} />}
+              </Pressable>
+            )}
           </View>
           {create.error && (
             <View style={{ marginBottom: space.md }}>
@@ -327,11 +341,12 @@ function QuickAddForm() {
 
 const styles = StyleSheet.create({
   // Font and size only on inputs: a lineHeight on an iOS TextInput clips descenders.
-  title: { flex: 1, fontSize: 24, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
+  title: { flex: 1, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
   dot: { width: 12, height: 12, borderRadius: 6 },
   end: { alignItems: 'flex-end' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  circle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6 },
+  titleRow: { flexDirection: 'row', alignItems: 'center' },
+  /** 44 pt target, drawn flush with the sheet's edge padding like ListRow's ✕. */
+  clearTitle: { width: 44, height: 44, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
   summary: { flexShrink: 1 },
   /** Full-width hairline under the title, like the one on top of the bar. */
   divider: { height: StyleSheet.hairlineWidth },
