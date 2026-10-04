@@ -2,7 +2,7 @@ import type { Id, LocalDate, Version } from '@/core/types';
 
 export type SortMode = 'manual' | 'dueDate' | 'important' | 'title' | 'created';
 
-/** An item of GET /workspaces/{id}/collections: Inbox first, then the sidebar order. */
+/** An item of GET /collections?workspaceId=: Inbox first, then the sidebar order. */
 export interface Collection {
   id: Id;
   workspaceId: Id;
@@ -18,7 +18,7 @@ export interface Collection {
   openTasks?: number;
 }
 
-/** An item of GET /workspaces/{id}/tags. */
+/** An item of GET /tags?workspaceId=. */
 export interface Tag {
   id: Id;
   workspaceId: Id;
@@ -28,8 +28,11 @@ export interface Tag {
   openTasks?: number;
 }
 
-/** POST /collections/{id}/tasks. `#tags` in the title are applied (created when new) and removed from it. */
+/** POST /tasks. `#tags` in the title are applied (created when new) and removed from it. */
 export interface CreateTaskRequest {
+  /** The collection; or omit it and send `workspaceId` for that workspace's Inbox. */
+  collectionId?: Id;
+  workspaceId?: Id;
   title: string;
   notes?: string;
   dueDate?: LocalDate;
@@ -87,7 +90,7 @@ export interface UpcomingView {
   later: TaskList;
 }
 
-/** GET /workspaces/{id}/tasks (D51): a keyset page; `total` on the first page only. */
+/** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
 export interface TaskPage {
   items: TaskSummary[];
   nextCursor: string | null;
@@ -96,19 +99,21 @@ export interface TaskPage {
 
 export type DueFilter = 'overdue' | 'today' | 'upcoming' | 'none';
 
-/** Filters of GET /workspaces/{id}/tasks; all optional, combined with AND. */
+/** GET /tasks: the scope (one of workspaceId, collectionId) and filters, combined with AND. */
 export interface TaskFilter {
+  workspaceId?: Id;
+  collectionId?: Id;
   status?: TaskStatus;
   important?: boolean;
   due?: DueFilter[];
   dueFrom?: LocalDate;
   dueTo?: LocalDate;
-  collectionId?: Id;
   tagId?: Id;
   /** 'me', 'none' or a user id. */
   assignee?: string;
   assignment?: AssignmentStatus;
-  sort?: 'due' | 'created';
+  /** `collection`: the collection's own order (default with collectionId). */
+  sort?: 'due' | 'created' | 'collection';
   limit?: number;
 }
 

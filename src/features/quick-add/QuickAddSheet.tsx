@@ -42,7 +42,7 @@ const NO_NAMES: string[] = [];
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
  * The form is a summary (Collection, then a row per set field, each with ✕) with a bottom icon bar (M18)
- * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /collections/{id}/tasks) and closes the sheet.
+ * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /tasks) and closes the sheet.
  */
 export function QuickAddSheet() {
   const session = useQuickAdd((s) => s.session);
@@ -97,8 +97,8 @@ function QuickAddForm() {
     const chosen = draft.reminder ?? undefined;
     create.mutate(
       {
-        collectionId: collection.id,
         body: {
+          collectionId: collection.id,
           title: [draft.title.trim(), ...picked].join(' '),
           notes: draft.notes.trim() || undefined,
           isImportant: draft.isImportant || undefined,

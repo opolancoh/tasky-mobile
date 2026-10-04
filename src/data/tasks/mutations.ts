@@ -15,8 +15,8 @@ import type { CreateTaskRequest, TaskSummary, UpdateTaskRequest } from './types'
 export function useCreateTask(workspaceId: Id | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ collectionId, body, withoutReminder }: { collectionId: Id; body: CreateTaskRequest; withoutReminder?: boolean }) => {
-      const task = await tasksApi.createTask(collectionId, body);
+    mutationFn: async ({ body, withoutReminder }: { body: CreateTaskRequest; withoutReminder?: boolean }) => {
+      const task = await tasksApi.createTask(body);
       // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
       if (withoutReminder) await tasksApi.removeReminder(task.id).catch(() => undefined);
       return task;

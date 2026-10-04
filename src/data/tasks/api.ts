@@ -4,21 +4,20 @@ import { http } from '../http';
 import type { Collection, CreateTaskRequest, Tag, Task, TaskFilter, TaskList, TaskPage, UpcomingView, UpdateTaskRequest } from './types';
 
 export const tasksApi = {
-  /** GET /workspaces/{id}/collections: Inbox first, with open counts. */
-  collections: (workspaceId: Id) => http().get<Collection[]>(`/workspaces/${workspaceId}/collections`),
+  /** GET /collections?workspaceId=: Inbox first, with open counts. */
+  collections: (workspaceId: Id) => http().get<Collection[]>('/collections', { query: { workspaceId } }),
 
-  /** GET /workspaces/{id}/tags: with open counts. */
-  tags: (workspaceId: Id) => http().get<Tag[]>(`/workspaces/${workspaceId}/tags`),
+  /** GET /tags?workspaceId=: with open counts. */
+  tags: (workspaceId: Id) => http().get<Tag[]>('/tags', { query: { workspaceId } }),
 
-  /** POST /collections/{id}/tasks: a new task at the bottom of the collection (201). */
-  createTask: (collectionId: Id, body: CreateTaskRequest) => http().post<Task>(`/collections/${collectionId}/tasks`, { body }),
+  /** POST /tasks: a new task at the bottom of `collectionId`, or of `workspaceId`'s Inbox (201). */
+  createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body }),
 
   /** DELETE /tasks/{id}/reminder: removes the caller's reminder (204). */
   removeReminder: (taskId: Id) => http().delete(`/tasks/${taskId}/reminder`),
 
-  /** GET /workspaces/{id}/tasks (D51): filtered, keyset-paged; `total` on the first page. */
-  list: (workspaceId: Id, { due, ...filter }: TaskFilter, cursor?: string) =>
-    http().get<TaskPage>(`/workspaces/${workspaceId}/tasks`, { query: { ...filter, due: due?.join(','), cursor } }),
+  /** GET /tasks (D51, D52): the scope (workspaceId or collectionId) plus filters; keyset-paged, `total` on the first page. */
+  list: ({ due, ...filter }: TaskFilter, cursor?: string) => http().get<TaskPage>('/tasks', { query: { ...filter, due: due?.join(','), cursor } }),
 
   /** GET /views/today: overdue first, then due today (the profile's today). */
   today: (workspaceId: Id) => http().get<TaskList>('/views/today', { query: { workspaceId } }),
