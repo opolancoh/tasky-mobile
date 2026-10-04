@@ -13,6 +13,8 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
 import { DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
+import { NotesPage } from './NotesPage';
+import { QuickAddBar, type BarItem } from './QuickAddBar';
 import { useQuickAdd } from './quickAddStore';
 import { type ReminderAt, type ReminderChoice } from './reminder';
 import { useRecentTags } from './recentTagsStore';
@@ -21,14 +23,14 @@ import { removeTypedTag, sortByRecent, typedTags as typedTagsOf, type TagItem } 
 import { TagsPage } from './TagsPage';
 import { TagsRow } from './TagsRow';
 
-type Page = 'form' | 'collection' | 'tags' | 'due' | 'reminder';
+type Page = 'form' | 'collection' | 'tags' | 'due' | 'reminder' | 'notes';
 
 interface Draft {
   title: string;
   notes: string;
   /** Undefined: the Inbox. */
   collectionId?: string;
-  /** The Important flag (a toggle row on the form, no page). */
+  /** The Important flag (a bar icon toggles it, no page). */
   isImportant: boolean;
   dueDate?: LocalDate;
   reminder: ReminderChoice;
@@ -41,9 +43,8 @@ const NO_NAMES: string[] = [];
 
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
- * Collection, Important, Tags · Due date, Reminder · Notes typed in place (plain text; a separate notes
- * editor comes with formatted notes, see pending-decisions.md). The pickers and Reminder are pages
- * inside the same sheet. Add creates the task (POST /collections/{id}/tasks) and closes the sheet.
+ * The form is a summary (Collection, then a row per set field, each with ✕) with a bottom icon bar (M18)
+ * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /collections/{id}/tasks) and closes the sheet.
  */
 export function QuickAddSheet() {
   const session = useQuickAdd((s) => s.session);
@@ -81,6 +82,7 @@ function QuickAddForm() {
   const tags = [...new Set([...draft.tags, ...typedTags])];
   const titleText = [...typedTags].reduce(removeTypedTag, draft.title).trim();
   const reminder = draft.reminder;
+  const notesText = draft.notes.trim();
   const canAdd = titleText.length > 0 && !!collection && !create.isPending;
 
   const dayText = (date: LocalDate) =>
@@ -135,17 +137,28 @@ function QuickAddForm() {
     tags: t('quickAdd.fields.tags'),
     due: t('quickAdd.fields.dueDate'),
     reminder: t('quickAdd.fields.reminder'),
+    notes: t('quickAdd.fields.notes'),
   };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
     page === 'form'
       ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd, onPress: submit } }
       : { title: titles[page], left: back };
 
+  const barItems: BarItem[] = [
+    { key: 'important', icon: 'flag', label: t('quickAdd.fields.important'), value: draft.isImportant ? t('quickAdd.on') : undefined, danger: true, onPress: () => update({ isImportant: !draft.isImportant }) },
+    { key: 'due', icon: 'calendar', label: t('quickAdd.fields.dueDate'), value: draft.dueDate && dayText(draft.dueDate), onPress: () => setPage('due') },
+    { key: 'reminder', icon: 'bell', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => setPage('reminder') },
+    { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => setPage('tags') },
+    { key: 'notes', icon: 'file-text', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => setPage('notes') },
+  ];
+
   return (
-    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} dismissLabel={t('quickAdd.close')} {...header}>
+    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <QuickAddBar items={barItems} /> : undefined}>
       {page === 'form' && (
-        <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
-          <TextInput
+        <ScrollView keyboardShouldPersistTaps="handled" bounces={false} style={styles.summary}>
+          <View style={styles.titleRow}>
+            <View style={[styles.circle, { borderColor: colors.ink3 }]} />
+            <TextInput
             value={draft.title}
             onChangeText={(title) => update({ title })}
             placeholder={t('quickAdd.placeholder')}
@@ -158,7 +171,8 @@ function QuickAddForm() {
             maxLength={taskLimits.titleMax}
             returnKeyType="done"
             style={[styles.title, { fontFamily: type.title.fontFamily, color: colors.heading }]}
-          />
+            />
+          </View>
           {create.error && (
             <View style={{ marginBottom: space.md }}>
               <Notice>{errorMessage(create.error)}</Notice>
@@ -172,58 +186,53 @@ function QuickAddForm() {
               value={collection ? <Text variant="bodyMedium" color="accent">{collection.name}</Text> : '…'}
               onPress={() => setPage('collection')}
             />
-            <ListRow
-              label={t('quickAdd.fields.important')}
-              icon={<Feather name="flag" size={20} color={draft.isImportant ? colors.danger : colors.ink3} />}
-              selected={draft.isImportant}
-              onPress={() => update({ isImportant: !draft.isImportant })}
-              strong={draft.isImportant}
-            />
-            <ListRow
-              label={t('quickAdd.fields.dueDate')}
-              icon={<Feather name="calendar" size={20} color={draft.dueDate ? colors.accent : colors.ink3} />}
-              value={draft.dueDate ? <Text variant="bodyMedium" color="accent">{dayText(draft.dueDate)}</Text> : t('quickAdd.none')}
-              onPress={() => setPage('due')}
-              onClear={draft.dueDate ? () => update({ dueDate: undefined }) : undefined}
-              clearLabel={t('quickAdd.clearDue')}
-            />
-            <ListRow
-              label={t('quickAdd.fields.reminder')}
-              icon={<Feather name="bell" size={20} color={reminder ? colors.accent : colors.ink3} />}
-              value={
-                reminder ? (
+            {draft.isImportant && (
+              <ListRow
+                label={t('quickAdd.fields.important')}
+                icon={<Feather name="flag" size={20} color={colors.danger} />}
+                strong
+                onPress={() => update({ isImportant: false })}
+                onClear={() => update({ isImportant: false })}
+                clearLabel={t('quickAdd.clearImportant')}
+              />
+            )}
+            {draft.dueDate && (
+              <ListRow
+                label={t('quickAdd.fields.dueDate')}
+                icon={<Feather name="calendar" size={20} color={colors.accent} />}
+                value={<Text variant="bodyMedium" color="accent">{dayText(draft.dueDate)}</Text>}
+                onPress={() => setPage('due')}
+                onClear={() => update({ dueDate: undefined })}
+                clearLabel={t('quickAdd.clearDue')}
+              />
+            )}
+            {reminder && (
+              <ListRow
+                label={t('quickAdd.fields.reminder')}
+                icon={<Feather name="bell" size={20} color={colors.accent} />}
+                value={
                   <View style={styles.end}>
                     <Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>
+                    <Text variant="caption" color="ink2">{t('quickAdd.onlyYou')}</Text>
                   </View>
-                ) : t('quickAdd.none')
-              }
-              onPress={() => setPage('reminder')}
-              onClear={reminder ? () => update({ reminder: null }) : undefined}
-              clearLabel={t('quickAdd.reminder.remove')}
-            />
-            <TagsRow tags={tagItems} onPress={() => setPage('tags')} onClear={tags.length ? clearTags : undefined} />
-          </View>
-
-          {/* Notes, typed in place under its label (plain text for now). */}
-          <View style={[styles.notesRow, { gap: space.md, paddingVertical: space.sm }]}>
-            <View style={styles.notesIcon}>
-              <Feather name="align-left" size={20} color={colors.ink3} />
-            </View>
-            <View style={styles.notesMain}>
-              <Text variant="body">{t('quickAdd.fields.notes')}</Text>
-              <TextInput
-                value={draft.notes}
-                onChangeText={(notes) => update({ notes })}
-                placeholder={t('quickAdd.notesPlaceholder')}
-                placeholderTextColor={colors.ink3}
-                selectionColor={colors.accent}
-                accessibilityLabel={t('quickAdd.fields.notes')}
-                multiline
-                maxLength={taskLimits.notesMax}
-                textAlignVertical="top"
-                style={[styles.notes, { fontFamily: type.subhead.fontFamily, fontSize: type.subhead.fontSize, color: colors.ink2 }]}
+                }
+                onPress={() => setPage('reminder')}
+                onClear={() => update({ reminder: null })}
+                clearLabel={t('quickAdd.reminder.remove')}
               />
-            </View>
+            )}
+            {tags.length > 0 && <TagsRow tags={tagItems} onPress={() => setPage('tags')} onClear={clearTags} />}
+            {notesText.length > 0 && (
+              <ListRow
+                label={t('quickAdd.fields.notes')}
+                icon={<Feather name="file-text" size={20} color={colors.ink3} />}
+                detail={notesText}
+                onPress={() => setPage('notes')}
+                onClear={() => update({ notes: '' })}
+                clearLabel={t('quickAdd.clearNotes')}
+                divider={false}
+              />
+            )}
           </View>
         </ScrollView>
       )}
@@ -242,6 +251,8 @@ function QuickAddForm() {
           ))}
         </ScrollView>
       )}
+
+      {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
 
       {page === 'tags' && <TagsPage tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
 
@@ -296,12 +307,10 @@ function QuickAddForm() {
 
 const styles = StyleSheet.create({
   // Font and size only on inputs: a lineHeight on an iOS TextInput clips descenders.
-  title: { fontSize: 24, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
+  title: { flex: 1, fontSize: 24, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
   dot: { width: 12, height: 12, borderRadius: 6 },
   end: { alignItems: 'flex-end' },
-  notesRow: { flexDirection: 'row', alignItems: 'flex-start' },
-  notesIcon: { width: 24, alignItems: 'center', paddingTop: 1 },
-  notesMain: { flex: 1, gap: 2 },
-  /** About five lines, then it scrolls; no lineHeight (it clips descenders on iOS). */
-  notes: { minHeight: 22, maxHeight: 110, padding: 0 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  circle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6 },
+  summary: { flexShrink: 1 },
 });

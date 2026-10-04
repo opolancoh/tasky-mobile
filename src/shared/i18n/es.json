@@ -107,7 +107,6 @@
       "notes": "Notas"
     },
     "none": "Ninguna",
-    "reminderAt": "{{date}}, 9:00",
     "onlyYou": "Solo lo recibes tú",
     "due": {
       "today": "Hoy",
@@ -127,6 +126,10 @@
     },
     "notesPlaceholder": "Añade notas",
     "clearTags": "Quitar etiquetas",
+    "clearImportant": "Quitar Importante",
+    "clearNotes": "Quitar notas",
+    "on": "activado",
+    "toolbar": "Opciones rápidas",
     "clearDue": "Quitar la fecha límite",
     "reminder": {
       "laterToday": "Hoy más tarde",

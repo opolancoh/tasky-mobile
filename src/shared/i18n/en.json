@@ -107,7 +107,6 @@
       "notes": "Notes"
     },
     "none": "None",
-    "reminderAt": "{{date}}, 9:00",
     "onlyYou": "Only you get it",
     "due": {
       "today": "Today",
@@ -127,6 +126,10 @@
     },
     "notesPlaceholder": "Add notes",
     "clearTags": "Remove tags",
+    "clearImportant": "Remove Important",
+    "clearNotes": "Remove notes",
+    "on": "on",
+    "toolbar": "Quick options",
     "clearDue": "Remove due date",
     "reminder": {
       "laterToday": "Later today",

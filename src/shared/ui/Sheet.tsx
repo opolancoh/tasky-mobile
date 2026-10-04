@@ -28,6 +28,8 @@ export interface SheetProps {
   left?: SheetAction;
   right?: SheetAction;
   children: ReactNode;
+  /** Full-width strip under the content on the sheet's own background, kept above the keyboard (e.g. an icon bar). */
+  footer?: ReactNode;
 }
 
 const DURATION = 220;
@@ -37,7 +39,7 @@ const DURATION = 220;
  * optional header (title, left and right actions), and the content. It rises above the keyboard.
  * `visible` false plays the closing animation before the sheet leaves.
  */
-export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, children }: SheetProps) {
+export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, children, footer }: SheetProps) {
   const { colors, radius, space } = useTheme();
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
@@ -72,7 +74,7 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
               borderTopLeftRadius: radius.xl,
               borderTopRightRadius: radius.xl,
               paddingHorizontal: space.lg,
-              paddingBottom: keyboard > 0 ? space.lg : Math.max(insets.bottom, space.lg),
+              paddingBottom: footer ? 0 : keyboard > 0 ? space.lg : Math.max(insets.bottom, space.lg),
               maxHeight: offscreen - keyboard - insets.top - space.sm,   // never taller than the room above the keyboard; the content scrolls
               transform: [{ translateY }],
             },
@@ -89,6 +91,7 @@ export function Sheet({ visible, onDismiss, dismissLabel, title, left, right, ch
             </View>
           )}
           {children}
+          {footer && <View style={{ marginHorizontal: -space.lg, paddingBottom: keyboard > 0 ? 0 : insets.bottom }}>{footer}</View>}
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
