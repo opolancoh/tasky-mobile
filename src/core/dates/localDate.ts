@@ -14,9 +14,15 @@ export function todayIn(timeZone: string, now: Date = new Date()): LocalDate {
   return nowIn(timeZone, now).date;
 }
 
+/**
+ * Not for display: the locale used to read a date's numbers out of Intl. 'en-CA' gives Latin digits,
+ * two-digit months and days, and a 24-hour clock (with hourCycle 'h23'); parts are read by type, not position.
+ */
+const PARTS_LOCALE = 'en-CA';
+
 /** The date and wall-clock time in an IANA time zone, e.g. { date: "2026-09-28", time: "17:05" }. */
 export function nowIn(timeZone: string, now: Date = new Date()): { date: LocalDate; time: LocalTime } {
-  const parts = formatter('en-CA', {
+  const parts = formatter(PARTS_LOCALE, {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
   }).formatToParts(now);
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';

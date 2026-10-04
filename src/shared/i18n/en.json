@@ -106,8 +106,6 @@
       "tags": "Tags",
       "notes": "Notes"
     },
-    "none": "None",
-    "onlyYou": "Only you get it",
     "due": {
       "today": "Today",
       "tomorrow": "Tomorrow",
@@ -115,33 +113,41 @@
       "none": "No date",
       "custom": "Pick a date"
     },
-    "tags": {
-      "search": "Search or create a tag",
-      "clearSearch": "Clear search",
-      "create": "Create \"#{{name}}\"",
-      "selected": "Selected · {{count}}",
-      "all": "All tags",
-      "empty": "No tags yet. Type a name to create one.",
-      "noMatch": "No tags match."
-    },
     "notesPlaceholder": "Add notes",
-    "clearTags": "Remove tags",
     "clearTitle": "Clear title",
     "clearImportant": "Remove Important",
     "clearNotes": "Remove notes",
     "on": "on",
     "toolbar": "Quick options",
-    "clearDue": "Remove due date",
-    "reminder": {
-      "laterToday": "Later today",
-      "tomorrow": "Tomorrow",
-      "thisWeekend": "This weekend",
-      "nextWeek": "Next week",
-      "custom": "Custom",
-      "date": "Date",
-      "time": "Time",
-      "remove": "Remove reminder"
-    }
+    "clearDue": "Remove due date"
+  },
+  "dates": {
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
+  "tags": {
+    "title": "Tags",
+    "none": "None",
+    "clear": "Remove tags",
+    "search": "Search or create a tag",
+    "clearSearch": "Clear search",
+    "create": "Create \"#{{name}}\"",
+    "selected": "Selected · {{count}}",
+    "all": "All tags",
+    "empty": "No tags yet. Type a name to create one.",
+    "noMatch": "No tags match."
+  },
+  "reminders": {
+    "title": "Reminder",
+    "onlyYou": "Only you get it",
+    "laterToday": "Later today",
+    "tomorrow": "Tomorrow",
+    "thisWeekend": "This weekend",
+    "nextWeek": "Next week",
+    "custom": "Custom",
+    "date": "Date",
+    "time": "Time",
+    "remove": "Remove reminder"
   },
   "wheels": {
     "day": "Day",

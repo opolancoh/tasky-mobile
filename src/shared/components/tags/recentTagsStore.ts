@@ -12,7 +12,7 @@ interface RecentTagsState {
   used(workspaceId: Id, names: string[]): void;
 }
 
-/** The last 10 tags used in Quick add, kept on this device (M16). Names are lower case. */
+/** The last 10 tags used on new tasks, kept on this device (M16); TagPicker lists them first. Names are lower case. */
 export const useRecentTags = create<RecentTagsState>()(
   persist(
     (set, get) => ({

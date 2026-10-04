@@ -13,10 +13,12 @@ src/core/
 ├── auth/
 │   └── tokens.ts         Access and refresh tokens, one refresh at a time
 ├── dates/
-│   └── localDate.ts      Today in a time zone; formatting a date
+│   ├── localDate.ts      Today in a time zone; formatting a date or time (cached formatters)
+│   └── reminders.ts      A reminder (date + time), the quick presets
 └── validation/
     ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled
-    └── limits.ts         The API's field limits
+    ├── limits.ts         The API's field limits
+    └── tags.ts           The API's #tag rule: typed tags in a title, valid names
 ```
 
 ## http/
@@ -40,11 +42,15 @@ src/core/
 
 ## dates/localDate.ts
 
-Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives today in the **profile's** time zone; `formatLocalDate` formats one for display without shifting the day.
+Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives today in the **profile's** time zone; `formatLocalDate` and `formatLocalTime` format for display without shifting the day. Formatters are cached per locale and options: building an `Intl.DateTimeFormat` costs milliseconds in Hermes ([performance](../performance.md)). `nowIn` reads numbers through a fixed, non-display locale (`PARTS_LOCALE`, `en-CA`: Latin digits, 24-hour).
+
+## dates/reminders.ts
+
+`ReminderAt` (local date and time), `sameReminder`, and `reminderPresets(now)`: Later today 18:00 (until 17:00), Tomorrow, This weekend, Next week, all 9:00 ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
 
 ## validation/
 
-Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), and the API's limits (`emailMax` 254, `passwordMin` 8…). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../tasky-docs/design/clients/apps/06-mobile.md#validation)).
+Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), the API's limits (`emailMax` 254, `passwordMin` 8…), and the #tag rule (`tags.ts` ↔ `TagNames.cs`: `typedTags`, `removeTypedTag`, `newTagName`). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../tasky-docs/design/clients/apps/06-mobile.md#validation)).
 
 ---
 

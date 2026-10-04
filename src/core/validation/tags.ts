@@ -1,6 +1,7 @@
-import type { Tag } from '@/data/tasks/types';
-
-/** The API's tag rule (TagNames.cs): 1–30 letters, digits, _ or -. In a title, a # at the start or after a space, then the name up to the next space. */
+/**
+ * The API's tag rule (TagNames.cs; change both together): a name is 1–30 letters, digits, _ or -.
+ * In a title, a # at the start or after a space, then the name up to the next space.
+ */
 const NAME = '[\\p{L}\\p{M}\\p{N}_-]';
 export const TAG_NAME_MAX = 30;
 export const TAG = new RegExp(`(?<=^|\\s)#(${NAME}{1,${TAG_NAME_MAX}})(?=\\s|$)`, 'gu');
@@ -20,24 +21,4 @@ export const removeTypedTag = (title: string, name: string) =>
 export function newTagName(query: string): string | undefined {
   const name = query.trim().replace(/^#/, '').toLowerCase();
   return VALID_NAME.test(name) ? name : undefined;
-}
-
-/** Tags the page shows: the workspace's, plus picked names the workspace doesn't have yet (new ones). */
-export interface TagItem {
-  name: string;
-  color: string | null;
-}
-
-/** One collator for every sort: String.localeCompare builds one per call in Hermes. */
-const collator = new Intl.Collator();
-
-/** Last used first (most recent at the front of `recent`), then the rest A–Z. */
-export function sortByRecent(tags: Tag[], recent: string[]): TagItem[] {
-  const rank = (name: string) => {
-    const i = recent.indexOf(name);
-    return i < 0 ? Infinity : i;
-  };
-  return tags
-    .map((g) => ({ name: g.name.toLowerCase(), color: g.color }))
-    .sort((a, b) => rank(a.name) - rank(b.name) || collator.compare(a.name, b.name));
 }

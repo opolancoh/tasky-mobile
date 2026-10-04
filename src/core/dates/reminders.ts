@@ -1,5 +1,6 @@
-import { addDays, nextMonday, nextWeekday } from '@/core/dates/localDate';
-import type { LocalDate, LocalTime } from '@/core/types';
+import type { LocalDate, LocalTime } from '../types';
+
+import { addDays, nextMonday, nextWeekday } from './localDate';
 
 /** The caller's reminder on a task: a local date and time, fired wherever the person is. */
 export interface ReminderAt {

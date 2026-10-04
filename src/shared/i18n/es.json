@@ -106,8 +106,6 @@
       "tags": "Etiquetas",
       "notes": "Notas"
     },
-    "none": "Ninguna",
-    "onlyYou": "Solo lo recibes tú",
     "due": {
       "today": "Hoy",
       "tomorrow": "Mañana",
@@ -115,33 +113,41 @@
       "none": "Sin fecha",
       "custom": "Elegir una fecha"
     },
-    "tags": {
-      "search": "Busca o crea una etiqueta",
-      "clearSearch": "Borrar búsqueda",
-      "create": "Crear \"#{{name}}\"",
-      "selected": "Seleccionadas · {{count}}",
-      "all": "Todas las etiquetas",
-      "empty": "Aún no hay etiquetas. Escribe un nombre para crear una.",
-      "noMatch": "Ninguna etiqueta coincide."
-    },
     "notesPlaceholder": "Añade notas",
-    "clearTags": "Quitar etiquetas",
     "clearTitle": "Borrar título",
     "clearImportant": "Quitar Importante",
     "clearNotes": "Quitar notas",
     "on": "activado",
     "toolbar": "Opciones rápidas",
-    "clearDue": "Quitar la fecha límite",
-    "reminder": {
-      "laterToday": "Hoy más tarde",
-      "tomorrow": "Mañana",
-      "thisWeekend": "Este fin de semana",
-      "nextWeek": "La próxima semana",
-      "custom": "Personalizado",
-      "date": "Fecha",
-      "time": "Hora",
-      "remove": "Quitar recordatorio"
-    }
+    "clearDue": "Quitar la fecha límite"
+  },
+  "dates": {
+    "today": "Hoy",
+    "tomorrow": "Mañana"
+  },
+  "tags": {
+    "title": "Etiquetas",
+    "none": "Ninguna",
+    "clear": "Quitar etiquetas",
+    "search": "Busca o crea una etiqueta",
+    "clearSearch": "Borrar búsqueda",
+    "create": "Crear \"#{{name}}\"",
+    "selected": "Seleccionadas · {{count}}",
+    "all": "Todas las etiquetas",
+    "empty": "Aún no hay etiquetas. Escribe un nombre para crear una.",
+    "noMatch": "Ninguna etiqueta coincide."
+  },
+  "reminders": {
+    "title": "Recordatorio",
+    "onlyYou": "Solo lo recibes tú",
+    "laterToday": "Hoy más tarde",
+    "tomorrow": "Mañana",
+    "thisWeekend": "Este fin de semana",
+    "nextWeek": "La próxima semana",
+    "custom": "Personalizado",
+    "date": "Fecha",
+    "time": "Hora",
+    "remove": "Quitar recordatorio"
   },
   "wheels": {
     "day": "Día",

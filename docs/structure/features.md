@@ -18,7 +18,7 @@ src/features/
 ├── upcoming/       UpcomingScreen.tsx
 ├── browse/         BrowseScreen.tsx
 ├── search/         SearchScreen.tsx
-└── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx  ReminderPage.tsx  reminder.ts  TagsPage.tsx  TagsRow.tsx  tags.ts  recentTagsStore.ts  quickAddStore.ts
+└── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx  quickAddStore.ts
 ```
 
 ## Areas
@@ -28,7 +28,7 @@ src/features/
 | `auth` | Sign in, Sign up, Verify code, Forgot password, Reset code, New password, Can't reach Tasky | Built ([Auth docs](../auth/README.md)) |
 | `today` | Today | Shell: the date and Sign out |
 | `upcoming`, `browse`, `search` | One tab each | Shells, waiting for their designs |
-| `quick-add` | Quick add: the new-task form in a sheet, from the + | Built: title; a summary of Collection plus a row per set field (Important, due date, reminder, tags, notes; each with ✕) and a bottom icon bar, style E, that sets them (`QuickAddBar`, Sheet `footer` slot); due date and reminder pages (quick choices or a custom date and time); Notes page (`NotesPage`); tags page with search, create and last-used order ([M14, M15, M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `quick-add` | Quick add: the new-task form in a sheet, from the + | Built: title; a summary of Collection plus a row per set field (Important, due date, reminder, tags, notes; each with ✕) and a bottom icon bar, style E, that sets them (`QuickAddBar`, Sheet `footer` slot); due date and reminder pages (quick choices or a custom date and time); Notes page (`NotesPage`); the Tags and Reminder pages are the shared `TagPicker` and `ReminderPicker`; tags page with search, create and last-used order ([M14, M15, M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 
 Planned (06-mobile.md): `task`, `assignments`, `workspace`, `notifications`, `settings`.
 

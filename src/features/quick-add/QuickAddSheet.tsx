@@ -1,9 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { addDays, formatLocalDate, formatLocalTime, nextMonday, nowIn } from '@/core/dates/localDate';
+import { addDays, formatLocalDate, nextMonday, nowIn } from '@/core/dates/localDate';
+import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
 import { useCreateTask } from '@/data/tasks/mutations';
@@ -11,17 +12,14 @@ import { useCollections, useTags } from '@/data/tasks/queries';
 import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
-import { DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
+import { removeTypedTag, typedTags as typedTagsOf } from '@/core/validation/tags';
+import { CollectionIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { useDateLabels } from '@/shared/hooks/useDateLabels';
+import { ClearButton, DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
 import { useQuickAdd } from './quickAddStore';
-import { type ReminderAt, type ReminderChoice } from './reminder';
-import { useRecentTags } from './recentTagsStore';
-import { ReminderPage } from './ReminderPage';
-import { removeTypedTag, sortByRecent, typedTags as typedTagsOf, type TagItem } from './tags';
-import { TagsPage } from './TagsPage';
-import { TagsRow } from './TagsRow';
 
 type Page = 'form' | 'collection' | 'tags' | 'due' | 'reminder' | 'notes';
 
@@ -87,11 +85,9 @@ function QuickAddForm() {
   const notesText = draft.notes.trim();
   const canAdd = titleText.length > 0 && !!collection && !create.isPending;
 
-  const dayText = (date: LocalDate) =>
-    date === today ? t('quickAdd.due.today')
-    : today && date === addDays(today, 1) ? t('quickAdd.due.tomorrow')
-    : formatLocalDate(date, locale, { weekday: 'short', month: 'short', day: 'numeric' });
-  const reminderText = (r: ReminderAt) => `${formatLocalDate(r.date, locale, { weekday: 'short' })}, ${formatLocalTime(r.time, locale)}`;
+  const labels = useDateLabels(today);
+  const dayText = labels.day;
+  const reminderText = labels.reminder;
   const sortedTags = sortByRecent(workspaceTags, recent);
   const tagItems: TagItem[] = tags.map((n) => sortedTags.find((g) => g.name === n) ?? { name: n, color: null });
 
@@ -191,17 +187,15 @@ function QuickAddForm() {
             style={[styles.title, { fontFamily: type.headline.fontFamily, fontSize: type.headline.fontSize, color: colors.heading }]}
             />
             {draft.title.length > 0 && (
-              <Pressable
+              <ClearButton
+                size={20}
                 onPress={() => {
                   update({ title: '' });
                   titleInput.current?.focus();
                 }}
-                accessibilityRole="button"
                 accessibilityLabel={t('quickAdd.clearTitle')}
                 style={styles.clearTitle}
-              >
-                {({ pressed }) => <Feather name="x" size={20} color={pressed ? colors.ink : colors.ink3} />}
-              </Pressable>
+              />
             )}
           </View>
           {create.error && (
@@ -215,7 +209,7 @@ function QuickAddForm() {
           <View>
             <ListRow
               label={t('quickAdd.fields.collection')}
-              icon={collection?.isInbox ? <Feather name="inbox" size={20} color={colors.accent} /> : <View style={[styles.dot, { backgroundColor: collection?.color ?? colors.ink3 }]} />}
+              icon={<CollectionIcon collection={collection} />}
               value={collection ? <Text variant="bodyMedium" color="accent">{collection.name}</Text> : '…'}
               onPress={() => openPage('collection')}
             />
@@ -246,12 +240,12 @@ function QuickAddForm() {
                 value={
                   <View style={styles.end}>
                     <Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>
-                    <Text variant="caption" color="ink2">{t('quickAdd.onlyYou')}</Text>
+                    <Text variant="caption" color="ink2">{t('reminders.onlyYou')}</Text>
                   </View>
                 }
                 onPress={() => openPage('reminder')}
                 onClear={() => update({ reminder: null })}
-                clearLabel={t('quickAdd.reminder.remove')}
+                clearLabel={t('reminders.remove')}
               />
             )}
             {tags.length > 0 && <TagsRow tags={tagItems} onPress={() => openPage('tags')} onClear={clearTags} />}
@@ -276,7 +270,7 @@ function QuickAddForm() {
             <ListRow
               key={c.id}
               label={c.name}
-              icon={c.isInbox ? <Feather name="inbox" size={20} color={colors.ink3} /> : <View style={[styles.dot, { backgroundColor: c.color }]} />}
+              icon={<CollectionIcon collection={c} tint="ink3" />}
               selected={c.id === collection?.id}
               onPress={() => pick({ collectionId: c.id })}
               divider={i < collections.length - 1}
@@ -287,7 +281,7 @@ function QuickAddForm() {
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
 
-      {page === 'tags' && <TagsPage tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
+      {page === 'tags' && <TagPicker tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
         <ScrollView bounces={false}>
@@ -327,7 +321,7 @@ function QuickAddForm() {
       )}
 
       {page === 'reminder' && now && (
-        <ReminderPage
+        <ReminderPicker
           value={reminder}
           onChange={(at) => update({ reminder: at })}
           onPick={(at) => pick({ reminder: at })}
@@ -342,11 +336,10 @@ function QuickAddForm() {
 const styles = StyleSheet.create({
   // Font and size only on inputs: a lineHeight on an iOS TextInput clips descenders.
   title: { flex: 1, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
-  dot: { width: 12, height: 12, borderRadius: 6 },
   end: { alignItems: 'flex-end' },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
-  /** 44 pt target, drawn flush with the sheet's edge padding like ListRow's ✕. */
-  clearTitle: { width: 44, height: 44, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
+  /** ClearButton's negative vertical margin is for rows; the title keeps its own height. */
+  clearTitle: { marginVertical: 0 },
   summary: { flexShrink: 1 },
   /** Full-width hairline under the title, like the one on top of the bar. */
   divider: { height: StyleSheet.hairlineWidth },

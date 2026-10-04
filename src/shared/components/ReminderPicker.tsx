@@ -5,11 +5,10 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, formatLocalTime } from '@/core/dates/localDate';
 import type { LocalDate, LocalTime } from '@/core/types';
-import { DateWheel, ListRow, Text, TimeWheel, useTheme } from '@/shared/ui';
+import { reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
+import { DateWheel, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
 
-import { reminderPresets, sameReminder, type ReminderAt } from './reminder';
-
-interface ReminderPageProps {
+interface ReminderPickerProps {
   /** The current reminder, or null for none; changes are reported as they happen. */
   value: ReminderAt | null;
   onChange(value: ReminderAt): void;
@@ -21,10 +20,10 @@ interface ReminderPageProps {
 }
 
 /**
- * Reminder, a page of the Quick add sheet: four quick choices (a tap returns to the form), then a custom date and time with the
+ * Picks the caller's reminder on a task (Quick add's Reminder page, task detail): four quick choices (`onPick`), then a custom date and time with the
  * shared DateWheel and TimeWheel (one open at a time), and Remove reminder.
  */
-export function ReminderPage({ value, onChange, onPick, onRemove, now }: ReminderPageProps) {
+export function ReminderPicker({ value, onChange, onPick, onRemove, now }: ReminderPickerProps) {
   const { t, i18n } = useTranslation();
   const { colors, radius, space } = useTheme();
   const [open, setOpen] = useState<'date' | 'time' | null>(null);
@@ -41,7 +40,7 @@ export function ReminderPage({ value, onChange, onPick, onRemove, now }: Reminde
         {presets.map(({ id, at }) => (
           <PresetCard
             key={id}
-            label={t(`quickAdd.reminder.${id}`)}
+            label={t(`reminders.${id}`)}
             detail={id === 'laterToday' ? formatLocalTime(at.time, locale) : `${formatLocalDate(at.date, locale, { weekday: 'short' })}, ${formatLocalTime(at.time, locale)}`}
             selected={sameReminder(at, value)}
             onPress={() => onPick(at)}
@@ -49,11 +48,9 @@ export function ReminderPage({ value, onChange, onPick, onRemove, now }: Reminde
         ))}
       </View>
 
-      <Text variant="label" color="ink3" style={{ marginTop: space.xxl, marginBottom: space.xs, letterSpacing: 0.6 }}>
-        {t('quickAdd.reminder.custom').toUpperCase()}
-      </Text>
+      <SectionLabel style={{ marginTop: space.xxl }}>{t('reminders.custom')}</SectionLabel>
       <ListRow
-        label={t('quickAdd.reminder.date')}
+        label={t('reminders.date')}
         icon={<Feather name="calendar" size={20} color={colors.ink3} />}
         value={<Text variant="body" color={valueColor}>{formatLocalDate(shown.date, locale, { weekday: 'short', month: 'short', day: 'numeric' })}</Text>}
         onPress={() => toggle('date')}
@@ -69,7 +66,7 @@ export function ReminderPage({ value, onChange, onPick, onRemove, now }: Reminde
         />
       )}
       <ListRow
-        label={t('quickAdd.reminder.time')}
+        label={t('reminders.time')}
         icon={<Feather name="clock" size={20} color={colors.ink3} />}
         value={<Text variant="body" color={valueColor}>{formatLocalTime(shown.time, locale)}</Text>}
         onPress={() => toggle('time')}
@@ -87,7 +84,7 @@ export function ReminderPage({ value, onChange, onPick, onRemove, now }: Reminde
       <Pressable onPress={onRemove} accessibilityRole="button" style={[styles.remove, { marginTop: space.xxl, borderRadius: radius.md }]}>
         {({ pressed }) => (
           <Text variant="bodyMedium" color="danger" style={{ opacity: pressed ? 0.6 : 1 }}>
-            {t('quickAdd.reminder.remove')}
+            {t('reminders.remove')}
           </Text>
         )}
       </Pressable>

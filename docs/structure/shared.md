@@ -8,6 +8,7 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
+│   ├── ClearButton  SectionLabel  ColorDot  SearchField
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
@@ -16,13 +17,18 @@ src/shared/
 │   ├── sessionStore.ts    App-wide state (Zustand)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 │   └── useCurrentWorkspace.ts
+├── components/            Domain pieces several features use; import from '@/shared/components'
+│   ├── CollectionIcon.tsx   ReminderPicker.tsx
+│   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
+├── hooks/
+│   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
 └── i18n/
     ├── i18n.ts            i18next setup, device language and time zone
     ├── en.json  es.json   Every string
     └── errors.ts          errorMessage(), fieldErrors()
 ```
 
-Planned: `components/` (task rows, avatars and other domain pieces used by several features) and `hooks/`.
+Before writing something new in a feature, look here and in `core/`. When a second feature needs a piece, move it here (strings to a neutral namespace such as `tags.*`, `reminders.*`, `dates.*`).
 
 ## ui/
 
@@ -40,11 +46,32 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Sheet` | A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
+| `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
+| `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM") |
+| `ColorDot` | A collection or tag color swatch; ink3 when none |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |
 | `TimeWheel` | Hour, minute (15-minute steps by default), AM/PM when the locale uses it; value always 24-hour `"09:00"` |
 
 **Colors live only in `palettes/`** ([M10](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): `azure.json` (light and dark), checked against `PaletteColors` in `types.ts`, which also lists the contrast minimums. `useTheme()` gives the active palette, light or dark from the OS. Lint rejects color literals anywhere else.
+
+## components/
+
+May use `data` types and `shared/ui`; knows tasks, tags, collections.
+
+| Piece | Purpose |
+|---|---|
+| `CollectionIcon` | The Inbox tray or the collection's color dot |
+| `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
+| `ReminderPicker` | Four quick choices, a custom date and time (wheels), Remove ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per workspace, on this device |
+
+## hooks/
+
+| Hook | Purpose |
+|---|---|
+| `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM", in the app's language |
 
 ## session/
 

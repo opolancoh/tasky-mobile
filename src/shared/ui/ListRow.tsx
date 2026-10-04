@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ClearButton } from './ClearButton';
 import { Text } from './Text';
 import { useTheme } from './theme';
 
@@ -55,9 +56,7 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
         )}
       </View>
       {onClear ? (
-        <Pressable onPress={onClear} accessibilityRole="button" accessibilityLabel={clearLabel} hitSlop={12} style={styles.clear}>
-          {({ pressed }) => <Feather name="x" size={18} color={pressed ? colors.ink : colors.ink3} />}
-        </Pressable>
+        <ClearButton onPress={onClear} accessibilityLabel={clearLabel ?? ''} />
       ) : selected !== undefined ? (
         <View style={styles.trailing}>{selected && <Feather name="check" size={20} color={colors.accent} />}</View>
       ) : (
@@ -87,6 +86,4 @@ const styles = StyleSheet.create({
   inline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   value: { flexShrink: 1, alignItems: 'flex-end' },
   trailing: { width: 20, alignItems: 'center' },
-  /** 44 pt wide, but drawn like the 20 pt chevron it replaces. */
-  clear: { width: 44, height: 44, marginVertical: -12, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
 });

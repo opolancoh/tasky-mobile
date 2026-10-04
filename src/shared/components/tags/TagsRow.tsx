@@ -2,19 +2,19 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Text, useTheme } from '@/shared/ui';
+import { ClearButton, ColorDot, Text, useTheme } from '@/shared/ui';
 
-import type { TagItem } from './tags';
+import type { TagItem } from './tagItems';
 
 /**
- * The form's Tags row: the tag icon, the picked tags as chips (tinted with each tag's color, wrapping
+ * A form's Tags row (Quick add, task detail): the tag icon, the picked tags as chips (tinted with each tag's color, wrapping
  * onto more lines), a ✕ that clears them (a chevron when none). "None" when empty.
  */
 export function TagsRow({ tags, onPress, onClear, divider = true }: { tags: TagItem[]; onPress(): void; onClear?(): void; divider?: boolean }) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${t('quickAdd.fields.tags')}: ${tags.length ? tags.map((g) => g.name).join(', ') : t('quickAdd.none')}`}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${t('tags.title')}: ${tags.length ? tags.map((g) => g.name).join(', ') : t('tags.none')}`}>
       {({ pressed }) => (
         <View
           style={[
@@ -30,21 +30,19 @@ export function TagsRow({ tags, onPress, onClear, divider = true }: { tags: TagI
             {tags.length ? (
               tags.map((g) => (
                 <View key={g.name} style={[styles.chip, { backgroundColor: `${g.color ?? colors.ink3}26`, borderRadius: radius.pill, gap: space.xs + 2 }]}>
-                  <View style={[styles.dot, { backgroundColor: g.color ?? colors.ink3 }]} />
+                  <ColorDot color={g.color} size={8} />
                   <Text variant="subhead" color="ink" numberOfLines={1} style={styles.name}>
                     {g.name}
                   </Text>
                 </View>
               ))
             ) : (
-              <Text variant="body">{t('quickAdd.fields.tags')}</Text>
+              <Text variant="body">{t('tags.title')}</Text>
             )}
           </View>
-          {tags.length === 0 && <Text variant="body" color="ink2">{t('quickAdd.none')}</Text>}
+          {tags.length === 0 && <Text variant="body" color="ink2">{t('tags.none')}</Text>}
           {onClear ? (
-            <Pressable onPress={onClear} accessibilityRole="button" accessibilityLabel={t('quickAdd.clearTags')} hitSlop={12} style={styles.clear}>
-              {({ pressed }) => <Feather name="x" size={18} color={pressed ? colors.ink : colors.ink3} />}
-            </Pressable>
+            <ClearButton onPress={onClear} accessibilityLabel={t('tags.clear')} />
           ) : (
             <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
           )}
@@ -59,9 +57,6 @@ const styles = StyleSheet.create({
   icon: { width: 24, alignItems: 'center' },
   main: { flex: 1, minWidth: 0, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   chip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, maxWidth: '100%' },
-  dot: { width: 8, height: 8, borderRadius: 4 },
   name: { flexShrink: 1 },
-  /** 44 pt wide, drawn like the 20 pt chevron it replaces (same as ListRow's ✕). */
-  clear: { width: 44, height: 44, marginVertical: -12, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
   trailing: { width: 20, textAlign: 'center' },
 });
