@@ -20,9 +20,10 @@ import { Button, Notice, radius, Screen, Text, useTheme } from '@/shared/ui';
 /** Home's rows, one list (FlashList) so a long Today stays fast (docs/performance.md). */
 type Item =
   | { type: 'header'; key: string }
-  | { type: 'section'; key: string; title: string; count?: number; link?: { label: string; onPress(): void } }
+  | { type: 'section'; key: string; title: string; count?: number; flag?: boolean; link?: { label: string; onPress(): void } }
   | { type: 'attention'; key: string; task: TaskSummary; kind: 'overdue' | 'pending'; first: boolean; last: boolean }
   | { type: 'task'; key: string; task: TaskSummary; showDue: boolean }
+  | { type: 'important'; key: string; task: TaskSummary; first: boolean; last: boolean }
   | { type: 'calm'; key: string; icon: ComponentProps<typeof Feather>['name']; title: string; body: string }
   | { type: 'day'; key: string; label: string; date: string; first: string; more: number; count: number }
   | { type: 'inbox'; key: string; count: number }
@@ -34,8 +35,8 @@ const WEEK = 7;
 const LIST_MAX = 200;
 
 /**
- * Home (06-mobile.md, M23): the start of the day. Needs attention (overdue, assignments to answer; hidden
- * when empty), Today, Important (up to 3 not due today), Coming up (next 7 days by day, then Later), Inbox.
+ * Home (06-mobile.md, M23, M24): the start of the day. Needs attention (overdue, assignments to answer; hidden
+ * when empty), Important (up to 3 not due today, on a soft red card), Today, Coming up (next 7 days by day, then Later), Inbox.
  * Data: the task list, GET /tasks (D51–D53); Coming up is grouped by day here.
  */
 export function HomeScreen() {
@@ -92,6 +93,13 @@ export function HomeScreen() {
     attention.forEach(({ task, kind }, i) => items.push({ type: 'attention', key: `a-${task.id}`, task, kind, first: i === 0, last: i === attention.length - 1 }));
   }
 
+  // Important (M23, M24): right after Needs attention, its rows on a soft red card so they're found at a glance.
+  const importantItems = important.data?.items ?? [];
+  if (importantItems.length) {
+    items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length, flag: true });
+    importantItems.forEach((task, i) => items.push({ type: 'important', key: `i-${task.id}`, task, first: i === 0, last: i === importantItems.length - 1 }));
+  }
+
   items.push({ type: 'section', key: 's-today', title: t('home.today'), count: dueToday.length });
   if (dueToday.length) dueToday.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, showDue: false }));
   else if (todayView.data) {
@@ -101,12 +109,6 @@ export function HomeScreen() {
         ? { type: 'calm', key: 'calm', icon: 'calendar', title: t('home.nothingToday'), body: t('home.next', { when: labels.day(next.dueDate!), title: next.title }) }
         : { type: 'calm', key: 'calm', icon: 'sun', title: t('home.nothingPlanned'), body: t('home.nothingPlannedBody') },
     );
-  }
-
-  const importantItems = important.data?.items ?? [];
-  if (importantItems.length) {
-    items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length });
-    importantItems.forEach((task) => items.push({ type: 'task', key: `i-${task.id}`, task, showDue: true }));
   }
 
   if (days.length || laterFirst) {
@@ -185,6 +187,7 @@ export function HomeScreen() {
       case 'section':
         return (
           <View style={[styles.sectionHead, { marginTop: space.xl, marginBottom: space.xs, gap: space.sm }]}>
+            {item.flag && <Feather name="flag" size={14} color={colors.danger} />}
             <Text variant="label" color="ink2" accessibilityRole="header">
               {item.title}
             </Text>
@@ -237,6 +240,18 @@ export function HomeScreen() {
         );
       case 'task':
         return <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} />;
+      case 'important':
+        return (
+          <View
+            style={[
+              { backgroundColor: colors.dangerSoft, paddingHorizontal: space.md },
+              item.first && styles.top,
+              item.last ? styles.bottomCard : { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
+            ]}
+          >
+            <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue onComplete={(task) => complete.mutate(task)} />
+          </View>
+        );
       case 'calm':
         return (
           <View style={[styles.calm, { backgroundColor: colors.surface2, padding: space.md, gap: space.md, marginTop: space.xs }]}>
@@ -323,6 +338,7 @@ const styles = StyleSheet.create({
   attention: { flexDirection: 'row', alignItems: 'flex-start' },
   top: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
   bottom: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg, paddingBottom: 4 },
+  bottomCard: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
   attnIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   main: { flex: 1, minWidth: 0 },
   actions: { flexDirection: 'row', marginLeft: -2 },
