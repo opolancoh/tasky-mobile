@@ -23,7 +23,7 @@ type Item =
   | { type: 'section'; key: string; title: string; count?: number; flag?: boolean; link?: { label: string; onPress(): void } }
   | { type: 'attention'; key: string; task: TaskSummary; kind: 'overdue' | 'pending'; first: boolean; last: boolean }
   | { type: 'task'; key: string; task: TaskSummary; showDue: boolean }
-  | { type: 'important'; key: string; task: TaskSummary; first: boolean; last: boolean }
+  | { type: 'important'; key: string; task: TaskSummary }
   | { type: 'calm'; key: string; icon: ComponentProps<typeof Feather>['name']; title: string; body: string }
   | { type: 'day'; key: string; label: string; date: string; first: string; more: number; count: number }
   | { type: 'inbox'; key: string; count: number }
@@ -36,7 +36,7 @@ const LIST_MAX = 200;
 
 /**
  * Home (06-mobile.md, M23, M24): the start of the day. Needs attention (overdue, assignments to answer; hidden
- * when empty), Important (up to 3 not due today, on a soft red card), Today, Coming up (next 7 days by day, then Later), Inbox.
+ * when empty), Important (up to 3 not due today, a red edge on each row), Today, Coming up (next 7 days by day, then Later), Inbox.
  * Data: the task list, GET /tasks (D51–D53); Coming up is grouped by day here.
  */
 export function HomeScreen() {
@@ -93,11 +93,11 @@ export function HomeScreen() {
     attention.forEach(({ task, kind }, i) => items.push({ type: 'attention', key: `a-${task.id}`, task, kind, first: i === 0, last: i === attention.length - 1 }));
   }
 
-  // Important (M23, M24): right after Needs attention, its rows on a soft red card so they're found at a glance.
+  // Important (M23, M24): right after Needs attention, each row with a red edge so they're found at a glance.
   const importantItems = important.data?.items ?? [];
   if (importantItems.length) {
     items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length, flag: true });
-    importantItems.forEach((task, i) => items.push({ type: 'important', key: `i-${task.id}`, task, first: i === 0, last: i === importantItems.length - 1 }));
+    importantItems.forEach((task) => items.push({ type: 'important', key: `i-${task.id}`, task }));
   }
 
   items.push({ type: 'section', key: 's-today', title: t('home.today'), count: dueToday.length });
@@ -242,14 +242,12 @@ export function HomeScreen() {
         return <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} />;
       case 'important':
         return (
-          <View
-            style={[
-              { backgroundColor: colors.dangerSoft, paddingHorizontal: space.md },
-              item.first && styles.top,
-              item.last ? styles.bottomCard : { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
-            ]}
-          >
-            <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue onComplete={(task) => complete.mutate(task)} />
+          // A thin red edge before each row (M24), rows on the page background.
+          <View style={styles.edgeRow}>
+            <View style={[styles.edge, { backgroundColor: colors.danger }]} />
+            <View style={styles.main}>
+              <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue onComplete={(task) => complete.mutate(task)} />
+            </View>
           </View>
         );
       case 'calm':
@@ -338,7 +336,8 @@ const styles = StyleSheet.create({
   attention: { flexDirection: 'row', alignItems: 'flex-start' },
   top: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
   bottom: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg, paddingBottom: 4 },
-  bottomCard: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg },
+  edgeRow: { flexDirection: 'row', gap: 12 },
+  edge: { width: 3, borderRadius: 2, marginVertical: 12 },
   attnIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   main: { flex: 1, minWidth: 0 },
   actions: { flexDirection: 'row', marginLeft: -2 },
