@@ -67,6 +67,7 @@ export function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const labels = useDateLabels(today);
+  const openTask = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
 
   const all = todayView.data?.items ?? [];
   const overdue = all.filter((x) => !!x.dueDate && !!today && x.dueDate < today);
@@ -204,10 +205,13 @@ export function HomeScreen() {
         );
       case 'attention':
         return (
-          <View
-            style={[
+          // The row opens the task; its buttons keep their own actions.
+          <Pressable
+            onPress={() => openTask(item.task)}
+            accessibilityRole="button"
+            style={({ pressed }) => [
               styles.attention,
-              { backgroundColor: colors.surface2, paddingHorizontal: space.md, paddingTop: space.sm, gap: space.sm },
+              { backgroundColor: pressed ? colors.line : colors.surface2, paddingHorizontal: space.md, paddingTop: space.sm, gap: space.sm },
               item.first && styles.top,
               item.last ? styles.bottom : { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
             ]}
@@ -235,17 +239,17 @@ export function HomeScreen() {
                 )}
               </View>
             </View>
-          </View>
+          </Pressable>
         );
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} />;
+        return <TaskRow task={item.task} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} onPress={openTask} />;
       case 'important':
         return (
           // A thin red edge before each row (M24), rows on the page background.
           <View style={styles.edgeRow}>
             <View style={[styles.edge, { backgroundColor: colors.danger }]} />
             <View style={styles.main}>
-              <TaskRow task={item.task} today={today} showDue onComplete={(task) => complete.mutate(task)} />
+              <TaskRow task={item.task} today={today} showDue onComplete={(task) => complete.mutate(task)} onPress={openTask} />
             </View>
           </View>
         );

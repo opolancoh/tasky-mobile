@@ -12,6 +12,7 @@ export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
 export { Text, type TextProps } from './Text';
 export { TimeWheel, type TimeWheelProps } from './TimeWheel';
+export { ToastHost, useToast, type ToastMessage } from './Toast';
 export { WheelColumn, WheelFrame, WHEEL_ROW, type WheelColumnProps } from './WheelColumn';
 export { TextField, type TextFieldProps } from './TextField';
 export { ThemeProvider, useTheme, type Theme } from './theme';

@@ -12,11 +12,14 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
+import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
-import { fonts, ThemeProvider, useTheme } from '@/shared/ui';
+import { fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
 
 import { Navigation } from './navigation/RootNavigator';
 import { queryClient } from './queryClient';
@@ -26,15 +29,18 @@ SplashScreen.preventAutoHideAsync();
 
 export function App() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <SessionProvider tokens={tokenManager}>
-            <Root />
-          </SessionProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    // Gestures (swipe a step to delete it) need the root view.
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <SessionProvider tokens={tokenManager}>
+              <Root />
+            </SessionProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -69,7 +75,15 @@ function Root() {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Navigation theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['tasky://'] }} />
-      {status === 'signedIn' && <QuickAddSheet />}
+      {status === 'signedIn' && (
+        <>
+          <QuickAddSheet />
+          <TaskFieldSheet />
+        </>
+      )}
+      <ToastHost />
     </>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });

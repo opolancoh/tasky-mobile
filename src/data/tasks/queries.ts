@@ -25,3 +25,7 @@ export const useTaskList = (workspaceId: Id | undefined, filter: Omit<TaskFilter
     queryFn: () => tasksApi.list(filter.collectionId ? filter : { ...filter, workspaceId }),
     enabled: !!workspaceId,
   });
+
+/** The full task (D55). Waits until there is a workspace (its key starts with it). */
+export const useTask = (workspaceId: Id | undefined, taskId: Id) =>
+  useQuery({ queryKey: taskKeys.detail(workspaceId ?? '', taskId), queryFn: () => tasksApi.get(taskId), enabled: !!workspaceId });

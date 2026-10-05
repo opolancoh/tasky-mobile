@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { addDays, formatLocalDate, nextMonday, nowIn } from '@/core/dates/localDate';
+import { nowIn } from '@/core/dates/localDate';
 import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
@@ -13,9 +13,9 @@ import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
 import { removeTypedTag, typedTags as typedTagsOf } from '@/core/validation/tags';
-import { CollectionIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { ClearButton, DateWheel, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
+import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
@@ -50,11 +50,10 @@ export function QuickAddSheet() {
 }
 
 function QuickAddForm() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const open = useQuickAdd((s) => s.open);
   const hide = useQuickAdd((s) => s.hide);
-  const locale = i18n.language;
 
   const workspace = useCurrentWorkspace();
   const me = useMe().data;
@@ -67,7 +66,6 @@ function QuickAddForm() {
   const [page, setPage] = useState<Page>('form');
   const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(EMPTY);   // the draft when a page opened: tapping outside restores it
-  const [customDue, setCustomDue] = useState(false);
   const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this Quick add, in the profile's zone
 
   const update = (changes: Partial<Draft>) => {
@@ -264,60 +262,14 @@ function QuickAddForm() {
         </ScrollView>
       )}
 
-      {page === 'collection' && (
-        <ScrollView>
-          {collections.map((c, i) => (
-            <ListRow
-              key={c.id}
-              label={c.name}
-              icon={<CollectionIcon collection={c} tint="ink3" />}
-              selected={c.id === collection?.id}
-              onPress={() => pick({ collectionId: c.id })}
-              divider={i < collections.length - 1}
-            />
-          ))}
-        </ScrollView>
-      )}
+      {page === 'collection' && <CollectionPicker collections={collections} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id })} />}
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
 
       {page === 'tags' && <TagPicker tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
-        <ScrollView bounces={false}>
-          {[
-            { label: t('quickAdd.due.today'), date: today },
-            { label: t('quickAdd.due.tomorrow'), date: addDays(today, 1) },
-            { label: t('quickAdd.due.nextWeek'), date: nextMonday(today) },
-          ].map(({ label, date }) => (
-            <ListRow
-              key={label}
-              label={label}
-              value={formatLocalDate(date, locale, { weekday: 'short', month: 'short', day: 'numeric' })}
-              selected={draft.dueDate === date}
-              onPress={() => pick({ dueDate: date })}
-            />
-          ))}
-          <ListRow
-            label={t('quickAdd.due.custom')}
-            value={customDue && draft.dueDate ? <Text variant="body" color="accent">{dayText(draft.dueDate)}</Text> : undefined}
-            onPress={() => {
-              setCustomDue((c) => !c);
-              if (!draft.dueDate) update({ dueDate: today });
-            }}
-            divider={!customDue}
-          />
-          {customDue && draft.dueDate && (
-            <DateWheel
-              value={draft.dueDate}
-              onChange={(dueDate) => update({ dueDate: dueDate < today ? today : dueDate })}
-              locale={locale}
-              fromYear={Number(today.slice(0, 4))}
-              labels={{ day: t('wheels.day'), month: t('wheels.month'), year: t('wheels.year') }}
-            />
-          )}
-          <ListRow label={t('quickAdd.due.none')} selected={!draft.dueDate} onPress={() => pick({ dueDate: undefined })} divider={false} />
-        </ScrollView>
+        <DueDatePicker value={draft.dueDate} today={today} onPick={(dueDate) => pick({ dueDate })} onChange={(dueDate) => update({ dueDate })} />
       )}
 
       {page === 'reminder' && now && (

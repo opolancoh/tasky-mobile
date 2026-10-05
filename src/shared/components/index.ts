@@ -1,4 +1,6 @@
 export { CollectionIcon } from './CollectionIcon';
+export { CollectionPicker } from './CollectionPicker';
+export { DueDatePicker } from './DueDatePicker';
 export { ReminderPicker } from './ReminderPicker';
 export { TagPicker } from './tags/TagPicker';
 export { TagsRow } from './tags/TagsRow';

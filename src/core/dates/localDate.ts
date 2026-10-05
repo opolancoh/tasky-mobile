@@ -57,3 +57,11 @@ export function formatLocalTime(time: LocalTime, locale: string): string {
   const [h, m] = time.split(':').map(Number);
   return formatter(locale, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, h, m)));
 }
+
+/**
+ * Formats a UTC instant ("2026-09-20T14:14:00Z") in an IANA time zone (the profile's), e.g. options
+ * { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' } → "9:14 AM GMT-5".
+ */
+export function formatInstant(iso: string, locale: string, timeZone: string, options: Intl.DateTimeFormatOptions): string {
+  return formatter(locale, { ...options, timeZone }).format(new Date(iso));
+}

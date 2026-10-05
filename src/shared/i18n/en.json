@@ -4,7 +4,12 @@
     "hide": "Hide",
     "retry": "Try again",
     "back": "Back",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "cancel": "Cancel",
+    "close": "Close",
+    "done": "Done",
+    "undo": "Undo",
+    "none": "None"
   },
   "auth": {
     "signIn": {
@@ -134,13 +139,6 @@
       "tags": "Tags",
       "notes": "Notes"
     },
-    "due": {
-      "today": "Today",
-      "tomorrow": "Tomorrow",
-      "nextWeek": "Next week",
-      "none": "No date",
-      "custom": "Pick a date"
-    },
     "notesPlaceholder": "Add notes",
     "clearTitle": "Clear title",
     "clearImportant": "Remove Important",
@@ -194,10 +192,69 @@
     "timeout": "Tasky is taking too long to answer. Try again.",
     "unknown": "Something went wrong. Try again.",
     "auth.invalid_code": "The code is wrong or has expired. Check the latest email or ask for a new code.",
-    "task.title_only_tags": "Add some words besides #tags."
+    "task.title_only_tags": "Add some words besides #tags.",
+    "stale": "This task changed. Here's the latest.",
+    "task.too_many_steps": "A task can have at most 100 steps.",
+    "task.completed": "Reopen the task to add steps.",
+    "tag.name_taken": "There's already a tag with that name.",
+    "task.not_found": "This task no longer exists."
   },
   "languages": {
     "en": "English",
     "es": "Spanish"
+  },
+  "dueDate": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "nextWeek": "Next week",
+    "none": "No date",
+    "custom": "Pick a date"
+  },
+  "taskDetail": {
+    "fields": {
+      "collection": "Collection",
+      "due": "Due date",
+      "reminder": "Reminder",
+      "repeat": "Repeat",
+      "tags": "Tags"
+    },
+    "title": "Title",
+    "complete": "Complete",
+    "reopen": "Reopen",
+    "important": "Important",
+    "clearDue": "Remove due date",
+    "clearRepeat": "Stop repeating",
+    "overdue": "{{date}} · overdue",
+    "skip": "Skip this one · next {{date}}",
+    "skipped": "Skipped. Next: {{date}}",
+    "nextOn": "Done. Next: {{date}}",
+    "steps": "Steps",
+    "addStep": "Add a step",
+    "stepTitle": "Step",
+    "deleteStep": "Delete step",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes",
+    "at": "{{date}} at {{time}}",
+    "created": "Created {{when}}",
+    "updated": "Updated {{when}}",
+    "completed": "Completed {{when}}",
+    "byYou": "{{line}} by you",
+    "byName": "{{line}} by {{name}}",
+    "delete": "Delete task",
+    "deleted": "Task deleted"
+  },
+  "repeat": {
+    "never": "Never",
+    "daily": "Daily",
+    "weekdays": "Weekdays",
+    "weekly": "Weekly on {{day}}",
+    "monthly": "Monthly on day {{day}}",
+    "yearly": "Yearly on {{date}}",
+    "everyDays": "Every {{count}} days",
+    "everyWeeks": "Every {{count}} weeks on {{days}}",
+    "everyMonths": "Every {{count}} months on day {{day}}",
+    "everyYears": "Every {{count}} years on {{date}}",
+    "fromCompletion": "{{rule}}, after completing it",
+    "hint": "Repeats from the due date. With no due date, it starts today."
   }
 }

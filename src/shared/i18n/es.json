@@ -4,7 +4,12 @@
     "hide": "Ocultar",
     "retry": "Reintentar",
     "back": "Atrás",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "done": "Listo",
+    "undo": "Deshacer",
+    "none": "Sin definir"
   },
   "auth": {
     "signIn": {
@@ -134,13 +139,6 @@
       "tags": "Etiquetas",
       "notes": "Notas"
     },
-    "due": {
-      "today": "Hoy",
-      "tomorrow": "Mañana",
-      "nextWeek": "La próxima semana",
-      "none": "Sin fecha",
-      "custom": "Elegir una fecha"
-    },
     "notesPlaceholder": "Añade notas",
     "clearTitle": "Borrar título",
     "clearImportant": "Quitar Importante",
@@ -194,10 +192,69 @@
     "timeout": "Tasky está tardando en responder. Inténtalo de nuevo.",
     "unknown": "Algo salió mal. Inténtalo de nuevo.",
     "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo.",
-    "task.title_only_tags": "Añade algo de texto además de las #etiquetas."
+    "task.title_only_tags": "Añade algo de texto además de las #etiquetas.",
+    "stale": "Esta tarea cambió. Esto es lo más reciente.",
+    "task.too_many_steps": "Una tarea puede tener como máximo 100 pasos.",
+    "task.completed": "Reabre la tarea para añadir pasos.",
+    "tag.name_taken": "Ya hay una etiqueta con ese nombre.",
+    "task.not_found": "Esta tarea ya no existe."
   },
   "languages": {
     "en": "Inglés",
     "es": "Español"
+  },
+  "dueDate": {
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "nextWeek": "La próxima semana",
+    "none": "Sin fecha",
+    "custom": "Elegir una fecha"
+  },
+  "taskDetail": {
+    "fields": {
+      "collection": "Colección",
+      "due": "Fecha límite",
+      "reminder": "Recordatorio",
+      "repeat": "Repetir",
+      "tags": "Etiquetas"
+    },
+    "title": "Título",
+    "complete": "Completar",
+    "reopen": "Reabrir",
+    "important": "Importante",
+    "clearDue": "Quitar fecha límite",
+    "clearRepeat": "Dejar de repetir",
+    "overdue": "{{date}} · vencida",
+    "skip": "Saltar esta · siguiente {{date}}",
+    "skipped": "Saltada. Siguiente: {{date}}",
+    "nextOn": "Hecha. Siguiente: {{date}}",
+    "steps": "Pasos",
+    "addStep": "Añadir un paso",
+    "stepTitle": "Paso",
+    "deleteStep": "Eliminar paso",
+    "notes": "Notas",
+    "notesPlaceholder": "Añadir notas",
+    "at": "{{date}}, {{time}}",
+    "created": "Creada el {{when}}",
+    "updated": "Actualizada el {{when}}",
+    "completed": "Completada el {{when}}",
+    "byYou": "{{line}} por ti",
+    "byName": "{{line}} por {{name}}",
+    "delete": "Eliminar tarea",
+    "deleted": "Tarea eliminada"
+  },
+  "repeat": {
+    "never": "Nunca",
+    "daily": "Cada día",
+    "weekdays": "Entre semana",
+    "weekly": "Cada semana, el {{day}}",
+    "monthly": "Cada mes, el día {{day}}",
+    "yearly": "Cada año, el {{date}}",
+    "everyDays": "Cada {{count}} días",
+    "everyWeeks": "Cada {{count}} semanas: {{days}}",
+    "everyMonths": "Cada {{count}} meses, el día {{day}}",
+    "everyYears": "Cada {{count}} años, el {{date}}",
+    "fromCompletion": "{{rule}}, tras completarla",
+    "hint": "Se repite desde la fecha límite. Sin fecha límite, empieza hoy."
   }
 }

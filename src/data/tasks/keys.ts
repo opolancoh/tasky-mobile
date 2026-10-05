@@ -8,4 +8,6 @@ export const taskKeys = {
   /** Every task list (views and filtered lists): invalidated together after any task change. */
   views: (workspaceId: Id) => ['workspace', workspaceId, 'views'] as const,
   list: (workspaceId: Id, filter: object) => ['workspace', workspaceId, 'views', 'tasks', filter] as const,
+  /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
+  detail: (workspaceId: Id, taskId: Id) => ['workspace', workspaceId, 'task', taskId] as const,
 };

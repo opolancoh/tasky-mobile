@@ -42,7 +42,7 @@ src/core/
 
 ## dates/localDate.ts
 
-Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives today in the **profile's** time zone; `formatLocalDate` and `formatLocalTime` format for display without shifting the day. Formatters are cached per locale and options: building an `Intl.DateTimeFormat` costs milliseconds in Hermes ([performance](../performance.md)). `nowIn` reads numbers through a fixed, non-display locale (`PARTS_LOCALE`, `en-CA`: Latin digits, 24-hour).
+Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives today in the **profile's** time zone; `formatLocalDate` and `formatLocalTime` format for display without shifting the day; `formatInstant` shows a UTC moment ("created at") in a time zone. Formatters are cached per locale and options: building an `Intl.DateTimeFormat` costs milliseconds in Hermes ([performance](../performance.md)). `nowIn` reads numbers through a fixed, non-display locale (`PARTS_LOCALE`, `en-CA`: Latin digits, 24-hour).
 
 ## dates/reminders.ts
 

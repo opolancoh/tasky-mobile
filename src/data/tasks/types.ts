@@ -166,16 +166,35 @@ export interface TaskFilter {
   limit?: number;
 }
 
+/** How a task repeats; interval 1 and "from the due date" when omitted. A repeat needs a due date. */
+export interface RepeatRequest {
+  pattern: RepeatPattern;
+  interval?: number;
+  daysOfWeek?: DayOfWeek[];
+  dayOfMonth?: number;
+  mode?: RepeatMode;
+}
+
 /** PATCH /tasks/{id}: only what is sent changes; null clears. */
 export interface UpdateTaskRequest {
   title?: string;
   notes?: string | null;
   dueDate?: LocalDate | null;
   isImportant?: boolean;
+  repeat?: RepeatRequest | null;
+}
+
+/** An item of GET /recently-deleted (D54): restore it with its version as If-Match. */
+export interface DeletedItem {
+  kind: 'task' | 'collection' | 'tag';
+  id: Id;
+  name: string;
+  canRestore: boolean;
+  version: Version;
 }
 
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100 } as const;
 
 export const TaskErrorCodes = {
   /** The title had only #tags. */

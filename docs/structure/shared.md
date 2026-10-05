@@ -8,7 +8,7 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
-│   ├── ClearButton  SectionLabel  ColorDot  SearchField
+│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
@@ -18,7 +18,7 @@ src/shared/
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 │   └── useCurrentWorkspace.ts
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── CollectionIcon.tsx   ReminderPicker.tsx   TaskRow.tsx
+│   ├── CollectionIcon.tsx   CollectionPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
@@ -45,6 +45,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
 | `Sheet` | A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
+| `Toast` | `useToast.getState().show({ message, action })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM") |
@@ -62,7 +63,9 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 | Piece | Purpose |
 |---|---|
 | `CollectionIcon` | The Inbox tray or the collection's color dot |
-| `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (collection, due, steps, repeat), red flag when important |
+| `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (the task's collection, due, steps, repeat), red flag when important; `onPress` opens it |
+| `CollectionPicker` | The workspace's collections, Inbox first, the chosen one checked; a tap picks (Quick add, task detail) |
+| `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `ReminderPicker` | Four quick choices, a custom date and time (wheels), Remove ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
@@ -72,7 +75,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 
 | Hook | Purpose |
 |---|---|
-| `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM", in the app's language |
+| `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
 
 ## session/
 
