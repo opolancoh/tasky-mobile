@@ -43,26 +43,87 @@ export interface CreateTaskRequest {
   reminderTime?: string;
 }
 
-/** The fields of a task the app reads so far. */
-export interface Task {
+// References the UI shows come as objects: id, label and what drawing them needs (D55).
+
+/** A person a task points to; `displayName` is "" when their profile can't be read. */
+export interface UserRef {
   id: Id;
-  workspaceId: Id;
-  collectionId: Id;
+  displayName: string;
+}
+
+export interface CollectionRef {
+  id: Id;
+  name: string;
+  /** "#4A90E2": user data, not a palette color. */
+  color: string;
+  isInbox: boolean;
+}
+
+export interface TagRef {
+  id: Id;
+  name: string;
+  color: string;
+}
+
+export interface Step {
+  id: Id;
   title: string;
-  notes: string | null;
-  isImportant: boolean;
-  dueDate: LocalDate | null;
-  tagIds: Id[];
-  version: Version;
+  isDone: boolean;
+}
+
+export type RepeatPattern = 'daily' | 'weekdays' | 'weekly' | 'monthly' | 'yearly';
+export type RepeatMode = 'fromDueDate' | 'fromCompletion';
+export type DayOfWeek = 'sunday' | 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+
+export interface Repeat {
+  pattern: RepeatPattern;
+  interval: number;
+  daysOfWeek?: DayOfWeek[] | null;
+  dayOfMonth?: number | null;
+  mode: RepeatMode;
+  /** Where completing or skipping it today would move the due date. */
+  nextDueDate?: LocalDate | null;
+}
+
+/** The caller's own reminder; time "09:00:00". */
+export interface Reminder {
+  date: LocalDate;
+  time: string;
 }
 
 export type TaskStatus = 'open' | 'completed';
 export type AssignmentStatus = 'pending' | 'accepted';
 
+/** GET /tasks/{id} (TaskResponse); times are UTC ISO-8601. Missing keys are null (the API omits nulls). */
+export interface Task {
+  id: Id;
+  workspaceId: Id;
+  collection: CollectionRef;
+  title: string;
+  notes?: string | null;
+  isImportant: boolean;
+  dueDate?: LocalDate | null;
+  repeat?: Repeat | null;
+  reminder?: Reminder | null;
+  status: TaskStatus;
+  completedAt?: string | null;
+  completedBy?: UserRef | null;
+  assignee?: UserRef | null;
+  assignmentStatus?: AssignmentStatus | null;
+  assignedBy?: UserRef | null;
+  steps: Step[];
+  tags: TagRef[];
+  createdAt: string;
+  createdBy?: UserRef | null;
+  updatedAt?: string | null;
+  updatedBy?: UserRef | null;
+  version: Version;
+}
+
 /** A task in a list (TaskSummaryResponse): enough for one row. */
 export interface TaskSummary {
   id: Id;
-  collectionId: Id;
+  collection: CollectionRef;
   title: string;
   hasNotes: boolean;
   isImportant: boolean;
@@ -70,11 +131,11 @@ export interface TaskSummary {
   repeats: boolean;
   status: TaskStatus;
   completedAt: string | null;
-  assigneeId: Id | null;
+  assignee?: UserRef | null;
   assignmentStatus: AssignmentStatus | null;
   stepsDone: number;
   stepsTotal: number;
-  tagIds: Id[];
+  tags: TagRef[];
   version: Version;
 }
 

@@ -8,7 +8,7 @@ import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { addDays, formatLocalDate, nowIn } from '@/core/dates/localDate';
 import { useAnswerAssignment, useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
 import { useCollections, useTaskList } from '@/data/tasks/queries';
-import type { Collection, TaskSummary } from '@/data/tasks/types';
+import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
@@ -67,7 +67,6 @@ export function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const labels = useDateLabels(today);
-  const collectionOf = (task: TaskSummary): Collection | undefined => collections?.find((c) => c.id === task.collectionId);
 
   const all = todayView.data?.items ?? [];
   const overdue = all.filter((x) => !!x.dueDate && !!today && x.dueDate < today);
@@ -239,14 +238,14 @@ export function HomeScreen() {
           </View>
         );
       case 'task':
-        return <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} />;
+        return <TaskRow task={item.task} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} />;
       case 'important':
         return (
           // A thin red edge before each row (M24), rows on the page background.
           <View style={styles.edgeRow}>
             <View style={[styles.edge, { backgroundColor: colors.danger }]} />
             <View style={styles.main}>
-              <TaskRow task={item.task} collection={collectionOf(item.task)} today={today} showDue onComplete={(task) => complete.mutate(task)} />
+              <TaskRow task={item.task} today={today} showDue onComplete={(task) => complete.mutate(task)} />
             </View>
           </View>
         );

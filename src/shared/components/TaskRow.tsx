@@ -4,13 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/core/types';
-import type { Collection, TaskSummary } from '@/data/tasks/types';
+import type { TaskSummary } from '@/data/tasks/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ColorDot, Text, useTheme } from '@/shared/ui';
 
 export interface TaskRowProps {
   task: TaskSummary;
-  collection: Collection | undefined;
   /** The profile's today: due labels ("Tomorrow") and overdue in red. */
   today: LocalDate | undefined;
   /** Show the due date in the meta line (lists that mix days). */
@@ -24,7 +23,7 @@ export interface TaskRowProps {
  * (collection, due date, steps) and a red flag when important. Ticking fills the circle at once; the list
  * refetches after the API answers.
  */
-export function TaskRow({ task, collection, today, showDue = false, onComplete, onPress }: TaskRowProps) {
+export function TaskRow({ task, today, showDue = false, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const labels = useDateLabels(today);
@@ -56,14 +55,12 @@ export function TaskRow({ task, collection, today, showDue = false, onComplete, 
               {task.title}
             </Text>
             <View style={[styles.meta, { gap: space.sm }]}>
-              {collection && (
-                <View style={[styles.metaItem, { gap: space.xs }]}>
-                  <ColorDot color={collection.color} size={8} />
-                  <Text variant="footnote" color="ink3" numberOfLines={1}>
-                    {collection.name}
-                  </Text>
-                </View>
-              )}
+              <View style={[styles.metaItem, { gap: space.xs }]}>
+                <ColorDot color={task.collection.color} size={8} />
+                <Text variant="footnote" color="ink3" numberOfLines={1}>
+                  {task.collection.name}
+                </Text>
+              </View>
               {task.dueDate && (showDue || overdue) && (
                 <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>
                   {labels.day(task.dueDate)}
