@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 
 import { newTagName, stripInvalidTagChars, TAG_NAME_MAX } from '@/core/validation/tags';
-import { ColorDot, ListRow, SearchField, SectionLabel, Text, useTheme } from '@/shared/ui';
+import { ColorDot, ListRow, SearchField, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import type { TagItem } from './tagItems';
 
@@ -14,6 +14,8 @@ interface TagPickerProps {
   /** Picked names, including new ones the workspace doesn't have yet. */
   selected: TagItem[];
   onToggle(name: string): void;
+  /** The workspace's tags are still loading: skeleton rows under the search box (M27). */
+  loading?: boolean;
 }
 
 /**
@@ -21,7 +23,7 @@ interface TagPickerProps {
  * tags (last used first). A new name is created by the API when the task is saved (#name in the title);
  * nothing is created here.
  */
-export function TagPicker({ tags, selected, onToggle }: TagPickerProps) {
+export function TagPicker({ tags, selected, onToggle, loading }: TagPickerProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const [query, setQuery] = useState('');
@@ -75,7 +77,9 @@ export function TagPicker({ tags, selected, onToggle }: TagPickerProps) {
         </>
       )}
 
-      {!canCreate && shownSelected.length === 0 && shownAll.length === 0 && (
+      {loading && [55, 40, 65].map((w) => <SkeletonRow key={w} width={w} />)}
+
+      {!loading && !canCreate && shownSelected.length === 0 && shownAll.length === 0 && (
         <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>
           {t(needle ? 'tags.noMatch' : 'tags.empty')}
         </Text>

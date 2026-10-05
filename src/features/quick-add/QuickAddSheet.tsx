@@ -38,6 +38,8 @@ interface Draft {
 
 const EMPTY: Draft = { title: '', notes: '', isImportant: false, reminder: null, tags: [] };
 const NO_NAMES: string[] = [];
+/** The Inbox's mark before the collections arrive. */
+const INBOX = { isInbox: true, color: '' };
 
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
@@ -57,8 +59,10 @@ function QuickAddForm() {
 
   const workspace = useCurrentWorkspace();
   const me = useMe().data;
-  const collections = useCollections(workspace?.id).data ?? [];
-  const workspaceTags = useTags(workspace?.id).data ?? [];
+  const collectionsQuery = useCollections(workspace?.id);
+  const tagsQuery = useTags(workspace?.id);
+  const collections = collectionsQuery.data ?? [];
+  const workspaceTags = tagsQuery.data ?? [];
   const recent = useRecentTags((s) => (workspace ? s.byWorkspace[workspace.id] : undefined)) ?? NO_NAMES;
   const create = useCreateTask(workspace?.id);
 
@@ -81,7 +85,8 @@ function QuickAddForm() {
   const titleText = [...typedTags].reduce(removeTypedTag, draft.title).trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
-  const canAdd = titleText.length > 0 && !!collection && !create.isPending;
+  // Never waits for the lists (M27): with none picked the task goes to the workspace's Inbox (POST with workspaceId).
+  const canAdd = titleText.length > 0 && !!workspace && !create.isPending;
 
   const labels = useDateLabels(today);
   const dayText = labels.day;
@@ -90,13 +95,13 @@ function QuickAddForm() {
   const tagItems: TagItem[] = tags.map((n) => sortedTags.find((g) => g.name === n) ?? { name: n, color: null });
 
   function submit() {
-    if (!canAdd || !collection) return;
+    if (!canAdd || !workspace) return;
     const picked = draft.tags.filter((n) => !typedTags.includes(n)).map((n) => `#${n}`);
     const chosen = draft.reminder ?? undefined;
     create.mutate(
       {
         body: {
-          collectionId: collection.id,
+          ...(collection ? { collectionId: collection.id } : { workspaceId: workspace.id }),
           title: [draft.title.trim(), ...picked].join(' '),
           notes: draft.notes.trim() || undefined,
           isImportant: draft.isImportant || undefined,
@@ -147,7 +152,7 @@ function QuickAddForm() {
   };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
     page === 'form'
-      ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd, onPress: submit } }
+      ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd && !create.isPending, busy: create.isPending, onPress: submit } }
       : { title: titles[page], left: back };
 
   const barItems: BarItem[] = [
@@ -159,11 +164,12 @@ function QuickAddForm() {
   ];
 
   return (
-    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <QuickAddBar items={barItems} /> : undefined}>
+    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <View pointerEvents={create.isPending ? 'none' : 'auto'}><QuickAddBar items={barItems} /></View> : undefined}>
       {/* Full sheet width (a ScrollView clips its children), padded inside, so the divider reaches the edges. */}
       {page === 'form' && (
         <ScrollView
           keyboardShouldPersistTaps="handled"
+          pointerEvents={create.isPending ? 'none' : 'auto'}   // locked while Add saves
           bounces={false}
           style={[styles.summary, { marginHorizontal: -space.lg }]}
           contentContainerStyle={{ paddingHorizontal: space.lg }}
@@ -207,8 +213,8 @@ function QuickAddForm() {
           <View>
             <ListRow
               label={t('quickAdd.fields.collection')}
-              icon={<CollectionIcon collection={collection} />}
-              value={collection ? <Text variant="bodyMedium" color="accent">{collection.name}</Text> : '…'}
+              icon={<CollectionIcon collection={collection ?? INBOX} />}
+              value={<Text variant="bodyMedium" color="accent">{collection?.name ?? t('collections.inbox')}</Text>}
               onPress={() => openPage('collection')}
             />
             {draft.isImportant && (
@@ -262,11 +268,11 @@ function QuickAddForm() {
         </ScrollView>
       )}
 
-      {page === 'collection' && <CollectionPicker collections={collections} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id })} />}
+      {page === 'collection' && <CollectionPicker collections={collections} loading={collectionsQuery.isPending} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id })} />}
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
 
-      {page === 'tags' && <TagPicker tags={sortedTags} selected={tagItems} onToggle={toggleTag} />}
+      {page === 'tags' && <TagPicker tags={sortedTags} loading={tagsQuery.isPending} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
         <DueDatePicker value={draft.dueDate} today={today} onPick={(dueDate) => pick({ dueDate })} onChange={(dueDate) => update({ dueDate })} />

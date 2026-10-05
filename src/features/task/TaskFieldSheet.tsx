@@ -89,8 +89,10 @@ interface PageProps {
 }
 
 function Page({ field, draft, workspaceId, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
-  const collections = useCollections(workspaceId).data ?? [];
-  const workspaceTags = useTags(workspaceId).data ?? [];
+  const collectionsQuery = useCollections(workspaceId);
+  const tagsQuery = useTags(workspaceId);
+  const collections = collectionsQuery.data ?? [];
+  const workspaceTags = tagsQuery.data ?? [];
   const recent = useRecentTags((s) => s.byWorkspace[workspaceId]) ?? NO_NAMES;
   const today = now.date;
 
@@ -99,6 +101,7 @@ function Page({ field, draft, workspaceId, now, due, setDue, reminder, setRemind
       return (
         <CollectionPicker
           collections={collections}
+          loading={collectionsQuery.isPending}
           selectedId={draft.collection.id}
           onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox } })}
         />
@@ -123,6 +126,7 @@ function Page({ field, draft, workspaceId, now, due, setDue, reminder, setRemind
       return (
         <TagPicker
           tags={sorted}
+          loading={tagsQuery.isPending}
           selected={tags}
           onToggle={(name) =>
             setTags((ts) => (ts.some((g) => g.name === name) ? ts.filter((g) => g.name !== name) : [...ts, sorted.find((g) => g.name === name) ?? { name, color: null }]))

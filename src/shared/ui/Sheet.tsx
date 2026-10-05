@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
-import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { interpolate, useAnimatedKeyboard, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -16,6 +16,8 @@ export interface SheetAction {
   /** Semibold, for the action that confirms (Add, Done). */
   emphasis?: boolean;
   disabled?: boolean;
+  /** A small spinner in its place while the action runs (M27); not pressable meanwhile. */
+  busy?: boolean;
   /** Needed when there is only an icon. */
   accessibilityLabel?: string;
 }
@@ -41,7 +43,9 @@ const DURATION = 220;
 /**
  * A bottom sheet over the whole app: a dimmed backdrop that closes it when tapped, a grabber, an
  * optional header (title, left and right actions), the content and an optional footer kept above the
- * keyboard. Mount it at the app root (after the navigator), like QuickAddSheet: it draws as an overlay,
+ * keyboard. Always the large size (M28): its top sits just below the status bar on every page and never moves while
+ * typing or filtering; the keyboard only lifts its bottom, and the content scrolls inside.
+ * Mount it at the app root (after the navigator), like QuickAddSheet: it draws as an overlay,
  * not a native Modal. Opening, closing and following the keyboard run on the UI thread (Reanimated), with
  * no re-render per frame (docs/performance.md). `visible` false plays the closing animation before it leaves.
  */
@@ -116,7 +120,7 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
               <View style={[styles.side, styles.end]}>{right && <HeaderAction action={right} />}</View>
             </View>
           )}
-          {children}
+          <View style={styles.fill}>{children}</View>
           {footer && <Animated.View style={[{ marginHorizontal: -space.lg }, footerStyle]}>{footer}</Animated.View>}
         </Animated.View>
       </Animated.View>
@@ -126,19 +130,20 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
 
 function HeaderAction({ action }: { action: SheetAction }) {
   const { colors, type } = useTheme();
-  const { label, icon, onPress, emphasis, disabled, accessibilityLabel } = action;
+  const { label, icon, onPress, emphasis, disabled, busy, accessibilityLabel } = action;
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={disabled || busy}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: !!disabled }}
+      accessibilityState={{ disabled: !!disabled, busy: !!busy }}
       hitSlop={8}
       style={styles.action}
     >
       {({ pressed }) => {
         const color = disabled ? colors.ink3 : pressed ? colors.accentPressed : colors.accent;
+        if (busy) return <ActivityIndicator size="small" color={colors.accent} />;
         return (
           <>
             {icon && <Feather name={icon} size={label ? 24 : 22} color={color} style={label ? styles.iconWithLabel : undefined} />}
@@ -152,9 +157,10 @@ function HeaderAction({ action }: { action: SheetAction }) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  /** Fills the screen above the keyboard and puts the panel at its bottom; the panel never grows past it. */
-  frame: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'flex-end' },
-  panel: { width: '100%', flexShrink: 1 },
+  /** Fills the screen below the status bar and above the keyboard. */
+  frame: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  /** The large size (M28): the panel fills the frame, whatever its content. */
+  panel: { width: '100%', flex: 1 },
   grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3 },
   /** 44 pt tall: every action is a full touch target (HIG). */
   header: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: 4 },

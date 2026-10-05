@@ -15,7 +15,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
-import { Button, Notice, radius, Screen, Text, useTheme } from '@/shared/ui';
+import { Button, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 /** Home's rows, one list (FlashList) so a long Today stays fast (docs/performance.md). */
 type Item =
@@ -27,7 +27,9 @@ type Item =
   | { type: 'calm'; key: string; icon: ComponentProps<typeof Feather>['name']; title: string; body: string }
   | { type: 'day'; key: string; label: string; date: string; first: string; more: number; count: number }
   | { type: 'inbox'; key: string; count: number }
-  | { type: 'signOut'; key: string };
+  | { type: 'signOut'; key: string }
+  | { type: 'skeletonSection'; key: string }
+  | { type: 'skeletonRow'; key: string; width: number };
 
 const IMPORTANT_SHOWN = 3;
 const WEEK = 7;
@@ -85,66 +87,74 @@ export function HomeScreen() {
   const error = todayView.error ?? week.error ?? complete.error ?? update.error ?? answer.error;
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
-
-  // Needs attention: only when something does (hidden otherwise).
-  const attention = [...overdue.map((task) => ({ task, kind: 'overdue' as const })), ...asks.map((task) => ({ task, kind: 'pending' as const }))];
-  if (attention.length) {
-    items.push({ type: 'section', key: 's-attention', title: t('home.attention') });
-    attention.forEach(({ task, kind }, i) => items.push({ type: 'attention', key: `a-${task.id}`, task, kind, first: i === 0, last: i === attention.length - 1 }));
+  // First load (M27): skeleton sections and rows where Today and Coming up will be, instead of the sections.
+  const loading = !todayView.data && todayView.isPending;
+  if (loading) {
+    items.push({ type: 'skeletonSection', key: 'ks1' }, ...[72, 55, 64].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr1-${i}`, width })));
+    items.push({ type: 'skeletonSection', key: 'ks2' }, ...[48, 60].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr2-${i}`, width })));
   }
 
-  // Important (M23, M24): right after Needs attention, each row with a red edge so they're found at a glance.
-  const importantItems = important.data?.items ?? [];
-  if (importantItems.length) {
-    items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length, flag: true });
-    importantItems.forEach((task) => items.push({ type: 'important', key: `i-${task.id}`, task }));
-  }
+  if (!loading) {
+    // Needs attention: only when something does (hidden otherwise).
+    const attention = [...overdue.map((task) => ({ task, kind: 'overdue' as const })), ...asks.map((task) => ({ task, kind: 'pending' as const }))];
+    if (attention.length) {
+      items.push({ type: 'section', key: 's-attention', title: t('home.attention') });
+      attention.forEach(({ task, kind }, i) => items.push({ type: 'attention', key: `a-${task.id}`, task, kind, first: i === 0, last: i === attention.length - 1 }));
+    }
 
-  items.push({ type: 'section', key: 's-today', title: t('home.today'), count: dueToday.length });
-  if (dueToday.length) dueToday.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, showDue: false }));
-  else if (todayView.data) {
-    const next = days[0]?.items[0];
-    items.push(
-      next
-        ? { type: 'calm', key: 'calm', icon: 'calendar', title: t('home.nothingToday'), body: t('home.next', { when: labels.day(next.dueDate!), title: next.title }) }
-        : { type: 'calm', key: 'calm', icon: 'sun', title: t('home.nothingPlanned'), body: t('home.nothingPlannedBody') },
-    );
-  }
+    // Important (M23, M24): right after Needs attention, each row with a red edge so they're found at a glance.
+    const importantItems = important.data?.items ?? [];
+    if (importantItems.length) {
+      items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length, flag: true });
+      importantItems.forEach((task) => items.push({ type: 'important', key: `i-${task.id}`, task }));
+    }
 
-  if (days.length || laterFirst) {
-    const toUpcoming = () => navigation.navigate('Tabs', { screen: 'Upcoming' });
-    items.push({
-      type: 'section',
-      key: 's-coming',
-      title: t('home.comingUp'),
-      count: days.reduce((n, d) => n + d.items.length, 0) + laterCount,
-      link: { label: t('home.seeAll'), onPress: toUpcoming },
-    });
-    days.forEach((d) =>
+    items.push({ type: 'section', key: 's-today', title: t('home.today'), count: dueToday.length });
+    if (dueToday.length) dueToday.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, showDue: false }));
+    else if (todayView.data) {
+      const next = days[0]?.items[0];
+      items.push(
+        next
+          ? { type: 'calm', key: 'calm', icon: 'calendar', title: t('home.nothingToday'), body: t('home.next', { when: labels.day(next.dueDate!), title: next.title }) }
+          : { type: 'calm', key: 'calm', icon: 'sun', title: t('home.nothingPlanned'), body: t('home.nothingPlannedBody') },
+      );
+    }
+
+    if (days.length || laterFirst) {
+      const toUpcoming = () => navigation.navigate('Tabs', { screen: 'Upcoming' });
       items.push({
-        type: 'day',
-        key: `d-${d.date}`,
-        label: labels.day(d.date),
-        date: formatLocalDate(d.date, i18n.language, { month: 'short', day: 'numeric' }),
-        first: d.items[0]!.title,
-        more: d.items.length - 1,
-        count: d.items.length,
-      }),
-    );
-    if (laterFirst && weekEnd)
-      items.push({
-        type: 'day',
-        key: 'd-later',
-        label: t('home.later'),
-        date: t('home.after', { date: formatLocalDate(weekEnd, i18n.language, { month: 'short', day: 'numeric' }) }),
-        first: laterFirst.title,
-        more: laterCount - 1,
-        count: laterCount,
+        type: 'section',
+        key: 's-coming',
+        title: t('home.comingUp'),
+        count: days.reduce((n, d) => n + d.items.length, 0) + laterCount,
+        link: { label: t('home.seeAll'), onPress: toUpcoming },
       });
-  }
+      days.forEach((d) =>
+        items.push({
+          type: 'day',
+          key: `d-${d.date}`,
+          label: labels.day(d.date),
+          date: formatLocalDate(d.date, i18n.language, { month: 'short', day: 'numeric' }),
+          first: d.items[0]!.title,
+          more: d.items.length - 1,
+          count: d.items.length,
+        }),
+      );
+      if (laterFirst && weekEnd)
+        items.push({
+          type: 'day',
+          key: 'd-later',
+          label: t('home.later'),
+          date: t('home.after', { date: formatLocalDate(weekEnd, i18n.language, { month: 'short', day: 'numeric' }) }),
+          first: laterFirst.title,
+          more: laterCount - 1,
+          count: laterCount,
+        });
+    }
 
-  const sortCount = toSort.data?.total ?? 0;
-  if (sortCount > 0) items.push({ type: 'inbox', key: 'inbox', count: sortCount });
+    const sortCount = toSort.data?.total ?? 0;
+    if (sortCount > 0) items.push({ type: 'inbox', key: 'inbox', count: sortCount });
+  }
   items.push({ type: 'signOut', key: 'signOut' });   // until Settings exists
 
   const refresh = async () => {
@@ -172,10 +182,14 @@ export function HomeScreen() {
             <Text variant="title" numberOfLines={1}>
               {greeting}
             </Text>
-            {todayView.data && (
+            {todayView.data ? (
               <Text variant="subhead" color="ink2">
                 {summary}
               </Text>
+            ) : (
+              <View accessible accessibilityLabel={t('home.loading')} style={{ paddingTop: space.xs }}>
+                <Skeleton width={150} height={12} />
+              </View>
             )}
             {error && (
               <View style={{ marginTop: space.md }}>
@@ -309,6 +323,10 @@ export function HomeScreen() {
             )}
           </Pressable>
         );
+      case 'skeletonSection':
+        return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
+      case 'skeletonRow':
+        return <SkeletonRow width={item.width} />;
       case 'signOut':
         return (
           <View style={{ alignItems: 'center', paddingVertical: space.xxl }}>

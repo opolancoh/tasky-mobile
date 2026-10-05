@@ -102,7 +102,8 @@
     "accept": "Aceptar",
     "reject": "Rechazar",
     "inbox": "Bandeja de entrada",
-    "toSort": "{{count}} por ordenar"
+    "toSort": "{{count}} por ordenar",
+    "loading": "Cargando tu día"
   },
   "taskRow": {
     "complete": "Completar {{title}}",
@@ -263,5 +264,8 @@
     "everyYears": "Cada {{count}} años, el {{date}}",
     "fromCompletion": "{{rule}}, tras completarla",
     "hint": "Se repite desde la fecha límite. Sin fecha límite, empieza hoy."
+  },
+  "collections": {
+    "inbox": "Bandeja de entrada"
   }
 }

@@ -11,6 +11,7 @@ export { Screen, type ScreenProps } from './Screen';
 export { SectionLabel } from './SectionLabel';
 export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
+export { Skeleton, SkeletonRow, type SkeletonProps } from './Skeleton';
 export { Text, type TextProps } from './Text';
 export { TimeWheel, type TimeWheelProps } from './TimeWheel';
 export { ToastHost, useToast, type ToastMessage } from './Toast';
