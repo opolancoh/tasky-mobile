@@ -3,30 +3,32 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { useShallow } from 'zustand/react/shallow';
 
-import type { Step } from '@/data/tasks/types';
 import { taskLimits } from '@/data/tasks/types';
 import { Text, useTheme } from '@/shared/ui';
 
-interface StepListProps {
-  steps: Step[];
-  /** Completed tasks take no new steps (the API refuses them). */
-  canAdd: boolean;
-  onToggle(step: Step): void;
-  onRename(step: Step, title: string): void;
-  onDelete(step: Step): void;
-  onAdd(title: string): void;
-}
+import type { DraftStep } from '../taskDraft';
+import { useTaskDraft } from '../taskDraftStore';
+
+let newKey = 0;
+
+const setSteps = (change: (steps: DraftStep[]) => DraftStep[]) => {
+  const { draft, edit } = useTaskDraft.getState();
+  if (draft) edit({ steps: change(draft.steps) });
+};
 
 /**
- * Task detail's steps (M25): "2 of 5" with a progress line, then each step (tick, rename in place, swipe left
- * to delete; screen readers get a Delete action), then "Add a step". Steps are capped at 100 per task, so a
- * plain list inside the screen's scroll view is enough (docs/performance.md, rule 3).
+ * Task detail's steps, edited in the draft (M26): "2 of 5" with a progress line, then each step (tick, rename in place,
+ * swipe left to delete; screen readers get a Delete action), then "Add a step". Each row reads only its own step,
+ * so typing redraws one row. Steps are capped at 100, so a plain list in the screen's scroll view is enough
+ * (docs/performance.md, rule 3).
  */
-export function StepList({ steps, canAdd, onToggle, onRename, onDelete, onAdd }: StepListProps) {
+export function StepList({ canAdd }: { canAdd: boolean }) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
-  const done = steps.filter((s) => s.isDone).length;
+  const keys = useTaskDraft(useShallow((s) => s.draft?.steps.map((x) => x.key) ?? []));
+  const done = useTaskDraft((s) => s.draft?.steps.filter((x) => x.isDone).length ?? 0);
 
   return (
     <View style={{ marginTop: space.xxl }}>
@@ -34,34 +36,39 @@ export function StepList({ steps, canAdd, onToggle, onRename, onDelete, onAdd }:
         <Text variant="label" color="ink2" accessibilityRole="header">
           {t('taskDetail.steps')}
         </Text>
-        {steps.length > 0 && (
+        {keys.length > 0 && (
           <Text variant="label" color="ink3">
-            {t('taskRow.steps', { done, total: steps.length })}
+            {t('taskRow.steps', { done, total: keys.length })}
           </Text>
         )}
       </View>
-      {steps.length > 0 && (
+      {keys.length > 0 && (
         <View style={[styles.track, { backgroundColor: colors.surface2, borderRadius: radius.pill, marginBottom: space.xs }]}>
-          <View style={[styles.fill, { width: `${(done / steps.length) * 100}%`, backgroundColor: colors.accent, borderRadius: radius.pill }]} />
+          <View style={[styles.fill, { width: `${(done / keys.length) * 100}%`, backgroundColor: colors.accent, borderRadius: radius.pill }]} />
         </View>
       )}
-      {steps.map((step) => (
-        <StepRow key={`${step.id}:${step.title}`} step={step} onToggle={() => onToggle(step)} onRename={(title) => onRename(step, title)} onDelete={() => onDelete(step)} />
+      {keys.map((key) => (
+        <StepRow key={key} stepKey={key} />
       ))}
-      {canAdd && steps.length < taskLimits.stepsMax && <AddStep onAdd={onAdd} />}
+      {canAdd && keys.length < taskLimits.stepsMax && <AddStep />}
     </View>
   );
 }
 
-function StepRow({ step, onToggle, onRename, onDelete }: { step: Step; onToggle(): void; onRename(title: string): void; onDelete(): void }) {
+function StepRow({ stepKey }: { stepKey: string }) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
-  const [title, setTitle] = useState(step.title);   // typed text stays here (docs/performance.md, rule 2)
+  const step = useTaskDraft((s) => s.draft?.steps.find((x) => x.key === stepKey));
+  if (!step) return null;
 
-  const save = () => {
-    const trimmed = title.trim();
-    if (!trimmed) setTitle(step.title);   // a step can't be blank: put the old title back
-    else if (trimmed !== step.title) onRename(trimmed);
+  const update = (changes: Partial<DraftStep>) => setSteps((steps) => steps.map((x) => (x.key === stepKey ? { ...x, ...changes } : x)));
+  const remove = () => setSteps((steps) => steps.filter((x) => x.key !== stepKey));
+  // A step can't be blank: an emptied one goes back to its saved title, or away if it's new.
+  const endEditing = () => {
+    if (step.title.trim()) return;
+    const saved = useTaskDraft.getState().base?.steps.find((x) => x.key === stepKey);
+    if (saved) update({ title: saved.title });
+    else remove();
   };
 
   return (
@@ -73,7 +80,7 @@ function StepRow({ step, onToggle, onRename, onDelete }: { step: Step; onToggle(
         <Pressable
           onPress={() => {
             methods.close();
-            onDelete();
+            remove();
           }}
           accessibilityRole="button"
           accessibilityLabel={t('taskDetail.deleteStep')}
@@ -86,10 +93,10 @@ function StepRow({ step, onToggle, onRename, onDelete }: { step: Step; onToggle(
       <View
         style={[styles.row, { gap: space.md, backgroundColor: colors.bg }]}
         accessibilityActions={[{ name: 'delete', label: t('taskDetail.deleteStep') }]}
-        onAccessibilityAction={(e) => e.nativeEvent.actionName === 'delete' && onDelete()}
+        onAccessibilityAction={(e) => e.nativeEvent.actionName === 'delete' && remove()}
       >
         <Pressable
-          onPress={onToggle}
+          onPress={() => update({ isDone: !step.isDone })}
           hitSlop={12}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: step.isDone }}
@@ -99,9 +106,9 @@ function StepRow({ step, onToggle, onRename, onDelete }: { step: Step; onToggle(
           {step.isDone && <Feather name="check" size={12} color={colors.onAccent} />}
         </Pressable>
         <TextInput
-          value={title}
-          onChangeText={setTitle}
-          onEndEditing={save}
+          value={step.title}
+          onChangeText={(title) => update({ title })}
+          onEndEditing={endEditing}
           submitBehavior="blurAndSubmit"
           returnKeyType="done"
           multiline
@@ -119,15 +126,15 @@ function StepRow({ step, onToggle, onRename, onDelete }: { step: Step; onToggle(
   );
 }
 
-function AddStep({ onAdd }: { onAdd(title: string): void }) {
+function AddStep() {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState('');   // typed text stays here until Return adds it
 
   const add = () => {
     const trimmed = title.trim();
     if (!trimmed) return;
-    onAdd(trimmed);
+    setSteps((steps) => [...steps, { key: `new-${++newKey}`, title: trimmed, isDone: false }]);
     setTitle('');
   };
 

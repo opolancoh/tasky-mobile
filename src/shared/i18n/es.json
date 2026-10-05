@@ -193,7 +193,7 @@
     "unknown": "Algo salió mal. Inténtalo de nuevo.",
     "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo.",
     "task.title_only_tags": "Añade algo de texto además de las #etiquetas.",
-    "stale": "Esta tarea cambió. Esto es lo más reciente.",
+    "stale": "Esta tarea cambió en otro lugar. Tus cambios siguen sobre la última versión; revísalos y guarda de nuevo.",
     "task.too_many_steps": "Una tarea puede tener como máximo 100 pasos.",
     "task.completed": "Reabre la tarea para añadir pasos.",
     "tag.name_taken": "Ya hay una etiqueta con ese nombre.",
@@ -241,7 +241,14 @@
     "byYou": "{{line}} por ti",
     "byName": "{{line}} por {{name}}",
     "delete": "Eliminar tarea",
-    "deleted": "Tarea eliminada"
+    "deleted": "Tarea eliminada",
+    "save": "Guardar",
+    "discardTitle": "¿Descartar los cambios?",
+    "discardMessage": "Los cambios en esta tarea no se han guardado.",
+    "discard": "Descartar cambios",
+    "keepEditing": "Seguir editando",
+    "deleteTitle": "¿Eliminar esta tarea?",
+    "deleteMessage": "Puedes restaurarla desde Eliminados recientemente durante 30 días."
   },
   "repeat": {
     "never": "Nunca",

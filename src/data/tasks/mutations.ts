@@ -59,32 +59,23 @@ export function useAnswerAssignment(workspaceId: Id | undefined) {
   return useMutation({ mutationFn: ({ task, accept }: { task: TaskSummary; accept: boolean }) => tasksApi.answerAssignment(task, accept), onSettled: refetch });
 }
 
-/** A change to one task, for `useChangeTask`. */
+/** A command on one task (complete, reopen, skip), for `useChangeTask`. */
 export interface TaskChange {
-  /** Calls the API with the task as last read (its version is the If-Match). May make several calls. */
-  run(task: Task): Promise<unknown>;
-  /** The task as it should look right away; rolled back if the change fails (06-mobile.md, Data). */
+  /** Calls the API with the task as last read (its version is the If-Match). */
+  run(task: Task): Promise<Task>;
+  /** The task as it should look right away; rolled back if the command fails (06-mobile.md, Data). */
   optimistic?(task: Task): Task;
 }
 
-const isTask = (x: unknown): x is Task => typeof x === 'object' && x !== null && 'version' in x && 'steps' in x;
-
 /**
- * Changes one task (Task detail). Changes run one at a time, in order (`scope`), each against the latest
- * version: a returned task replaces the cached one; otherwise (steps, tags) the task is read again, since
- * those change its version too. A 412 rereads the task and runs the change once more on it; a second
- * 412 reaches the screen ("This task changed"). Afterwards every list, the collections' and tags' counts refetch
- * (a tag change may have created a tag). Callbacks live here, not on `mutate`, so they run after a sheet closes.
+ * Runs a command on one task (Task detail's circle and Skip), one at a time (`scope`), against the latest version.
+ * A 412 rereads the task and runs it once more. Afterwards every list and the collections' counts refetch.
  */
 export function useChangeTask(workspaceId: Id | undefined, taskId: Id) {
   const queryClient = useQueryClient();
   const refetchLists = useRefetchTasks(workspaceId);
   const key = taskKeys.detail(workspaceId ?? '', taskId);
   const read = () => queryClient.fetchQuery({ queryKey: key, queryFn: () => tasksApi.get(taskId), staleTime: 0 });
-  const apply = async (result: unknown) => {
-    if (isTask(result)) queryClient.setQueryData(key, result);
-    else await read();
-  };
 
   return useMutation({
     scope: { id: `task-${taskId}` },
@@ -97,16 +88,33 @@ export function useChangeTask(workspaceId: Id | undefined, taskId: Id) {
     mutationFn: async (change: TaskChange) => {
       const task = queryClient.getQueryData<Task>(key) ?? (await read());
       try {
-        await apply(await change.run(task));
+        queryClient.setQueryData(key, await change.run(task));
       } catch (e) {
         if (!isApiError(e) || e.status !== 412) throw e;
-        await apply(await change.run(await read()));
+        queryClient.setQueryData(key, await change.run(await read()));
       }
     },
     onError: (_error, _change, context) => {
       if (context?.before) queryClient.setQueryData(key, context.before);
       queryClient.invalidateQueries({ queryKey: key });
     },
+    onSettled: refetchLists,
+  });
+}
+
+/**
+ * Task detail's Save (M26): every changed field in one PATCH (D56) against `version`, the one the edits started from.
+ * The saved task replaces the cached one; lists, collection and tag counts refetch. A 412 reaches the caller, which
+ * rereads the task and keeps the edits on top of it.
+ */
+export function useSaveTask(workspaceId: Id | undefined, taskId: Id) {
+  const queryClient = useQueryClient();
+  const refetchLists = useRefetchTasks(workspaceId);
+  const key = taskKeys.detail(workspaceId ?? '', taskId);
+  return useMutation({
+    scope: { id: `task-${taskId}` },
+    mutationFn: ({ version, body }: { version: number; body: UpdateTaskRequest }) => tasksApi.update({ id: taskId, version }, body),
+    onSuccess: (task) => queryClient.setQueryData(key, task),
     onSettled: () => {
       refetchLists();
       if (workspaceId) queryClient.invalidateQueries({ queryKey: taskKeys.tags(workspaceId) });

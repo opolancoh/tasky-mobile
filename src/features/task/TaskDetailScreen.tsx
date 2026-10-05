@@ -1,14 +1,17 @@
 import { Feather } from '@expo/vector-icons';
-import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
+import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useShallow } from 'zustand/react/shallow';
 
 import { formatInstant, todayIn } from '@/core/dates/localDate';
 import { isApiError } from '@/core/http/problem';
 import type { Id } from '@/core/types';
-import { restoreTask, useChangeTask, useDeleteTask, type TaskChange } from '@/data/tasks/mutations';
+import { tasksApi } from '@/data/tasks/api';
+import { taskKeys } from '@/data/tasks/keys';
+import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
 import { useTask } from '@/data/tasks/queries';
 import { taskLimits, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
@@ -16,20 +19,20 @@ import { CollectionIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
-import { Button, ListRow, Notice, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
+import { Button, confirm, ListRow, Notice, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
-import { reminderOf } from './reminderOf';
-import { taskChanges } from './taskChanges';
-import { useTaskSheet, type TaskField } from './taskSheetStore';
+import { changedKeys, patchOf } from './taskDraft';
+import { useDirty, useTaskDraft } from './taskDraftStore';
+import { useTaskSheet } from './taskSheetStore';
 import { useRepeatText } from './useRepeatText';
 
 /**
- * Task detail (06-mobile.md, M25), pushed from any task row. The title edits in place next to the circle
- * (complete / reopen) and the Important flag (a red edge when on, M24). Collection, Due date, Reminder, Repeat
- * and Tags are rows with ✕, or "None" and a chevron when empty (as in Quick add); each opens its page in `TaskFieldSheet`. Then steps, notes, who
- * created and last changed it (in the profile's time zone), and Delete with Undo. Every edit goes through
- * `useChangeTask` (If-Match, a 412 reread and retry, lists refetched).
+ * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
+ * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Due date, Reminder, Repeat and
+ * Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
+ * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
+ * saving pending edits first.
  */
 export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { taskId } = route.params;
@@ -38,33 +41,78 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const me = useMe().data;
-  const workspace = useCurrentWorkspace();
-  const wid = workspace?.id;
+  const wid = useCurrentWorkspace()?.id;
   const query = useTask(wid, taskId);
   const task = query.data;
-  const change = useChangeTask(wid, taskId);
+  const command = useChangeTask(wid, taskId);
+  const save = useSaveTask(wid, taskId);
   const remove = useDeleteTask(wid);
-  const showSheet = useTaskSheet((s) => s.show);
+  const open = useTaskSheet((s) => s.show);
+  const load = useTaskDraft((s) => s.load);
+  const clear = useTaskDraft((s) => s.clear);
+  const edit = useTaskDraft((s) => s.edit);
+  const dirty = useDirty();
   const { describe } = useRepeatText();
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
+  const leaving = useRef(false);   // set when the screen closes on purpose (after Delete): no discard prompt
+  // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
+  const fields = useTaskDraft(
+    useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, collection: s.draft.collection, tags: s.draft.tags } : null)),
+  );
+
+  // The task as read becomes the draft (unsaved edits of this task are kept); leaving drops it.
+  useEffect(() => {
+    if (task) load(task);
+  }, [task, load]);
+  useEffect(() => clear, [clear]);
 
   // A task that is gone (deleted elsewhere, no longer shared) closes its screen (06-mobile.md, Errors).
   const missing = isApiError(query.error) && query.error.status === 404;
   useEffect(() => {
-    if (missing) navigation.goBack();
+    if (missing) {
+      leaving.current = true;
+      navigation.goBack();
+    }
   }, [missing, navigation]);
 
-  if (!task || !me || !today || !wid) {
+  /** Sends the draft's changes. True when there was nothing to save or it saved; a 412 keeps the edits on the latest task. */
+  const saveDraft = async (): Promise<boolean> => {
+    const { base, draft, version } = useTaskDraft.getState();
+    if (!base || !draft || !changedKeys(base, draft).length) return true;
+    try {
+      const saved = await save.mutateAsync({ version, body: patchOf(base, draft) });
+      clear();
+      load(saved);
+      return true;
+    } catch (e) {
+      if (isApiError(e) && e.status === 412 && wid) {
+        const latest = await queryClient.fetchQuery({ queryKey: taskKeys.detail(wid, taskId), queryFn: () => tasksApi.get(taskId), staleTime: 0 });
+        useTaskDraft.getState().rebase(latest);
+      }
+      return false;
+    }
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerRight: () => <SaveButton pending={save.isPending} onPress={saveDraft} /> });
+  });
+
+  // Leaving with unsaved changes asks first (HIG): Discard or Keep editing.
+  usePreventRemove(dirty, ({ data }) => {
+    if (leaving.current) return navigation.dispatch(data.action);
+    confirm({ title: t('taskDetail.discardTitle'), message: t('taskDetail.discardMessage'), confirmLabel: t('taskDetail.discard'), cancelLabel: t('taskDetail.keepEditing') }).then(
+      (ok) => ok && navigation.dispatch(data.action),
+    );
+  });
+
+  if (!task || !me || !today || !wid || !fields) {
     return <Screen edges={['bottom']}>{query.error && !missing ? <Notice>{errorMessage(query.error)}</Notice> : null}</Screen>;
   }
 
   const locale = i18n.language;
   const completed = task.status === 'completed';
-  const overdue = !!task.dueDate && task.dueDate < today && !completed;
-  const reminder = reminderOf(task);
-  const run = (c: TaskChange) => change.mutate(c);
-  const open = (field: TaskField) => showSheet(task.id, field);
+  const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
 
   const when = (iso: string) =>
     t('taskDetail.at', {
@@ -74,27 +122,37 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const by = (line: string, who: UserRef | null | undefined) =>
     !who ? line : who.id === me.id ? t('taskDetail.byYou', { line }) : who.displayName ? t('taskDetail.byName', { line, name: who.displayName }) : line;
 
-  const toggleComplete = () => {
-    if (completed) return run(taskChanges.reopen());
-    run(taskChanges.complete());
-    if (task.repeat?.nextDueDate) useToast.getState().show({ message: t('taskDetail.nextOn', { date: labels.day(task.repeat.nextDueDate) }) });
+  /** Complete, reopen and Skip act at once (M26), after saving pending edits. */
+  const run = async (change: TaskChange, toast?: string) => {
+    if (!(await saveDraft())) return;
+    command.mutate(change);
+    if (toast) useToast.getState().show({ message: toast });
   };
+  const next = task.repeat?.nextDueDate;
+  const toggleComplete = () =>
+    completed
+      ? run({ run: (x) => tasksApi.reopen(x), optimistic: (x) => ({ ...x, status: 'open', completedAt: null, completedBy: null }) })
+      : run(
+          // A repeating task stays open on its next date, so it isn't shown completed.
+          { run: (x) => tasksApi.complete(x), optimistic: (x) => (x.repeat ? x : { ...x, status: 'completed' }) },
+          next ? t('taskDetail.nextOn', { date: labels.day(next) }) : undefined,
+        );
+  const skip = () => run({ run: (x) => tasksApi.skip(x), optimistic: (x) => ({ ...x, dueDate: next ?? x.dueDate }) }, next ? t('taskDetail.skipped', { date: labels.day(next) }) : undefined);
 
-  const skip = () => {
-    run(taskChanges.skip());
-    if (task.repeat?.nextDueDate) useToast.getState().show({ message: t('taskDetail.skipped', { date: labels.day(task.repeat.nextDueDate) }) });
-  };
-
-  // Deleted once the API agrees; then back to the list with Undo (the task is in Recently Deleted for 30 days).
-  const deleteTask = () =>
+  // Asks first; deleted once the API agrees (unsaved edits go with it); then back with Undo (Recently Deleted keeps it 30 days).
+  const deleteTask = async () => {
+    const ok = await confirm({ title: t('taskDetail.deleteTitle'), message: t('taskDetail.deleteMessage'), confirmLabel: t('taskDetail.delete'), cancelLabel: t('common.cancel') });
+    if (!ok) return;
     remove.mutate(task, {
       onSuccess: () => {
+        leaving.current = true;
         navigation.goBack();
         useToast.getState().show({ message: t('taskDetail.deleted'), action: { label: t('common.undo'), onPress: () => restoreTask(queryClient, wid, task.id) } });
       },
     });
+  };
 
-  const error = change.error ?? remove.error;
+  const error = save.error ?? command.error ?? remove.error;
 
   return (
     <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
@@ -104,7 +162,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         </View>
       )}
 
-      <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, task.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
+      <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, fields.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
         <Pressable
           onPress={toggleComplete}
           hitSlop={8}
@@ -115,15 +173,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         >
           {completed && <Feather name="check" size={16} color={colors.onAccent} />}
         </Pressable>
-        <TitleField key={task.title} title={task.title} completed={completed} onSave={(title) => run(taskChanges.title(title))} />
+        <TitleField completed={completed} />
         <Pressable
-          onPress={() => run(taskChanges.important(!task.isImportant))}
+          onPress={() => edit({ isImportant: !fields.isImportant })}
           accessibilityRole="switch"
-          accessibilityState={{ checked: task.isImportant }}
+          accessibilityState={{ checked: fields.isImportant }}
           accessibilityLabel={t('taskDetail.important')}
           style={styles.flag}
         >
-          <Feather name="flag" size={22} color={task.isImportant ? colors.danger : colors.ink3} />
+          <Feather name="flag" size={22} color={fields.isImportant ? colors.danger : colors.ink3} />
         </Pressable>
       </View>
 
@@ -132,81 +190,71 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <Text variant="footnote" color="ink2" style={styles.fill}>
             {task.completedAt ? by(t('taskDetail.completed', { when: when(task.completedAt) }), task.completedBy) : ''}
           </Text>
-          <Button variant="link" title={t('taskDetail.reopen')} onPress={() => run(taskChanges.reopen())} />
+          <Button variant="link" title={t('taskDetail.reopen')} onPress={toggleComplete} />
         </View>
       )}
 
       <View style={{ marginTop: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }}>
         <ListRow
           label={t('taskDetail.fields.collection')}
-          icon={<CollectionIcon collection={task.collection} />}
-          value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{task.collection.name}</Text>}
+          icon={<CollectionIcon collection={fields.collection} />}
+          value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.collection.name}</Text>}
           onPress={() => open('collection')}
         />
-        {task.dueDate ? (
+        {fields.dueDate ? (
           <ListRow
             label={t('taskDetail.fields.due')}
             icon={<Feather name="calendar" size={20} color={colors.accent} />}
-            value={<Text variant="bodyMedium" color={overdue ? 'danger' : 'accent'}>{overdue ? t('taskDetail.overdue', { date: labels.day(task.dueDate) }) : labels.day(task.dueDate)}</Text>}
+            value={<Text variant="bodyMedium" color={overdue ? 'danger' : 'accent'}>{overdue ? t('taskDetail.overdue', { date: labels.day(fields.dueDate) }) : labels.day(fields.dueDate)}</Text>}
             onPress={() => open('due')}
-            onClear={() => run(taskChanges.due(undefined))}
+            onClear={() => edit({ dueDate: null, repeat: null })}
             clearLabel={t('taskDetail.clearDue')}
           />
         ) : (
           <ListRow label={t('taskDetail.fields.due')} value={t('common.none')} icon={<Feather name="calendar" size={20} color={colors.ink3} />} onPress={() => open('due')} />
         )}
-        {reminder ? (
+        {fields.reminder ? (
           <ListRow
             label={t('taskDetail.fields.reminder')}
             icon={<Feather name="bell" size={20} color={colors.accent} />}
             value={
               <View style={styles.end}>
-                <Text variant="bodyMedium" color="accent">{reminder.date === today ? `${t('dates.today')}, ${labels.time(reminder.time)}` : labels.reminder(reminder)}</Text>
+                <Text variant="bodyMedium" color="accent">
+                  {fields.reminder.date === today ? `${t('dates.today')}, ${labels.time(fields.reminder.time)}` : labels.reminder(fields.reminder)}
+                </Text>
                 <Text variant="caption" color="ink2">{t('reminders.onlyYou')}</Text>
               </View>
             }
             onPress={() => open('reminder')}
-            onClear={() => run(taskChanges.reminder(null))}
+            onClear={() => edit({ reminder: null })}
             clearLabel={t('reminders.remove')}
           />
         ) : (
           <ListRow label={t('taskDetail.fields.reminder')} value={t('common.none')} icon={<Feather name="bell" size={20} color={colors.ink3} />} onPress={() => open('reminder')} />
         )}
-        {task.repeat ? (
+        {fields.repeat ? (
           <ListRow
             label={t('taskDetail.fields.repeat')}
             icon={<Feather name="repeat" size={20} color={colors.accent} />}
-            value={<Text variant="bodyMedium" color="accent" numberOfLines={2}>{describe(task.repeat, task.dueDate)}</Text>}
+            value={<Text variant="bodyMedium" color="accent" numberOfLines={2}>{describe(fields.repeat, fields.dueDate)}</Text>}
             onPress={() => open('repeat')}
-            onClear={() => run(taskChanges.repeat(null, today))}
+            onClear={() => edit({ repeat: null })}
             clearLabel={t('taskDetail.clearRepeat')}
           />
         ) : (
           <ListRow label={t('taskDetail.fields.repeat')} value={t('common.none')} icon={<Feather name="repeat" size={20} color={colors.ink3} />} onPress={() => open('repeat')} />
         )}
-        <TagsRow
-          tags={task.tags.map((g) => ({ name: g.name, color: g.color }))}
-          onPress={() => open('tags')}
-          onClear={task.tags.length ? () => run(taskChanges.tags(wid, [], [])) : undefined}
-        />
+        <TagsRow tags={fields.tags} onPress={() => open('tags')} onClear={fields.tags.length ? () => edit({ tags: [] }) : undefined} />
       </View>
 
-      {task.repeat?.nextDueDate && !completed && (
+      {task.repeat && next && !completed && (
         <View style={styles.start}>
-          <Button variant="link" title={t('taskDetail.skip', { date: labels.day(task.repeat.nextDueDate) })} onPress={skip} />
+          <Button variant="link" title={t('taskDetail.skip', { date: labels.day(next) })} onPress={skip} />
         </View>
       )}
 
-      <StepList
-        steps={task.steps}
-        canAdd={!completed}
-        onToggle={(step) => run(taskChanges.toggleStep(step))}
-        onRename={(step, title) => run(taskChanges.renameStep(step, title))}
-        onDelete={(step) => run(taskChanges.deleteStep(step))}
-        onAdd={(title) => run(taskChanges.addStep(title))}
-      />
-
-      <NotesField key={task.notes ?? ''} notes={task.notes ?? ''} onSave={(notes) => run(taskChanges.notes(notes))} />
+      <StepList canAdd={!completed} />
+      <NotesField />
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
         <Text variant="footnote" color="ink3">
@@ -233,21 +281,33 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   );
 }
 
-/** The title, edited in place; typed text stays here (docs/performance.md, rule 2) and saves when editing ends. */
-function TitleField({ title, completed, onSave }: { title: string; completed: boolean; onSave(title: string): void }) {
+/** Save in the header: enabled once something changed (and the title isn't blank). */
+function SaveButton({ pending, onPress }: { pending: boolean; onPress(): void }) {
+  const { t } = useTranslation();
+  const dirty = useDirty();
+  const titled = useTaskDraft((s) => !!s.draft?.title.trim());
+  const enabled = dirty && titled && !pending;
+  return (
+    <Pressable onPress={onPress} disabled={!enabled} accessibilityRole="button" accessibilityState={{ disabled: !enabled }} hitSlop={8} style={styles.save}>
+      {({ pressed }) => (
+        <Text variant="button" color={enabled ? 'accent' : 'ink3'} style={{ opacity: pressed ? 0.6 : 1 }}>
+          {t('taskDetail.save')}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+
+/** The title, edited in place in the draft; only this field redraws while typing. */
+function TitleField({ completed }: { completed: boolean }) {
   const { t } = useTranslation();
   const { colors, type } = useTheme();
-  const [text, setText] = useState(title);
-  const save = () => {
-    const trimmed = text.trim();
-    if (!trimmed) setText(title);   // a title can't be blank: put it back
-    else if (trimmed !== title) onSave(trimmed);
-  };
+  const title = useTaskDraft((s) => s.draft?.title ?? '');
+  const edit = useTaskDraft((s) => s.edit);
   return (
     <TextInput
-      value={text}
-      onChangeText={setText}
-      onEndEditing={save}
+      value={title}
+      onChangeText={(text) => edit({ title: text.replace(/\n/g, ' ') })}
       multiline
       submitBehavior="blurAndSubmit"
       returnKeyType="done"
@@ -263,20 +323,20 @@ function TitleField({ title, completed, onSave }: { title: string; completed: bo
   );
 }
 
-/** Plain-text notes, edited in place; saved when editing ends (empty clears them). */
-function NotesField({ notes, onSave }: { notes: string; onSave(notes: string): void }) {
+/** Plain-text notes, edited in place in the draft. */
+function NotesField() {
   const { t } = useTranslation();
-  const { colors, radius, space, type } = useTheme();
-  const [text, setText] = useState(notes);
+  const { colors, radius, type } = useTheme();
+  const notes = useTaskDraft((s) => s.draft?.notes ?? '');
+  const edit = useTaskDraft((s) => s.edit);
   return (
     <View style={{ marginTop: space.xxl, gap: space.sm }}>
       <Text variant="label" color="ink2" accessibilityRole="header">
         {t('taskDetail.notes')}
       </Text>
       <TextInput
-        value={text}
-        onChangeText={setText}
-        onEndEditing={() => text.trim() !== notes.trim() && onSave(text.trim())}
+        value={notes}
+        onChangeText={(text) => edit({ notes: text })}
         multiline
         placeholder={t('taskDetail.notesPlaceholder')}
         placeholderTextColor={colors.ink3}
@@ -305,4 +365,5 @@ const styles = StyleSheet.create({
   start: { alignItems: 'flex-start', marginTop: space.xs },
   notes: { minHeight: 96 },
   delete: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
+  save: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
 });

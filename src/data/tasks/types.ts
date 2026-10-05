@@ -175,13 +175,21 @@ export interface RepeatRequest {
   mode?: RepeatMode;
 }
 
-/** PATCH /tasks/{id}: only what is sent changes; null clears. */
+/** PATCH /tasks/{id}: only what is sent changes, in one transaction (D56); null clears. */
 export interface UpdateTaskRequest {
   title?: string;
   notes?: string | null;
   dueDate?: LocalDate | null;
   isImportant?: boolean;
   repeat?: RepeatRequest | null;
+  /** Another collection of the same workspace. */
+  collectionId?: Id;
+  /** The caller's reminder ("HH:mm"); null removes it. With a first due date it replaces the automatic 9:00 one. */
+  reminder?: { date: LocalDate; time: string } | null;
+  /** Tag names, exactly these; new names are created. */
+  tags?: string[];
+  /** The steps in order, exactly these: with an id kept, without one new, missing ones deleted. */
+  steps?: { id?: Id; title: string; isDone: boolean }[];
 }
 
 /** An item of GET /recently-deleted (D54): restore it with its version as If-Match. */
