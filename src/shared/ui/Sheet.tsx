@@ -36,6 +36,11 @@ export interface SheetProps {
   children: ReactNode;
   /** Full-width strip under the content on the sheet's own background, kept above the keyboard (e.g. an icon bar). */
   footer?: ReactNode;
+  /**
+   * `large` (the standard, M28): the top sits just below the status bar and never moves. `fit`: as tall as the content,
+   * only for a short form that grows when the person adds something, never while typing (Quick add's form, M29).
+   */
+  size?: 'large' | 'fit';
 }
 
 const DURATION = 220;
@@ -43,8 +48,8 @@ const DURATION = 220;
 /**
  * A bottom sheet over the whole app: a dimmed backdrop that closes it when tapped, a grabber, an
  * optional header (title, left and right actions), the content and an optional footer kept above the
- * keyboard. Always the large size (M28): its top sits just below the status bar on every page and never moves while
- * typing or filtering; the keyboard only lifts its bottom, and the content scrolls inside.
+ * keyboard. The large size by default (M28): its top sits just below the status bar on every page and never moves while
+ * typing or filtering; the keyboard only lifts its bottom, and the content scrolls inside. `size="fit"` is only for Quick add's form (M29).
  * Mount it at the app root (after the navigator), like QuickAddSheet: it draws as an overlay,
  * not a native Modal. Opening, closing and following the keyboard run on the UI thread (Reanimated), with
  * no re-render per frame (docs/performance.md). `visible` false plays the closing animation before it leaves.
@@ -56,7 +61,7 @@ export function Sheet(props: SheetProps) {
   return mounted ? <SheetPanel {...props} onClosed={() => setMounted(false)} /> : null;
 }
 
-function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, left, right, children, footer, onClosed }: SheetProps & { onClosed(): void }) {
+function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, left, right, children, footer, size = 'large', onClosed }: SheetProps & { onClosed(): void }) {
   const { colors, radius, space } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -102,10 +107,10 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
         <Pressable style={styles.fill} onPress={onBackdropPress ?? onDismiss} accessibilityRole="button" accessibilityLabel={dismissLabel} />
       </Animated.View>
 
-      <Animated.View style={[styles.frame, { paddingTop: insets.top + space.sm }, frameStyle]} pointerEvents="box-none">
+      <Animated.View style={[styles.frame, size === 'fit' && styles.bottom, { paddingTop: insets.top + space.sm }, frameStyle]} pointerEvents="box-none">
         <Animated.View
           style={[
-            styles.panel,
+            size === 'fit' ? styles.panelFit : styles.panel,
             { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, paddingHorizontal: space.lg },
             panelStyle,
           ]}
@@ -120,7 +125,7 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
               <View style={[styles.side, styles.end]}>{right && <HeaderAction action={right} />}</View>
             </View>
           )}
-          <View style={styles.fill}>{children}</View>
+          <View style={size === 'fit' ? styles.shrink : styles.fill}>{children}</View>
           {footer && <Animated.View style={[{ marginHorizontal: -space.lg }, footerStyle]}>{footer}</Animated.View>}
         </Animated.View>
       </Animated.View>
@@ -161,6 +166,10 @@ const styles = StyleSheet.create({
   frame: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   /** The large size (M28): the panel fills the frame, whatever its content. */
   panel: { width: '100%', flex: 1 },
+  /** The fit size (M29): at the bottom, as tall as the content, never past the frame. */
+  bottom: { justifyContent: 'flex-end' },
+  panelFit: { width: '100%', flexShrink: 1 },
+  shrink: { flexShrink: 1 },
   grabber: { alignSelf: 'center', width: 36, height: 5, borderRadius: 3 },
   /** 44 pt tall: every action is a full touch target (HIG). */
   header: { flexDirection: 'row', alignItems: 'center', minHeight: 44, marginBottom: 4 },

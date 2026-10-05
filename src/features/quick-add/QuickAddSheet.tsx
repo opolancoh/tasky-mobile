@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { nowIn } from '@/core/dates/localDate';
 import type { ReminderChoice } from '@/core/dates/reminders';
@@ -128,6 +128,7 @@ function QuickAddForm() {
   const clearTags = () => update({ title: typedTags.reduce(removeTypedTag, draft.title), tags: [] });
 
   const openPage = (next: Exclude<Page, 'form'>) => {
+    Keyboard.dismiss();   // the keyboard only when typing (M30); Notes brings it back for its own field
     setBeforePage(draft);
     setPage(next);
   };
@@ -164,7 +165,8 @@ function QuickAddForm() {
   ];
 
   return (
-    <Sheet visible={open} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <View pointerEvents={create.isPending ? 'none' : 'auto'}><QuickAddBar items={barItems} /></View> : undefined}>
+    // The form fits its rows (M29); its pages are the large size (M28).
+    <Sheet visible={open} size={page === 'form' ? 'fit' : 'large'} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <View pointerEvents={create.isPending ? 'none' : 'auto'}><QuickAddBar items={barItems} /></View> : undefined}>
       {/* Full sheet width (a ScrollView clips its children), padded inside, so the divider reaches the edges. */}
       {page === 'form' && (
         <ScrollView
@@ -183,7 +185,6 @@ function QuickAddForm() {
             placeholderTextColor={colors.ink3}
             selectionColor={colors.accent}
             accessibilityLabel={t('quickAdd.fields.title')}
-            autoFocus
             multiline
             submitBehavior="blurAndSubmit"
             maxLength={taskLimits.titleMax}

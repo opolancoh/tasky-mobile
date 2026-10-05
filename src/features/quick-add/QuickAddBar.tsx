@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/shared/ui';
 
@@ -30,7 +30,10 @@ export function QuickAddBar({ items }: { items: BarItem[] }) {
         return (
           <Pressable
             key={it.key}
-            onPress={it.onPress}
+            onPress={() => {
+              Keyboard.dismiss();   // a bar choice isn't typing: the keyboard goes away (M30)
+              it.onPress();
+            }}
             accessibilityRole="button"
             accessibilityLabel={set ? `${it.label}: ${it.value}` : it.label}
             accessibilityState={{ selected: set }}
