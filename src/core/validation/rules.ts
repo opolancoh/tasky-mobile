@@ -2,7 +2,7 @@ import { limits } from './limits';
 
 /**
  * Shape rules for kinds of values any feature can use. Each matches an API attribute
- * (tasky-api Platform/Validation), so a value never passes here and fails there.
+ * (tasky-api Shared/Validation), so a value never passes here and fails there.
  * Rules answer true or false; the feature's form validator picks the message.
  */
 

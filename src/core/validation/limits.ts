@@ -1,9 +1,9 @@
 /**
- * The API's field limits, in one place. Mirrors tasky-api: Platform/Validation (email) and each
+ * The API's field limits, in one place. Mirrors tasky-api: Shared/Validation (email) and each
  * module's *Limits class. Change both sides together.
  */
 export const limits = {
-  /** Platform EmailAttribute.MaxLength */
+  /** Shared EmailAttribute.MaxLength */
   emailMax: 254,
   /** IdentityLimits */
   passwordMin: 8,
