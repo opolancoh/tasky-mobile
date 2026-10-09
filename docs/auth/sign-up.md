@@ -29,7 +29,7 @@ sequenceDiagram
     V->>A: POST /auth/verify-email
     A-->>V: 204
     V->>P: signIn(email, password)
-    P->>A: POST /auth/login, then /me, /workspaces
+    P->>A: POST /auth/login, then /me
     Note over V,P: status signedIn: the tabs open on Today
 ```
 
@@ -43,7 +43,7 @@ sequenceDiagram
 
 - **Create account** stays disabled until all three are valid. The keyboard's Go on an incomplete form shows what's missing.
 - The device's **time zone** and **language** are shown and sent with the form. They decide when "Today" starts and which language emails use.
-- The notice explains invitations: signing up with the email an invitation went to joins that workspace ([D28](../../../tasky-docs/design/api/README.md#decision-log)).
+- The notice explains invitations: sign up with the email an invitation went to, then accept it (a list or a team, [D57, D59](../../../tasky-docs/design/api/README.md#decision-log)). The Inbox is created on first need, not at sign-up for invited people.
 - **`POST /auth/register`** answers the same way whether the email is new, waiting for its code, or already an account. An existing account gets an "already registered" email instead of a code, so the form can't be used to find out who has an account. The app always moves on to Check your email.
 - The account gets its password only when the code is confirmed, and it's the password of the attempt that was confirmed.
 

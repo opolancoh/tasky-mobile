@@ -29,14 +29,14 @@ sequenceDiagram
     participant C as HTTP client
     participant T as Token manager
     participant A as API
-    C->>A: GET /tasks?workspaceId=… (Bearer token)
+    C->>A: GET /tasks?due=today (Bearer token)
     A-->>C: 401
     C->>T: refresh()
     T->>A: POST /auth/refresh
     alt new tokens
         A-->>T: 200
         T-->>C: true
-        C->>A: GET /tasks?workspaceId=… (new token)
+        C->>A: GET /tasks?due=today (new token)
         A-->>C: 200
     else session refused
         A-->>T: 401 / 403
@@ -78,7 +78,7 @@ What the app does, once:
 2. Clears the query cache, so no data of the account stays on screen.
 3. Forgets the current user and sets the status to `signedOut`. Navigation swaps to Sign in.
 
-The workspace saved per user stays; it isn't secret and applies at the next sign-in.
+The last-used tags per user stay on the device (not secret).
 
 ## Code
 

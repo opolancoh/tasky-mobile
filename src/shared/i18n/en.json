@@ -37,7 +37,7 @@
       "passwordHint": "At least 8 characters",
       "timeZone": "Time zone",
       "language": "Language",
-      "invited": "Invited to a workspace? Sign up with the email the invitation went to and you'll join it.",
+      "invited": "Invited to a list or a team? Sign up with the email the invitation went to.",
       "submit": "Create account"
     },
     "verify": {

@@ -1,6 +1,6 @@
 import type { Tag } from '@/data/tasks/types';
 
-/** A tag as pickers show it: the workspace's, or a picked name the workspace doesn't have yet (new). */
+/** A tag as pickers show it: one of the caller's tags, or a picked name they don't have yet (new). */
 export interface TagItem {
   name: string;
   color: string | null;

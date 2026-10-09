@@ -30,7 +30,7 @@ sequenceDiagram
     N->>A: POST /auth/reset-password
     Note over A: sets the password, verifies the email,<br/>ends every session, emails "password changed"
     A-->>N: 204
-    N->>A: POST /auth/login, then /me, /workspaces
+    N->>A: POST /auth/login, then /me
     Note over N: status signedIn: the tabs open on Today
 ```
 

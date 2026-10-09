@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { nowIn } from '@/core/dates/localDate';
 import type { ReminderAt } from '@/core/dates/reminders';
-import type { Id, LocalDate } from '@/core/types';
+import type { LocalDate } from '@/core/types';
 import { useCollections, useTags } from '@/data/tasks/queries';
 import type { RepeatPattern } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
-import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
+import { useSessionStore } from '@/shared/session/sessionStore';
 import { Sheet } from '@/shared/ui';
 
 import { RepeatPicker } from './components/RepeatPicker';
@@ -36,7 +36,6 @@ function FieldSheet() {
   const field = useTaskSheet((s) => s.field);
   const hide = useTaskSheet((s) => s.hide);
   const edit = useTaskDraft((s) => s.edit);
-  const workspaceId = useCurrentWorkspace()?.id;
   const me = useMe().data;
   const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this opening, in the profile's zone
 
@@ -66,8 +65,8 @@ function FieldSheet() {
 
   return (
     <Sheet visible={open} onDismiss={hide} dismissLabel={t('common.close')} {...header}>
-      {now && workspaceId && (
-        <Page field={field} draft={draft} workspaceId={workspaceId} now={now} due={due} setDue={setDue} reminder={reminder} setReminder={setReminder} tags={tags} setTags={setTags} apply={apply} applyDue={applyDue} />
+      {now && (
+        <Page field={field} draft={draft} now={now} due={due} setDue={setDue} reminder={reminder} setReminder={setReminder} tags={tags} setTags={setTags} apply={apply} applyDue={applyDue} />
       )}
     </Sheet>
   );
@@ -76,7 +75,6 @@ function FieldSheet() {
 interface PageProps {
   field: TaskField;
   draft: TaskDraft;
-  workspaceId: Id;
   now: { date: LocalDate; time: string };
   due: LocalDate | null;
   setDue(date: LocalDate): void;
@@ -88,12 +86,13 @@ interface PageProps {
   applyDue(date: LocalDate | null): void;
 }
 
-function Page({ field, draft, workspaceId, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
-  const collectionsQuery = useCollections(workspaceId);
-  const tagsQuery = useTags(workspaceId);
+function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
+  const collectionsQuery = useCollections();
+  const tagsQuery = useTags();
+  const userId = useSessionStore((s) => s.userId);
   const collections = collectionsQuery.data ?? [];
-  const workspaceTags = tagsQuery.data ?? [];
-  const recent = useRecentTags((s) => s.byWorkspace[workspaceId]) ?? NO_NAMES;
+  const myTags = tagsQuery.data ?? [];
+  const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
   const today = now.date;
 
   switch (field) {
@@ -122,7 +121,7 @@ function Page({ field, draft, workspaceId, now, due, setDue, reminder, setRemind
         />
       );
     case 'tags': {
-      const sorted = sortByRecent(workspaceTags, recent);
+      const sorted = sortByRecent(myTags, recent);
       return (
         <TagPicker
           tags={sorted}

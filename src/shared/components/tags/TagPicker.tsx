@@ -9,12 +9,12 @@ import { ColorDot, ListRow, SearchField, SectionLabel, SkeletonRow, Text, useThe
 import type { TagItem } from './tagItems';
 
 interface TagPickerProps {
-  /** The workspace's tags, already sorted (last used first). */
+  /** The caller's tags, already sorted (last used first). */
   tags: TagItem[];
-  /** Picked names, including new ones the workspace doesn't have yet. */
+  /** Picked names, including new ones the caller doesn't have yet. */
   selected: TagItem[];
   onToggle(name: string): void;
-  /** The workspace's tags are still loading: skeleton rows under the search box (M27). */
+  /** The tags are still loading: skeleton rows under the search box (M27). */
   loading?: boolean;
 }
 

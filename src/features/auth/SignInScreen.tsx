@@ -12,7 +12,7 @@ import { Button, Logo, Notice, Screen, Text, TextField, useTheme } from '@/share
 import { useEmailField } from './useEmailField';
 import { validateSignIn, type SignInField } from './validation';
 
-/** POST /auth/login, then /me and /workspaces (06-mobile.md, Session). */
+/** POST /auth/login, then /me (06-mobile.md, Session). */
 export function SignInScreen() {
   const { t } = useTranslation();
   const { space } = useTheme();

@@ -11,6 +11,6 @@ export const limits = {
   displayNameMax: 100,
   /** EmailCode.Length: sign-up and reset codes */
   codeLength: 6,
-  /** WorkspaceLimits */
-  workspaceNameMax: 100,
+  /** SharingLimits */
+  teamNameMax: 100,
 } as const;

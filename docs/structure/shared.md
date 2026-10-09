@@ -16,7 +16,6 @@ src/shared/
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
-│   └── useCurrentWorkspace.ts
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── CollectionIcon.tsx   CollectionPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
@@ -66,12 +65,12 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 |---|---|
 | `CollectionIcon` | The Inbox tray or the collection's color dot |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (the task's collection, due, steps, repeat), red flag when important; `onPress` opens it |
-| `CollectionPicker` | The workspace's collections, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
+| `CollectionPicker` | The collections the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `ReminderPicker` | Four quick choices, a custom date and time (wheels), Remove ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
-| `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per workspace, on this device |
+| `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
 
 ## hooks/
 
@@ -83,9 +82,8 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 
 | Piece | Purpose |
 |---|---|
-| `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`), the current user, and the workspace each user last chose (saved in AsyncStorage). Readable outside React ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`) and the current user. No current workspace (M31). Readable outside React ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `SessionProvider.tsx` | Launch, sign in, sign out, retry; `useIsSignedIn()` and friends pick the navigation group |
-| `useCurrentWorkspace.ts` | The workspace every view shows: the saved choice, else the personal one |
 
 How they're used: [Auth](../auth/README.md).
 

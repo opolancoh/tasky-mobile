@@ -18,7 +18,6 @@ import { useMe } from '@/data/tenancy/queries';
 import { CollectionIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
 import { Button, confirm, ListRow, Notice, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
@@ -41,12 +40,11 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const me = useMe().data;
-  const wid = useCurrentWorkspace()?.id;
-  const query = useTask(wid, taskId);
+  const query = useTask(taskId);
   const task = query.data;
-  const command = useChangeTask(wid, taskId);
-  const save = useSaveTask(wid, taskId);
-  const remove = useDeleteTask(wid);
+  const command = useChangeTask(taskId);
+  const save = useSaveTask(taskId);
+  const remove = useDeleteTask();
   const open = useTaskSheet((s) => s.show);
   const load = useTaskDraft((s) => s.load);
   const clear = useTaskDraft((s) => s.clear);
@@ -86,8 +84,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
       load(saved);
       return true;
     } catch (e) {
-      if (isApiError(e) && e.status === 412 && wid) {
-        const latest = await queryClient.fetchQuery({ queryKey: taskKeys.detail(wid, taskId), queryFn: () => tasksApi.get(taskId), staleTime: 0 });
+      if (isApiError(e) && e.status === 412) {
+        const latest = await queryClient.fetchQuery({ queryKey: taskKeys.detail(taskId), queryFn: () => tasksApi.get(taskId), staleTime: 0 });
         useTaskDraft.getState().rebase(latest);
       }
       return false;
@@ -106,7 +104,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     );
   });
 
-  if (!task || !me || !today || !wid || !fields) {
+  if (!task || !me || !today || !fields) {
     return <Screen edges={['bottom']}>{query.error && !missing ? <Notice>{errorMessage(query.error)}</Notice> : null}</Screen>;
   }
 
@@ -147,7 +145,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
       onSuccess: () => {
         leaving.current = true;
         navigation.goBack();
-        useToast.getState().show({ message: t('taskDetail.deleted'), action: { label: t('common.undo'), onPress: () => restoreTask(queryClient, wid, task.id) } });
+        useToast.getState().show({ message: t('taskDetail.deleted'), action: { label: t('common.undo'), onPress: () => restoreTask(queryClient, task.id) } });
       },
     });
   };

@@ -7,7 +7,6 @@ import { isApiError } from '@/core/http/problem';
 import { identityApi } from '@/data/identity/api';
 import type { LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
-import { workspacesQuery } from '@/data/workspaces/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
 
 import { useSessionStore, type SessionStatus } from './sessionStore';
@@ -30,14 +29,14 @@ const sessionRefused = (e: unknown) => isApiError(e) && (e.status === 401 || e.s
 /**
  * Owns the signed-in state (06-mobile.md, Session; status lives in `useSessionStore`).
  * Launch: no stored session → Sign in. A stored one → a valid access token (saved, or refreshed) and
- * /me + /workspaces → the tabs, which open on Today. Refused (401/403) → Sign in. Unreachable → Retry.
+ * /me → the tabs, which open on Today. Refused (401/403) → Sign in. Unreachable → Retry.
  */
 export function SessionProvider({ tokens, children }: { tokens: TokenManager; children: ReactNode }) {
   const queryClient = useQueryClient();
   const status = useSessionStore((s) => s.status);
 
   const loadAccount = useCallback(async () => {
-    const [me] = await Promise.all([queryClient.fetchQuery(meQuery), queryClient.fetchQuery(workspacesQuery)]);
+    const me = await queryClient.fetchQuery(meQuery);
     useSessionStore.getState().setUser(me.id);
     if ((languages as readonly string[]).includes(me.language)) await i18n.changeLanguage(me.language);   // the profile's language wins
   }, [queryClient]);

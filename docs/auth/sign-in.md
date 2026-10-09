@@ -25,11 +25,7 @@ sequenceDiagram
     P->>A: POST /auth/login
     A-->>P: access + refresh token
     P->>P: save both in secure storage
-    par
-        P->>A: GET /me
-    and
-        P->>A: GET /workspaces
-    end
+    P->>A: GET /me
     P->>P: apply the profile's language, remember the user
     P-->>S: status signedIn
     Note over S: the signed-out screens go away;<br/>the tabs open on Today
@@ -38,7 +34,7 @@ sequenceDiagram
 1. **Check the form** on the phone (see [Form rules](#form-rules)). Nothing is sent while it's incomplete.
 2. **`POST /auth/login`** with the email (trimmed) and password. The request carries `X-Client` and `X-Device-Name`, which name this device in the sessions list.
 3. **Save the tokens** in secure storage ([Auth › Tokens](README.md#tokens)).
-4. **Load the account:** `GET /me` and `GET /workspaces`. The profile's language replaces the device's.
+4. **Load the account:** `GET /me`. The profile's language replaces the device's. There is no current workspace ([M31](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): every view shows everything the user can see.
 5. **Status `signedIn`.** Navigation swaps groups: Sign in and its history go away, and the tabs open on Today.
 
 The same `signIn()` finishes [Sign up](sign-up.md) (after the code) and [Password reset](password-reset.md) (after the new password).
@@ -67,7 +63,7 @@ Shown in a notice above the form, or under a field for a `400` with field errors
 | `503` with `Retry-After` | Right after verifying, the account is still being set up | Retried quietly (up to 3 times); if still not ready, "Your account is still being set up…" |
 | No response | Offline or a 15-second timeout, after 3 retries | "Can't reach Tasky…" / "Tasky is taking too long…" |
 
-A failed `/me` or `/workspaces` after a successful login shows the same messages; the saved tokens stay, so the next launch continues the session.
+A failed `/me` after a successful login shows the same messages; the saved tokens stay, so the next launch continues the session.
 
 ## Code
 

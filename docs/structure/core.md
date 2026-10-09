@@ -18,7 +18,7 @@ src/core/
 └── validation/
     ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled
     ├── limits.ts         The API's field limits
-    └── tags.ts           The API's #tag rule: typed tags in a title, valid names
+    └── tags.ts           The API's tag name rule (titles are plain text, M31)
 ```
 
 ## http/
@@ -50,7 +50,7 @@ Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives tod
 
 ## validation/
 
-Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), the API's limits (`emailMax` 254, `passwordMin` 8…), and the #tag rule (`tags.ts` ↔ `TagNames.cs`: `typedTags`, `removeTypedTag`, `newTagName`). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../tasky-docs/design/clients/apps/06-mobile.md#validation)).
+Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), the API's limits (`emailMax` 254, `passwordMin` 8…), and the tag name rule (`tags.ts` ↔ `TagNames.cs`: `newTagName`, `stripInvalidTagChars`). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../tasky-docs/design/clients/apps/06-mobile.md#validation)).
 
 ---
 

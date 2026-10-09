@@ -14,7 +14,6 @@ import { TaskRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
-import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
 import { Button, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 /** Home's rows, one list (FlashList) so a long Today stays fast (docs/performance.md). */
@@ -47,25 +46,24 @@ export function HomeScreen() {
   const navigation = useNavigation();
   const { signOut } = useSession();
   const me = useMe().data;
-  const workspace = useCurrentWorkspace();
-  const wid = workspace?.id;
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
   const weekEnd = today ? addDays(today, WEEK) : undefined;
   // Overdue and today in one list (soonest first); the next 7 days; the first task after them (its total for "+N more").
-  const todayView = useTaskList(wid, { due: ['overdue', 'today'], limit: LIST_MAX });
-  const week = useTaskList(today ? wid : undefined, { due: ['upcoming'], dueTo: weekEnd, limit: LIST_MAX });
-  const later = useTaskList(today ? wid : undefined, { dueFrom: today ? addDays(today, WEEK + 1) : undefined, limit: 1 });
-  const pending = useTaskList(wid, { assignee: 'me', assignment: 'pending' });
-  const important = useTaskList(wid, { important: true, due: ['upcoming', 'none'], limit: IMPORTANT_SHOWN });
-  const collections = useCollections(wid).data;
+  // Everything the user can see (M31); Important only their own tasks (mine: Inbox, private collections, assigned to them).
+  const todayView = useTaskList({ due: ['overdue', 'today'], limit: LIST_MAX });
+  const week = useTaskList({ due: ['upcoming'], dueTo: weekEnd, limit: LIST_MAX }, !!today);
+  const later = useTaskList({ dueFrom: today ? addDays(today, WEEK + 1) : undefined, limit: 1 }, !!today);
+  const pending = useTaskList({ assignee: 'me', assignment: 'pending' });
+  const important = useTaskList({ important: true, mine: true, due: ['upcoming', 'none'], limit: IMPORTANT_SHOWN });
+  const collections = useCollections().data;
   const inbox = collections?.find((c) => c.isInbox);
-  const toSort = useTaskList(inbox ? wid : undefined, { collectionId: inbox?.id, due: ['none'], limit: 1 });
+  const toSort = useTaskList({ collectionId: inbox?.id, due: ['none'], limit: 1 }, !!inbox);
 
-  const complete = useCompleteTask(wid);
-  const update = useUpdateTask(wid);
-  const answer = useAnswerAssignment(wid);
+  const complete = useCompleteTask();
+  const update = useUpdateTask();
+  const answer = useAnswerAssignment();
   const [refreshing, setRefreshing] = useState(false);
 
   const labels = useDateLabels(today);

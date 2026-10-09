@@ -58,7 +58,7 @@ Changing status swaps the group: the old group's screens and their history go aw
 | Stored | Secure storage (Keychain / Keystore), key `tasky.tokens`, together with the refresh token and both expiry times ([M12](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) | Same |
 | Rotation | — | Every refresh returns a new one; using an old one ends the session |
 
-Nothing else about the account is stored. `/me` and `/workspaces` are loaded after each sign-in and launch. The only other saved value is which workspace each user last chose on this device (AsyncStorage, not secret).
+Nothing else about the account is stored. `/me` is loaded after each sign-in and launch. The only other saved value is each user's last-used tags on this device (AsyncStorage, not secret).
 
 ## Error messages
 
@@ -78,7 +78,7 @@ The app never shows the API's text. It maps the problem's `code` to `errors.<cod
 
 | Piece | File |
 |---|---|
-| Session status, current user, workspace per user | `src/shared/session/sessionStore.ts` |
+| Session status, current user | `src/shared/session/sessionStore.ts` |
 | Launch, sign in, sign out, retry (`useSession()`) | `src/shared/session/SessionProvider.tsx` |
 | Tokens in memory and secure storage, refresh | `src/core/auth/tokens.ts` |
 | Secure storage keys, what ends a session | `src/app/services.ts` |

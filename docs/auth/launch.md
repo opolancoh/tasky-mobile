@@ -20,7 +20,7 @@ flowchart TD
     A([App starts]) --> B{Tokens in<br/>secure storage?}
     B -- no --> SO[Sign in]
     B -- yes --> C{Access token valid<br/>for over a minute?}
-    C -- yes --> D[Load /me and /workspaces]
+    C -- yes --> D[Load /me]
     C -- no --> R[POST /auth/refresh]
     R -- new tokens --> D
     R -- 401 / 403 --> X[Delete the tokens] --> SO
@@ -32,7 +32,7 @@ flowchart TD
 
 1. **Read the tokens** from secure storage (`tasky.tokens`). None → status `signedOut` → Sign in.
 2. **Get a valid access token.** A saved one that is still valid for over a minute is used as it is, with no network call. Otherwise the app refreshes first ([tokens.md](tokens.md)).
-3. **Load the account:** `GET /me` and `GET /workspaces` in parallel, into the query cache. The profile's language is applied, and the user id goes into the session store (it picks the saved workspace).
+3. **Load the account:** `GET /me`, into the query cache. The profile's language is applied, and the user id goes into the session store.
 4. **Show the app:** status `signedIn` → the tabs, which always open on the first tab, **Today**.
 
 A refused refresh (`401`, `403`) deletes the tokens and shows Sign in. Any other failure, at any step, shows [Can't reach Tasky](#cant-reach-tasky) and keeps the tokens.

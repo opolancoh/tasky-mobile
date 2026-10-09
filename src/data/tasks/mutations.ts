@@ -9,11 +9,11 @@ import type { CreateTaskRequest, Task, TaskSummary, UpdateTaskRequest } from './
 
 /**
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
- * views, the collections' counts and the tags (a #tag may have created one) are refetched.
+ * views, the collections' counts (the Inbox may be new, D59) and the tags (a new name joins them) are refetched.
  * `withoutReminder`: a task created with a due date gets the caller's 9:00 reminder (D31); this
  * removes it right away, for someone who set a due date without a reminder (M19).
  */
-export function useCreateTask(workspaceId: Id | undefined) {
+export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ body, withoutReminder }: { body: CreateTaskRequest; withoutReminder?: boolean }) => {
@@ -23,39 +23,37 @@ export function useCreateTask(workspaceId: Id | undefined) {
       return task;
     },
     onSuccess: () => {
-      if (!workspaceId) return;
-      queryClient.invalidateQueries({ queryKey: taskKeys.views(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.collections(workspaceId) });
-      queryClient.invalidateQueries({ queryKey: taskKeys.tags(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.views });
+      queryClient.invalidateQueries({ queryKey: taskKeys.collections });
+      queryClient.invalidateQueries({ queryKey: taskKeys.tags });
     },
   });
 }
 
 /** After any change to a task: every list and the collections' counts are refetched. */
-function useRefetchTasks(workspaceId: Id | undefined) {
+function useRefetchTasks() {
   const queryClient = useQueryClient();
   return () => {
-    if (!workspaceId) return;
-    queryClient.invalidateQueries({ queryKey: taskKeys.views(workspaceId) });
-    queryClient.invalidateQueries({ queryKey: taskKeys.collections(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: taskKeys.views });
+    queryClient.invalidateQueries({ queryKey: taskKeys.collections });
   };
 }
 
 /** POST /tasks/{id}:complete. */
-export function useCompleteTask(workspaceId: Id | undefined) {
-  const refetch = useRefetchTasks(workspaceId);
+export function useCompleteTask() {
+  const refetch = useRefetchTasks();
   return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.complete(task), onSettled: refetch });
 }
 
 /** PATCH /tasks/{id}, e.g. `{ dueDate: today }` to move a task to today. */
-export function useUpdateTask(workspaceId: Id | undefined) {
-  const refetch = useRefetchTasks(workspaceId);
+export function useUpdateTask() {
+  const refetch = useRefetchTasks();
   return useMutation({ mutationFn: ({ task, body }: { task: TaskSummary; body: UpdateTaskRequest }) => tasksApi.update(task, body), onSettled: refetch });
 }
 
 /** Accept or reject a task assigned to the caller (while Pending). */
-export function useAnswerAssignment(workspaceId: Id | undefined) {
-  const refetch = useRefetchTasks(workspaceId);
+export function useAnswerAssignment() {
+  const refetch = useRefetchTasks();
   return useMutation({ mutationFn: ({ task, accept }: { task: TaskSummary; accept: boolean }) => tasksApi.answerAssignment(task, accept), onSettled: refetch });
 }
 
@@ -71,10 +69,10 @@ export interface TaskChange {
  * Runs a command on one task (Task detail's circle and Skip), one at a time (`scope`), against the latest version.
  * A 412 rereads the task and runs it once more. Afterwards every list and the collections' counts refetch.
  */
-export function useChangeTask(workspaceId: Id | undefined, taskId: Id) {
+export function useChangeTask(taskId: Id) {
   const queryClient = useQueryClient();
-  const refetchLists = useRefetchTasks(workspaceId);
-  const key = taskKeys.detail(workspaceId ?? '', taskId);
+  const refetchLists = useRefetchTasks();
+  const key = taskKeys.detail(taskId);
   const read = () => queryClient.fetchQuery({ queryKey: key, queryFn: () => tasksApi.get(taskId), staleTime: 0 });
 
   return useMutation({
@@ -107,24 +105,24 @@ export function useChangeTask(workspaceId: Id | undefined, taskId: Id) {
  * The saved task replaces the cached one; lists, collection and tag counts refetch. A 412 reaches the caller, which
  * rereads the task and keeps the edits on top of it.
  */
-export function useSaveTask(workspaceId: Id | undefined, taskId: Id) {
+export function useSaveTask(taskId: Id) {
   const queryClient = useQueryClient();
-  const refetchLists = useRefetchTasks(workspaceId);
-  const key = taskKeys.detail(workspaceId ?? '', taskId);
+  const refetchLists = useRefetchTasks();
+  const key = taskKeys.detail(taskId);
   return useMutation({
     scope: { id: `task-${taskId}` },
     mutationFn: ({ version, body }: { version: number; body: UpdateTaskRequest }) => tasksApi.update({ id: taskId, version }, body),
     onSuccess: (task) => queryClient.setQueryData(key, task),
     onSettled: () => {
       refetchLists();
-      if (workspaceId) queryClient.invalidateQueries({ queryKey: taskKeys.tags(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.tags });
     },
   });
 }
 
 /** DELETE /tasks/{id}: the task goes to Recently Deleted; `useRestoreTask` brings it back. */
-export function useDeleteTask(workspaceId: Id | undefined) {
-  const refetch = useRefetchTasks(workspaceId);
+export function useDeleteTask() {
+  const refetch = useRefetchTasks();
   return useMutation({ mutationFn: (task: Task) => tasksApi.remove(task), onSettled: refetch });
 }
 
@@ -132,10 +130,10 @@ export function useDeleteTask(workspaceId: Id | undefined) {
  * Undo for a delete, called from a toast after the screen has closed (so a plain function, not a hook): the
  * deleted task's version comes from Recently Deleted (newest first, so it's on the first page), then POST :restore.
  */
-export async function restoreTask(queryClient: QueryClient, workspaceId: Id, taskId: Id): Promise<void> {
-  const { items } = await tasksApi.recentlyDeleted(workspaceId, 20);
+export async function restoreTask(queryClient: QueryClient, taskId: Id): Promise<void> {
+  const { items } = await tasksApi.recentlyDeleted(20);
   const item = items.find((x) => x.kind === 'task' && x.id === taskId);
   if (item) await tasksApi.restore(item);
-  queryClient.invalidateQueries({ queryKey: taskKeys.views(workspaceId) });
-  queryClient.invalidateQueries({ queryKey: taskKeys.collections(workspaceId) });
+  queryClient.invalidateQueries({ queryKey: taskKeys.views });
+  queryClient.invalidateQueries({ queryKey: taskKeys.collections });
 }

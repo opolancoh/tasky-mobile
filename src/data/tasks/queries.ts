@@ -7,25 +7,19 @@ import type { TaskFilter } from './types';
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
 
-/** The workspace's collections, Inbox first. Waits until there is a workspace. */
-export const useCollections = (workspaceId: Id | undefined) =>
-  useQuery({ queryKey: taskKeys.collections(workspaceId ?? ''), queryFn: () => tasksApi.collections(workspaceId!), enabled: !!workspaceId });
+/** Every collection the caller can see, Inbox first. */
+export const useCollections = () => useQuery({ queryKey: taskKeys.collections, queryFn: tasksApi.collections });
 
-/** The workspace's tags. */
-export const useTags = (workspaceId: Id | undefined) =>
-  useQuery({ queryKey: taskKeys.tags(workspaceId ?? ''), queryFn: () => tasksApi.tags(workspaceId!), enabled: !!workspaceId });
+/** The caller's tags (D60). */
+export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });
 
 /**
- * The first page of a task list (D51, D52) in a workspace, e.g. `{ important: true, due: ['upcoming', 'none'], limit: 3 }`;
- * add `collectionId` for one collection. Waits until there is a workspace.
+ * The first page of a task list (D51, D61) over everything the caller can see, e.g.
+ * `{ important: true, mine: true, due: ['upcoming', 'none'], limit: 3 }`; add `collectionId` for one collection.
+ * `enabled: false` waits (e.g. for today's date).
  */
-export const useTaskList = (workspaceId: Id | undefined, filter: Omit<TaskFilter, 'workspaceId'>) =>
-  useQuery({
-    queryKey: taskKeys.list(workspaceId ?? '', filter),
-    queryFn: () => tasksApi.list(filter.collectionId ? filter : { ...filter, workspaceId }),
-    enabled: !!workspaceId,
-  });
+export const useTaskList = (filter: TaskFilter, enabled = true) =>
+  useQuery({ queryKey: taskKeys.list(filter), queryFn: () => tasksApi.list(filter), enabled });
 
-/** The full task (D55). Waits until there is a workspace (its key starts with it). */
-export const useTask = (workspaceId: Id | undefined, taskId: Id) =>
-  useQuery({ queryKey: taskKeys.detail(workspaceId ?? '', taskId), queryFn: () => tasksApi.get(taskId), enabled: !!workspaceId });
+/** The full task (D55). */
+export const useTask = (taskId: Id) => useQuery({ queryKey: taskKeys.detail(taskId), queryFn: () => tasksApi.get(taskId) });

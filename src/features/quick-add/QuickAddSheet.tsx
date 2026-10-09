@@ -11,8 +11,7 @@ import { useCreateTask } from '@/data/tasks/mutations';
 import { useCollections, useTags } from '@/data/tasks/queries';
 import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { useCurrentWorkspace } from '@/shared/session/useCurrentWorkspace';
-import { removeTypedTag, typedTags as typedTagsOf } from '@/core/validation/tags';
+import { useSessionStore } from '@/shared/session/sessionStore';
 import { CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
@@ -32,7 +31,7 @@ interface Draft {
   isImportant: boolean;
   dueDate?: LocalDate;
   reminder: ReminderChoice;
-  /** Picked in the Tags page; sent as #name in the title, which the API applies (and creates when new). */
+  /** Picked in the Tags page; sent as `tags` (names; new ones become the user's). The title is plain text (M31). */
   tags: string[];
 }
 
@@ -57,14 +56,14 @@ function QuickAddForm() {
   const open = useQuickAdd((s) => s.open);
   const hide = useQuickAdd((s) => s.hide);
 
-  const workspace = useCurrentWorkspace();
   const me = useMe().data;
-  const collectionsQuery = useCollections(workspace?.id);
-  const tagsQuery = useTags(workspace?.id);
+  const userId = useSessionStore((s) => s.userId);
+  const collectionsQuery = useCollections();
+  const tagsQuery = useTags();
   const collections = collectionsQuery.data ?? [];
-  const workspaceTags = tagsQuery.data ?? [];
-  const recent = useRecentTags((s) => (workspace ? s.byWorkspace[workspace.id] : undefined)) ?? NO_NAMES;
-  const create = useCreateTask(workspace?.id);
+  const myTags = tagsQuery.data ?? [];
+  const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
+  const create = useCreateTask();
 
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [page, setPage] = useState<Page>('form');
@@ -80,29 +79,28 @@ function QuickAddForm() {
   const today = now?.date;
   const inbox = collections.find((c) => c.isInbox);
   const collection = collections.find((c) => c.id === draft.collectionId) ?? inbox;
-  const typedTags = typedTagsOf(draft.title);
-  const tags = [...new Set([...draft.tags, ...typedTags])];
-  const titleText = [...typedTags].reduce(removeTypedTag, draft.title).trim();
+  const tags = draft.tags;
+  const titleText = draft.title.trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
-  // Never waits for the lists (M27): with none picked the task goes to the workspace's Inbox (POST with workspaceId).
-  const canAdd = titleText.length > 0 && !!workspace && !create.isPending;
+  // Never waits for the lists (M27): with none picked the task goes to the user's Inbox (POST without a collection, M31).
+  const canAdd = titleText.length > 0 && !create.isPending;
 
   const labels = useDateLabels(today);
   const dayText = labels.day;
   const reminderText = labels.reminder;
-  const sortedTags = sortByRecent(workspaceTags, recent);
+  const sortedTags = sortByRecent(myTags, recent);
   const tagItems: TagItem[] = tags.map((n) => sortedTags.find((g) => g.name === n) ?? { name: n, color: null });
 
   function submit() {
-    if (!canAdd || !workspace) return;
-    const picked = draft.tags.filter((n) => !typedTags.includes(n)).map((n) => `#${n}`);
+    if (!canAdd) return;
     const chosen = draft.reminder ?? undefined;
     create.mutate(
       {
         body: {
-          ...(collection ? { collectionId: collection.id } : { workspaceId: workspace.id }),
-          title: [draft.title.trim(), ...picked].join(' '),
+          collectionId: collection?.id,
+          title: titleText,
+          tags: tags.length ? tags : undefined,
           notes: draft.notes.trim() || undefined,
           isImportant: draft.isImportant || undefined,
           dueDate: draft.dueDate,
@@ -113,19 +111,16 @@ function QuickAddForm() {
       },
       {
         onSuccess: () => {
-          if (workspace) useRecentTags.getState().used(workspace.id, tags);
+          if (userId) useRecentTags.getState().used(userId, tags);
           hide();
         },
       },
     );
   }
 
-  const toggleTag = (name: string) =>
-    typedTags.includes(name)
-      ? update({ title: removeTypedTag(draft.title, name), tags: draft.tags.filter((n) => n !== name) })
-      : update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
+  const toggleTag = (name: string) => update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
 
-  const clearTags = () => update({ title: typedTags.reduce(removeTypedTag, draft.title), tags: [] });
+  const clearTags = () => update({ tags: [] });
 
   const openPage = (next: Exclude<Page, 'form'>) => {
     Keyboard.dismiss();   // the keyboard only when typing (M30); Notes brings it back for its own field

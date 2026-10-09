@@ -1,13 +1,16 @@
 import type { Id } from '@/core/types';
 
-/** Every key starts with the workspace, so switching workspaces never shows another's data (06-mobile.md, Data). */
+/**
+ * No workspace in the keys (M31): every list covers everything the caller can see. Signing out clears the cache, so
+ * another user never sees these.
+ */
 export const taskKeys = {
-  all: (workspaceId: Id) => ['workspace', workspaceId] as const,
-  collections: (workspaceId: Id) => ['workspace', workspaceId, 'collections'] as const,
-  tags: (workspaceId: Id) => ['workspace', workspaceId, 'tags'] as const,
+  all: ['tasks'] as const,
+  collections: ['tasks', 'collections'] as const,
+  tags: ['tasks', 'tags'] as const,
   /** Every task list (views and filtered lists): invalidated together after any task change. */
-  views: (workspaceId: Id) => ['workspace', workspaceId, 'views'] as const,
-  list: (workspaceId: Id, filter: object) => ['workspace', workspaceId, 'views', 'tasks', filter] as const,
+  views: ['tasks', 'views'] as const,
+  list: (filter: object) => ['tasks', 'views', filter] as const,
   /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
-  detail: (workspaceId: Id, taskId: Id) => ['workspace', workspaceId, 'task', taskId] as const,
+  detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
 };

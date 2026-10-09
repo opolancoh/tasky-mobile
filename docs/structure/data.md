@@ -12,7 +12,6 @@ src/data/
 │   └── types.ts
 ├── tenancy/             GET /me
 │   ├── api.ts  keys.ts  queries.ts  types.ts
-├── workspaces/          GET /workspaces
 │   ├── api.ts  keys.ts  queries.ts  types.ts
 └── tasks/               Collections, tags, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore
     ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
@@ -24,7 +23,7 @@ Coming with its screens: `collaboration/` (notifications).
 
 | File | Holds | Example |
 |---|---|---|
-| `types.ts` | Request and response types, in the API's names and shapes | `Me`, `Workspace`, `TokenResponse` |
+| `types.ts` | Request and response types, in the API's names and shapes | `Me`, `Collection`, `TokenResponse` |
 | `api.ts` | One function per endpoint; calls `http()`, no caching | `identityApi.login(body)` |
 | `keys.ts` | Query key factories | `tenancyKeys.me` |
 | `queries.ts` | Query definitions and hooks | `meQuery`, `useMe()` |
@@ -32,7 +31,7 @@ Coming with its screens: `collaboration/` (notifications).
 
 ## Rules
 
-- **Keys start with the workspace** for anything workspace-scoped, so switching workspaces never shows another workspace's data.
+- **No workspace in the keys** (M31): lists cover everything the user can see. Signing out clears the cache, so another user never sees them.
 - **Writes send `If-Match`** with the version last read. Task detail saves with `useSaveTask` (one PATCH with every change, D56; a `412` goes back to the screen, which rereads the task and keeps the edits). `useChangeTask` runs commands (complete, reopen, skip) one at a time (`scope`); a `412` rereads the task and runs the command once more.
 - **Optimistic only where it should feel instant:** complete, reopen, tick a step, reorder. Everything else waits for the response.
 - **After a write,** invalidate the item and every task list it can appear in (`taskKeys.views`).
