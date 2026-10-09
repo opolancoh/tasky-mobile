@@ -1,7 +1,7 @@
 import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { http } from '../http';
-import type { Collection, CreateTaskRequest, DeletedItem, Step, Tag, Task, TaskFilter, TaskPage, UpdateTaskRequest } from './types';
+import type { Collection, CreateTaskRequest, DeletedItem, Home, HomeSection, MyInvitation, Step, Tag, Task, TaskFilter, TaskPage, UpdateTaskRequest } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 type Versioned = { id: Id; version: number };
@@ -68,7 +68,19 @@ export const tasksApi = {
   /** DELETE /steps/{id} (204). */
   removeStep: (stepId: Id) => http().delete(`/steps/${stepId}`),
 
-  /** POST /tasks/{id}:accept-assignment or :reject-assignment, by the assignee while Pending. */
-  answerAssignment: (task: Versioned, accept: boolean) =>
-    http().post<Task>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : {} }),
+  /** POST /tasks/{id}:accept-assignment or :reject-assignment (optional reason, up to 500), by the assignee while Pending. */
+  answerAssignment: (task: Versioned, accept: boolean, reason?: string) =>
+    http().post<Task>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),
+
+  /** GET /home (D67): every Home section's first `limit` items and totals, in one request. */
+  home: (limit: number) => http().get<Home>('/home', { query: { limit } }),
+
+  /** GET /home/{section} (D67): one section, keyset-paged; `total` on the first page. */
+  homeSection: (section: HomeSection, limit: number, cursor?: string) => http().get<TaskPage>(`/home/${section}`, { query: { limit, cursor } }),
+
+  /** GET /invitations: invitations waiting for the caller, with who invited them and what joining shows. */
+  invitations: () => http().get<MyInvitation[]>('/invitations'),
+
+  /** POST /invitations/{id}:accept or :decline (D68), by the invited email (204). */
+  answerInvitation: (id: Id, join: boolean) => http().post(`/invitations/${id}:${join ? 'accept' : 'decline'}`),
 };

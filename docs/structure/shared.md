@@ -8,7 +8,7 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
-│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast  confirm  Skeleton
+│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast  confirm  Skeleton  Pill
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
@@ -44,7 +44,8 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
 | `Sheet` | The large size by default ([M28](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner, M27) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
-| `confirm` | `await confirm({ title, message, confirmLabel, cancelLabel })`: an action sheet on iOS, an alert on Android. **Every delete asks through it**, and so does discarding edits |
+| `confirm` | `await confirm({ title, message, confirmLabel, cancelLabel })`: an action sheet on iOS, an alert on Android. **Every delete asks through it**, and so does discarding edits. `askReason(...)`: the same with an optional reason (a text prompt on iOS; Android, with no text alert, asks without it); resolves the reason or null |
+| `Pill` | A small rounded button for one action in a row or a chip under a heading ("Join", "Accept", "⚑ 3 important"): `accent`, `quiet` or `danger`, 32 pt with a 44 pt hit area |
 | `Skeleton`, `SkeletonRow` | A grey placeholder with a soft shimmer (UI thread; still with Reduce Motion; hidden from screen readers), and a task-row-shaped one: circle and two lines ([M27](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `Toast` | `useToast.getState().show({ message, action })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |

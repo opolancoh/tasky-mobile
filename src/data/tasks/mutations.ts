@@ -57,6 +57,15 @@ export function useAnswerAssignment() {
   return useMutation({ mutationFn: ({ task, accept }: { task: TaskSummary; accept: boolean }) => tasksApi.answerAssignment(task, accept), onSettled: refetch });
 }
 
+/**
+ * Join or decline an invitation (D68). Joining adds collections (and maybe a team), so every list and the collections
+ * refetch; declining only drops it from Home and the invitations.
+ */
+export function useAnswerInvitation() {
+  const refetch = useRefetchTasks();
+  return useMutation({ mutationFn: ({ id, join }: { id: Id; join: boolean }) => tasksApi.answerInvitation(id, join), onSettled: refetch });
+}
+
 /** A command on one task (complete, reopen, skip), for `useChangeTask`. */
 export interface TaskChange {
   /** Calls the API with the task as last read (its version is the If-Match). */

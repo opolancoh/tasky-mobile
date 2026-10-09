@@ -3,6 +3,7 @@ import { createStaticNavigation, getFocusedRouteNameFromRoute, type StaticParamL
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ForgotPasswordScreen } from '@/features/auth/ForgotPasswordScreen';
+import { HomeListScreen } from '@/features/home/HomeListScreen';
 import { HomeScreen } from '@/features/home/HomeScreen';
 import { NewPasswordScreen } from '@/features/auth/NewPasswordScreen';
 import { ResetCodeScreen } from '@/features/auth/ResetCodeScreen';
@@ -13,6 +14,7 @@ import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
+import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
 import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
@@ -71,6 +73,9 @@ const RootStack = createNativeStackNavigator({
         // Titled after the open tab, so a pushed screen's back button reads "‹ Home".
         Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${(getFocusedRouteNameFromRoute(route) ?? 'Home').toLowerCase()}`) }) },
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
+        // See all, the chips and the shared line (M33); an invitation from Needs attention (M34).
+        HomeList: { screen: HomeListScreen, options: { headerShown: true } },
+        Invitation: { screen: InvitationScreen, options: { headerShown: true } },
       },
     },
   },

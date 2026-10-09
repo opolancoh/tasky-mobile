@@ -29,3 +29,28 @@ export function confirm({ title, message, confirmLabel, cancelLabel, destructive
     ], { cancelable: true, onDismiss: () => resolve(false) });
   });
 }
+
+export interface AskReasonOptions extends ConfirmOptions {
+  /** Longest reason accepted. */
+  maxLength?: number;
+}
+
+/**
+ * Asks before an action that takes an optional reason (rejecting an assignment): a text prompt on iOS; on Android,
+ * which has no text alert, the same choice as `confirm` without the reason. Resolves the reason ('' when none), or
+ * null when cancelled.
+ */
+export function askReason({ title, message, confirmLabel, cancelLabel, destructive = true, maxLength = 500 }: AskReasonOptions): Promise<string | null> {
+  if (Platform.OS !== 'ios') return confirm({ title, message, confirmLabel, cancelLabel, destructive }).then((ok) => (ok ? '' : null));
+  return new Promise((resolve) => {
+    Alert.prompt(
+      title,
+      message,
+      [
+        { text: cancelLabel, style: 'cancel', onPress: () => resolve(null) },
+        { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: (text?: string) => resolve((text ?? '').trim().slice(0, maxLength)) },
+      ],
+      'plain-text',
+    );
+  });
+}

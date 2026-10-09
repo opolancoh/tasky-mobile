@@ -13,12 +13,12 @@ import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
 import { useTask } from '@/data/tasks/queries';
-import { taskLimits, type UserRef } from '@/data/tasks/types';
+import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { CollectionIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Button, confirm, ListRow, Notice, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
+import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
 import { changedKeys, patchOf } from './taskDraft';
@@ -31,7 +31,8 @@ import { useRepeatText } from './useRepeatText';
  * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Due date, Reminder, Repeat and
  * Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
  * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
- * saving pending edits first.
+ * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
+ * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
  */
 export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { taskId } = route.params;
@@ -92,8 +93,10 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     }
   };
 
+  // Waiting for the caller's answer (M35): nothing changes until they accept, so there is no Save.
+  const waiting = !!task && !!me && task.assignee?.id === me.id && task.assignmentStatus === 'pending';
   useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: () => <SaveButton pending={save.isPending} onPress={saveDraft} /> });
+    navigation.setOptions({ headerRight: waiting ? undefined : () => <SaveButton pending={save.isPending} onPress={saveDraft} /> });
   });
 
   // Leaving with unsaved changes asks first (HIG): Discard or Keep editing.
@@ -150,6 +153,32 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     });
   };
 
+  // M35: Accept unlocks this screen; Reject asks first, with an optional reason the assigner sees, then goes back.
+  const accept = () => command.mutate({ run: (x) => tasksApi.answerAssignment(x, true), optimistic: (x) => ({ ...x, assignmentStatus: 'accepted' }) });
+  const reject = async (assigner: string) => {
+    const reason = await askReason({
+      title: t('taskDetail.rejectTitle'),
+      message: t('taskDetail.rejectMessage', { name: assigner }),
+      confirmLabel: t('taskDetail.reject'),
+      cancelLabel: t('common.cancel'),
+      maxLength: taskLimits.rejectReasonMax,
+    });
+    if (reason === null) return;
+    command.mutate(
+      { run: (x: Task) => tasksApi.answerAssignment(x, false, reason) },
+      {
+        onSuccess: () => {
+          leaving.current = true;
+          navigation.goBack();
+          useToast.getState().show({ message: t('taskDetail.rejected', { name: assigner }) });
+        },
+      },
+    );
+  };
+  const assigner = task.assignedBy?.displayName || t('notifications.someone');
+  // While waiting, the fields read only: dimmed, and taps don't reach them.
+  const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : {};
+
   const error = save.error ?? command.error ?? remove.error;
 
   return (
@@ -160,6 +189,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         </View>
       )}
 
+      <View {...locked}>
       <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, fields.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
         <Pressable
           onPress={toggleComplete}
@@ -192,7 +222,21 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         </View>
       )}
 
+      </View>
+
       <View style={{ marginTop: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }}>
+        {waiting && (
+          <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, borderBottomColor: colors.line }]} accessibilityRole="summary">
+            <Feather name="user" size={20} color={colors.warn} />
+            <View style={styles.fill}>
+              <Text variant="body">{t('taskDetail.assignment')}</Text>
+              <Text variant="caption" color="ink2" numberOfLines={2}>{t('taskDetail.assignmentWaiting', { name: assigner })}</Text>
+            </View>
+            <Pill label={t('taskDetail.reject')} tone="quiet" onPress={() => reject(assigner)} disabled={command.isPending} />
+            <Pill label={t('taskDetail.accept')} onPress={accept} disabled={command.isPending} />
+          </View>
+        )}
+        <View {...locked}>
         <ListRow
           label={t('taskDetail.fields.collection')}
           icon={<CollectionIcon collection={fields.collection} />}
@@ -243,7 +287,10 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <ListRow label={t('taskDetail.fields.repeat')} value={t('common.none')} icon={<Feather name="repeat" size={20} color={colors.ink3} />} onPress={() => open('repeat')} />
         )}
         <TagsRow tags={fields.tags} onPress={() => open('tags')} onClear={fields.tags.length ? () => edit({ tags: [] }) : undefined} />
+        </View>
       </View>
+
+      <View {...locked}>
 
       {task.repeat && next && !completed && (
         <View style={styles.start}>
@@ -253,6 +300,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
 
       <StepList canAdd={!completed} />
       <NotesField />
+      </View>
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
         <Text variant="footnote" color="ink3">
@@ -265,6 +313,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         )}
       </View>
 
+      {!waiting && (
       <Pressable onPress={deleteTask} disabled={remove.isPending} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
         {({ pressed }) => (
           <>
@@ -275,6 +324,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           </>
         )}
       </Pressable>
+      )}
     </Screen>
   );
 }
@@ -364,4 +414,6 @@ const styles = StyleSheet.create({
   notes: { minHeight: 96 },
   delete: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
   save: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  locked: { opacity: 0.55 },
+  assignment: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
 });

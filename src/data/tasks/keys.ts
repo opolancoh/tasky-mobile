@@ -11,6 +11,11 @@ export const taskKeys = {
   /** Every task list (views and filtered lists): invalidated together after any task change. */
   views: ['tasks', 'views'] as const,
   list: (filter: object) => ['tasks', 'views', filter] as const,
+  /** Home (GET /home) and its sections (See all): views too, so any task change refetches them. */
+  home: ['tasks', 'views', 'home'] as const,
+  homeSection: (section: string) => ['tasks', 'views', 'home', section] as const,
+  /** Invitations waiting for the caller (also inside Home). */
+  invitations: ['tasks', 'views', 'invitations'] as const,
   /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
   detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
 };

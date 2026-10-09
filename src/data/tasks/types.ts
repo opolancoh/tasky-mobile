@@ -153,6 +153,8 @@ export interface TaskSummary {
   stepsTotal: number;
   tags: TagRef[];
   version: Version;
+  /** The caller's own reminder (D67): Home's Today shows its time. */
+  reminder?: Reminder | null;
 }
 
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
@@ -222,6 +224,38 @@ export interface DeletedItem {
   version: Version;
 }
 
+/**
+ * An invitation waiting for the caller (GET /invitations, D67): a team's (`teamId`) or a collection's (`collectionId`),
+ * who invited them, the people in it, and its open tasks (a collection) or lists (a team).
+ */
+export interface MyInvitation {
+  id: Id;
+  teamId?: Id | null;
+  collectionId?: Id | null;
+  name: string;
+  invitedBy?: UserRef | null;
+  people: number;
+  openTasks?: number | null;
+  lists?: number | null;
+  /** UTC ISO-8601. */
+  expiresAt: string;
+}
+
+/** Home's task sections (GET /home/{section}, D67). */
+export type HomeSection = 'to-answer' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox' | 'shared';
+
+/** GET /home (D67): invitations, each section's first page, and the totals behind the chips and the shared line. */
+export interface Home {
+  invitations: MyInvitation[];
+  toAnswer: TaskPage;
+  overdue: TaskPage;
+  today: TaskPage;
+  comingUp: TaskPage;
+  importantTotal: number;
+  inboxTotal: number;
+  sharedTotal: number;
+}
+
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500 } as const;
 

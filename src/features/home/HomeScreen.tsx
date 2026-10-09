@@ -1,44 +1,43 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useState, type ComponentProps } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { addDays, formatLocalDate, nowIn } from '@/core/dates/localDate';
-import { useAnswerAssignment, useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
-import { useCollections, useTaskList } from '@/data/tasks/queries';
-import type { TaskSummary } from '@/data/tasks/types';
+import { formatLocalDate, nowIn } from '@/core/dates/localDate';
+import type { Notification } from '@/data/collaboration/types';
+import { useUnreadCount, useUnreadNotifications } from '@/data/collaboration/queries';
+import { HOME_PREVIEW, useHome } from '@/data/tasks/queries';
+import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { TaskRow } from '@/shared/components';
-import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
-import { Button, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Button, Notice, Pill, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-/** Home's rows, one list (FlashList) so a long Today stays fast (docs/performance.md). */
+import { AskRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
+import type { HomeListSection } from './homeSections';
+
+/** Home's rows, one list (FlashList) so long sections stay fast (docs/performance.md). */
 type Item =
   | { type: 'header'; key: string }
-  | { type: 'section'; key: string; title: string; count?: number; flag?: boolean; link?: { label: string; onPress(): void } }
-  | { type: 'attention'; key: string; task: TaskSummary; kind: 'overdue' | 'pending'; first: boolean; last: boolean }
-  | { type: 'task'; key: string; task: TaskSummary; showDue: boolean }
-  | { type: 'important'; key: string; task: TaskSummary }
-  | { type: 'calm'; key: string; icon: ComponentProps<typeof Feather>['name']; title: string; body: string }
-  | { type: 'day'; key: string; label: string; date: string; first: string; more: number; count: number }
-  | { type: 'inbox'; key: string; count: number }
+  | { type: 'section'; key: string; title: string; count: number; seeAll?: HomeListSection }
+  | { type: 'invitation'; key: string; invitation: MyInvitation }
+  | { type: 'ask'; key: string; task: TaskSummary }
+  | { type: 'overdue'; key: string; task: TaskSummary }
+  | { type: 'task'; key: string; task: TaskSummary; when: 'time' | 'day' }
+  | { type: 'update'; key: string; notification: Notification }
+  | { type: 'shared'; key: string; count: number }
+  | { type: 'calm'; key: string; body: string }
   | { type: 'signOut'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
-const IMPORTANT_SHOWN = 3;
-const WEEK = 7;
-/** The largest page the API serves; Today and the week fit in one. */
-const LIST_MAX = 200;
-
 /**
- * Home (06-mobile.md, M23, M24): the start of the day. Needs attention (overdue, assignments to answer; hidden
- * when empty), Important (up to 3 not due today, a red edge on each row), Today, Coming up (next 7 days by day, then Later), Inbox.
- * Data: the task list, GET /tasks (D51–D53); Coming up is grouped by day here.
+ * Home, "my pending stuff" (06-mobile.md, M32–M35): one stream by urgency. Needs attention (invitations, assignments
+ * to answer, overdue), Today (due today or a reminder today), Coming up (next 7 days), Updates (unread notifications),
+ * each with its count, its first 5 rows and See all; chips for Important and the Inbox. Data: GET /home (D67) beside
+ * the unread notifications; every count opens its list (HomeList, M33).
  */
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -46,125 +45,69 @@ export function HomeScreen() {
   const navigation = useNavigation();
   const { signOut } = useSession();
   const me = useMe().data;
+  const home = useHome();
+  const updates = useUnreadNotifications(HOME_PREVIEW);
+  const unread = useUnreadCount();
+  const [refreshing, setRefreshing] = useState(false);
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
-  const weekEnd = today ? addDays(today, WEEK) : undefined;
-  // Overdue and today in one list (soonest first); the next 7 days; the first task after them (its total for "+N more").
-  // Everything the user can see (M31); Important only their own tasks (mine: Inbox, private collections, assigned to them).
-  const todayView = useTaskList({ due: ['overdue', 'today'], limit: LIST_MAX });
-  const week = useTaskList({ due: ['upcoming'], dueTo: weekEnd, limit: LIST_MAX }, !!today);
-  const later = useTaskList({ dueFrom: today ? addDays(today, WEEK + 1) : undefined, limit: 1 }, !!today);
-  const pending = useTaskList({ assignee: 'me', assignment: 'pending' });
-  const important = useTaskList({ important: true, mine: true, due: ['upcoming', 'none'], limit: IMPORTANT_SHOWN });
-  const collections = useCollections().data;
-  const inbox = collections?.find((c) => c.isInbox);
-  const toSort = useTaskList({ collectionId: inbox?.id, due: ['none'], limit: 1 }, !!inbox);
+  const data = home.data;
+  const seeAll = (section: HomeListSection) => navigation.navigate('HomeList', { section });
 
-  const complete = useCompleteTask();
-  const update = useUpdateTask();
-  const answer = useAnswerAssignment();
-  const [refreshing, setRefreshing] = useState(false);
-
-  const labels = useDateLabels(today);
-  const openTask = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
-
-  const all = todayView.data?.items ?? [];
-  const overdue = all.filter((x) => !!x.dueDate && !!today && x.dueDate < today);
-  const dueToday = all.filter((x) => x.dueDate === today);
-  const asks = pending.data?.items ?? [];
-  // The next 7 days by date (the list comes soonest first), only days with tasks.
-  const days: { date: string; items: TaskSummary[] }[] = [];
-  for (const task of week.data?.items ?? []) {
-    const last = days[days.length - 1];
-    if (last?.date === task.dueDate) last.items.push(task);
-    else days.push({ date: task.dueDate!, items: [task] });
-  }
-  const laterFirst = later.data?.items[0];
-  const laterCount = later.data?.total ?? 0;
-  const error = todayView.error ?? week.error ?? complete.error ?? update.error ?? answer.error;
+  const attentionCount = data ? data.invitations.length + (data.toAnswer.total ?? 0) + (data.overdue.total ?? 0) : 0;
+  const todayCount = data?.today.total ?? 0;
+  const unreadCount = unread.data?.count ?? updates.data?.items.length ?? 0;
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
-  // First load (M27): skeleton sections and rows where Today and Coming up will be, instead of the sections.
-  const loading = !todayView.data && todayView.isPending;
-  if (loading) {
+  // First load (M27): skeleton sections and rows where the sections will be.
+  if (!data && home.isPending) {
     items.push({ type: 'skeletonSection', key: 'ks1' }, ...[72, 55, 64].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr1-${i}`, width })));
     items.push({ type: 'skeletonSection', key: 'ks2' }, ...[48, 60].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr2-${i}`, width })));
   }
 
-  if (!loading) {
-    // Needs attention: only when something does (hidden otherwise).
-    const attention = [...overdue.map((task) => ({ task, kind: 'overdue' as const })), ...asks.map((task) => ({ task, kind: 'pending' as const }))];
-    if (attention.length) {
-      items.push({ type: 'section', key: 's-attention', title: t('home.attention') });
-      attention.forEach(({ task, kind }, i) => items.push({ type: 'attention', key: `a-${task.id}`, task, kind, first: i === 0, last: i === attention.length - 1 }));
+  if (data && today) {
+    if (!attentionCount && !todayCount) items.push({ type: 'calm', key: 'calm', body: t(data.comingUp.total ? 'home.caughtUpNext' : 'home.caughtUpBody') });
+
+    // Needs attention: invitations, then answers, then overdue; 5 rows at most, See all for the rest.
+    if (attentionCount) {
+      items.push({ type: 'section', key: 's-attention', title: t('home.attention'), count: attentionCount, seeAll: attentionCount > HOME_PREVIEW ? 'attention' : undefined });
+      const rows: Item[] = [
+        ...data.invitations.map((invitation) => ({ type: 'invitation' as const, key: `v-${invitation.id}`, invitation })),
+        ...data.toAnswer.items.map((task) => ({ type: 'ask' as const, key: `a-${task.id}`, task })),
+        ...data.overdue.items.map((task) => ({ type: 'overdue' as const, key: `o-${task.id}`, task })),
+      ];
+      items.push(...rows.slice(0, HOME_PREVIEW));
     }
 
-    // Important (M23, M24): right after Needs attention, each row with a red edge so they're found at a glance.
-    const importantItems = important.data?.items ?? [];
-    if (importantItems.length) {
-      items.push({ type: 'section', key: 's-important', title: t('home.important'), count: important.data?.total ?? importantItems.length, flag: true });
-      importantItems.forEach((task) => items.push({ type: 'important', key: `i-${task.id}`, task }));
+    if (todayCount) {
+      items.push({ type: 'section', key: 's-today', title: t('home.today'), count: todayCount, seeAll: todayCount > HOME_PREVIEW ? 'today' : undefined });
+      data.today.items.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, when: 'time' }));
+    }
+    if (data.sharedTotal) items.push({ type: 'shared', key: 'shared', count: data.sharedTotal });
+
+    const coming = data.comingUp.total ?? 0;
+    if (coming) {
+      items.push({ type: 'section', key: 's-coming', title: t('home.comingUp'), count: coming, seeAll: coming > HOME_PREVIEW ? 'coming-up' : undefined });
+      data.comingUp.items.forEach((task) => items.push({ type: 'task', key: `c-${task.id}`, task, when: 'day' }));
     }
 
-    items.push({ type: 'section', key: 's-today', title: t('home.today'), count: dueToday.length });
-    if (dueToday.length) dueToday.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, showDue: false }));
-    else if (todayView.data) {
-      const next = days[0]?.items[0];
-      items.push(
-        next
-          ? { type: 'calm', key: 'calm', icon: 'calendar', title: t('home.nothingToday'), body: t('home.next', { when: labels.day(next.dueDate!), title: next.title }) }
-          : { type: 'calm', key: 'calm', icon: 'sun', title: t('home.nothingPlanned'), body: t('home.nothingPlannedBody') },
-      );
+    if (unreadCount && updates.data?.items.length) {
+      items.push({ type: 'section', key: 's-updates', title: t('home.updates'), count: unreadCount, seeAll: unreadCount > HOME_PREVIEW ? 'updates' : undefined });
+      updates.data.items.forEach((notification) => items.push({ type: 'update', key: `u-${notification.id}`, notification }));
     }
-
-    if (days.length || laterFirst) {
-      const toUpcoming = () => navigation.navigate('Tabs', { screen: 'Upcoming' });
-      items.push({
-        type: 'section',
-        key: 's-coming',
-        title: t('home.comingUp'),
-        count: days.reduce((n, d) => n + d.items.length, 0) + laterCount,
-        link: { label: t('home.seeAll'), onPress: toUpcoming },
-      });
-      days.forEach((d) =>
-        items.push({
-          type: 'day',
-          key: `d-${d.date}`,
-          label: labels.day(d.date),
-          date: formatLocalDate(d.date, i18n.language, { month: 'short', day: 'numeric' }),
-          first: d.items[0]!.title,
-          more: d.items.length - 1,
-          count: d.items.length,
-        }),
-      );
-      if (laterFirst && weekEnd)
-        items.push({
-          type: 'day',
-          key: 'd-later',
-          label: t('home.later'),
-          date: t('home.after', { date: formatLocalDate(weekEnd, i18n.language, { month: 'short', day: 'numeric' }) }),
-          first: laterFirst.title,
-          more: laterCount - 1,
-          count: laterCount,
-        });
-    }
-
-    const sortCount = toSort.data?.total ?? 0;
-    if (sortCount > 0) items.push({ type: 'inbox', key: 'inbox', count: sortCount });
   }
   items.push({ type: 'signOut', key: 'signOut' });   // until Settings exists
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([todayView.refetch(), week.refetch(), later.refetch(), pending.refetch(), important.refetch(), toSort.refetch()]);
+    await Promise.all([home.refetch(), updates.refetch(), unread.refetch()]);
     setRefreshing(false);
   };
 
   const summary = [
-    t('home.forToday', { count: dueToday.length }),
-    overdue.length > 0 && t('home.overdueCount', { count: overdue.length }),
-    asks.length > 0 && t('home.toAccept', { count: asks.length }),
+    attentionCount > 0 && t('home.needAttention', { count: attentionCount }),
+    t('home.forToday', { count: todayCount }),
   ].filter(Boolean).join(' · ');
   const hour = Number(now?.time.slice(0, 2) ?? 9);
   const greeting = t(hour < 12 ? 'home.morning' : hour < 18 ? 'home.afternoon' : 'home.evening', { name: me?.displayName.split(' ')[0] ?? '' });
@@ -180,7 +123,7 @@ export function HomeScreen() {
             <Text variant="title" numberOfLines={1}>
               {greeting}
             </Text>
-            {todayView.data ? (
+            {data ? (
               <Text variant="subhead" color="ink2">
                 {summary}
               </Text>
@@ -189,137 +132,76 @@ export function HomeScreen() {
                 <Skeleton width={150} height={12} />
               </View>
             )}
-            {error && (
+            {/* Important and the Inbox: a count each, opening its list (M32, M33). */}
+            {data && (data.importantTotal > 0 || data.inboxTotal > 0) && (
+              <View style={[styles.chips, { gap: space.sm, marginTop: space.sm }]}>
+                {data.importantTotal > 0 && (
+                  <Pill tone="danger" icon={<Feather name="flag" size={13} color={colors.danger} />} label={t('home.importantCount', { count: data.importantTotal })} onPress={() => seeAll('important')} />
+                )}
+                {data.inboxTotal > 0 && (
+                  <Pill icon={<Feather name="inbox" size={13} color={colors.accent} />} label={t('home.toSort', { count: data.inboxTotal })} onPress={() => seeAll('inbox')} />
+                )}
+              </View>
+            )}
+            {home.error && (
               <View style={{ marginTop: space.md }}>
-                <Notice>{errorMessage(error)}</Notice>
+                <Notice>{errorMessage(home.error)}</Notice>
               </View>
             )}
           </View>
         );
       case 'section':
         return (
-          <View style={[styles.sectionHead, { marginTop: space.xl, marginBottom: space.xs, gap: space.sm }]}>
-            {item.flag && <Feather name="flag" size={14} color={colors.danger} />}
+          <View style={[styles.sectionHead, { marginTop: space.xl, gap: space.sm }]}>
             <Text variant="label" color="ink2" accessibilityRole="header">
               {item.title}
             </Text>
-            {item.count !== undefined && (
-              <Text variant="label" color="ink3">
-                {item.count}
-              </Text>
-            )}
-            {item.link && (
+            <Text variant="label" color="ink3">
+              {item.count}
+            </Text>
+            {item.seeAll && (
               <View style={styles.push}>
-                <Button variant="link" title={item.link.label} onPress={item.link.onPress} />
+                <Button variant="link" title={t('home.seeAll')} onPress={() => seeAll(item.seeAll!)} />
               </View>
             )}
           </View>
         );
-      case 'attention':
-        return (
-          // The row opens the task; its buttons keep their own actions.
-          <Pressable
-            onPress={() => openTask(item.task)}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.attention,
-              { backgroundColor: pressed ? colors.line : colors.surface2, paddingHorizontal: space.md, paddingTop: space.sm, gap: space.sm },
-              item.first && styles.top,
-              item.last ? styles.bottom : { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
-            ]}
-          >
-            <View style={[styles.attnIcon, { backgroundColor: item.kind === 'overdue' ? colors.dangerSoft : colors.warnSoft }]}>
-              <Feather name={item.kind === 'overdue' ? 'flag' : 'user'} size={16} color={item.kind === 'overdue' ? colors.danger : colors.warn} />
-            </View>
-            <View style={styles.main}>
-              <Text variant="bodyMedium" numberOfLines={1}>
-                {item.task.title}
-              </Text>
-              <Text variant="footnote" color="ink3" numberOfLines={1}>
-                {item.kind === 'overdue'
-                  ? t('home.overdueSince', { date: labels.day(item.task.dueDate!) })
-                  : item.task.dueDate ? t('home.assignedDue', { date: labels.day(item.task.dueDate) }) : t('home.assigned')}
-              </Text>
-              <View style={[styles.actions, { gap: space.lg }]}>
-                {item.kind === 'overdue' ? (
-                  <Button variant="link" title={t('home.moveToToday')} onPress={() => today && update.mutate({ task: item.task, body: { dueDate: today } })} />
-                ) : (
-                  <>
-                    <Button variant="link" title={t('home.reject')} onPress={() => answer.mutate({ task: item.task, accept: false })} />
-                    <Button variant="link" title={t('home.accept')} onPress={() => answer.mutate({ task: item.task, accept: true })} />
-                  </>
-                )}
-              </View>
-            </View>
-          </Pressable>
-        );
+      case 'invitation':
+        return <InvitationRow invitation={item.invitation} />;
+      case 'ask':
+        return <AskRow task={item.task} today={today!} />;
+      case 'overdue':
+        return <OverdueRow task={item.task} today={today!} />;
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue={item.showDue} onComplete={(task) => complete.mutate(task)} onPress={openTask} />;
-      case 'important':
+        return <TaskStreamRow task={item.task} today={today!} when={item.when} />;
+      case 'update':
+        return <UpdateRow notification={item.notification} />;
+      case 'shared':
         return (
-          // A thin red edge before each row (M24), rows on the page background.
-          <View style={styles.edgeRow}>
-            <View style={[styles.edge, { backgroundColor: colors.danger }]} />
-            <View style={styles.main}>
-              <TaskRow task={item.task} today={today} showDue onComplete={(task) => complete.mutate(task)} onPress={openTask} />
-            </View>
-          </View>
-        );
-      case 'calm':
-        return (
-          <View style={[styles.calm, { backgroundColor: colors.surface2, padding: space.md, gap: space.md, marginTop: space.xs }]}>
-            <View style={[styles.attnIcon, { backgroundColor: colors.accentSoft }]}>
-              <Feather name={item.icon} size={18} color={colors.accent} />
-            </View>
-            <View style={styles.main}>
-              <Text variant="bodyMedium">{item.title}</Text>
-              <Text variant="footnote" color="ink2" numberOfLines={2}>
-                {item.body}
-              </Text>
-            </View>
-          </View>
-        );
-      case 'day':
-        return (
-          <Pressable onPress={() => navigation.navigate('Tabs', { screen: 'Upcoming' })} accessibilityRole="button">
+          <Pressable onPress={() => seeAll('shared')} accessibilityRole="button">
             {({ pressed }) => (
-              <View style={[styles.day, { gap: space.md, paddingVertical: space.sm + 2, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-                <View style={styles.when}>
-                  <Text variant="bodyMedium" numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                  <Text variant="footnote" color="ink3" numberOfLines={1}>
-                    {item.date}
-                  </Text>
-                </View>
-                <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.main}>
-                  {item.more > 0 ? t('home.andMore', { title: item.first, count: item.more }) : item.first}
-                </Text>
-                <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
-                  <Text variant="label" color="accent">
-                    {item.count}
-                  </Text>
-                </View>
-              </View>
-            )}
-          </Pressable>
-        );
-      case 'inbox':
-        return (
-          <Pressable onPress={() => navigation.navigate('Tabs', { screen: 'Browse' })} accessibilityRole="button" style={{ marginTop: space.xl }}>
-            {({ pressed }) => (
-              <View style={[styles.day, { gap: space.md, paddingVertical: space.sm + 2, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-                <Feather name="inbox" size={20} color={colors.accent} />
-                <Text variant="body" style={styles.main}>
-                  {t('home.inbox')}
-                </Text>
-                <Text variant="subhead" color="ink3">
-                  {t('home.toSort', { count: item.count })}
+              <View style={[styles.line, { gap: space.sm, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
+                <Text variant="subhead" color="ink2" style={styles.fill} numberOfLines={1}>
+                  {t('home.shared', { count: item.count })}
                 </Text>
                 <Feather name="chevron-right" size={18} color={colors.ink3} />
               </View>
             )}
           </Pressable>
+        );
+      case 'calm':
+        return (
+          <View style={[styles.calm, { backgroundColor: colors.surface2, padding: space.md, gap: space.md, marginTop: space.xs }]}>
+            <View style={[styles.calmIcon, { backgroundColor: colors.successSoft }]}>
+              <Feather name="check" size={18} color={colors.success} />
+            </View>
+            <View style={styles.fill}>
+              <Text variant="bodyMedium">{t('home.caughtUp')}</Text>
+              <Text variant="footnote" color="ink2" numberOfLines={2}>
+                {item.body}
+              </Text>
+            </View>
+          </View>
         );
       case 'skeletonSection':
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
@@ -350,18 +232,10 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap' },
   sectionHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   push: { marginLeft: 'auto' },
-  attention: { flexDirection: 'row', alignItems: 'flex-start' },
-  top: { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg },
-  bottom: { borderBottomLeftRadius: radius.lg, borderBottomRightRadius: radius.lg, paddingBottom: 4 },
-  edgeRow: { flexDirection: 'row', gap: 12 },
-  edge: { width: 3, borderRadius: 2, marginVertical: 12 },
-  attnIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  main: { flex: 1, minWidth: 0 },
-  actions: { flexDirection: 'row', marginLeft: -2 },
+  line: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
   calm: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.lg },
-  day: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 56 },
-  when: { width: 84 },
-  badge: { minWidth: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7 },
+  calmIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
 });

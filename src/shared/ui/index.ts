@@ -1,11 +1,12 @@
 export { Button, type ButtonProps } from './Button';
 export { ClearButton, type ClearButtonProps } from './ClearButton';
 export { ColorDot } from './ColorDot';
-export { confirm, type ConfirmOptions } from './confirm';
+export { askReason, confirm, type AskReasonOptions, type ConfirmOptions } from './confirm';
 export { DateWheel, type DateWheelProps } from './DateWheel';
 export { ListRow, type ListRowProps } from './ListRow';
 export { Logo } from './Logo';
 export { Notice } from './Notice';
+export { Pill, type PillProps } from './Pill';
 export { RuleCheck } from './RuleCheck';
 export { Screen, type ScreenProps } from './Screen';
 export { SectionLabel } from './SectionLabel';
