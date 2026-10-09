@@ -19,7 +19,7 @@ export interface TaskRowProps {
 }
 
 /**
- * A task in a list (Home, Today, collections): round checkbox, the title (2 lines at most, then …), a meta line
+ * A task in a list (collections, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
  * (collection, due date, steps) and a red flag when important. Ticking fills the circle at once; the list
  * refetches after the API answers.
  */

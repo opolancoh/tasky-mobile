@@ -153,7 +153,7 @@ export interface TaskSummary {
   stepsTotal: number;
   tags: TagRef[];
   version: Version;
-  /** The caller's own reminder (D67): Home's Today shows its time. */
+  /** The caller's own reminder (D67): the Today tab shows its time. */
   reminder?: Reminder | null;
 }
 
@@ -241,10 +241,10 @@ export interface MyInvitation {
   expiresAt: string;
 }
 
-/** Home's task sections (GET /home/{section}, D67). */
-export type HomeSection = 'to-answer' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox' | 'shared';
+/** The Today tab's task sections (GET /home/{section}, D67). */
+export type HomeSection = 'to-answer' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox';
 
-/** GET /home (D67): invitations, each section's first page, and the totals behind the chips and the shared line. */
+/** GET /home (D67, D69): the Today tab's invitations, each section's first page, and the totals behind its chips. */
 export interface Home {
   invitations: MyInvitation[];
   toAnswer: TaskPage;
@@ -253,7 +253,6 @@ export interface Home {
   comingUp: TaskPage;
   importantTotal: number;
   inboxTotal: number;
-  sharedTotal: number;
 }
 
 /** API limits (TaskLimits.cs). */

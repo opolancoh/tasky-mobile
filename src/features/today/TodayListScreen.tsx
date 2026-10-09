@@ -16,7 +16,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { AskRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
-import type { HomeListSection } from './homeSections';
+import type { TodayListSection } from './todaySections';
 
 type Item =
   | { type: 'header'; key: string }
@@ -29,17 +29,16 @@ type Item =
   | { type: 'footer'; key: string };
 
 /** The task section behind each See all (D67); Needs attention pages its answers, then its overdue tasks. */
-const TASK_SECTION: Partial<Record<HomeListSection, HomeSection>> = {
-  today: 'today', 'coming-up': 'coming-up', important: 'important', inbox: 'inbox', shared: 'shared',
+const TASK_SECTION: Partial<Record<TodayListSection, HomeSection>> = {
+  today: 'today', 'coming-up': 'coming-up', important: 'important', inbox: 'inbox',
 };
-const WHEN = { today: 'time', 'coming-up': 'none', important: 'due', inbox: 'none', shared: 'due' } as const;
+const WHEN = { today: 'time', 'coming-up': 'none', important: 'due', inbox: 'none' } as const;
 
 /**
- * See all (06-mobile.md, M33): a whole Home section on its own screen, pushed from its See all, a chip or the shared
- * line. Title, total and what it holds; the same rows as Home (Coming up under day headings); 20 at a time, the next
+ * See all (06-mobile.md, M33): a whole Today section on its own screen, pushed from its See all or a chip. Title, total and what it holds; the same rows as Home (Coming up under day headings); 20 at a time, the next
  * page as the list nears its end (keyset cursor), "All N shown" at the end.
  */
-export function HomeListScreen({ route }: StaticScreenProps<{ section: HomeListSection }>) {
+export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayListSection }>) {
   const { section } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
@@ -84,7 +83,7 @@ export function HomeListScreen({ route }: StaticScreenProps<{ section: HomeListS
       headerRight: isUpdates && notifications.some((n) => !n.readAt)
         ? () => (
             <Pressable onPress={() => markRead.mutate('all')} hitSlop={8} accessibilityRole="button" style={styles.headerButton}>
-              <Text variant="button" color="accent">{t('homeList.markAllRead')}</Text>
+              <Text variant="button" color="accent">{t('todayList.markAllRead')}</Text>
             </Pressable>
           )
         : undefined,
@@ -109,8 +108,8 @@ export function HomeListScreen({ route }: StaticScreenProps<{ section: HomeListS
   }
   items.push({ type: 'footer', key: 'footer' });
 
-  const title = t(`homeList.title.${section}`);
-  const subtitle = t(`homeList.sub.${section}`);
+  const title = t(`todayList.title.${section}`);
+  const subtitle = t(`todayList.sub.${section}`);
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -119,7 +118,7 @@ export function HomeListScreen({ route }: StaticScreenProps<{ section: HomeListS
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             <Text variant="title" accessibilityRole="header">{title}</Text>
             <Text variant="subhead" color="ink2">
-              {total !== undefined ? `${t(isUpdates ? 'homeList.updates' : 'homeList.items', { count: total })} · ${subtitle}` : subtitle}
+              {total !== undefined ? `${t(isUpdates ? 'todayList.updates' : 'todayList.items', { count: total })} · ${subtitle}` : subtitle}
             </Text>
             {error && (
               <View style={{ marginTop: space.md }}>
@@ -150,13 +149,13 @@ export function HomeListScreen({ route }: StaticScreenProps<{ section: HomeListS
         ) : hasMore ? (
           <View style={[styles.footer, { gap: space.sm }]} accessibilityLiveRegion="polite">
             <ActivityIndicator color={colors.ink3} />
-            <Text variant="footnote" color="ink3">{t('homeList.loadingMore')}</Text>
+            <Text variant="footnote" color="ink3">{t('todayList.loadingMore')}</Text>
           </View>
         ) : shown === 0 ? (
-          <Text variant="subhead" color="ink3" style={{ paddingVertical: space.lg }}>{t('homeList.empty')}</Text>
+          <Text variant="subhead" color="ink3" style={{ paddingVertical: space.lg }}>{t('todayList.empty')}</Text>
         ) : shown > HOME_PAGE ? (
           <View style={styles.footer}>
-            <Text variant="footnote" color="ink3">{t('homeList.allShown', { count: shown })}</Text>
+            <Text variant="footnote" color="ink3">{t('todayList.allShown', { count: shown })}</Text>
           </View>
         ) : null;
     }

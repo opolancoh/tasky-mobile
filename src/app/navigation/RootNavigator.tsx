@@ -3,8 +3,6 @@ import { createStaticNavigation, getFocusedRouteNameFromRoute, type StaticParamL
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { ForgotPasswordScreen } from '@/features/auth/ForgotPasswordScreen';
-import { HomeListScreen } from '@/features/home/HomeListScreen';
-import { HomeScreen } from '@/features/home/HomeScreen';
 import { NewPasswordScreen } from '@/features/auth/NewPasswordScreen';
 import { ResetCodeScreen } from '@/features/auth/ResetCodeScreen';
 import { SignInScreen } from '@/features/auth/SignInScreen';
@@ -15,6 +13,8 @@ import { BrowseScreen } from '@/features/browse/BrowseScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
+import { TodayListScreen } from '@/features/today/TodayListScreen';
+import { TodayScreen } from '@/features/today/TodayScreen';
 import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
 import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
@@ -26,7 +26,8 @@ import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
-    Home: { screen: HomeScreen, options: tab('home', 'tabs.home') },
+    // The first tab is Today (M36): what is pending, at a glance.
+    Today: { screen: TodayScreen, options: tab('check-circle', 'tabs.today') },
     Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
     Add: {
       screen: AddTabScreen,
@@ -70,11 +71,11 @@ const RootStack = createNativeStackNavigator({
     SignedIn: {
       if: useIsSignedIn,
       screens: {
-        // Titled after the open tab, so a pushed screen's back button reads "‹ Home".
-        Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${(getFocusedRouteNameFromRoute(route) ?? 'Home').toLowerCase()}`) }) },
+        // Titled after the open tab, so a pushed screen's back button reads "‹ Today".
+        Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${(getFocusedRouteNameFromRoute(route) ?? 'Today').toLowerCase()}`) }) },
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
         // See all, the chips and the shared line (M33); an invitation from Needs attention (M34).
-        HomeList: { screen: HomeListScreen, options: { headerShown: true } },
+        TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
       },
     },

@@ -72,7 +72,7 @@ export const tasksApi = {
   answerAssignment: (task: Versioned, accept: boolean, reason?: string) =>
     http().post<Task>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),
 
-  /** GET /home (D67): every Home section's first `limit` items and totals, in one request. */
+  /** GET /home (D67): every Today section's first `limit` items and totals, in one request. */
   home: (limit: number) => http().get<Home>('/home', { query: { limit } }),
 
   /** GET /home/{section} (D67): one section, keyset-paged; `total` on the first page. */

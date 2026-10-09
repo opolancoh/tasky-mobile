@@ -59,7 +59,7 @@ export function useAnswerAssignment() {
 
 /**
  * Join or decline an invitation (D68). Joining adds collections (and maybe a team), so every list and the collections
- * refetch; declining only drops it from Home and the invitations.
+ * refetch; declining only drops it from Today and the invitations.
  */
 export function useAnswerInvitation() {
   const refetch = useRefetchTasks();

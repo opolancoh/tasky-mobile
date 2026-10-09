@@ -21,15 +21,15 @@ export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksA
 export const useTaskList = (filter: TaskFilter, enabled = true) =>
   useQuery({ queryKey: taskKeys.list(filter), queryFn: () => tasksApi.list(filter), enabled });
 
-/** Rows each Home section shows (M32); its See all pages by `HOME_PAGE`. */
+/** Rows each Today section shows (M32); its See all pages by `HOME_PAGE`. Named after the API's GET /home. */
 export const HOME_PREVIEW = 5;
 export const HOME_PAGE = 20;
 
-/** Home in one request (D67, M33). */
+/** The Today tab in one request (GET /home, D67, M33). */
 export const useHome = () => useQuery({ queryKey: taskKeys.home, queryFn: () => tasksApi.home(HOME_PREVIEW) });
 
 /**
- * One Home section, a page at a time (See all, M33): the next page loads as the list nears its end. `enabled: false`
+ * One Today section (GET /home/{section}), a page at a time (See all, M33): the next page loads as the list nears its end. `enabled: false`
  * waits (Needs attention pages its overdue tasks after the assignments to answer).
  */
 export const useHomeSection = (section: HomeSection, enabled = true) =>

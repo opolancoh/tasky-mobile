@@ -3,7 +3,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { collaborationApi } from './api';
 import { collaborationKeys } from './keys';
 
-/** Home's Updates (M32): the newest unread notifications. */
+/** Today's Updates (M32): the newest unread notifications. */
 export const useUnreadNotifications = (limit: number) =>
   useQuery({ queryKey: collaborationKeys.unread, queryFn: () => collaborationApi.notifications(limit, true) });
 

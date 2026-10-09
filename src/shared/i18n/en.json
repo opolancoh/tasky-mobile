@@ -71,12 +71,12 @@
     }
   },
   "tabs": {
-    "home": "Home",
+    "today": "Today",
     "upcoming": "Upcoming",
     "browse": "Browse",
     "search": "Search"
   },
-  "home": {
+  "today": {
     "morning": "Good morning, {{name}}",
     "afternoon": "Good afternoon, {{name}}",
     "evening": "Good evening, {{name}}",
@@ -90,7 +90,6 @@
     "seeAll": "See all",
     "importantCount": "{{count}} important",
     "toSort": "{{count}} to sort",
-    "shared": "{{count}} more due in teams and shared lists",
     "caughtUp": "All caught up",
     "caughtUpBody": "Nothing needs you today.",
     "caughtUpNext": "Nothing needs you today. Coming up has what is next.",
@@ -280,14 +279,13 @@
   "collections": {
     "inbox": "Inbox"
   },
-  "homeList": {
+  "todayList": {
     "title": {
       "attention": "Needs attention",
       "today": "Today",
       "coming-up": "Coming up",
       "important": "Important",
       "inbox": "Inbox",
-      "shared": "Teams and shared lists",
       "updates": "Updates"
     },
     "sub": {
@@ -296,7 +294,6 @@
       "coming-up": "Due in the next 7 days",
       "important": "All your important tasks, soonest first",
       "inbox": "Tasks with no list or date yet",
-      "shared": "Other people's tasks due today or overdue",
       "updates": "Notifications from the last 90 days"
     },
     "items_one": "{{count}} item",

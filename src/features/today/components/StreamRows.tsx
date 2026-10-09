@@ -15,7 +15,7 @@ import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 import { useNotificationText } from '../useNotificationText';
 
 /**
- * Home's rows (M32), shared by Home and See all (HomeList): a lead (the complete circle, or an icon for what isn't a
+ * Today's rows (M32), shared by Today and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
  * task), the title on one line, one line saying when or why, and one action. Tapping the row opens what it is about.
  */
 function StreamRow({ lead, title, sub, action, onPress, label }: { lead: ReactNode; title: string; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string }) {
@@ -93,24 +93,24 @@ export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const answer = useAnswerInvitation();
-  const kind = t(invitation.teamId ? 'home.kindTeam' : 'home.kindList');
+  const kind = t(invitation.teamId ? 'today.kindTeam' : 'today.kindList');
   const respond = async (join: boolean) => {
     if (!join) {
       const ok = await confirm({ title: t('invitation.declineTitle', { name: invitation.name }), message: t('invitation.declineMessage'), confirmLabel: t('invitation.decline'), cancelLabel: t('common.cancel') });
       if (!ok) return;
     }
-    answer.mutate({ id: invitation.id, join }, { onSuccess: () => useToast.getState().show({ message: join ? t('home.joined', { name: invitation.name }) : t('home.declined') }) });
+    answer.mutate({ id: invitation.id, join }, { onSuccess: () => useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') }) });
   };
   return (
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={invitation.name}
-      sub={invitation.invitedBy?.displayName ? t('home.invitedBy', { name: invitation.invitedBy.displayName, kind }) : kind}
+      sub={invitation.invitedBy?.displayName ? t('today.invitedBy', { name: invitation.invitedBy.displayName, kind }) : kind}
       onPress={() => navigation.navigate('Invitation', { invitationId: invitation.id })}
       action={
         <View style={styles.actions}>
-          <Pill label={t('home.decline')} tone="quiet" onPress={() => respond(false)} disabled={answer.isPending} />
-          <Pill label={t('home.join')} onPress={() => respond(true)} disabled={answer.isPending} />
+          <Pill label={t('today.decline')} tone="quiet" onPress={() => respond(false)} disabled={answer.isPending} />
+          <Pill label={t('today.join')} onPress={() => respond(true)} disabled={answer.isPending} />
         </View>
       }
     />
@@ -128,10 +128,10 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
     <StreamRow
       lead={<Badge icon="user" tone="warn" />}
       title={task.title}
-      sub={task.dueDate ? t('home.assignedDue', { date: labels.day(task.dueDate) }) : t('home.assigned')}
+      sub={task.dueDate ? t('today.assignedDue', { date: labels.day(task.dueDate) }) : t('today.assigned')}
       onPress={() => open(task)}
       label={by ? `${task.title}, ${by}` : task.title}
-      action={<Pill label={t('home.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('home.accepted') }) })} disabled={answer.isPending} />}
+      action={<Pill label={t('today.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('today.accepted') }) })} disabled={answer.isPending} />}
     />
   );
 }
@@ -148,13 +148,13 @@ export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDat
       title={task.title}
       sub={<Text variant="footnote" color="danger">{labels.day(task.dueDate!)}</Text>}
       onPress={() => open(task)}
-      action={<Pill label={t('home.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('home.movedToday') }) })} disabled={update.isPending} />}
+      action={<Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />}
     />
   );
 }
 
 /**
- * A task in Today, Coming up, Important, the Inbox or the shared list. Lean (M32): the title, then only what says when
+ * A task in Today, Coming up, Important or the Inbox. Lean (M32): the title, then only what says when
  * (`when`: Today's reminder time, Coming up's day, the due date elsewhere), and a flag when important.
  */
 export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today: LocalDate; when: 'time' | 'day' | 'due' | 'none' }) {

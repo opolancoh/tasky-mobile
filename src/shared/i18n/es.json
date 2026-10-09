@@ -71,12 +71,12 @@
     }
   },
   "tabs": {
-    "home": "Inicio",
+    "today": "Hoy",
     "upcoming": "Próximo",
     "browse": "Explorar",
     "search": "Buscar"
   },
-  "home": {
+  "today": {
     "morning": "Buenos días, {{name}}",
     "afternoon": "Buenas tardes, {{name}}",
     "evening": "Buenas noches, {{name}}",
@@ -90,7 +90,6 @@
     "seeAll": "Ver todo",
     "importantCount": "{{count}} importantes",
     "toSort": "{{count}} por ordenar",
-    "shared": "{{count}} más pendientes en equipos y listas compartidas",
     "caughtUp": "Todo al día",
     "caughtUpBody": "Nada te espera hoy.",
     "caughtUpNext": "Nada te espera hoy. En Próximamente está lo siguiente.",
@@ -280,14 +279,13 @@
   "collections": {
     "inbox": "Bandeja de entrada"
   },
-  "homeList": {
+  "todayList": {
     "title": {
       "attention": "Requiere atención",
       "today": "Hoy",
       "coming-up": "Próximamente",
       "important": "Importantes",
       "inbox": "Bandeja de entrada",
-      "shared": "Equipos y listas compartidas",
       "updates": "Novedades"
     },
     "sub": {
@@ -296,7 +294,6 @@
       "coming-up": "Para los próximos 7 días",
       "important": "Todas tus tareas importantes, las más próximas primero",
       "inbox": "Tareas aún sin lista ni fecha",
-      "shared": "Tareas de otras personas para hoy o vencidas",
       "updates": "Notificaciones de los últimos 90 días"
     },
     "items_one": "{{count}} elemento",

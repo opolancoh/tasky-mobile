@@ -38,7 +38,7 @@ export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id
       {
         onSuccess: () => {
           navigation.goBack();
-          useToast.getState().show({ message: join ? t('home.joined', { name: invitation.name }) : t('home.declined') });
+          useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') });
         },
       },
     );
