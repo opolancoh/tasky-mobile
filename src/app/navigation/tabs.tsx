@@ -2,7 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import type { BottomTabBarButtonProps, BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+
+import { useUnreadCount } from '@/data/collaboration/queries';
 
 import i18n from '@/shared/i18n/i18n';
 import { Text, useTheme } from '@/shared/ui';
@@ -35,6 +37,29 @@ export const tabScreenOptions: BottomTabNavigationOptions = {
   tabBarStyle: { borderTopWidth: 0, elevation: 0 },
   tabBarLabel: ({ focused, children }) => <TabLabel focused={focused}>{children}</TabLabel>,
 };
+
+/** Activity's icon, with the unread count as a badge (M39). A component, so it can read the count. */
+function ActivityIcon({ focused }: { focused: boolean }) {
+  const { colors } = useTheme();
+  const unread = useUnreadCount().data?.count ?? 0;
+  return (
+    <View>
+      <Feather name="bell" size={24} color={focused ? colors.accent : colors.ink3} />
+      {unread > 0 && (
+        <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+          <Text variant="caption" style={{ color: colors.onAccent, fontSize: 10, lineHeight: 14 }}>{unread > 99 ? '99+' : unread}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** The Activity tab: its title, and the bell with the unread badge. */
+export const activityTab = (): BottomTabNavigationOptions => ({
+  title: i18n.t('tabs.activity'),
+  tabBarIcon: ({ focused }) => <ActivityIcon focused={focused} />,
+  tabBarAccessibilityLabel: i18n.t('tabs.activity'),
+});
 
 /** One tab's title (label and accessibility name) and icon. */
 export const tab = (icon: IconName, titleKey: string) => (): BottomTabNavigationOptions => ({
@@ -75,5 +100,6 @@ export const AddTabScreen = () => null;
 
 const styles = StyleSheet.create({
   slot: { alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', top: -4, right: -10, minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   circle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

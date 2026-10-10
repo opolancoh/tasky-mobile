@@ -15,6 +15,8 @@ src/core/
 ├── dates/
 │   ├── localDate.ts      Today in a time zone; formatting a date or time (cached formatters)
 │   └── reminders.ts      A reminder (date + time), the quick presets
+├── text/
+│   └── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)
 └── validation/
     ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled
     ├── limits.ts         The API's field limits

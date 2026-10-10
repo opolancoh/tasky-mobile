@@ -63,7 +63,7 @@ Created once at startup:
 
 Params carry ids only; route types come from the config (`RootStackParamList`), so `navigation.navigate(...)` is type-checked.
 
-**tabs.tsx:** the bottom tabs: Today · Upcoming · + · Browse · Search ([M11](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)). The + is a stand-in `Add` tab that opens Quick add (`useQuickAdd().show()`) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
+**tabs.tsx:** the bottom tabs: Today · Browse · + · Search · Activity ([M11](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions), [M39](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)); Activity's icon carries the unread count (`activityTab`). The + is a stand-in `Add` tab that opens Quick add (`useQuickAdd().show()`) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
 
 ---
 

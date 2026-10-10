@@ -11,8 +11,8 @@ import { useUnreadCount, useUnreadNotifications } from '@/data/collaboration/que
 import { HOME_PREVIEW, useHome } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
+import { MeButton } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
-import { useSession } from '@/shared/session/SessionProvider';
 import { Button, Notice, Pill, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { AskRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
@@ -28,7 +28,6 @@ type Item =
   | { type: 'task'; key: string; task: TaskSummary; when: 'time' | 'day' }
   | { type: 'update'; key: string; notification: Notification }
   | { type: 'calm'; key: string; body: string }
-  | { type: 'signOut'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
@@ -37,13 +36,12 @@ type Item =
  * can see (M37). Needs attention (invitations, assignments to answer, overdue), Today (due today or a reminder today),
  * Coming up (next 7 days), Updates (unread notifications), each with its count, its first 5 rows and See all; chips
  * for Important and the Inbox. Data: GET /home (D67, D69) beside the unread notifications; every count opens its list
- * (TodayList, M33).
+ * (TodayList, M33). Me behind the avatar at the top (M39).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
-  const { signOut } = useSession();
   const me = useMe().data;
   const home = useHome();
   const updates = useUnreadNotifications(HOME_PREVIEW);
@@ -96,7 +94,6 @@ export function TodayScreen() {
       updates.data.items.forEach((notification) => items.push({ type: 'update', key: `u-${notification.id}`, notification }));
     }
   }
-  items.push({ type: 'signOut', key: 'signOut' });   // until Settings exists
 
   const refresh = async () => {
     setRefreshing(true);
@@ -115,7 +112,11 @@ export function TodayScreen() {
     switch (item.type) {
       case 'header':
         return (
-          <View style={{ paddingTop: space.xl, paddingBottom: space.md, gap: space.xxs }}>
+          <View style={{ paddingBottom: space.md, gap: space.xxs }}>
+            {/* Me (profile, settings, sign out) behind the avatar (M39). */}
+            <View style={styles.bar}>
+              <MeButton />
+            </View>
             <Text variant="label" color="ink3">
               {today ? formatLocalDate(today, i18n.language, { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
             </Text>
@@ -193,12 +194,6 @@ export function TodayScreen() {
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':
         return <SkeletonRow width={item.width} />;
-      case 'signOut':
-        return (
-          <View style={{ alignItems: 'center', paddingVertical: space.xxl }}>
-            <Button variant="link" title={t('common.signOut')} onPress={signOut} />
-          </View>
-        );
     }
   };
 
@@ -218,6 +213,7 @@ export function TodayScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
   chips: { flexDirection: 'row', flexWrap: 'wrap' },
   sectionHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   push: { marginLeft: 'auto' },

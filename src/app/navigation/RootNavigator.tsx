@@ -9,6 +9,7 @@ import { SignInScreen } from '@/features/auth/SignInScreen';
 import { SignUpScreen } from '@/features/auth/SignUpScreen';
 import { UnreachableScreen } from '@/features/auth/UnreachableScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
+import { ActivityScreen } from '@/features/activity/ActivityScreen';
 import { ArchivedScreen } from '@/features/browse/ArchivedScreen';
 import { BrowseListScreen } from '@/features/browse/BrowseListScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
@@ -18,15 +19,15 @@ import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
+import { MeScreen } from '@/features/me/MeScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
 import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
-import { UpcomingScreen } from '@/features/upcoming/UpcomingScreen';
 import i18n from '@/shared/i18n/i18n';
 import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/session/SessionProvider';
 
-import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
+import { activityTab, AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
 /** The signed-in home: stock bottom tabs with a + in the middle that opens Quick add (M11). */
 const Tabs = createBottomTabNavigator({
@@ -45,8 +46,9 @@ const Tabs = createBottomTabNavigator({
         },
       },
     },
-    Upcoming: { screen: UpcomingScreen, options: tab('calendar', 'tabs.upcoming') },
+    // Search and Activity (M39); Upcoming lives in Today's Coming up, Me behind the avatar.
     Search: { screen: SearchScreen, options: tab('search', 'tabs.search') },
+    Activity: { screen: ActivityScreen, options: activityTab },
   },
 });
 
@@ -90,6 +92,7 @@ const RootStack = createNativeStackNavigator({
         BrowseList: { screen: BrowseListScreen, options: { headerShown: true } },
         Archived: { screen: ArchivedScreen, options: { headerShown: true } },
         RecentlyDeleted: { screen: RecentlyDeletedScreen, options: { headerShown: true } },
+        Me: { screen: MeScreen, options: { headerShown: true } },
       },
     },
   },

@@ -5,6 +5,7 @@ import { useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { byName } from '@/core/text/collate';
 import { useReorderCollections, useReorderTags } from '@/data/tasks/mutations';
 import { useArchivedCollections, useCollections, useTags, useTaskList, useTeams } from '@/data/tasks/queries';
 import type { Collection, Tag, Team } from '@/data/tasks/types';
@@ -57,7 +58,7 @@ export function BrowseScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const all = collections.data ?? [];
-  const teamList = [...(teams.data ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+  const teamList = [...(teams.data ?? [])].sort(byName);
   const tagList = tags.data ?? [];
   const groups = groupCollections(all, teamList, me?.id);
   const many = all.length + teamList.length + tagList.length > FILTER_FROM;

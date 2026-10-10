@@ -1,3 +1,4 @@
+import { collator } from '@/core/text/collate';
 import type { Tag } from '@/data/tasks/types';
 
 /** A tag as pickers show it: one of the caller's tags, or a picked name they don't have yet (new). */
@@ -5,9 +6,6 @@ export interface TagItem {
   name: string;
   color: string | null;
 }
-
-/** One collator for every sort: String.localeCompare builds one per call in Hermes (docs/performance.md). */
-const collator = new Intl.Collator();
 
 /** Last used first (most recent at the front of `recent`), then the rest A–Z. Names in lower case. */
 export function sortByRecent(tags: Tag[], recent: string[]): TagItem[] {

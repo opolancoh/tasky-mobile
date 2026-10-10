@@ -5,14 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/core/types';
-import type { Notification } from '@/data/collaboration/types';
-import { useMarkRead } from '@/data/collaboration/mutations';
 import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 
-import { useNotificationText } from '../useNotificationText';
 
 /**
  * Today's rows (M32), shared by Today and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
@@ -170,32 +167,7 @@ export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today:
   return <StreamRow lead={<Check task={task} />} title={task.title} sub={sub} onPress={() => open(task)} action={task.isImportant ? <Flag /> : undefined} />;
 }
 
-/** An update: a dot while unread; opening it marks it read and goes to its task (or Browse for a list or team). */
-export function UpdateRow({ notification }: { notification: Notification }) {
-  const { colors, space } = useTheme();
-  const navigation = useNavigation();
-  const markRead = useMarkRead();
-  const text = useNotificationText();
-  const { line, when, icon } = text(notification);
-  const open = () => {
-    if (!notification.readAt) markRead.mutate([notification.id]);
-    if (notification.taskId) navigation.navigate('TaskDetail', { taskId: notification.taskId });
-    else navigation.navigate('Tabs', { screen: 'Browse' });
-  };
-  return (
-    <StreamRow
-      lead={
-        <View style={[styles.updateLead, { gap: space.sm }]}>
-          <View style={[styles.dot, { backgroundColor: notification.readAt ? 'transparent' : colors.unreadDot }]} />
-          <Badge icon={icon} tone="grey" />
-        </View>
-      }
-      title={line}
-      sub={when}
-      onPress={open}
-    />
-  );
-}
+export { UpdateRow } from '@/shared/components';
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
@@ -203,6 +175,4 @@ const styles = StyleSheet.create({
   badge: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4 },
   actions: { flexDirection: 'row', gap: 6 },
-  updateLead: { flexDirection: 'row', alignItems: 'center' },
-  dot: { width: 6, height: 6, borderRadius: 3 },
 });

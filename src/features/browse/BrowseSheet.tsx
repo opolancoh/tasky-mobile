@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { byName } from '@/core/text/collate';
 import type { Id } from '@/core/types';
 import { limits } from '@/core/validation/limits';
 import { newTagName, stripInvalidTagChars, TAG_NAME_MAX } from '@/core/validation/tags';
@@ -154,7 +155,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
           <>
             <SectionLabel>{t('browse.sheet.in')}</SectionLabel>
             <ListRow label={t('browse.myLists')} detail={t('browse.sheet.privateHint')} selected={!teamId} onPress={() => setTeamId(undefined)} />
-            {[...teams].sort((a, b) => a.name.localeCompare(b.name)).map((x, i, all) => (
+            {[...teams].sort(byName).map((x, i, all) => (
               <ListRow key={x.id} label={x.name} detail={t('browse.sheet.teamListHint', { name: x.name })} selected={teamId === x.id} onPress={() => setTeamId(x.id)} divider={i < all.length - 1} />
             ))}
           </>

@@ -18,6 +18,7 @@ src/shared/
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── CollectionIcon.tsx   CollectionPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx
+│   ├── UpdateRow.tsx   Faces.tsx (Avatar, Faces)   MeButton.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
@@ -65,6 +66,9 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 | Piece | Purpose |
 |---|---|
 | `CollectionIcon` | The Inbox tray or the collection's color dot |
+| `UpdateRow` | A notification: unread dot, icon, one line and when; opening marks it read and opens its task (Today's Updates, Activity) |
+| `Avatar`, `Faces` | Initials in a circle, colors by a hash of the user id; up to 3 overlapping (a list's people) |
+| `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (the task's collection, due, steps, repeat), red flag when important; `onPress` opens it |
 | `CollectionPicker` | The collections the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |

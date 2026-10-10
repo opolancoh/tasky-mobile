@@ -7,13 +7,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Id } from '@/core/types';
 import { useCollections, useMembers, useTeams } from '@/data/tasks/queries';
 import { useMe } from '@/data/tenancy/queries';
+import { Avatar } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, faint, ListRow, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { useShowBrowseSheet } from './browseSheetStore';
 import { BrowseRow } from './components/BrowseRow';
-import { Avatar } from './components/Faces';
 
 /** People shown on the team page before All people. */
 const PEOPLE_PREVIEW = 3;

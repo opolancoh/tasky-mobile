@@ -73,9 +73,9 @@
   },
   "tabs": {
     "today": "Hoy",
-    "upcoming": "Próximo",
     "browse": "Explorar",
-    "search": "Buscar"
+    "search": "Buscar",
+    "activity": "Actividad"
   },
   "today": {
     "morning": "Buenos días, {{name}}",
@@ -113,11 +113,6 @@
     "complete": "Completar {{title}}",
     "steps": "{{done}} de {{total}}",
     "important": "Importante"
-  },
-  "upcoming": {
-    "eyebrow": "Los próximos 7 días y después",
-    "title": "Próximo",
-    "empty": "No hay nada planeado para los próximos días."
   },
   "browse": {
     "title": "Explorar",
@@ -294,7 +289,17 @@
   },
   "search": {
     "title": "Buscar",
-    "empty": "Busca tus tareas por título, notas y pasos."
+    "placeholder": "Tareas, notas y pasos",
+    "clearField": "Borrar búsqueda",
+    "recent": "Recientes",
+    "clear": "Borrar",
+    "forget": "Olvidar {{query}}",
+    "tags": "Etiquetas",
+    "tasks": "Tareas",
+    "empty": "Encuentra tareas por las palabras de sus títulos, notas y pasos, abiertas y completadas, en todo lo que puedes ver. Los acentos no importan.",
+    "noResults": "Ninguna tarea coincide con “{{query}}”.",
+    "completed": "Completada",
+    "reopen": "Reabrir {{title}}"
   },
   "quickAdd": {
     "add": "Añadir una tarea",
@@ -461,7 +466,7 @@
     "sub": {
       "attention": "Invitaciones, asignaciones por responder, tareas vencidas",
       "today": "Para hoy, o con un recordatorio hoy",
-      "coming-up": "Para los próximos 7 días",
+      "coming-up": "Los próximos 7 días, luego más adelante",
       "important": "Todas tus tareas importantes, las más próximas primero",
       "inbox": "Tareas aún sin lista ni fecha",
       "updates": "Notificaciones de los últimos 90 días"
@@ -473,7 +478,8 @@
     "loadingMore": "Cargando más",
     "allShown": "Se muestran las {{count}}",
     "empty": "No hay nada aquí.",
-    "markAllRead": "Marcar todo como leído"
+    "markAllRead": "Marcar todo como leído",
+    "later": "Más adelante"
   },
   "notifications": {
     "someone": "Alguien",
@@ -513,5 +519,27 @@
     "declineTitle": "¿Rechazar la invitación a {{name}}?",
     "declineMessage": "Nadie recibe aviso. Pueden invitarte de nuevo.",
     "gone": "Esta invitación ya no está abierta."
+  },
+  "activity": {
+    "title": "Actividad",
+    "sub": "Asignaciones, invitaciones y cambios en tus listas y equipos",
+    "new": "Nuevas",
+    "earlier": "Anteriores",
+    "markAllRead": "Marcar todo como leído",
+    "empty": "Nada todavía",
+    "emptyBody": "Cuando compartan listas y equipos contigo, lo que hagan por ti aparece aquí."
+  },
+  "me": {
+    "open": "Yo: perfil y ajustes",
+    "profile": "Perfil",
+    "timeZone": "Zona horaria",
+    "language": "Idioma",
+    "company": "Empresa",
+    "languages": {
+      "en": "English",
+      "es": "Español"
+    },
+    "editLater": "Editar tu perfil, tu contraseña y tus dispositivos llega con Ajustes.",
+    "signOutTitle": "¿Cerrar sesión en este dispositivo?"
   }
 }

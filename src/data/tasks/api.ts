@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { http } from '../http';
 import type {
-  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, Team,
+  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
   UpdateCollectionRequest, UpdateTaskRequest,
 } from './types';
 
@@ -114,6 +114,9 @@ export const tasksApi = {
 
   /** POST /tasks/{id}:restore with the deleted task's version. */
   restore: (item: Versioned) => http().post<Task>(`/tasks/${item.id}:restore`, { ifMatch: item.version }),
+
+  /** GET /search?q= (D32, D61): tasks, open and completed, in everything the caller can see; best match first, keyset-paged. */
+  search: (q: string, limit: number, cursor?: string) => http().get<{ items: TaskSummary[]; nextCursor: string | null }>('/search', { query: { q, limit, cursor } }),
 
   /** GET /recently-deleted: everything the caller could see, newest first (D54). */
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),

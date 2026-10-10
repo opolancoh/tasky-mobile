@@ -72,3 +72,13 @@ export const useTaskPages = (filter: TaskFilter, enabled = true) =>
 
 /** Recently Deleted (D54): the first 50, newest first. */
 export const useRecentlyDeleted = () => useQuery({ queryKey: taskKeys.deleted, queryFn: () => tasksApi.recentlyDeleted(50) });
+
+/** Search (M40): a page of 20 at a time, best match first; `enabled` once there is a word to look for. */
+export const useSearch = (q: string) =>
+  useInfiniteQuery({
+    queryKey: taskKeys.search(q),
+    queryFn: ({ pageParam }) => tasksApi.search(q, 20, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled: /[\p{L}\p{N}]/u.test(q),
+  });

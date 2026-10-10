@@ -11,13 +11,12 @@ import { useCompleteTask } from '@/data/tasks/mutations';
 import { useCollections, useMembers, useTaskList, useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { TaskRow } from '@/shared/components';
+import { Faces, TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { CompletedRow } from './components/CompletedRow';
-import { Faces } from './components/Faces';
 
 type Item =
   | { type: 'header'; key: string }

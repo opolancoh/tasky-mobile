@@ -11,11 +11,11 @@ import { useInvite, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mu
 import { useCollections, useMembers, useOpenInvitations, useTeams } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
+import { Avatar } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
-import { Avatar } from './components/Faces';
 
 type Item =
   | { type: 'header'; key: string }
