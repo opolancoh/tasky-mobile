@@ -34,7 +34,8 @@
       "expo-image",
       "expo-status-bar",
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      "expo-notifications"
     ],
     "experiments": {
       "reactCompiler": true

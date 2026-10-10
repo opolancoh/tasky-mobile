@@ -19,6 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
+import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
 
@@ -81,6 +82,7 @@ function Root() {
           <QuickAddSheet />
           <TaskFieldSheet />
           <BrowseSheet />
+          <ReminderSync />
         </>
       )}
       <ToastHost />

@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { http } from '../http';
 import type {
-  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
+  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
   UpdateCollectionRequest, UpdateTaskRequest,
 } from './types';
 
@@ -120,6 +120,9 @@ export const tasksApi = {
 
   /** GET /recently-deleted: everything the caller could see, newest first (D54). */
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),
+
+  /** GET /me/reminders: the caller's reminders from today on, open tasks only, soonest first (D11), for the device to schedule. */
+  myReminders: (limit: number) => http().get<{ items: MyReminder[]; nextCursor: string | null }>('/me/reminders', { query: { limit } }),
 
   /** PUT /tasks/{id}/reminder: sets the caller's reminder. */
   setReminder: (taskId: Id, date: LocalDate, time: LocalTime) => http().put(`/tasks/${taskId}/reminder`, { body: { date, time } }),

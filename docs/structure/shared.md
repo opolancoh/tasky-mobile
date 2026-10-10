@@ -13,6 +13,7 @@ src/shared/
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
 │   └── palettes/          One JSON file per palette; active.json names the one in use
+├── notifications/     reminders.ts (sync the phone's reminders with GET /me/reminders, permission state), useReminders.ts (ReminderSync, mounted in App)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
@@ -82,6 +83,10 @@ May use `data` types and `shared/ui`; knows tasks, tags, collections.
 | Hook | Purpose |
 |---|---|
 | `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
+
+## notifications/
+
+Reminders as local notifications ([M42](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions), D11). `syncReminders(timeZone)` keeps the nearest 50 scheduled at their date and time in the profile's zone (one run at a time); `ReminderSync` runs it at launch, on foreground, on a time zone change and after saved changes, and opens a tapped reminder's task. Permission is asked when the first reminder exists; `useReminderPermission` tells Me. Sign-out clears them (`clearReminders`).
 
 ## session/
 

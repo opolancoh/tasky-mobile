@@ -353,7 +353,9 @@
     "custom": "Personalizado",
     "date": "Fecha",
     "time": "Hora",
-    "remove": "Quitar recordatorio"
+    "remove": "Quitar recordatorio",
+    "body": "Recordatorio",
+    "channel": "Recordatorios"
   },
   "wheels": {
     "day": "Día",
@@ -569,6 +571,11 @@
     "deviceSignedOut": "Sesión cerrada en {{device}}",
     "signOutAll": "Cerrar sesión en todos los dispositivos",
     "signOutAllTitle": "¿Cerrar sesión en todos los dispositivos?",
-    "signOutAllBody": "También en este. Necesitarás tu contraseña para volver a entrar."
+    "signOutAllBody": "También en este. Necesitarás tu contraseña para volver a entrar.",
+    "notifications": "Notificaciones",
+    "reminders": "Recordatorios",
+    "remindersOn": "Activados",
+    "remindersOff": "Desactivados",
+    "remindersOffHint": "Tasky no puede avisarte. Activa las notificaciones en Ajustes."
   }
 }

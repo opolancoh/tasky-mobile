@@ -1,11 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { zoneCity } from '@/core/dates/timeZones';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
+import { useReminderPermission } from '@/shared/notifications/reminders';
 import { useSession } from '@/shared/session/SessionProvider';
 import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -19,6 +20,7 @@ export function MeScreen() {
   const { signOut } = useSession();
   const navigation = useNavigation();
   const me = useMe().data;
+  const permission = useReminderPermission((s) => s.status);
   const company = me?.tenant.type === 'organization' && !!me.tenant.name;
 
   const leave = async () => {
@@ -41,6 +43,15 @@ export function MeScreen() {
       <ListRow label={t('me.timeZone')} value={zoneCity(me.timeZone)} onPress={() => navigation.navigate('TimeZone')} />
       <ListRow label={t('me.language')} value={t(`me.languages.${me.language}`, { defaultValue: me.language })} onPress={() => navigation.navigate('Language')} divider={!company} />
       {company ? <ListRow label={t('me.company')} value={me.tenant.name!} divider={false} /> : null}
+
+      <SectionLabel>{t('settings.notifications')}</SectionLabel>
+      <ListRow
+        label={t('settings.reminders')}
+        value={permission === 'unknown' ? undefined : t(permission === 'denied' ? 'settings.remindersOff' : 'settings.remindersOn')}
+        detail={permission === 'denied' ? t('settings.remindersOffHint') : undefined}
+        onPress={permission === 'denied' ? () => Linking.openSettings() : undefined}
+        divider={false}
+      />
 
       <SectionLabel>{t('settings.security')}</SectionLabel>
       <ListRow label={t('settings.email')} value={me.email} />

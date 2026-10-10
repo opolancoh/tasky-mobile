@@ -321,6 +321,16 @@ export interface UpdateCollectionRequest {
   showCompleted?: boolean;
 }
 
+/** One of the caller's upcoming reminders (GET /me/reminders, D11): what the device schedules. Time "HH:mm:ss". */
+export interface MyReminder {
+  taskId: Id;
+  collectionId: Id;
+  title: string;
+  dueDate?: LocalDate | null;
+  date: LocalDate;
+  time: string;
+}
+
 /** API limits (TaskLimits.cs). */
 export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, collectionNameMax: 100 } as const;
 

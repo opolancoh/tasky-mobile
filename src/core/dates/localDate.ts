@@ -65,3 +65,20 @@ export function formatLocalTime(time: LocalTime, locale: string): string {
 export function formatInstant(iso: string, locale: string, timeZone: string, options: Intl.DateTimeFormatOptions): string {
   return formatter(locale, { ...options, timeZone }).format(new Date(iso));
 }
+
+/** How far `timeZone`'s wall clock is ahead of UTC at instant `ms`, in ms. */
+function zoneOffset(ms: number, timeZone: string): number {
+  const { date, time } = nowIn(timeZone, new Date(ms));
+  return Date.parse(`${date}T${time}:00Z`) - Math.floor(ms / 60_000) * 60_000;
+}
+
+/**
+ * The instant a wall-clock date and time happens in an IANA time zone (the profile's): when a reminder fires
+ * (04-notifications.md). Checked twice around daylight-saving changes; a time skipped by DST lands an hour later.
+ */
+export function instantIn(date: LocalDate, time: LocalTime, timeZone: string): Date {
+  const wall = Date.parse(`${date}T${time.slice(0, 5)}:00Z`);
+  let at = wall - zoneOffset(wall, timeZone);
+  at = wall - zoneOffset(at, timeZone);
+  return new Date(at);
+}

@@ -353,7 +353,9 @@
     "custom": "Custom",
     "date": "Date",
     "time": "Time",
-    "remove": "Remove reminder"
+    "remove": "Remove reminder",
+    "body": "Reminder",
+    "channel": "Reminders"
   },
   "wheels": {
     "day": "Day",
@@ -569,6 +571,11 @@
     "deviceSignedOut": "Signed out of {{device}}",
     "signOutAll": "Sign out of all devices",
     "signOutAllTitle": "Sign out of all devices?",
-    "signOutAllBody": "This one too. You’ll need your password to sign in again."
+    "signOutAllBody": "This one too. You’ll need your password to sign in again.",
+    "notifications": "Notifications",
+    "reminders": "Reminders",
+    "remindersOn": "On",
+    "remindersOff": "Off",
+    "remindersOffHint": "Tasky can’t alert you. Turn notifications on in Settings."
   }
 }
