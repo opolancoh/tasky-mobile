@@ -112,7 +112,8 @@
   "taskRow": {
     "complete": "Completar {{title}}",
     "steps": "{{done}} de {{total}}",
-    "important": "Importante"
+    "important": "Importante",
+    "assignedTo": "Asignada a {{name}}"
   },
   "browse": {
     "title": "Explorar",
@@ -152,7 +153,6 @@
     "moveUp": "Subir",
     "moveDown": "Bajar",
     "ownersList": "Lista de {{name}}",
-    "peopleOf": "Personas: {{names}}",
     "listEmpty": "Nada abierto aquí",
     "listEmptyBody": "Toca + para añadir una tarea.",
     "sort": {
@@ -285,7 +285,9 @@
       "teamListHint": "Todos en {{name}} la ven",
       "sortBy": "Ordenar tareas por",
       "sameForAll": "El nombre, el color y el orden son los mismos para todos en esta lista."
-    }
+    },
+    "sharedWith": "Compartida con {{names}}",
+    "share": "Compartir…"
   },
   "search": {
     "title": "Buscar",
@@ -588,6 +590,7 @@
       "accepted": "Aceptada"
     },
     "unassign": "Quitar asignación",
-    "note": "La reciben como Pendiente y responden Aceptar o Rechazar. Si te la asignas tú, no hace falta responder."
+    "note": "La reciben como Pendiente y responden Aceptar o Rechazar. Si te la asignas tú, no hace falta responder.",
+    "onlyYou": "Solo tú ves esta lista. Asignártela la pone en Asignadas a mí."
   }
 }

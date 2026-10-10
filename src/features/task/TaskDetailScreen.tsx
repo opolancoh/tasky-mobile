@@ -12,7 +12,7 @@ import type { Id } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
-import { useCollections, useTask } from '@/data/tasks/queries';
+import { useTask } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, CollectionIcon, TagsRow } from '@/shared/components';
@@ -54,7 +54,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { describe } = useRepeatText();
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
-  const collections = useCollections().data;
   const leaving = useRef(false);   // set when the screen closes on purpose (after Delete): no discard prompt
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
@@ -113,8 +112,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   }
 
   const locale = i18n.language;
-  const list = collections?.find((c) => c.id === fields.collection.id);
-  const sharedList = !!list && !list.isInbox && list.sharing !== 'private';
   const status = assigneeStatus(task, fields.assignee, me.id);
   const completed = task.status === 'completed';
   const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
@@ -247,25 +244,23 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.collection.name}</Text>}
           onPress={() => open('collection')}
         />
-        {/* Assigned to (M43): only on a shared or team list (the Inbox and private lists have only you). */}
-        {sharedList && (
-          fields.assignee ? (
-            <ListRow
-              label={t('taskDetail.fields.assignee')}
-              icon={<Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} />}
-              value={
-                <View style={styles.end}>
-                  <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
-                  {status && <Text variant="caption" color={status === 'pending' ? 'ink2' : 'success'}>{t(`assign.status.${status}`)}</Text>}
-                </View>
-              }
-              onPress={() => open('assignee')}
-              onClear={() => edit({ assignee: null })}
-              clearLabel={t('assign.unassign')}
-            />
-          ) : (
-            <ListRow label={t('taskDetail.fields.assignee')} value={t('common.none')} icon={<Feather name="user" size={20} color={colors.ink3} />} onPress={() => open('assignee')} />
-          )
+        {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
+        {fields.assignee ? (
+          <ListRow
+            label={t('taskDetail.fields.assignee')}
+            icon={<Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} />}
+            value={
+              <View style={styles.end}>
+                <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
+                {status && <Text variant="caption" color={status === 'pending' ? 'ink2' : 'success'}>{t(`assign.status.${status}`)}</Text>}
+              </View>
+            }
+            onPress={() => open('assignee')}
+            onClear={() => edit({ assignee: null })}
+            clearLabel={t('assign.unassign')}
+          />
+        ) : (
+          <ListRow label={t('taskDetail.fields.assignee')} value={t('common.none')} icon={<Feather name="user" size={20} color={colors.ink3} />} onPress={() => open('assignee')} />
         )}
         {fields.dueDate ? (
           <ListRow

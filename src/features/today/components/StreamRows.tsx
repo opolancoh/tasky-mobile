@@ -77,7 +77,7 @@ function Check({ task }: { task: TaskSummary }) {
 const Flag = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  return <Feather name="flag" size={15} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
+  return <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
 };
 
 function useOpenTask() {
@@ -152,7 +152,7 @@ export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDat
 
 /**
  * A task in Today, Coming up, Important or the Inbox. Lean (M32): the title, then only what says when
- * (`when`: Today's reminder time, Coming up's day, the due date elsewhere), and a flag when important.
+ * (`when`: Today's reminder time, Coming up's day, the due date elsewhere), with a red flag last when important (M44).
  */
 export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today: LocalDate; when: 'time' | 'day' | 'due' | 'none' }) {
   const labels = useDateLabels(today);
@@ -164,7 +164,7 @@ export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today:
     : when === 'day' ? labels.day(task.dueDate!)
     : when === 'due' && task.dueDate ? <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>{labels.day(task.dueDate)}</Text>
     : undefined;
-  return <StreamRow lead={<Check task={task} />} title={task.title} sub={sub} onPress={() => open(task)} action={task.isImportant ? <Flag /> : undefined} />;
+  return <StreamRow lead={<Check task={task} />} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
 }
 
 export { UpdateRow } from '@/shared/components';

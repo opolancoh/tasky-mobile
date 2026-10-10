@@ -13,27 +13,9 @@ export function Avatar({ name, seed, size = 30 }: { name: string; seed: string; 
   );
 }
 
-/** Up to 3 overlapping avatars and "+N" (a list's people, in its header, M38). */
-export function Faces({ people }: { people: { id: string; name: string }[] }) {
-  const { colors } = useTheme();
-  return (
-    <View style={styles.row}>
-      {people.slice(0, 3).map((p, i) => (
-        <View key={p.id} style={[styles.ring, { borderColor: colors.bg, marginLeft: i ? -8 : 0 }]}>
-          <Avatar name={p.name} seed={p.id} size={26} />
-        </View>
-      ))}
-      {people.length > 3 && <Text variant="caption" color="ink3" style={styles.more}>+{people.length - 3}</Text>}
-    </View>
-  );
-}
-
 const hash = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?';
 
 const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  ring: { borderWidth: 2, borderRadius: 15 },
-  more: { marginLeft: 4 },
 });

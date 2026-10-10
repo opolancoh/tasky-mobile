@@ -55,9 +55,9 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
               <ColorDot color={task.collection.color} size={8} />
               <Text variant="footnote" color="ink3" numberOfLines={1} style={styles.shrink}>{task.collection.isInbox ? t('browse.inbox') : task.collection.name}</Text>
               {done && <Text variant="footnote" color="ink3">· {t('search.completed')}</Text>}
+              {task.isImportant && !done && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
             </View>
           </View>
-          {task.isImportant && !done && <Feather name="flag" size={16} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
         </View>
       )}
     </Pressable>
@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', alignItems: 'center' },
   shrink: { flexShrink: 1 },
-  flag: { marginTop: 3 },
+  flag: { marginLeft: 6 },   // important: the last item of the meta line (M44)
 });

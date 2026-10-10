@@ -107,8 +107,8 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
           collections={collections}
           loading={collectionsQuery.isPending}
           selectedId={draft.collection.id}
-          // A private list has only you: whoever had the task can't see it there (the API drops them on the move too).
-          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox || c.sharing === 'private' ? { assignee: null } : {}) })}
+          // A private list has only you: someone else who had the task can't see it there (the API drops them on the move too).
+          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...((c.isInbox || c.sharing === 'private') && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
         />
       );
     case 'assignee':

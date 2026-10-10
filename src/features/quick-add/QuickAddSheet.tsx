@@ -33,7 +33,7 @@ interface Draft {
   reminder: ReminderChoice;
   /** Picked in the Tags page; sent as `tags` (names; new ones become the user's). The title is plain text (M31). */
   tags: string[];
-  /** Who gets it (M43): only on a shared or team list; assigned right after the task is created. */
+  /** Who gets it (M43, M44): any list (on a private one or the Inbox, only Me); assigned right after the task is created. */
   assignee?: UserRef;
 }
 
@@ -82,8 +82,8 @@ function QuickAddForm() {
   const inbox = collections.find((c) => c.isInbox);
   const collection = collections.find((c) => c.id === draft.collectionId) ?? inbox;
   const tags = draft.tags;
-  // Assigning is for shared and team lists: the Inbox and private lists have only you.
-  const shared = !!collection && !collection.isInbox && collection.sharing !== 'private';
+  // Assigning is on every list (M44); the Inbox and private lists offer only Me.
+  const canAssign = !!collection;
   const titleText = draft.title.trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
@@ -112,7 +112,7 @@ function QuickAddForm() {
           reminderTime: chosen?.time,
         },
         withoutReminder: !draft.reminder && !!draft.dueDate,
-        assignee: shared ? draft.assignee?.id : undefined,
+        assignee: canAssign ? draft.assignee?.id : undefined,
       },
       {
         onSuccess: () => {
@@ -161,7 +161,7 @@ function QuickAddForm() {
     { key: 'important', icon: 'flag', label: t('quickAdd.fields.important'), value: draft.isImportant ? t('quickAdd.on') : undefined, danger: true, onPress: () => update({ isImportant: !draft.isImportant }) },
     { key: 'due', icon: 'calendar', label: t('quickAdd.fields.dueDate'), value: draft.dueDate && dayText(draft.dueDate), onPress: () => openPage('due') },
     { key: 'reminder', icon: 'bell', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
-    ...(shared ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
+    ...(canAssign ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
     { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => openPage('tags') },
     { key: 'notes', icon: 'file-text', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
   ];
@@ -220,7 +220,7 @@ function QuickAddForm() {
               value={<Text variant="bodyMedium" color="accent">{collection?.name ?? t('collections.inbox')}</Text>}
               onPress={() => openPage('collection')}
             />
-            {shared && draft.assignee && (
+            {canAssign && draft.assignee && (
               <ListRow
                 label={t('quickAdd.fields.assignee')}
                 icon={<Avatar name={draft.assignee.displayName} seed={draft.assignee.id} size={22} />}

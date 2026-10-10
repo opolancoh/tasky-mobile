@@ -112,7 +112,8 @@
   "taskRow": {
     "complete": "Complete {{title}}",
     "steps": "{{done}} of {{total}}",
-    "important": "Important"
+    "important": "Important",
+    "assignedTo": "Assigned to {{name}}"
   },
   "browse": {
     "title": "Browse",
@@ -152,7 +153,6 @@
     "moveUp": "Move up",
     "moveDown": "Move down",
     "ownersList": "{{name}}’s list",
-    "peopleOf": "People: {{names}}",
     "listEmpty": "Nothing open here",
     "listEmptyBody": "Tap + to add a task.",
     "sort": {
@@ -285,7 +285,9 @@
       "teamListHint": "Everyone in {{name}} sees it",
       "sortBy": "Sort tasks by",
       "sameForAll": "Name, color and sort are the same for everyone in this list."
-    }
+    },
+    "sharedWith": "Shared with {{names}}",
+    "share": "Share…"
   },
   "search": {
     "title": "Search",
@@ -588,6 +590,7 @@
       "accepted": "Accepted"
     },
     "unassign": "Unassign",
-    "note": "They get it as Pending and answer Accept or Reject. Assigning yourself needs no answer."
+    "note": "They get it as Pending and answer Accept or Reject. Assigning yourself needs no answer.",
+    "onlyYou": "Only you see this list. Assigning it to yourself puts it in Assigned to me."
   }
 }

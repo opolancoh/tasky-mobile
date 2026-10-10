@@ -11,7 +11,7 @@ import { useCompleteTask } from '@/data/tasks/mutations';
 import { useCollections, useMembers, useTaskList, useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Faces, TaskRow } from '@/shared/components';
+import { TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -28,8 +28,8 @@ type Item =
 
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode, Completed folded at the end (loaded
- * when opened, D54). The header holds up to 3 faces of its people (a tap opens People; none on a private list) and •••,
- * the list's menu by role.
+ * when opened, D54). Under the title a line says who is in it (M44): "Shared with Luis", "Family · 3 people", or
+ * "Share…" on a private list; a tap opens People. The header holds •••, the list's menu by role.
  */
 export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id }>) {
   const { collectionId } = route.params;
@@ -52,11 +52,6 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
       headerRight: collection
         ? () => (
             <View style={styles.headerRight}>
-              {shared && members.data && members.data.length > 1 && (
-                <Pressable onPress={() => navigation.navigate('People', { kind: 'collection', id: collectionId })} accessibilityRole="button" accessibilityLabel={t('browse.peopleOf', { names: members.data.map((m) => m.displayName).join(', ') })} style={styles.faces}>
-                  <Faces people={members.data.map((m) => ({ id: m.userId, name: m.displayName }))} />
-                </Pressable>
-              )}
               <Pressable onPress={() => listMenu(collection, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
@@ -77,6 +72,16 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
     if (showDone) (done.data?.pages.flatMap((p) => p.items) ?? []).forEach((task) => items.push({ type: 'done', key: `d-${task.id}`, task }));
   }
   const doneTotal = done.data?.pages[0]?.total;
+  const people = members.data ?? [];
+  const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
+  const count = t('browse.people', { count: people.length });
+  // Who is in it (M44): nothing on the Inbox; "Share…" on a private list (only its owner sees it).
+  const who = !collection || collection.isInbox ? null
+    : !shared ? t('browse.share')
+    : !members.data ? null
+    : collection.team ? `${collection.team.name} · ${count}`
+    : collection.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })
+    : `${t('browse.ownersList', { name: collection.owner.displayName.split(' ')[0] })} · ${count}`;
   const eyebrow = !collection || collection.isInbox ? '' : collection.team ? collection.team.name : collection.owner.id !== me?.id ? t('browse.ownersList', { name: collection.owner.displayName.split(' ')[0] }) : '';
 
   const renderItem = ({ item }: { item: Item }) => {
@@ -93,6 +98,13 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
               <Text variant="subhead" color="ink2">
                 {`${t('browse.openCount', { count: tasks.data?.total ?? rows.length })} · ${t(`browse.sort.${collection.sortMode}`)}`}
               </Text>
+            )}
+            {who && (
+              <Pressable onPress={() => navigation.navigate('People', { kind: 'collection', id: collectionId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
+                <Feather name="users" size={15} color={colors.accent} />
+                <Text variant="subhead" color="accent" numberOfLines={1} style={styles.shrink}>{who}</Text>
+                <Feather name="chevron-right" size={14} color={colors.accent} />
+              </Pressable>
             )}
             {tasks.error && (
               <View style={{ marginTop: space.md }}>
@@ -147,7 +159,8 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   title: { flexDirection: 'row', alignItems: 'center' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  faces: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
+  who: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44 },
+  shrink: { flexShrink: 1 },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   empty: { alignItems: 'center' },
   doneHead: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },

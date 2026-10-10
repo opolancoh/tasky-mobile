@@ -8,6 +8,6 @@ export { sortByRecent, type TagItem } from './tags/tagItems';
 export { useRecentTags, RECENT_TAGS_MAX } from './tags/recentTagsStore';
 export { TaskRow, type TaskRowProps } from './TaskRow';
 export { UpdateRow } from './UpdateRow';
-export { Avatar, Faces } from './Faces';
+export { Avatar } from './Faces';
 export { MeButton } from './MeButton';
 export { AssigneePicker, type AssigneePickerProps } from './AssigneePicker';

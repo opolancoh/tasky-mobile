@@ -21,8 +21,9 @@ export interface AssigneePickerProps {
 }
 
 /**
- * Who a task is assigned to (M43; Task detail and Quick add): the people who can see its list, you first as "Me", the
- * current one checked with its status, and Unassign at the end. A tap picks and goes back.
+ * Who a task is assigned to (M43, M44; Task detail and Quick add, on every list): the people who can see its list, you
+ * first as "Me" (the only one on a private list or the Inbox), the current one checked with its status, and Unassign at
+ * the end. A tap picks and goes back.
  */
 export function AssigneePicker({ collectionId, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
@@ -48,7 +49,7 @@ export function AssigneePicker({ collectionId, meId, selected, status, onPick }:
         );
       })}
       {selected && <ListRow label={t('assign.unassign')} onPress={() => onPick(null)} chevron={false} divider={false} />}
-      <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.md }]}>{t('assign.note')}</Text>
+      <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.md }]}>{t(people.length > 1 ? 'assign.note' : 'assign.onlyYou')}</Text>
     </ScrollView>
   );
 }

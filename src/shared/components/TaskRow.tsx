@@ -8,6 +8,8 @@ import type { TaskSummary } from '@/data/tasks/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ColorDot, Text, useTheme } from '@/shared/ui';
 
+import { Avatar } from './Faces';
+
 export interface TaskRowProps {
   task: TaskSummary;
   /** The profile's today: due labels ("Tomorrow") and overdue in red. */
@@ -20,7 +22,8 @@ export interface TaskRowProps {
 
 /**
  * A task in a list (collections, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
- * (collection, due date, steps) and a red flag when important. Ticking fills the circle at once; the list
+ * (collection, due date, steps, repeat, then a red flag when important, M44) and the initials of whoever has it at
+ * the right, you included, except in the Inbox (M44). Ticking fills the circle at once; the list
  * refetches after the API answers.
  */
 export function TaskRow({ task, today, showDue = false, onComplete, onPress }: TaskRowProps) {
@@ -29,6 +32,8 @@ export function TaskRow({ task, today, showDue = false, onComplete, onPress }: T
   const labels = useDateLabels(today);
   const [ticked, setTicked] = useState(false);
   const overdue = !!task.dueDate && !!today && task.dueDate < today;
+  // Whoever has it, you included (M44); none in the Inbox, which is only ever yours.
+  const who = task.assignee && !task.collection.isInbox ? task.assignee : null;
 
   const complete = () => {
     if (ticked) return;
@@ -72,9 +77,14 @@ export function TaskRow({ task, today, showDue = false, onComplete, onPress }: T
                 </Text>
               )}
               {task.repeats && <Feather name="repeat" size={12} color={colors.ink3} />}
+              {task.isImportant && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} />}
             </View>
           </View>
-          {task.isImportant && <Feather name="flag" size={16} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
+          {who && (
+            <View accessible accessibilityLabel={t('taskRow.assignedTo', { name: who.displayName })} style={styles.face}>
+              <Avatar name={who.displayName} seed={who.id} size={22} />
+            </View>
+          )}
         </View>
       )}
     </Pressable>
@@ -87,5 +97,5 @@ const styles = StyleSheet.create({
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   metaItem: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
-  flag: { marginTop: 3 },
+  face: { alignSelf: 'center' },
 });
