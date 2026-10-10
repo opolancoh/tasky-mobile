@@ -1,18 +1,20 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { nowIn } from '@/core/dates/localDate';
 import type { ReminderAt } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
+import { taskKeys } from '@/data/tasks/keys';
 import { useCollections, useTags } from '@/data/tasks/queries';
-import type { RepeatPattern } from '@/data/tasks/types';
+import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { Sheet } from '@/shared/ui';
 
 import { RepeatPicker } from './components/RepeatPicker';
-import type { TaskDraft } from './taskDraft';
+import { assigneeStatus, type TaskDraft } from './taskDraft';
 import { useTaskDraft } from './taskDraftStore';
 import { useTaskSheet, type TaskField } from './taskSheetStore';
 
@@ -94,6 +96,9 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
   const myTags = tagsQuery.data ?? [];
   const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
   const today = now.date;
+  const taskId = useTaskDraft((s) => s.taskId);
+  const task = useQueryClient().getQueryData<Task>(taskKeys.detail(taskId ?? ''));
+  const assignmentStatus = assigneeStatus(task, draft.assignee, userId);
 
   switch (field) {
     case 'collection':
@@ -102,9 +107,20 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
           collections={collections}
           loading={collectionsQuery.isPending}
           selectedId={draft.collection.id}
-          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox } })}
+          // A private list has only you: whoever had the task can't see it there (the API drops them on the move too).
+          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox || c.sharing === 'private' ? { assignee: null } : {}) })}
         />
       );
+    case 'assignee':
+      return userId ? (
+        <AssigneePicker
+          collectionId={draft.collection.id}
+          meId={userId}
+          selected={draft.assignee}
+          status={assignmentStatus}
+          onPick={(assignee) => apply({ assignee })}
+        />
+      ) : null;
     case 'due':
       return <DueDatePicker value={due ?? undefined} today={today} onPick={(date) => applyDue(date ?? null)} onChange={setDue} />;
     case 'reminder':

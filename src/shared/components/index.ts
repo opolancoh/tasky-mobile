@@ -10,3 +10,4 @@ export { TaskRow, type TaskRowProps } from './TaskRow';
 export { UpdateRow } from './UpdateRow';
 export { Avatar, Faces } from './Faces';
 export { MeButton } from './MeButton';
+export { AssigneePicker, type AssigneePickerProps } from './AssigneePicker';

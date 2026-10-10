@@ -9,10 +9,10 @@ import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
 import { useCreateTask } from '@/data/tasks/mutations';
 import { useCollections, useTags } from '@/data/tasks/queries';
-import { taskLimits } from '@/data/tasks/types';
+import { taskLimits, type UserRef } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -20,7 +20,7 @@ import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
 import { useQuickAdd } from './quickAddStore';
 
-type Page = 'form' | 'collection' | 'tags' | 'due' | 'reminder' | 'notes';
+type Page = 'form' | 'collection' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
 
 interface Draft {
   title: string;
@@ -33,6 +33,8 @@ interface Draft {
   reminder: ReminderChoice;
   /** Picked in the Tags page; sent as `tags` (names; new ones become the user's). The title is plain text (M31). */
   tags: string[];
+  /** Who gets it (M43): only on a shared or team list; assigned right after the task is created. */
+  assignee?: UserRef;
 }
 
 const EMPTY: Draft = { title: '', notes: '', isImportant: false, reminder: null, tags: [] };
@@ -80,6 +82,8 @@ function QuickAddForm() {
   const inbox = collections.find((c) => c.isInbox);
   const collection = collections.find((c) => c.id === draft.collectionId) ?? inbox;
   const tags = draft.tags;
+  // Assigning is for shared and team lists: the Inbox and private lists have only you.
+  const shared = !!collection && !collection.isInbox && collection.sharing !== 'private';
   const titleText = draft.title.trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
@@ -108,6 +112,7 @@ function QuickAddForm() {
           reminderTime: chosen?.time,
         },
         withoutReminder: !draft.reminder && !!draft.dueDate,
+        assignee: shared ? draft.assignee?.id : undefined,
       },
       {
         onSuccess: () => {
@@ -144,6 +149,7 @@ function QuickAddForm() {
     tags: t('quickAdd.fields.tags'),
     due: t('quickAdd.fields.dueDate'),
     reminder: t('quickAdd.fields.reminder'),
+    assignee: t('quickAdd.fields.assignee'),
     notes: t('quickAdd.fields.notes'),
   };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
@@ -155,6 +161,7 @@ function QuickAddForm() {
     { key: 'important', icon: 'flag', label: t('quickAdd.fields.important'), value: draft.isImportant ? t('quickAdd.on') : undefined, danger: true, onPress: () => update({ isImportant: !draft.isImportant }) },
     { key: 'due', icon: 'calendar', label: t('quickAdd.fields.dueDate'), value: draft.dueDate && dayText(draft.dueDate), onPress: () => openPage('due') },
     { key: 'reminder', icon: 'bell', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
+    ...(shared ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
     { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => openPage('tags') },
     { key: 'notes', icon: 'file-text', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
   ];
@@ -213,6 +220,16 @@ function QuickAddForm() {
               value={<Text variant="bodyMedium" color="accent">{collection?.name ?? t('collections.inbox')}</Text>}
               onPress={() => openPage('collection')}
             />
+            {shared && draft.assignee && (
+              <ListRow
+                label={t('quickAdd.fields.assignee')}
+                icon={<Avatar name={draft.assignee.displayName} seed={draft.assignee.id} size={22} />}
+                value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{draft.assignee.id === userId ? t('assign.meShort') : draft.assignee.displayName}</Text>}
+                onPress={() => openPage('assignee')}
+                onClear={() => update({ assignee: undefined })}
+                clearLabel={t('assign.unassign')}
+              />
+            )}
             {draft.isImportant && (
               <ListRow
                 label={t('quickAdd.fields.important')}
@@ -264,7 +281,11 @@ function QuickAddForm() {
         </ScrollView>
       )}
 
-      {page === 'collection' && <CollectionPicker collections={collections} loading={collectionsQuery.isPending} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id })} />}
+      {page === 'collection' && <CollectionPicker collections={collections} loading={collectionsQuery.isPending} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id, ...(c.id === collection?.id ? {} : { assignee: undefined }) })} />}
+
+      {page === 'assignee' && collection && userId && (
+        <AssigneePicker collectionId={collection.id} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />
+      )}
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
 

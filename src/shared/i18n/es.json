@@ -316,7 +316,8 @@
       "reminder": "Recordatorio",
       "dueDate": "Fecha límite",
       "tags": "Etiquetas",
-      "notes": "Notas"
+      "notes": "Notas",
+      "assignee": "Asignar a"
     },
     "notesPlaceholder": "Añade notas",
     "clearTitle": "Borrar título",
@@ -398,7 +399,8 @@
       "due": "Fecha límite",
       "reminder": "Recordatorio",
       "repeat": "Repetir",
-      "tags": "Etiquetas"
+      "tags": "Etiquetas",
+      "assignee": "Asignada a"
     },
     "title": "Título",
     "complete": "Completar",
@@ -577,5 +579,15 @@
     "remindersOn": "Activados",
     "remindersOff": "Desactivados",
     "remindersOffHint": "Tasky no puede avisarte. Activa las notificaciones en Ajustes."
+  },
+  "assign": {
+    "me": "Yo ({{name}})",
+    "meShort": "Yo",
+    "status": {
+      "pending": "Pendiente",
+      "accepted": "Aceptada"
+    },
+    "unassign": "Quitar asignación",
+    "note": "La reciben como Pendiente y responden Aceptar o Rechazar. Si te la asignas tú, no hace falta responder."
   }
 }

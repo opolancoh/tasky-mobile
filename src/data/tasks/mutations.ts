@@ -16,10 +16,12 @@ import type { Collection, CreateTaskRequest, DeletedItem, MembersOf, Tag, Task, 
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ body, withoutReminder }: { body: CreateTaskRequest; withoutReminder?: boolean }) => {
-      const task = await tasksApi.createTask(body);
+    mutationFn: async ({ body, withoutReminder, assignee }: { body: CreateTaskRequest; withoutReminder?: boolean; assignee?: Id }) => {
+      let task = await tasksApi.createTask(body);
       // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
       if (withoutReminder) await tasksApi.removeReminder(task.id).catch(() => undefined);
+      // Assigned while adding (M43): POST /tasks doesn't take an assignee, so :assign follows.
+      if (assignee) task = await tasksApi.assign(task, assignee);
       return task;
     },
     onSuccess: () => {
@@ -120,7 +122,13 @@ export function useSaveTask(taskId: Id) {
   const key = taskKeys.detail(taskId);
   return useMutation({
     scope: { id: `task-${taskId}` },
-    mutationFn: ({ version, body }: { version: number; body: UpdateTaskRequest }) => tasksApi.update({ id: taskId, version }, body),
+    // The PATCH, then the assignee when it changed (assigning isn't a PATCH field, M43), each on the version the last returned.
+    mutationFn: async ({ version, body, assignee }: { version: number; body: UpdateTaskRequest; assignee?: Id | null }) => {
+      let task = Object.keys(body).length ? await tasksApi.update({ id: taskId, version }, body) : undefined;
+      const current = { id: taskId, version: task?.version ?? version };
+      if (assignee !== undefined) task = assignee ? await tasksApi.assign(current, assignee) : await tasksApi.unassign(current);
+      return task ?? tasksApi.get(taskId);
+    },
     onSuccess: (task) => queryClient.setQueryData(key, task),
     onSettled: () => {
       refetchLists();

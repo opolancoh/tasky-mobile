@@ -143,6 +143,12 @@ export const tasksApi = {
   /** DELETE /steps/{id} (204). */
   removeStep: (stepId: Id) => http().delete(`/steps/${stepId}`),
 
+  /** POST /tasks/{id}:assign { userId } with If-Match: Pending, or Accepted when it's the caller (M43). */
+  assign: (task: Versioned, userId: Id) => http().post<Task>(`/tasks/${task.id}:assign`, { body: { userId }, ifMatch: task.version }),
+
+  /** POST /tasks/{id}:unassign with If-Match. */
+  unassign: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:unassign`, { ifMatch: task.version }),
+
   /** POST /tasks/{id}:accept-assignment or :reject-assignment (optional reason, up to 500), by the assignee while Pending. */
   answerAssignment: (task: Versioned, accept: boolean, reason?: string) =>
     http().post<Task>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),

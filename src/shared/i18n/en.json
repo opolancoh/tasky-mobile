@@ -316,7 +316,8 @@
       "reminder": "Reminder",
       "dueDate": "Due date",
       "tags": "Tags",
-      "notes": "Notes"
+      "notes": "Notes",
+      "assignee": "Assign to"
     },
     "notesPlaceholder": "Add notes",
     "clearTitle": "Clear title",
@@ -398,7 +399,8 @@
       "due": "Due date",
       "reminder": "Reminder",
       "repeat": "Repeat",
-      "tags": "Tags"
+      "tags": "Tags",
+      "assignee": "Assigned to"
     },
     "title": "Title",
     "complete": "Complete",
@@ -577,5 +579,15 @@
     "remindersOn": "On",
     "remindersOff": "Off",
     "remindersOffHint": "Tasky can’t alert you. Turn notifications on in Settings."
+  },
+  "assign": {
+    "me": "Me ({{name}})",
+    "meShort": "Me",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted"
+    },
+    "unassign": "Unassign",
+    "note": "They get it as Pending and answer Accept or Reject. Assigning yourself needs no answer."
   }
 }

@@ -12,24 +12,24 @@ import type { Id } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
-import { useTask } from '@/data/tasks/queries';
+import { useCollections, useTask } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { CollectionIcon, TagsRow } from '@/shared/components';
+import { Avatar, CollectionIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
-import { changedKeys, patchOf } from './taskDraft';
+import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
 import { useTaskSheet } from './taskSheetStore';
 import { useRepeatText } from './useRepeatText';
 
 /**
  * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
- * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Due date, Reminder, Repeat and
- * Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
+ * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Assigned to (shared lists, M43),
+ * Due date, Reminder, Repeat and Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
  * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
  * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
@@ -54,10 +54,11 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { describe } = useRepeatText();
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
+  const collections = useCollections().data;
   const leaving = useRef(false);   // set when the screen closes on purpose (after Delete): no discard prompt
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
-    useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, collection: s.draft.collection, tags: s.draft.tags } : null)),
+    useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, collection: s.draft.collection, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
   );
 
   // The task as read becomes the draft (unsaved edits of this task are kept); leaving drops it.
@@ -80,7 +81,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     const { base, draft, version } = useTaskDraft.getState();
     if (!base || !draft || !changedKeys(base, draft).length) return true;
     try {
-      const saved = await save.mutateAsync({ version, body: patchOf(base, draft) });
+      const saved = await save.mutateAsync({ version, body: patchOf(base, draft), assignee: assigneeChange(base, draft) });
       clear();
       load(saved);
       return true;
@@ -112,6 +113,9 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   }
 
   const locale = i18n.language;
+  const list = collections?.find((c) => c.id === fields.collection.id);
+  const sharedList = !!list && !list.isInbox && list.sharing !== 'private';
+  const status = assigneeStatus(task, fields.assignee, me.id);
   const completed = task.status === 'completed';
   const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
 
@@ -243,6 +247,26 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.collection.name}</Text>}
           onPress={() => open('collection')}
         />
+        {/* Assigned to (M43): only on a shared or team list (the Inbox and private lists have only you). */}
+        {sharedList && (
+          fields.assignee ? (
+            <ListRow
+              label={t('taskDetail.fields.assignee')}
+              icon={<Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} />}
+              value={
+                <View style={styles.end}>
+                  <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
+                  {status && <Text variant="caption" color={status === 'pending' ? 'ink2' : 'success'}>{t(`assign.status.${status}`)}</Text>}
+                </View>
+              }
+              onPress={() => open('assignee')}
+              onClear={() => edit({ assignee: null })}
+              clearLabel={t('assign.unassign')}
+            />
+          ) : (
+            <ListRow label={t('taskDetail.fields.assignee')} value={t('common.none')} icon={<Feather name="user" size={20} color={colors.ink3} />} onPress={() => open('assignee')} />
+          )
+        )}
         {fields.dueDate ? (
           <ListRow
             label={t('taskDetail.fields.due')}

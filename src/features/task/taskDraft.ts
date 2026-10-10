@@ -1,6 +1,6 @@
 import type { ReminderAt } from '@/core/dates/reminders';
 import type { Id, LocalDate } from '@/core/types';
-import type { CollectionRef, Repeat, Task, UpdateTaskRequest } from '@/data/tasks/types';
+import type { AssignmentStatus, CollectionRef, Repeat, Task, UpdateTaskRequest, UserRef } from '@/data/tasks/types';
 import type { TagItem } from '@/shared/components';
 
 import { reminderOf } from './reminderOf';
@@ -21,6 +21,8 @@ export interface TaskDraft {
   dueDate: LocalDate | null;
   repeat: Repeat | null;
   collection: CollectionRef;
+  /** Who has it (M43); saved with :assign / :unassign after the PATCH, not in it. */
+  assignee: UserRef | null;
   reminder: ReminderAt | null;
   tags: TagItem[];
   steps: DraftStep[];
@@ -34,6 +36,7 @@ export function toDraft(task: Task): TaskDraft {
     dueDate: task.dueDate ?? null,
     repeat: task.repeat ? { ...task.repeat, nextDueDate: undefined } : null,   // the server's preview, not something to edit
     collection: task.collection,
+    assignee: task.assignee ? { id: task.assignee.id, displayName: task.assignee.displayName } : null,
     reminder: reminderOf(task),
     tags: task.tags.map((g) => ({ name: g.name.toLowerCase(), color: g.color })),
     steps: task.steps.map((s) => ({ key: s.id, id: s.id, title: s.title, isDone: s.isDone })),
@@ -66,6 +69,17 @@ export function patchOf(base: TaskDraft, draft: TaskDraft): UpdateTaskRequest {
   if (keys.has('steps')) body.steps = draft.steps.map((s) => ({ ...(s.id ? { id: s.id } : {}), title: s.title.trim(), isDone: s.isDone }));
   return body;
 }
+
+/**
+ * The status to show beside the draft's assignee: the task's own when it's the same person, else what assigning will
+ * give (Accepted for yourself, Pending for anyone else).
+ */
+export const assigneeStatus = (task: Task | null | undefined, assignee: UserRef | null, meId: Id | null | undefined): AssignmentStatus | null =>
+  !assignee ? null : task?.assignee?.id === assignee.id ? (task.assignmentStatus ?? null) : assignee.id === meId ? 'accepted' : 'pending';
+
+/** The assignee to send on Save: their id, null to unassign, undefined when it didn't change. */
+export const assigneeChange = (base: TaskDraft, draft: TaskDraft): Id | null | undefined =>
+  base.assignee?.id === draft.assignee?.id ? undefined : (draft.assignee?.id ?? null);
 
 /** After a 412: the latest task, with the person's changes on top. */
 export function rebase(task: Task, base: TaskDraft, draft: TaskDraft): TaskDraft {
