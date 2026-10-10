@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/core/types';
-import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
+import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
+import { Avatar } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 
@@ -129,6 +130,27 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
       onPress={() => open(task)}
       label={by ? `${task.title}, ${by}` : task.title}
       action={<Pill label={t('today.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('today.accepted') }) })} disabled={answer.isPending} />}
+    />
+  );
+}
+
+/**
+ * A task the caller gave someone that needs them (D71, M45): declined (with the reason; the row opens the task to
+ * reassign, unassign or delete it), or completed and waiting for Confirm, here.
+ */
+export function FollowUpRow({ task }: { task: TaskSummary }) {
+  const { t } = useTranslation();
+  const open = useOpenTask();
+  const confirmTask = useConfirmTask();
+  const who = task.assignee?.displayName || t('notifications.someone');
+  const declined = task.assignmentStatus === 'declined';
+  return (
+    <StreamRow
+      lead={<Avatar name={who} seed={task.assignee?.id ?? who} size={30} />}
+      title={task.title}
+      sub={<Text variant="footnote" color={declined ? 'danger' : 'success'}>{t(declined ? 'today.declinedBy' : 'today.completedBy', { name: who.split(' ')[0] })}</Text>}
+      onPress={() => open(task)}
+      action={declined ? undefined : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />}
     />
   );
 }

@@ -15,7 +15,7 @@ import { MeButton } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, Notice, Pill, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { AskRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
+import { AskRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
 
 /** Today's rows, one list (FlashList) so long sections stay fast (docs/performance.md). */
@@ -24,6 +24,7 @@ type Item =
   | { type: 'section'; key: string; title: string; count: number; seeAll?: TodayListSection }
   | { type: 'invitation'; key: string; invitation: MyInvitation }
   | { type: 'ask'; key: string; task: TaskSummary }
+  | { type: 'follow'; key: string; task: TaskSummary }
   | { type: 'overdue'; key: string; task: TaskSummary }
   | { type: 'task'; key: string; task: TaskSummary; when: 'time' | 'day' }
   | { type: 'update'; key: string; notification: Notification }
@@ -53,7 +54,7 @@ export function TodayScreen() {
   const data = home.data;
   const seeAll = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
-  const attentionCount = data ? data.invitations.length + (data.toAnswer.total ?? 0) + (data.overdue.total ?? 0) : 0;
+  const attentionCount = data ? data.invitations.length + (data.toAnswer.total ?? 0) + (data.followUp.total ?? 0) + (data.overdue.total ?? 0) : 0;
   const todayCount = data?.today.total ?? 0;
   const unreadCount = unread.data?.count ?? updates.data?.items.length ?? 0;
 
@@ -67,12 +68,13 @@ export function TodayScreen() {
   if (data && today) {
     if (!attentionCount && !todayCount) items.push({ type: 'calm', key: 'calm', body: t(data.comingUp.total ? 'today.caughtUpNext' : 'today.caughtUpBody') });
 
-    // Needs attention: invitations, then answers, then overdue; 5 rows at most, See all for the rest.
+    // Needs attention: invitations, then answers, then follow-ups (D71), then overdue; 5 rows at most, See all for the rest.
     if (attentionCount) {
       items.push({ type: 'section', key: 's-attention', title: t('today.attention'), count: attentionCount, seeAll: attentionCount > HOME_PREVIEW ? 'attention' : undefined });
       const rows: Item[] = [
         ...data.invitations.map((invitation) => ({ type: 'invitation' as const, key: `v-${invitation.id}`, invitation })),
         ...data.toAnswer.items.map((task) => ({ type: 'ask' as const, key: `a-${task.id}`, task })),
+        ...data.followUp.items.map((task) => ({ type: 'follow' as const, key: `f-${task.id}`, task })),
         ...data.overdue.items.map((task) => ({ type: 'overdue' as const, key: `o-${task.id}`, task })),
       ];
       items.push(...rows.slice(0, HOME_PREVIEW));
@@ -170,6 +172,8 @@ export function TodayScreen() {
         return <InvitationRow invitation={item.invitation} />;
       case 'ask':
         return <AskRow task={item.task} today={today!} />;
+      case 'follow':
+        return <FollowUpRow task={item.task} />;
       case 'overdue':
         return <OverdueRow task={item.task} today={today!} />;
       case 'task':

@@ -13,6 +13,7 @@ const ICONS: Record<Notification['kind'], Icon> = {
   assigned: 'user', reassigned: 'user', unassigned: 'user', assignmentAccepted: 'user-check', assignmentRejected: 'user-x', assignmentDropped: 'user-x',
   taskCompleted: 'check-circle', taskMoved: 'corner-up-right', taskRescheduled: 'calendar',
   invited: 'users', invitationAccepted: 'users', removed: 'users', roleChanged: 'users', ownershipReceived: 'key',
+  assignmentCompleted: 'check-circle', taskDeleted: 'trash-2',
 };
 
 /**

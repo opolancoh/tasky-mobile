@@ -28,11 +28,14 @@ import { useRepeatText } from './useRepeatText';
 
 /**
  * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
- * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Assigned to (shared lists, M43),
+ * title in place, the Important flag (a red edge when on, M24), the rows for Collection, Assigned to (every task, M43, M44),
  * Due date, Reminder, Repeat and Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
  * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
  * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
+ * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
+ * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
+ * shows Confirm (D71).
  */
 export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { taskId } = route.params;
@@ -113,6 +116,9 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
 
   const locale = i18n.language;
   const status = assigneeStatus(task, fields.assignee, me.id);
+  // Seen only as its assignee (D70): the list's people define it; this person works on it.
+  const outside = !task.collection;
+  const fixed = outside ? ({ pointerEvents: 'none', accessibilityState: { disabled: true } } as const) : {};
   const completed = task.status === 'completed';
   const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
 
@@ -177,6 +183,20 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     );
   };
   const assigner = task.assignedBy?.displayName || t('notifications.someone');
+
+  // Give it back (D70): asks first; someone who sees only this task loses it, so the screen closes.
+  const giveBack = async () => {
+    const ok = await confirm({ title: t('taskDetail.giveBackTitle', { title: task.title }), message: t('taskDetail.giveBackMessage', { name: assigner }), confirmLabel: t('taskDetail.giveBack'), cancelLabel: t('common.cancel') });
+    if (!ok || !(await saveDraft())) return;
+    command.mutate({ run: (x) => tasksApi.unassign(x) }, {
+      onSuccess: () => {
+        leaving.current = true;
+        navigation.goBack();
+        useToast.getState().show({ message: t('taskDetail.gaveBack', { name: assigner }) });
+      },
+    });
+  };
+  const confirmDone = () => run({ run: (x) => tasksApi.confirm(x), optimistic: (x) => ({ ...x, awaitsConfirmation: false }) }, t('taskDetail.confirmed'));
   // While waiting, the fields read only: dimmed, and taps don't reach them.
   const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : {};
 
@@ -202,9 +222,10 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         >
           {completed && <Feather name="check" size={16} color={colors.onAccent} />}
         </Pressable>
-        <TitleField completed={completed} />
+        <TitleField completed={completed} editable={!outside} />
         <Pressable
           onPress={() => edit({ isImportant: !fields.isImportant })}
+          disabled={outside}
           accessibilityRole="switch"
           accessibilityState={{ checked: fields.isImportant }}
           accessibilityLabel={t('taskDetail.important')}
@@ -213,6 +234,17 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <Feather name="flag" size={22} color={fields.isImportant ? colors.danger : colors.ink3} />
         </Pressable>
       </View>
+
+      {task.awaitsConfirmation && (
+        <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, marginTop: space.md, borderBottomColor: colors.line }]} accessibilityRole="summary">
+          <Feather name="check-circle" size={20} color={colors.success} />
+          <View style={styles.fill}>
+            <Text variant="body">{t('taskDetail.awaitsConfirmation', { name: task.assignee?.displayName || t('notifications.someone') })}</Text>
+            <Text variant="caption" color="ink2">{t('taskDetail.awaitsConfirmationBody')}</Text>
+          </View>
+          <Pill label={t('taskDetail.confirm')} onPress={confirmDone} disabled={command.isPending} />
+        </View>
+      )}
 
       {completed && (
         <View style={[styles.doneNote, { gap: space.md }]}>
@@ -238,21 +270,33 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           </View>
         )}
         <View {...locked}>
-        <ListRow
-          label={t('taskDetail.fields.collection')}
-          icon={<CollectionIcon collection={fields.collection} />}
-          value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.collection.name}</Text>}
-          onPress={() => open('collection')}
-        />
+        {fields.collection ? (
+          <ListRow
+            label={t('taskDetail.fields.collection')}
+            icon={<CollectionIcon collection={fields.collection} />}
+            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.collection.name}</Text>}
+            onPress={() => open('collection')}
+          />
+        ) : (
+          <ListRow label={t('taskDetail.from')} icon={<Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={22} />} value={assigner} />
+        )}
         {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
-        {fields.assignee ? (
+        {outside ? (
+          <ListRow
+            label={t('taskDetail.fields.assignee')}
+            icon={<Avatar name={me.displayName} seed={me.id} size={22} />}
+            value={status ? t(`assign.status.${status}`) : t('assign.meShort')}
+          />
+        ) : fields.assignee ? (
           <ListRow
             label={t('taskDetail.fields.assignee')}
             icon={<Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} />}
             value={
               <View style={styles.end}>
                 <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
-                {status && <Text variant="caption" color={status === 'pending' ? 'ink2' : 'success'}>{t(`assign.status.${status}`)}</Text>}
+                {status && <Text variant="caption" color={status === 'declined' ? 'danger' : status === 'accepted' ? 'success' : 'ink2'} numberOfLines={2}>
+                  {status === 'declined' && task.declineReason ? t('taskDetail.declinedReason', { reason: task.declineReason }) : t(`assign.status.${status}`)}
+                </Text>}
               </View>
             }
             onPress={() => open('assignee')}
@@ -262,6 +306,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         ) : (
           <ListRow label={t('taskDetail.fields.assignee')} value={t('common.none')} icon={<Feather name="user" size={20} color={colors.ink3} />} onPress={() => open('assignee')} />
         )}
+        <View {...fixed}>
         {fields.dueDate ? (
           <ListRow
             label={t('taskDetail.fields.due')}
@@ -274,6 +319,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         ) : (
           <ListRow label={t('taskDetail.fields.due')} value={t('common.none')} icon={<Feather name="calendar" size={20} color={colors.ink3} />} onPress={() => open('due')} />
         )}
+        </View>
         {fields.reminder ? (
           <ListRow
             label={t('taskDetail.fields.reminder')}
@@ -293,6 +339,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         ) : (
           <ListRow label={t('taskDetail.fields.reminder')} value={t('common.none')} icon={<Feather name="bell" size={20} color={colors.ink3} />} onPress={() => open('reminder')} />
         )}
+        <View {...fixed}>
         {fields.repeat ? (
           <ListRow
             label={t('taskDetail.fields.repeat')}
@@ -306,6 +353,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <ListRow label={t('taskDetail.fields.repeat')} value={t('common.none')} icon={<Feather name="repeat" size={20} color={colors.ink3} />} onPress={() => open('repeat')} />
         )}
         <TagsRow tags={fields.tags} onPress={() => open('tags')} onClear={fields.tags.length ? () => edit({ tags: [] }) : undefined} />
+        </View>
+        {outside && <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('taskDetail.onlyListPeople')}</Text>}
         </View>
       </View>
 
@@ -333,12 +382,12 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
       </View>
 
       {!waiting && (
-      <Pressable onPress={deleteTask} disabled={remove.isPending} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
+      <Pressable onPress={outside ? giveBack : deleteTask} disabled={remove.isPending || command.isPending} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
         {({ pressed }) => (
           <>
-            <Feather name="trash-2" size={17} color={colors.danger} />
+            <Feather name={outside ? 'corner-up-left' : 'trash-2'} size={17} color={colors.danger} />
             <Text variant="bodyMedium" color="danger" style={{ opacity: pressed || remove.isPending ? 0.6 : 1 }}>
-              {t('taskDetail.delete')}
+              {t(outside ? 'taskDetail.giveBack' : 'taskDetail.delete')}
             </Text>
           </>
         )}
@@ -366,7 +415,7 @@ function SaveButton({ pending, onPress }: { pending: boolean; onPress(): void })
 }
 
 /** The title, edited in place in the draft; only this field redraws while typing. */
-function TitleField({ completed }: { completed: boolean }) {
+function TitleField({ completed, editable }: { completed: boolean; editable: boolean }) {
   const { t } = useTranslation();
   const { colors, type } = useTheme();
   const title = useTaskDraft((s) => s.draft?.title ?? '');
@@ -375,6 +424,7 @@ function TitleField({ completed }: { completed: boolean }) {
     <TextInput
       value={title}
       onChangeText={(text) => edit({ title: text.replace(/\n/g, ' ') })}
+      editable={editable}
       multiline
       submitBehavior="blurAndSubmit"
       returnKeyType="done"

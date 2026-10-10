@@ -116,12 +116,16 @@ export interface Reminder {
 }
 
 export type TaskStatus = 'open' | 'completed';
-export type AssignmentStatus = 'pending' | 'accepted';
+/** Declined stays on the task, with the reason, until whoever assigned it decides (D71). */
+export type AssignmentStatus = 'pending' | 'accepted' | 'declined';
 
-/** GET /tasks/{id} (TaskResponse); times are UTC ISO-8601. Missing keys are null (the API omits nulls). */
+/**
+ * GET /tasks/{id} (TaskResponse); times are UTC ISO-8601. Missing keys are null (the API omits nulls). `collection` is null
+ * for someone who sees the task only as its assignee: `assignedBy` says who it's from (D70).
+ */
 export interface Task {
   id: Id;
-  collection: CollectionRef;
+  collection: CollectionRef | null;
   title: string;
   notes?: string | null;
   isImportant: boolean;
@@ -134,6 +138,13 @@ export interface Task {
   assignee?: UserRef | null;
   assignmentStatus?: AssignmentStatus | null;
   assignedBy?: UserRef | null;
+  declineReason?: string | null;
+  /** Completed by its assignee for the caller, who hasn't confirmed it yet (D71). */
+  awaitsConfirmation: boolean;
+  confirmedAt?: string | null;
+  confirmedBy?: UserRef | null;
+  /** Given by email to someone without an account yet (D70); only for those who see the list. */
+  invitedEmail?: string | null;
   steps: Step[];
   tags: TagRef[];
   createdAt: string;
@@ -143,10 +154,10 @@ export interface Task {
   version: Version;
 }
 
-/** A task in a list (TaskSummaryResponse): enough for one row. */
+/** A task in a list (TaskSummaryResponse): enough for one row. `collection`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
 export interface TaskSummary {
   id: Id;
-  collection: CollectionRef;
+  collection: CollectionRef | null;
   title: string;
   hasNotes: boolean;
   isImportant: boolean;
@@ -156,6 +167,9 @@ export interface TaskSummary {
   completedAt: string | null;
   assignee?: UserRef | null;
   assignmentStatus: AssignmentStatus | null;
+  assignedBy?: UserRef | null;
+  awaitsConfirmation: boolean;
+  invitedEmail?: string | null;
   stepsDone: number;
   stepsTotal: number;
   tags: TagRef[];
@@ -254,12 +268,14 @@ export interface MyInvitation {
 }
 
 /** The Today tab's task sections (GET /home/{section}, D67). */
-export type HomeSection = 'to-answer' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox';
+export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox';
 
 /** GET /home (D67, D69): the Today tab's invitations, each section's first page, and the totals behind its chips. */
 export interface Home {
   invitations: MyInvitation[];
   toAnswer: TaskPage;
+  /** Tasks the caller assigned that were declined, or completed and wait for them to confirm (D71). */
+  followUp: TaskPage;
   overdue: TaskPage;
   today: TaskPage;
   comingUp: TaskPage;
@@ -334,3 +350,11 @@ export interface MyReminder {
 /** API limits (TaskLimits.cs). */
 export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, collectionNameMax: 100 } as const;
 
+
+/**
+ * Someone picked by email (D70), before Save: a UserRef whose id is `email:` and the address, so drafts and pickers treat
+ * them like anyone else. `assignTarget` turns an id back into what POST :assign takes.
+ */
+export const emailAssignee = (email: string): UserRef => ({ id: `email:${email}`, displayName: email });
+export const isEmailAssignee = (id: string | null | undefined): boolean => !!id?.startsWith('email:');
+export const assignTarget = (id: string): string | { email: string } => (isEmailAssignee(id) ? { email: id.slice(6) } : id);

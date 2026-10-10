@@ -107,13 +107,20 @@
     "declined": "Invitación rechazada",
     "accepted": "Aceptada",
     "movedToday": "Movida a hoy",
-    "loading": "Cargando tu día"
+    "loading": "Cargando tu día",
+    "declinedBy": "{{name}} la rechazó",
+    "completedBy": "{{name}} la completó"
   },
   "taskRow": {
     "complete": "Completar {{title}}",
     "steps": "{{done}} de {{total}}",
     "important": "Importante",
-    "assignedTo": "Asignada a {{name}}"
+    "assignedTo": "Asignada a {{name}}",
+    "from": "De {{name}}",
+    "declined": "Rechazada",
+    "completed": "Completada",
+    "confirm": "Confirmar",
+    "invited": "Invitada"
   },
   "browse": {
     "title": "Explorar",
@@ -287,7 +294,8 @@
       "sameForAll": "El nombre, el color y el orden son los mismos para todos en esta lista."
     },
     "sharedWith": "Compartida con {{names}}",
-    "share": "Compartir…"
+    "share": "Compartir…",
+    "onlyYouWith": "Solo tú · {{names}} tienen tareas"
   },
   "search": {
     "title": "Buscar",
@@ -441,7 +449,18 @@
     "reject": "Rechazar",
     "rejectTitle": "¿Rechazar esta asignación?",
     "rejectMessage": "{{name}} recibe aviso, con tu motivo si lo añades. La tarea sigue en su lista, sin asignar.",
-    "rejected": "Rechazada. {{name}} recibió aviso"
+    "rejected": "Rechazada. {{name}} recibió aviso",
+    "from": "De",
+    "giveBack": "Devolverla",
+    "giveBackTitle": "¿Devolver {{title}}?",
+    "giveBackMessage": "{{name}} recibe un aviso y ya no la verás.",
+    "gaveBack": "Devuelta a {{name}}",
+    "confirm": "Confirmar",
+    "confirmed": "Confirmada",
+    "awaitsConfirmation": "{{name}} la completó",
+    "awaitsConfirmationBody": "Confirma que la viste, o reábrela.",
+    "declinedReason": "Rechazada: {{reason}}",
+    "onlyListPeople": "Solo quienes ven su lista cambian el título, la fecha, Importante, la repetición y las etiquetas."
   },
   "repeat": {
     "never": "Nunca",
@@ -507,7 +526,9 @@
     "invitationAccepted": "{{other}} se unió a {{subject}}",
     "removed": "{{actor}} te quitó de {{subject}}",
     "roleChanged": "{{actor}} te hizo {{role}} de {{subject}}",
-    "ownershipReceived": "Ahora eres dueño de {{subject}}"
+    "ownershipReceived": "Ahora eres dueño de {{subject}}",
+    "assignmentCompleted": "{{actor}} completó {{task}}",
+    "taskDeleted": "{{actor}} eliminó {{task}}"
   },
   "invitation": {
     "invitedYou": "{{name}} te invitó",
@@ -587,10 +608,18 @@
     "meShort": "Yo",
     "status": {
       "pending": "Pendiente",
-      "accepted": "Aceptada"
+      "accepted": "Aceptada",
+      "declined": "Rechazada",
+      "invited": "Invitada"
     },
     "unassign": "Quitar asignación",
     "note": "La reciben como Pendiente y responden Aceptar o Rechazar. Si te la asignas tú, no hace falta responder.",
-    "onlyYou": "Solo tú ves esta lista. Asignártela la pone en Asignadas a mí."
+    "onlyYou": "Solo tú ves esta lista. Asignártela la pone en Asignadas a mí.",
+    "outside": "Solo esta tarea",
+    "byEmail": "Otra persona, por correo",
+    "emailLabel": "Correo",
+    "emailAssign": "Asignar",
+    "outsideNote": "Verá solo esta tarea, no la lista ni a sus personas. ¿No tiene cuenta en Tasky? Recibe un correo y la encuentra al registrarse.",
+    "invited": "Invitada"
   }
 }

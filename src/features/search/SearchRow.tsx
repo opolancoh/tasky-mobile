@@ -5,7 +5,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
-import { ColorDot, Text, useTheme } from '@/shared/ui';
+import { TaskOrigin } from '@/shared/components';
+import { Text, useTheme } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
 const fold = (s: string) => s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
@@ -52,8 +53,7 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
               )}
             </Text>
             <View style={[styles.meta, { gap: space.xs }]}>
-              <ColorDot color={task.collection.color} size={8} />
-              <Text variant="footnote" color="ink3" numberOfLines={1} style={styles.shrink}>{task.collection.isInbox ? t('browse.inbox') : task.collection.name}</Text>
+              <TaskOrigin collection={task.collection} assignedBy={task.assignedBy} />
               {done && <Text variant="footnote" color="ink3">· {t('search.completed')}</Text>}
               {task.isImportant && !done && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
             </View>

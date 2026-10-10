@@ -5,6 +5,7 @@ import type { Id } from '@/core/types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
+import { assignTarget } from './types';
 import type { Collection, CreateTaskRequest, DeletedItem, MembersOf, Tag, Task, TaskSummary, Team, UpdateCollectionRequest, UpdateTaskRequest } from './types';
 
 /**
@@ -21,7 +22,7 @@ export function useCreateTask() {
       // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
       if (withoutReminder) await tasksApi.removeReminder(task.id).catch(() => undefined);
       // Assigned while adding (M43): POST /tasks doesn't take an assignee, so :assign follows.
-      if (assignee) task = await tasksApi.assign(task, assignee);
+      if (assignee) task = await tasksApi.assign(task, assignTarget(assignee));
       return task;
     },
     onSuccess: () => {
@@ -47,6 +48,12 @@ export function useCompleteTask() {
   return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.complete(task), onSettled: refetch });
 }
 
+/** POST /tasks/{id}:confirm: the assignee completed it for the caller, who saw it (D71). It leaves the open tasks. */
+export function useConfirmTask() {
+  const refetch = useRefetchTasks();
+  return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.confirm(task), onSettled: refetch });
+}
+
 /** PATCH /tasks/{id}, e.g. `{ dueDate: today }` to move a task to today. */
 export function useUpdateTask() {
   const refetch = useRefetchTasks();
@@ -70,8 +77,11 @@ export function useAnswerInvitation() {
 
 /** A command on one task (complete, reopen, skip), for `useChangeTask`. */
 export interface TaskChange {
-  /** Calls the API with the task as last read (its version is the If-Match). */
-  run(task: Task): Promise<Task>;
+  /**
+   * Calls the API with the task as last read (its version is the If-Match). Undefined when the caller no longer sees it
+   * (an assignee from outside the list declined it or gave it back, D70).
+   */
+  run(task: Task): Promise<Task | undefined>;
   /** The task as it should look right away; rolled back if the command fails (06-mobile.md, Data). */
   optimistic?(task: Task): Task;
 }
@@ -96,11 +106,12 @@ export function useChangeTask(taskId: Id) {
     },
     mutationFn: async (change: TaskChange) => {
       const task = queryClient.getQueryData<Task>(key) ?? (await read());
+      const keep = (next: Task | undefined) => (next ? queryClient.setQueryData(key, next) : queryClient.removeQueries({ queryKey: key }));
       try {
-        queryClient.setQueryData(key, await change.run(task));
+        keep(await change.run(task));
       } catch (e) {
         if (!isApiError(e) || e.status !== 412) throw e;
-        queryClient.setQueryData(key, await change.run(await read()));
+        keep(await change.run(await read()));
       }
     },
     onError: (_error, _change, context) => {
@@ -126,7 +137,7 @@ export function useSaveTask(taskId: Id) {
     mutationFn: async ({ version, body, assignee }: { version: number; body: UpdateTaskRequest; assignee?: Id | null }) => {
       let task = Object.keys(body).length ? await tasksApi.update({ id: taskId, version }, body) : undefined;
       const current = { id: taskId, version: task?.version ?? version };
-      if (assignee !== undefined) task = assignee ? await tasksApi.assign(current, assignee) : await tasksApi.unassign(current);
+      if (assignee !== undefined) task = assignee ? await tasksApi.assign(current, assignTarget(assignee)) : await tasksApi.unassign(current);
       return task ?? tasksApi.get(taskId);
     },
     onSuccess: (task) => queryClient.setQueryData(key, task),

@@ -29,7 +29,8 @@ type Item =
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode, Completed folded at the end (loaded
  * when opened, D54). Under the title a line says who is in it (M44): "Shared with Luis", "Family · 3 people", or
- * "Share…" on a private list; a tap opens People. The header holds •••, the list's menu by role.
+ * "Share…" on a private list ("Only you · Ana and Luis have tasks" once tasks went to people outside it, D70, M45); a tap
+ * opens People. The header holds •••, the list's menu by role.
  */
 export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id }>) {
   const { collectionId } = route.params;
@@ -75,9 +76,11 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
   const people = members.data ?? [];
   const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
   const count = t('browse.people', { count: people.length });
+  // People with tasks here who aren't in it (D70): named on a private list's line.
+  const outsiders = [...new Set(rows.filter((r) => r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id)).map((r) => r.assignee!.displayName.split(' ')[0]))];
   // Who is in it (M44): nothing on the Inbox; "Share…" on a private list (only its owner sees it).
   const who = !collection || collection.isInbox ? null
-    : !shared ? t('browse.share')
+    : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : t('browse.share'))
     : !members.data ? null
     : collection.team ? `${collection.team.name} · ${count}`
     : collection.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })

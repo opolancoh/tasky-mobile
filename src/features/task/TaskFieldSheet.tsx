@@ -9,7 +9,7 @@ import { taskKeys } from '@/data/tasks/keys';
 import { useCollections, useTags } from '@/data/tasks/queries';
 import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { AssigneePicker, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
+import { givesOutside, AssigneePicker, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { Sheet } from '@/shared/ui';
 
@@ -106,15 +106,17 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
         <CollectionPicker
           collections={collections}
           loading={collectionsQuery.isPending}
-          selectedId={draft.collection.id}
-          // A private list has only you: someone else who had the task can't see it there (the API drops them on the move too).
-          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...((c.isInbox || c.sharing === 'private') && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
+          selectedId={draft.collection?.id}
+          // The Inbox is only yours: someone else who had the task loses it there (the API drops them too). Into your own
+          // private or shared list they keep it, seeing only that task (D70).
+          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
         />
       );
     case 'assignee':
-      return userId ? (
+      return userId && draft.collection ? (
         <AssigneePicker
           collectionId={draft.collection.id}
+          canGiveOutside={givesOutside(collections.find((c) => c.id === draft.collection?.id), userId)}
           meId={userId}
           selected={draft.assignee}
           status={assignmentStatus}

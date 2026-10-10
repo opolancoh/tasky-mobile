@@ -143,15 +143,25 @@ export const tasksApi = {
   /** DELETE /steps/{id} (204). */
   removeStep: (stepId: Id) => http().delete(`/steps/${stepId}`),
 
-  /** POST /tasks/{id}:assign { userId } with If-Match: Pending, or Accepted when it's the caller (M43). */
-  assign: (task: Versioned, userId: Id) => http().post<Task>(`/tasks/${task.id}:assign`, { body: { userId }, ifMatch: task.version }),
+  /**
+   * POST /tasks/{id}:assign with If-Match: Pending, or Accepted when it's the caller (M43). An email reaches anyone, even
+   * outside the list (its owner only, D70); without an account it's an invitation (`invitedEmail`).
+   */
+  assign: (task: Versioned, to: Id | { email: string }) =>
+    http().post<Task>(`/tasks/${task.id}:assign`, { body: typeof to === 'string' ? { userId: to } : to, ifMatch: task.version }),
 
-  /** POST /tasks/{id}:unassign with If-Match. */
-  unassign: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:unassign`, { ifMatch: task.version }),
+  /** POST /tasks/{id}:unassign with If-Match. Undefined (204) when the caller gave back a task they saw only as its assignee (D70). */
+  unassign: (task: Versioned) => http().post<Task | undefined>(`/tasks/${task.id}:unassign`, { ifMatch: task.version }),
 
-  /** POST /tasks/{id}:accept-assignment or :reject-assignment (optional reason, up to 500), by the assignee while Pending. */
+  /**
+   * POST /tasks/{id}:accept-assignment or :reject-assignment (optional reason, up to 500), by the assignee while Pending.
+   * Declining keeps them on it as Declined (D71); undefined (204) when they saw it only as its assignee (D70).
+   */
   answerAssignment: (task: Versioned, accept: boolean, reason?: string) =>
-    http().post<Task>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),
+    http().post<Task | undefined>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),
+
+  /** POST /tasks/{id}:confirm: whoever assigned it saw that its assignee completed it (D71). */
+  confirm: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:confirm`, { ifMatch: task.version }),
 
   /** GET /home (D67): every Today section's first `limit` items and totals, in one request. */
   home: (limit: number) => http().get<Home>('/home', { query: { limit } }),

@@ -5,7 +5,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useReopenTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
-import { ColorDot, Text, useTheme } from '@/shared/ui';
+import { TaskOrigin } from '@/shared/components';
+import { Text, useTheme } from '@/shared/ui';
 
 /** A completed task in a list: the filled circle reopens it; the title struck through, its list under it. */
 export function CompletedRow({ task, onPress }: { task: TaskSummary; onPress(): void }) {
@@ -30,8 +31,7 @@ export function CompletedRow({ task, onPress }: { task: TaskSummary; onPress(): 
           <View style={styles.main}>
             <Text variant="bodyMedium" color="ink3" numberOfLines={2} style={styles.done}>{task.title}</Text>
             <View style={[styles.meta, { gap: space.xs }]}>
-              <ColorDot color={task.collection.color} size={8} />
-              <Text variant="footnote" color="ink3" numberOfLines={1}>{task.collection.name}</Text>
+              <TaskOrigin collection={task.collection} assignedBy={task.assignedBy} />
             </View>
           </View>
         </View>

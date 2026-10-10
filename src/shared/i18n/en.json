@@ -107,13 +107,20 @@
     "declined": "Invitation declined",
     "accepted": "Accepted",
     "movedToday": "Moved to today",
-    "loading": "Loading your day"
+    "loading": "Loading your day",
+    "declinedBy": "{{name}} declined",
+    "completedBy": "{{name}} completed it"
   },
   "taskRow": {
     "complete": "Complete {{title}}",
     "steps": "{{done}} of {{total}}",
     "important": "Important",
-    "assignedTo": "Assigned to {{name}}"
+    "assignedTo": "Assigned to {{name}}",
+    "from": "From {{name}}",
+    "declined": "Declined",
+    "completed": "Completed",
+    "confirm": "Confirm",
+    "invited": "Invited"
   },
   "browse": {
     "title": "Browse",
@@ -287,7 +294,8 @@
       "sameForAll": "Name, color and sort are the same for everyone in this list."
     },
     "sharedWith": "Shared with {{names}}",
-    "share": "Share…"
+    "share": "Share…",
+    "onlyYouWith": "Only you · {{names}} have tasks"
   },
   "search": {
     "title": "Search",
@@ -441,7 +449,18 @@
     "reject": "Reject",
     "rejectTitle": "Reject this assignment?",
     "rejectMessage": "{{name}} is told, with your reason if you add one. The task stays in its list, unassigned.",
-    "rejected": "Rejected. {{name}} was told"
+    "rejected": "Rejected. {{name}} was told",
+    "from": "From",
+    "giveBack": "Give it back",
+    "giveBackTitle": "Give back {{title}}?",
+    "giveBackMessage": "{{name}} is told, and you won’t see it anymore.",
+    "gaveBack": "Given back to {{name}}",
+    "confirm": "Confirm",
+    "confirmed": "Confirmed",
+    "awaitsConfirmation": "{{name}} completed it",
+    "awaitsConfirmationBody": "Confirm you saw it, or reopen it.",
+    "declinedReason": "Declined: {{reason}}",
+    "onlyListPeople": "Only the people who see its list change the title, date, Important, repeat and tags."
   },
   "repeat": {
     "never": "Never",
@@ -507,7 +526,9 @@
     "invitationAccepted": "{{other}} joined {{subject}}",
     "removed": "{{actor}} removed you from {{subject}}",
     "roleChanged": "{{actor}} made you {{role}} of {{subject}}",
-    "ownershipReceived": "You're now the owner of {{subject}}"
+    "ownershipReceived": "You're now the owner of {{subject}}",
+    "assignmentCompleted": "{{actor}} completed {{task}}",
+    "taskDeleted": "{{actor}} deleted {{task}}"
   },
   "invitation": {
     "invitedYou": "{{name}} invited you",
@@ -587,10 +608,18 @@
     "meShort": "Me",
     "status": {
       "pending": "Pending",
-      "accepted": "Accepted"
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "invited": "Invited"
     },
     "unassign": "Unassign",
     "note": "They get it as Pending and answer Accept or Reject. Assigning yourself needs no answer.",
-    "onlyYou": "Only you see this list. Assigning it to yourself puts it in Assigned to me."
+    "onlyYou": "Only you see this list. Assigning it to yourself puts it in Assigned to me.",
+    "outside": "Only this task",
+    "byEmail": "Someone else, by email",
+    "emailLabel": "Email",
+    "emailAssign": "Assign",
+    "outsideNote": "They see this task only, not the list or its people. No Tasky account? They get an email and find it after signing up.",
+    "invited": "Invited"
   }
 }

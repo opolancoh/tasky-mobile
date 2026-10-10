@@ -9,5 +9,6 @@ export { useRecentTags, RECENT_TAGS_MAX } from './tags/recentTagsStore';
 export { TaskRow, type TaskRowProps } from './TaskRow';
 export { UpdateRow } from './UpdateRow';
 export { Avatar } from './Faces';
+export { TaskOrigin } from './TaskOrigin';
 export { MeButton } from './MeButton';
-export { AssigneePicker, type AssigneePickerProps } from './AssigneePicker';
+export { AssigneePicker, givesOutside, type AssigneePickerProps } from './AssigneePicker';

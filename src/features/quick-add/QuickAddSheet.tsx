@@ -12,7 +12,7 @@ import { useCollections, useTags } from '@/data/tasks/queries';
 import { taskLimits, type UserRef } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { AssigneePicker, Avatar, CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, givesOutside, CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -284,7 +284,7 @@ function QuickAddForm() {
       {page === 'collection' && <CollectionPicker collections={collections} loading={collectionsQuery.isPending} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id, ...(c.id === collection?.id ? {} : { assignee: undefined }) })} />}
 
       {page === 'assignee' && collection && userId && (
-        <AssigneePicker collectionId={collection.id} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />
+        <AssigneePicker collectionId={collection.id} canGiveOutside={givesOutside(collection, userId)} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />
       )}
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}
