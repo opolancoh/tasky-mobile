@@ -13,7 +13,8 @@ src/data/
 ├── tenancy/             GET /me
 │   ├── api.ts  keys.ts  queries.ts  types.ts
 │   ├── api.ts  keys.ts  queries.ts  types.ts
-├── tasks/               Collections, tags, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore;
+├── tasks/               Collections (create, edit, archive, delete, reorder), teams, people and invitations to them, tags (color, rename, merge,
+│   │                    delete, reorder), Recently Deleted, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore;
 │   │                    the Today tab (GET /home, GET /home/{section}, D67, D69; named after the API) and the caller's invitations (join, decline, D68): the API's Tasks module holds sharing (D64)
 │   ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
 └── collaboration/       Notifications: the list (unread only for Home's Updates), the unread count, mark read

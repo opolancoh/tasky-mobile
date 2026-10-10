@@ -9,7 +9,13 @@ import { SignInScreen } from '@/features/auth/SignInScreen';
 import { SignUpScreen } from '@/features/auth/SignUpScreen';
 import { UnreachableScreen } from '@/features/auth/UnreachableScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
+import { ArchivedScreen } from '@/features/browse/ArchivedScreen';
+import { BrowseListScreen } from '@/features/browse/BrowseListScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
+import { CollectionScreen } from '@/features/browse/CollectionScreen';
+import { PeopleScreen } from '@/features/browse/PeopleScreen';
+import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
+import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
@@ -77,6 +83,13 @@ const RootStack = createNativeStackNavigator({
         // See all, the chips and the shared line (M33); an invitation from Needs attention (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
+        // Browse (M38): a list, a team, a list's or team's people, the other task lists, Archived, Recently Deleted.
+        Collection: { screen: CollectionScreen, options: { headerShown: true } },
+        Team: { screen: TeamScreen, options: { headerShown: true } },
+        People: { screen: PeopleScreen, options: { headerShown: true } },
+        BrowseList: { screen: BrowseListScreen, options: { headerShown: true } },
+        Archived: { screen: ArchivedScreen, options: { headerShown: true } },
+        RecentlyDeleted: { screen: RecentlyDeletedScreen, options: { headerShown: true } },
       },
     },
   },

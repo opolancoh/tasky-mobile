@@ -5,7 +5,7 @@ import type { Id } from '@/core/types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
-import type { CreateTaskRequest, Task, TaskSummary, UpdateTaskRequest } from './types';
+import type { Collection, CreateTaskRequest, DeletedItem, MembersOf, Tag, Task, TaskSummary, Team, UpdateCollectionRequest, UpdateTaskRequest } from './types';
 
 /**
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
@@ -145,4 +145,118 @@ export async function restoreTask(queryClient: QueryClient, taskId: Id): Promise
   if (item) await tasksApi.restore(item);
   queryClient.invalidateQueries({ queryKey: taskKeys.views });
   queryClient.invalidateQueries({ queryKey: taskKeys.collections });
+}
+
+/**
+ * Changes to collections, teams, people and tags (Browse, M38). Each refetches what it touches: Browse's lists
+ * (collections, teams, tags), the task views when tasks move with them, Recently Deleted after a delete or restore.
+ */
+function useRefetchBrowse() {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: taskKeys.collections });
+    queryClient.invalidateQueries({ queryKey: taskKeys.teams });
+    queryClient.invalidateQueries({ queryKey: taskKeys.tags });
+    queryClient.invalidateQueries({ queryKey: taskKeys.views });
+  };
+}
+
+export const useCreateCollection = () => useMutation({ mutationFn: tasksApi.createCollection, onSettled: useRefetchBrowse() });
+
+export const useUpdateCollection = () =>
+  useMutation({ mutationFn: ({ collection, body }: { collection: Collection; body: UpdateCollectionRequest }) => tasksApi.updateCollection(collection, body), onSettled: useRefetchBrowse() });
+
+export const useArchiveCollection = () =>
+  useMutation({ mutationFn: ({ collection, archive }: { collection: Collection; archive: boolean }) => tasksApi.archiveCollection(collection, archive), onSettled: useRefetchBrowse() });
+
+export const useDeleteCollection = () => useMutation({ mutationFn: (collection: Collection) => tasksApi.deleteCollection(collection), onSettled: useRefetchBrowse() });
+
+/** The caller's Browse order (collection_position): every collection id in the new order. Optimistic: the list reorders at once. */
+export function useReorderCollections() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: Id[]) => tasksApi.reorderCollections(ids),
+    onMutate: (ids) => {
+      const before = queryClient.getQueryData<Collection[]>(taskKeys.collections);
+      if (before) queryClient.setQueryData(taskKeys.collections, [...before].sort((a, b) => order(ids, a.id) - order(ids, b.id)));
+      return { before };
+    },
+    onError: (_e, _ids, context) => context?.before && queryClient.setQueryData(taskKeys.collections, context.before),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.collections }),
+  });
+}
+
+/** The caller's tag order. Optimistic, like collections. */
+export function useReorderTags() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (names: string[]) => tasksApi.reorderTags(names),
+    onMutate: (names) => {
+      const before = queryClient.getQueryData<Tag[]>(taskKeys.tags);
+      if (before) queryClient.setQueryData(taskKeys.tags, [...before].sort((a, b) => order(names, a.name) - order(names, b.name)));
+      return { before };
+    },
+    onError: (_e, _names, context) => context?.before && queryClient.setQueryData(taskKeys.tags, context.before),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.tags }),
+  });
+}
+
+const order = <T,>(list: T[], x: T) => { const i = list.indexOf(x); return i < 0 ? list.length : i; };
+
+export const useCreateTeam = () => useMutation({ mutationFn: (name: string) => tasksApi.createTeam(name), onSettled: useRefetchBrowse() });
+
+export const useRenameTeam = () => useMutation({ mutationFn: ({ team, name }: { team: Team; name: string }) => tasksApi.renameTeam(team, name), onSettled: useRefetchBrowse() });
+
+export const useDeleteTeam = () => useMutation({ mutationFn: (team: Team) => tasksApi.deleteTeam(team), onSettled: useRefetchBrowse() });
+
+/** Remove someone from a team or collection; on yourself, leave it (its lists leave Browse). */
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+  const refetch = useRefetchBrowse();
+  return useMutation({
+    mutationFn: ({ of, userId }: { of: MembersOf; userId: Id }) => tasksApi.removeMember(of, userId),
+    onSettled: (_r, _e, { of }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.members(of.kind, of.id) });
+      refetch();
+    },
+  });
+}
+
+/** Invite an email to a team or collection, or revoke an open invitation: the open list refetches. */
+export function useInvite(of: MembersOf) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) => tasksApi.invite(of, email),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
+  });
+}
+
+export function useRevokeInvitation(of: MembersOf) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: Id) => tasksApi.revokeInvitation(id),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
+  });
+}
+
+/** A tag's color (the caller's own), name (rename or merge into an existing one) or deletion (D60). */
+export const useSaveTag = () => useMutation({ mutationFn: ({ name, color }: { name: string; color: string | null }) => tasksApi.saveTag(name, color), onSettled: useRefetchBrowse() });
+
+export const useRenameTag = () =>
+  useMutation({ mutationFn: ({ name, to, merge }: { name: string; to: string; merge: boolean }) => (merge ? tasksApi.mergeTag(name, to) : tasksApi.renameTag(name, to)), onSettled: useRefetchBrowse() });
+
+export const useDeleteTag = () => useMutation({ mutationFn: (name: string) => tasksApi.deleteTag(name), onSettled: useRefetchBrowse() });
+
+/** Restore something from Recently Deleted with its version. */
+export const useRestoreItem = () =>
+  useMutation({
+    mutationFn: (item: DeletedItem) =>
+      item.kind === 'task' ? tasksApi.restore(item).then(() => undefined) : item.kind === 'collection' ? tasksApi.restoreCollection(item) : tasksApi.restoreTeam(item),
+    onSettled: useRefetchBrowse(),
+  });
+
+/** POST /tasks/{id}:reopen from a list (Completed rows). */
+export function useReopenTask() {
+  const refetch = useRefetchTasks();
+  return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.reopen(task), onSettled: refetch });
 }

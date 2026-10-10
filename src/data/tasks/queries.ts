@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import type { Id } from '@/core/types';
 
-import type { HomeSection, TaskFilter } from './types';
+import type { HomeSection, MembersOf, TaskFilter } from './types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
@@ -46,3 +46,29 @@ export const useInvitations = (enabled = true) => useQuery({ queryKey: taskKeys.
 
 /** The full task (D55). */
 export const useTask = (taskId: Id) => useQuery({ queryKey: taskKeys.detail(taskId), queryFn: () => tasksApi.get(taskId) });
+
+/** Archived collections the caller can see (Browse › Archived). */
+export const useArchivedCollections = () => useQuery({ queryKey: taskKeys.archived, queryFn: tasksApi.archivedCollections });
+
+/** The caller's teams and their role (GET /teams). */
+export const useTeams = () => useQuery({ queryKey: taskKeys.teams, queryFn: tasksApi.teams });
+
+/** A team's or a collection's people. */
+export const useMembers = (of: MembersOf, enabled = true) => useQuery({ queryKey: taskKeys.members(of.kind, of.id), queryFn: () => tasksApi.members(of), enabled });
+
+/** Open invitations to a team or collection; only for those who invite (`enabled`). */
+export const useOpenInvitations = (of: MembersOf, enabled: boolean) =>
+  useQuery({ queryKey: taskKeys.openInvitations(of.kind, of.id), queryFn: () => tasksApi.openInvitations(of), enabled });
+
+/** A task list a page at a time (GET /tasks, keyset): `total` on the first page; the next loads as the list nears its end. */
+export const useTaskPages = (filter: TaskFilter, enabled = true) =>
+  useInfiniteQuery({
+    queryKey: [...taskKeys.list(filter), 'pages'],
+    queryFn: ({ pageParam }) => tasksApi.list(filter, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled,
+  });
+
+/** Recently Deleted (D54): the first 50, newest first. */
+export const useRecentlyDeleted = () => useQuery({ queryKey: taskKeys.deleted, queryFn: () => tasksApi.recentlyDeleted(50) });

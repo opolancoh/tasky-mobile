@@ -54,3 +54,30 @@ export function askReason({ title, message, confirmLabel, cancelLabel, destructi
     );
   });
 }
+
+export interface ActionChoice {
+  label: string;
+  /** Red, for actions that remove or leave something. */
+  destructive?: boolean;
+}
+
+/**
+ * A native menu of actions for one thing (a long press on a row, a ••• button): an action sheet on iOS, an alert with
+ * the choices on Android. Resolves the index of the chosen action, or null when cancelled.
+ */
+export function chooseAction({ title, actions, cancelLabel }: { title: string; actions: ActionChoice[]; cancelLabel: string }): Promise<number | null> {
+  return new Promise((resolve) => {
+    if (Platform.OS === 'ios') {
+      const destructive = actions.map((a, i) => (a.destructive ? i : -1)).filter((i) => i >= 0);
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title, options: [...actions.map((a) => a.label), cancelLabel], destructiveButtonIndex: destructive, cancelButtonIndex: actions.length },
+        (i) => resolve(i < actions.length ? i : null),
+      );
+      return;
+    }
+    Alert.alert(title, undefined, [
+      ...actions.map((a, i) => ({ text: a.label, style: a.destructive ? ('destructive' as const) : ('default' as const), onPress: () => resolve(i) })),
+      { text: cancelLabel, style: 'cancel', onPress: () => resolve(null) },
+    ], { cancelable: true, onDismiss: () => resolve(null) });
+  });
+}

@@ -1,7 +1,10 @@
 import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { http } from '../http';
-import type { Collection, CreateTaskRequest, DeletedItem, Home, HomeSection, MyInvitation, Step, Tag, Task, TaskFilter, TaskPage, UpdateTaskRequest } from './types';
+import type {
+  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, Team,
+  UpdateCollectionRequest, UpdateTaskRequest,
+} from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 type Versioned = { id: Id; version: number };
@@ -10,11 +13,77 @@ export const tasksApi = {
   /** GET /collections: every collection the caller can see, Inbox first, with open counts. */
   collections: () => http().get<Collection[]>('/collections'),
 
+  /** GET /collections?archived=true: archived ones the caller can see. */
+  archivedCollections: () => http().get<Collection[]>('/collections', { query: { archived: true } }),
+
+  /** POST /collections (201). */
+  createCollection: (body: CreateCollectionRequest) => http().post<Collection>('/collections', { body }),
+
+  /** PATCH /collections/{id} with If-Match: name, color, sort (any member). */
+  updateCollection: (c: Versioned, body: UpdateCollectionRequest) => http().patch<Collection>(`/collections/${c.id}`, { body, ifMatch: c.version }),
+
+  /** POST /collections/{id}:archive or :unarchive with If-Match (managers). */
+  archiveCollection: (c: Versioned, archive: boolean) => http().post<Collection>(`/collections/${c.id}:${archive ? 'archive' : 'unarchive'}`, { ifMatch: c.version }),
+
+  /** DELETE /collections/{id} with If-Match: with its tasks, to Recently Deleted (managers). */
+  deleteCollection: (c: Versioned) => http().delete(`/collections/${c.id}`, { ifMatch: c.version }),
+
+  /** POST /collections/{id}:restore with the deleted collection's version. */
+  restoreCollection: (item: Versioned) => http().post(`/collections/${item.id}:restore`, { ifMatch: item.version }),
+
+  /** POST /collections:reorder: the caller's own Browse order (204). */
+  reorderCollections: (ids: Id[]) => http().post('/collections:reorder', { body: { ids } }),
+
+  /** GET /teams: the caller's teams, with their role. */
+  teams: () => http().get<Team[]>('/teams'),
+
+  /** POST /teams: the caller is its owner (201). */
+  createTeam: (name: string) => http().post<Team>('/teams', { body: { name } }),
+
+  /** PATCH /teams/{id} with If-Match: rename (owner). */
+  renameTeam: (team: Versioned, name: string) => http().patch<Team>(`/teams/${team.id}`, { body: { name }, ifMatch: team.version }),
+
+  /** DELETE /teams/{id} with If-Match: with its collections (owner). */
+  deleteTeam: (team: Versioned) => http().delete(`/teams/${team.id}`, { ifMatch: team.version }),
+
+  /** POST /teams/{id}:restore with the deleted team's version. */
+  restoreTeam: (item: Versioned) => http().post(`/teams/${item.id}:restore`, { ifMatch: item.version }),
+
+  /** GET /teams/{id}/members or /collections/{id}/members. */
+  members: (of: MembersOf) => http().get<Member[]>(`/${of.kind}s/${of.id}/members`),
+
+  /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
+  removeMember: (of: MembersOf, userId: Id) => http().delete(`/${of.kind}s/${of.id}/members/${userId}`),
+
+  /** GET …/invitations: open invitations (those who invite). */
+  openInvitations: (of: MembersOf) => http().get<OpenInvitation[]>(`/${of.kind}s/${of.id}/invitations`),
+
+  /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
+  invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`/${of.kind}s/${of.id}/invitations`, { body: { email } }),
+
+  /** DELETE /invitations/{id}: revoke (204). */
+  revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),
+
   /** GET /tags: the caller's tags, with their color and open counts (D60). */
   tags: () => http().get<Tag[]>('/tags'),
 
   /** PUT /tags/{name}: one of the caller's own tags, or its color for them. */
   saveTag: (name: string, color: string | null) => http().put(`/tags/${encodeURIComponent(name)}`, { body: { color } }),
+
+  /**
+   * POST /tags/{name}:rename or :merge (a name already in use) on every task the caller can see (D60). `preview` changes
+   * nothing and says how many of those tasks other people see too, for the confirmation.
+   */
+  renameTag: (name: string, to: string, preview = false) =>
+    http().post<TagChange>(`/tags/${encodeURIComponent(name)}:rename`, { body: { to }, query: preview ? { preview: true } : undefined }),
+  mergeTag: (name: string, into: string, preview = false) =>
+    http().post<TagChange>(`/tags/${encodeURIComponent(name)}:merge`, { body: { into }, query: preview ? { preview: true } : undefined }),
+
+  /** DELETE /tags/{name}: off every task the caller can edit; tasks stay (204). */
+  deleteTag: (name: string) => http().delete<TagChange>(`/tags/${encodeURIComponent(name)}`),
+
+  /** POST /tags:reorder: the caller's own order (204). */
+  reorderTags: (names: string[]) => http().post('/tags:reorder', { body: { names } }),
 
   /** POST /tasks: a new task at the bottom of `collectionId`, or of the caller's Inbox (201). */
   createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body }),

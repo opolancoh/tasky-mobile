@@ -8,6 +8,13 @@ export const taskKeys = {
   all: ['tasks'] as const,
   collections: ['tasks', 'collections'] as const,
   tags: ['tasks', 'tags'] as const,
+  archived: ['tasks', 'collections', 'archived'] as const,
+  teams: ['tasks', 'teams'] as const,
+  /** A team's or a collection's people and open invitations. */
+  members: (kind: string, id: Id) => ['tasks', 'members', kind, id] as const,
+  openInvitations: (kind: string, id: Id) => ['tasks', 'members', kind, id, 'invitations'] as const,
+  /** Recently Deleted: changes with every delete and restore. */
+  deleted: ['tasks', 'views', 'deleted'] as const,
   /** Every task list (views and filtered lists): invalidated together after any task change. */
   views: ['tasks', 'views'] as const,
   list: (filter: object) => ['tasks', 'views', filter] as const,

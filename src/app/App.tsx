@@ -16,6 +16,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
@@ -79,6 +80,7 @@ function Root() {
         <>
           <QuickAddSheet />
           <TaskFieldSheet />
+          <BrowseSheet />
         </>
       )}
       <ToastHost />

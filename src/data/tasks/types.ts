@@ -37,6 +37,13 @@ export interface Tag {
   isOwn: boolean;
 }
 
+/** What a tag rename, merge or delete changes: the caller's tasks, and how many of them other people see too. */
+export interface TagChange {
+  tasks: number;
+  sharedTasks: number;
+  taskIds: Id[];
+}
+
 /** POST /tasks. The title is plain text: `#name` in it is not a tag (D60, M31). */
 export interface CreateTaskRequest {
   /** The collection; omitted: the caller's Inbox, created on first need (D59). */
@@ -215,13 +222,18 @@ export interface UpdateTaskRequest {
   steps?: { id?: Id; title: string; isDone: boolean }[];
 }
 
-/** An item of GET /recently-deleted (D54): restore it with its version as If-Match. */
+/** An item of GET /recently-deleted (D54): restore it with its version as If-Match. Times are UTC ISO-8601. */
 export interface DeletedItem {
   kind: 'task' | 'collection' | 'team';
   id: Id;
   name: string;
+  deletedAt: string;
+  restorableUntil: string;
   canRestore: boolean;
   version: Version;
+  collectionId?: Id | null;
+  /** The tasks a collection takes with it. */
+  taskCount?: number | null;
 }
 
 /**
@@ -255,6 +267,60 @@ export interface Home {
   inboxTotal: number;
 }
 
+export type TeamRole = 'owner' | 'admin' | 'member';
+
+/** An item of GET /teams: a team the caller is in; `role` is theirs, `members` how many people (D57). */
+export interface Team {
+  id: Id;
+  name: string;
+  owner: UserRef;
+  role: TeamRole;
+  members: number;
+  version: Version;
+}
+
+/**
+ * Someone who sees a team or a collection (GET …/members). `role`: owner, admin or member. `isGuest`: in a team's
+ * collection without being in the team; `isOutsider`: from another account.
+ */
+export interface Member {
+  userId: Id;
+  displayName: string;
+  email: string;
+  role: TeamRole;
+  isGuest: boolean;
+  isOutsider: boolean;
+  joinedAt: string;
+}
+
+/** An open invitation, as the people who invite see it (GET …/invitations). UTC ISO-8601. */
+export interface OpenInvitation {
+  id: Id;
+  teamId?: Id | null;
+  collectionId?: Id | null;
+  email: string;
+  expiresAt: string;
+  invitedBy?: Id | null;
+}
+
+/** Whose people: a team's or a collection's. */
+export type MembersOf = { kind: 'team' | 'collection'; id: Id };
+
+/** POST /collections: private, or in a team the caller is in. */
+export interface CreateCollectionRequest {
+  name: string;
+  color: string;
+  teamId?: Id;
+}
+
+/** PATCH /collections/{id}: only what is sent changes. */
+export interface UpdateCollectionRequest {
+  name?: string;
+  color?: string;
+  sortMode?: SortMode;
+  showCompleted?: boolean;
+}
+
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, collectionNameMax: 100 } as const;
 
