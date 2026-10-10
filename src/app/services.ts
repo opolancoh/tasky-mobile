@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import { randomUUID } from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
@@ -9,6 +8,7 @@ import { createHttpClient } from '@/core/http/client';
 import { isApiError } from '@/core/http/problem';
 import { configureHttp } from '@/data/http';
 import { identityApi } from '@/data/identity/api';
+import { appInfo } from '@/shared/appInfo';
 import i18n from '@/shared/i18n/i18n';
 import { useSessionStore } from '@/shared/session/sessionStore';
 
@@ -38,13 +38,12 @@ const tokenStore: TokenStore = {
   },
 };
 
-const appVersion = Constants.expoConfig?.version ?? '0.0.0';
-
 export const httpClient = createHttpClient({
   baseUrl: config.apiUrl,
   newId: randomUUID,
+  onClientTooOld: () => useSessionStore.getState().requireUpdate(),
   headers: () => ({
-    'X-Client': `${Platform.OS}/${appVersion}`,
+    'X-Client': `${Platform.OS}/${appInfo.version}`,
     ...(Device.deviceName ? { 'X-Device-Name': Device.deviceName } : {}),
     'Accept-Language': i18n.language,
   }),

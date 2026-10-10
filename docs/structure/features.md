@@ -9,7 +9,7 @@ src/features/
 ├── auth/
 │   ├── SignInScreen.tsx  SignUpScreen.tsx  VerifyCodeScreen.tsx
 │   ├── ForgotPasswordScreen.tsx  ResetCodeScreen.tsx  NewPasswordScreen.tsx
-│   ├── UnreachableScreen.tsx
+│   ├── UnreachableScreen.tsx  UpdateRequiredScreen.tsx (after a 426, M48)
 │   ├── components/       CodeInput, CodeStep
 │   ├── signUpDraft.ts  resetDraft.ts
 │   ├── useEmailField.ts
@@ -18,7 +18,7 @@ src/features/
 │   └── components/       StreamRows (the rows Today and See all share)
 ├── sharing/        InvitationScreen.tsx
 ├── activity/       ActivityScreen.tsx (the fifth tab)
-├── me/             MeScreen.tsx (from the avatar)  EditNameScreen  TimeZoneScreen  LanguageScreen  ChangePasswordScreen  SessionsScreen  useHeaderSave
+├── me/             MeScreen.tsx (from the avatar)  EditNameScreen  TimeZoneScreen  LanguageScreen  ChangePasswordScreen  SessionsScreen  AboutScreen (M48)  useHeaderSave
 ├── browse/         BrowseScreen.tsx (the tab)  CollectionScreen  TeamScreen  PeopleScreen  BrowseListScreen  ArchivedScreen  RecentlyDeletedScreen
 │   ├── BrowseSheet.tsx   New/Edit list, New/Rename team, Edit tag (mounted in App; browseSheetStore.ts says what)
 │   ├── browseMenus.ts    The long-press and ••• menus, by role

@@ -5,6 +5,7 @@ import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { zoneCity } from '@/core/dates/timeZones';
 import { useMe } from '@/data/tenancy/queries';
+import { appInfo } from '@/shared/appInfo';
 import { Avatar } from '@/shared/components';
 import { useReminderPermission } from '@/shared/notifications/reminders';
 import { useSession } from '@/shared/session/SessionProvider';
@@ -12,7 +13,7 @@ import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useTheme } f
 
 /**
  * Me (M39, M41), pushed from the avatar on Today and Activity: who the user is; Settings: name, time zone and language
- * (each a page that saves), email, change password, signed-in devices; Sign out (asks first).
+ * (each a page that saves), email, change password, signed-in devices; About (M48); Sign out (asks first).
  */
 export function MeScreen() {
   const { t } = useTranslation();
@@ -57,6 +58,9 @@ export function MeScreen() {
       <ListRow label={t('settings.email')} value={me.email} />
       <ListRow label={t('settings.changePassword')} onPress={() => navigation.navigate('ChangePassword')} />
       <ListRow label={t('settings.devices')} onPress={() => navigation.navigate('Sessions')} divider={false} />
+
+      <SectionLabel>{t('about.title')}</SectionLabel>
+      <ListRow label={t('about.version')} value={appInfo.version} onPress={() => navigation.navigate('About')} divider={false} />
 
       <Pressable onPress={leave} accessibilityRole="button" style={[styles.signOut, { gap: space.sm, marginTop: space.xxl }]}>
         {({ pressed }) => (

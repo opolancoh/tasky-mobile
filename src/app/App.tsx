@@ -16,11 +16,13 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
+import { useSessionStore } from '@/shared/session/sessionStore';
 import { fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
 
 import { Navigation } from './navigation/RootNavigator';
@@ -50,6 +52,7 @@ export function App() {
 function Root() {
   const [fontsLoaded] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
   const { status } = useSession();
+  const updateRequired = useSessionStore((s) => s.updateRequired);
   const { colors, scheme } = useTheme();
   const ready = fontsLoaded && status !== 'loading';
 
@@ -72,6 +75,8 @@ function Root() {
   }, [scheme, colors]);
 
   if (!ready) return null;
+  // A 426 (M48): nothing else works until the app is updated.
+  if (updateRequired) return <UpdateRequiredScreen />;
 
   return (
     <>

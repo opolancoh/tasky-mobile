@@ -14,8 +14,9 @@ src/shared/
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
 │   └── palettes/          One JSON file per palette; active.json names the one in use
 ├── notifications/     reminders.ts (sync the phone's reminders with GET /me/reminders, permission state), useReminders.ts (ReminderSync, mounted in App)
+├── appInfo.ts             This app's version, build number (store builds), Expo Go or not, where to update (M46, M48)
 ├── session/
-│   ├── sessionStore.ts    App-wide state (Zustand)
+│   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── CollectionIcon.tsx   CollectionPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx   TaskOrigin.tsx
@@ -94,7 +95,7 @@ Reminders as local notifications ([M42](../../../tasky-docs/design/clients/apps/
 
 | Piece | Purpose |
 |---|---|
-| `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`) and the current user. No current workspace (M31). Readable outside React ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`), the current user and `updateRequired` (the API answered 426, M48). No current workspace (M31). Readable outside React ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `SessionProvider.tsx` | Launch, sign in, sign out, retry; `useIsSignedIn()` and friends pick the navigation group |
 
 How they're used: [Auth](../auth/README.md).

@@ -17,6 +17,8 @@ export interface HttpClientOptions {
   /** A new UUID, for Idempotency-Key. */
   newId: () => string;
   timeoutMs?: number;
+  /** A 426: the API no longer accepts this app version (X-Client); the app asks the user to update. */
+  onClientTooOld?: () => void;
 }
 
 export interface RequestOptions {
@@ -32,6 +34,9 @@ export interface RequestOptions {
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export interface HttpClient {
+  /** The configured base URL, e.g. "http://localhost:5186/api/v1". */
+  readonly baseUrl: string;
+  /** A path is relative to `baseUrl`; a full URL (http…) is used as is, e.g. the API's /api/version. */
   get<T>(path: string, options?: RequestOptions): Promise<T>;
   post<T = void>(path: string, options?: RequestOptions): Promise<T>;
   put<T = void>(path: string, options?: RequestOptions): Promise<T>;
@@ -59,7 +64,8 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       .filter(([, v]) => v !== undefined)
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
       .join('&');
-    return `${options.baseUrl}${path}${params ? `?${params}` : ''}`;
+    const base = /^https?:\/\//.test(path) ? path : `${options.baseUrl}${path}`;
+    return `${base}${params ? `?${params}` : ''}`;
   }
 
   async function send(method: Method, path: string, opts: RequestOptions, idempotencyKey?: string): Promise<Response> {
@@ -120,6 +126,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         if (await auth.refresh()) continue;
       }
 
+      if (response.status === 426) options.onClientTooOld?.();
       const error = await toApiError(response);
       if (RETRYABLE.has(response.status) && attempt < MAX_RETRIES) {
         await sleep(error.retryAfter ? error.retryAfter * 1000 : backoff(attempt));
@@ -130,6 +137,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
   }
 
   return {
+    baseUrl: options.baseUrl,
     get: (path, opts) => request('GET', path, opts),
     post: (path, opts) => request('POST', path, opts),
     put: (path, opts) => request('PUT', path, opts),

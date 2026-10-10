@@ -19,6 +19,7 @@ import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
+import { AboutScreen } from '@/features/me/AboutScreen';
 import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';
 import { EditNameScreen } from '@/features/me/EditNameScreen';
 import { LanguageScreen } from '@/features/me/LanguageScreen';
@@ -104,6 +105,7 @@ const RootStack = createNativeStackNavigator({
         Language: { screen: LanguageScreen, options: { headerShown: true } },
         ChangePassword: { screen: ChangePasswordScreen, options: { headerShown: true } },
         Sessions: { screen: SessionsScreen, options: { headerShown: true } },
+        About: { screen: AboutScreen, options: { headerShown: true } },
       },
     },
   },

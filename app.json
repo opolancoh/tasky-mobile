@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tasky",
     "slug": "tasky",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "src/assets/images/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,10 +11,13 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "UIDesignRequiresCompatibility": true
-      }
+        "UIDesignRequiresCompatibility": true,
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.ikobit.tasky"
     },
     "android": {
+      "package": "com.ikobit.tasky",
       "adaptiveIcon": {
         "foregroundImage": "src/assets/images/adaptive-icon.png"
       }

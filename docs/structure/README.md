@@ -21,6 +21,9 @@ tasky-mobile/
 ├── app.config.ts          app.json + the active palette's colors (splash, Android icon)
 ├── eslint.config.js       Lint, the import rules and the no-hard-coded-colors rule
 ├── tsconfig.json          TypeScript strict; the @/ alias for src/
+├── eas.json               EAS builds: the production profile, its API address (docs/releases.md)
+├── CHANGELOG.md           Written by scripts/release.sh
+├── scripts/               release.sh (version, changelog, tag), build.sh (EAS builds)
 ├── .env.example           EXPO_PUBLIC_API_URL, only to reach an API somewhere else
 ├── docs/                  This documentation
 └── src/

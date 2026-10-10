@@ -69,6 +69,11 @@
     "unreachable": {
       "title": "No se puede conectar con Tasky",
       "body": "Revisa tu conexión e inténtalo de nuevo. Tu sesión sigue abierta."
+    },
+    "update": {
+      "title": "Actualiza Tasky",
+      "body": "Esta versión ({{version}}) ya no es compatible. Instala la más reciente para continuar; tu sesión se mantiene.",
+      "action": "Actualizar"
     }
   },
   "tabs": {
@@ -567,6 +572,15 @@
       "es": "Español"
     },
     "signOutTitle": "¿Cerrar sesión en este dispositivo?"
+  },
+  "about": {
+    "title": "Acerca de",
+    "app": "Esta app",
+    "api": "Servidor",
+    "version": "Versión",
+    "server": "Dirección",
+    "expoGo": "Expo Go",
+    "unreachable": "No responde"
   },
   "settings": {
     "saved": "Guardado",

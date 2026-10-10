@@ -13,8 +13,11 @@ interface SessionState {
   status: SessionStatus;
   /** The signed-in user, from GET /me. */
   userId: Id | null;
+  /** The API answered 426: this version is too old; the app shows only "Update Tasky" (M48). */
+  updateRequired: boolean;
   setStatus(status: SessionStatus): void;
   setUser(userId: Id | null): void;
+  requireUpdate(): void;
 }
 
 /**
@@ -25,6 +28,8 @@ interface SessionState {
 export const useSessionStore = create<SessionState>()((set) => ({
   status: 'loading',
   userId: null,
+  updateRequired: false,
   setStatus: (status) => set({ status }),
   setUser: (userId) => set({ userId }),
+  requireUpdate: () => set({ updateRequired: true }),
 }));

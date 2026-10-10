@@ -36,3 +36,16 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Generated native folders (expo prebuild, docs/releases.md): app.json and app.config.ts are the source
+/ios
+/android
+
+# Builds and signing: never in git (docs/releases.md, Signing)
+/builds
+credentials.json
+keystore.properties
+*.keystore
+*.aab
+*.apk
+*.ipa

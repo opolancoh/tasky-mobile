@@ -69,6 +69,11 @@
     "unreachable": {
       "title": "Can't reach Tasky",
       "body": "Check your connection and try again. You're still signed in."
+    },
+    "update": {
+      "title": "Update Tasky",
+      "body": "This version ({{version}}) is no longer supported. Install the latest one to continue; you'll stay signed in.",
+      "action": "Update"
     }
   },
   "tabs": {
@@ -567,6 +572,15 @@
       "es": "Español"
     },
     "signOutTitle": "Sign out of Tasky on this device?"
+  },
+  "about": {
+    "title": "About",
+    "app": "This app",
+    "api": "Server",
+    "version": "Version",
+    "server": "Address",
+    "expoGo": "Expo Go",
+    "unreachable": "Can't reach it"
   },
   "settings": {
     "saved": "Saved",
