@@ -539,7 +539,36 @@
       "en": "English",
       "es": "Español"
     },
-    "editLater": "Editing your profile, your password and your signed-in devices comes with Settings.",
     "signOutTitle": "Sign out of Tasky on this device?"
+  },
+  "settings": {
+    "saved": "Saved",
+    "name": "Name",
+    "nameHint": "Shown to people on shared lists, assignments and notifications.",
+    "timeZone": "Time zone",
+    "timeZoneHint": "When your day starts and when your reminders fire.",
+    "searchZone": "Search cities",
+    "thisDevice": "This device · {{region}}",
+    "timeZoneSaved": "Time zone set to {{zone}}",
+    "language": "Language",
+    "languageHint": "For the app and everything Tasky sends you: emails and notifications.",
+    "security": "Account",
+    "email": "Email",
+    "changePassword": "Change password",
+    "changePasswordHint": "This device stays signed in; your other devices are signed out.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "wrongPassword": "That isn’t your current password.",
+    "samePassword": "Choose a password different from the current one.",
+    "passwordChanged": "Password changed. Your other devices were signed out.",
+    "devices": "Signed-in devices",
+    "devicesHint": "Where your account is open right now.",
+    "thisDeviceNow": "This device",
+    "lastUsed": "Last used {{when}}",
+    "signOutDeviceTitle": "Sign out of {{device}}?",
+    "deviceSignedOut": "Signed out of {{device}}",
+    "signOutAll": "Sign out of all devices",
+    "signOutAllTitle": "Sign out of all devices?",
+    "signOutAllBody": "This one too. You’ll need your password to sign in again."
   }
 }

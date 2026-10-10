@@ -19,7 +19,12 @@ import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/features/quick-add/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
+import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';
+import { EditNameScreen } from '@/features/me/EditNameScreen';
+import { LanguageScreen } from '@/features/me/LanguageScreen';
 import { MeScreen } from '@/features/me/MeScreen';
+import { SessionsScreen } from '@/features/me/SessionsScreen';
+import { TimeZoneScreen } from '@/features/me/TimeZoneScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
@@ -93,6 +98,12 @@ const RootStack = createNativeStackNavigator({
         Archived: { screen: ArchivedScreen, options: { headerShown: true } },
         RecentlyDeleted: { screen: RecentlyDeletedScreen, options: { headerShown: true } },
         Me: { screen: MeScreen, options: { headerShown: true } },
+        // Settings (M41), from Me.
+        EditName: { screen: EditNameScreen, options: { headerShown: true } },
+        TimeZone: { screen: TimeZoneScreen, options: { headerShown: true } },
+        Language: { screen: LanguageScreen, options: { headerShown: true } },
+        ChangePassword: { screen: ChangePasswordScreen, options: { headerShown: true } },
+        Sessions: { screen: SessionsScreen, options: { headerShown: true } },
       },
     },
   },

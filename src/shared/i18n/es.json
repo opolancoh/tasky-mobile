@@ -539,7 +539,36 @@
       "en": "English",
       "es": "Español"
     },
-    "editLater": "Editar tu perfil, tu contraseña y tus dispositivos llega con Ajustes.",
     "signOutTitle": "¿Cerrar sesión en este dispositivo?"
+  },
+  "settings": {
+    "saved": "Guardado",
+    "name": "Nombre",
+    "nameHint": "Lo ven las personas en listas compartidas, asignaciones y notificaciones.",
+    "timeZone": "Zona horaria",
+    "timeZoneHint": "Cuándo empieza tu día y cuándo suenan tus recordatorios.",
+    "searchZone": "Buscar ciudades",
+    "thisDevice": "Este dispositivo · {{region}}",
+    "timeZoneSaved": "Zona horaria: {{zone}}",
+    "language": "Idioma",
+    "languageHint": "Para la app y todo lo que Tasky te envía: correos y notificaciones.",
+    "security": "Cuenta",
+    "email": "Correo",
+    "changePassword": "Cambiar contraseña",
+    "changePasswordHint": "Este dispositivo sigue con la sesión iniciada; los demás la cierran.",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "wrongPassword": "Esa no es tu contraseña actual.",
+    "samePassword": "Elige una contraseña distinta de la actual.",
+    "passwordChanged": "Contraseña cambiada. Se cerró la sesión en tus otros dispositivos.",
+    "devices": "Dispositivos con sesión iniciada",
+    "devicesHint": "Dónde está abierta tu cuenta ahora.",
+    "thisDeviceNow": "Este dispositivo",
+    "lastUsed": "Último uso: {{when}}",
+    "signOutDeviceTitle": "¿Cerrar sesión en {{device}}?",
+    "deviceSignedOut": "Sesión cerrada en {{device}}",
+    "signOutAll": "Cerrar sesión en todos los dispositivos",
+    "signOutAllTitle": "¿Cerrar sesión en todos los dispositivos?",
+    "signOutAllBody": "También en este. Necesitarás tu contraseña para volver a entrar."
   }
 }

@@ -5,7 +5,7 @@ import { AppState } from 'react-native';
 import type { TokenManager } from '@/core/auth/tokens';
 import { isApiError } from '@/core/http/problem';
 import { identityApi } from '@/data/identity/api';
-import type { LoginRequest } from '@/data/identity/types';
+import type { ChangePasswordRequest, LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
 
@@ -17,6 +17,10 @@ interface SessionContextValue {
   status: SessionStatus;
   signIn(credentials: LoginRequest): Promise<void>;
   signOut(): Promise<void>;
+  /** Signs out every device, this one included. */
+  signOutEverywhere(): Promise<void>;
+  /** Changes the password; this device stays signed in with new tokens. */
+  changePassword(body: ChangePasswordRequest): Promise<void>;
   /** From the "Can't reach Tasky" screen: checks the stored session again. */
   retry(): Promise<void>;
 }
@@ -89,7 +93,21 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
     useSessionStore.getState().setStatus('signedOut');
   }, [tokens, queryClient]);
 
-  const value = useMemo(() => ({ status, signIn, signOut, retry: resume }), [status, signIn, signOut, resume]);
+  /** Change password (M41): the API ends the other sessions and returns new tokens for this one. */
+  const changePassword = useCallback(
+    async (body: ChangePasswordRequest) => {
+      await tokens.set(await identityApi.changePassword(body));
+    },
+    [tokens],
+  );
+
+  /** Sign out of every device, this one included (M41). */
+  const signOutEverywhere = useCallback(async () => {
+    await identityApi.logoutAll();
+    await signOut();
+  }, [signOut]);
+
+  const value = useMemo(() => ({ status, signIn, signOut, signOutEverywhere, changePassword, retry: resume }), [status, signIn, signOut, signOutEverywhere, changePassword, resume]);
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

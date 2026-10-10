@@ -31,6 +31,23 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/** A signed-in device (GET /auth/sessions). Times are UTC ISO-8601. */
+export interface SessionInfo {
+  id: string;
+  deviceName: string;
+  deviceType: string;
+  appVersion?: string | null;
+  ipAddress?: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  isCurrent: boolean;
+}
+
 /** Error codes from Identity that screens handle. */
 export const IdentityErrorCodes = {
   invalidCredentials: 'auth.invalid_credentials',

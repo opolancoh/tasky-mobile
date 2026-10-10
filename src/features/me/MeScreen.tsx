@@ -1,21 +1,25 @@
 import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { zoneCity } from '@/core/dates/timeZones';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
 import { useSession } from '@/shared/session/SessionProvider';
 import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 /**
- * Me (M39), pushed from the avatar on Today and Activity: who the user is (name, email), their profile (time zone,
- * language) and Sign out. Editing them, changing the password and the signed-in devices come next (Settings).
+ * Me (M39, M41), pushed from the avatar on Today and Activity: who the user is; Settings: name, time zone and language
+ * (each a page that saves), email, change password, signed-in devices; Sign out (asks first).
  */
 export function MeScreen() {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const { signOut } = useSession();
+  const navigation = useNavigation();
   const me = useMe().data;
+  const company = me?.tenant.type === 'organization' && !!me.tenant.name;
 
   const leave = async () => {
     if (await confirm({ title: t('me.signOutTitle'), confirmLabel: t('common.signOut'), cancelLabel: t('common.cancel') })) signOut();
@@ -33,10 +37,15 @@ export function MeScreen() {
       </View>
 
       <SectionLabel style={{ marginTop: space.sm }}>{t('me.profile')}</SectionLabel>
-      <ListRow label={t('me.timeZone')} value={me.timeZone.replace(/_/g, ' ')} />
-      <ListRow label={t('me.language')} value={t(`me.languages.${me.language}`, { defaultValue: me.language })} />
-      {me.tenant.type === 'organization' && me.tenant.name ? <ListRow label={t('me.company')} value={me.tenant.name} /> : null}
-      <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('me.editLater')}</Text>
+      <ListRow label={t('settings.name')} value={me.displayName} onPress={() => navigation.navigate('EditName')} />
+      <ListRow label={t('me.timeZone')} value={zoneCity(me.timeZone)} onPress={() => navigation.navigate('TimeZone')} />
+      <ListRow label={t('me.language')} value={t(`me.languages.${me.language}`, { defaultValue: me.language })} onPress={() => navigation.navigate('Language')} divider={!company} />
+      {company ? <ListRow label={t('me.company')} value={me.tenant.name!} divider={false} /> : null}
+
+      <SectionLabel>{t('settings.security')}</SectionLabel>
+      <ListRow label={t('settings.email')} value={me.email} />
+      <ListRow label={t('settings.changePassword')} onPress={() => navigation.navigate('ChangePassword')} />
+      <ListRow label={t('settings.devices')} onPress={() => navigation.navigate('Sessions')} divider={false} />
 
       <Pressable onPress={leave} accessibilityRole="button" style={[styles.signOut, { gap: space.sm, marginTop: space.xxl }]}>
         {({ pressed }) => (

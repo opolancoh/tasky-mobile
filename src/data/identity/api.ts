@@ -1,5 +1,5 @@
 import { http } from '../http';
-import type { CodeRequestResponse, LoginRequest, RegisterRequest, ResetPasswordRequest, TokenResponse, VerifyEmailRequest } from './types';
+import type { ChangePasswordRequest, CodeRequestResponse, LoginRequest, RegisterRequest, ResetPasswordRequest, SessionInfo, TokenResponse, VerifyEmailRequest } from './types';
 
 export const identityApi = {
   /** POST /auth/register: emails a 6-digit code. The account gets its password when the code is confirmed. */
@@ -27,6 +27,18 @@ export const identityApi = {
   /** POST /auth/refresh: rotates the refresh token. */
   refresh: (refreshToken: string) =>
     http().post<TokenResponse>('/auth/refresh', { body: { refreshToken }, anonymous: true }),
+
+  /** POST /auth/change-password: signed in; ends the other sessions and returns new tokens for this one. */
+  changePassword: (body: ChangePasswordRequest) => http().post<TokenResponse>('/auth/change-password', { body }),
+
+  /** GET /auth/sessions: the devices where the user is signed in, this one marked. */
+  sessions: () => http().get<SessionInfo[]>('/auth/sessions'),
+
+  /** DELETE /auth/sessions/{id}: signs one device out (204). */
+  revokeSession: (id: string) => http().delete(`/auth/sessions/${id}`),
+
+  /** POST /auth/logout-all: signs every device out, this one included (204). */
+  logoutAll: () => http().post('/auth/logout-all'),
 
   /** POST /auth/logout: ends this device's session. An unknown token is not an error. */
   logout: (refreshToken: string) => http().post('/auth/logout', { body: { refreshToken }, anonymous: true }),
