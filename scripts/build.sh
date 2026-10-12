@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the app for testers with EAS (docs/releases.md):
 #   scripts/build.sh ios            in Expo's cloud; then `npm run submit:ios` sends it to TestFlight
-#   scripts/build.sh android [apk]  on this Mac (eas build --local, free): builds/tasky-<version>-<time>.aab (or .apk)
+#   scripts/build.sh android [apk]  on this Mac (eas build --local, free): builds/azignia-<version>-<time>.aab (or .apk)
 # The version is app.json's; EAS adds the build number. Asks first when the commit isn't the release tag v<version>.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -29,12 +29,12 @@ if [[ $(git tag --points-at HEAD) != *"v$version"* || -n $(git status --porcelai
   [[ $ok == [yY] ]] || exit 1
 fi
 
-echo "Building Tasky $version for $platform, API $api"
+echo "Building Azignia $version for $platform, API $api"
 if [[ $platform == ios ]]; then
   eas build --platform ios --profile production
 else
   mkdir -p builds
-  out="builds/tasky-$version-$(date +%Y%m%d-%H%M).$type"
+  out="builds/azignia-$version-$(date +%Y%m%d-%H%M).$type"
   profile=$([[ $type == apk ]] && echo production-apk || echo production)
   eas build --platform android --profile "$profile" --local --output "$out"
   echo

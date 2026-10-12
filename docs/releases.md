@@ -70,7 +70,7 @@ Commit and tag v0.2.0? [Y/n]
 Tagged v0.2.0 (local only).
 
 $ npm run build:ios && npm run submit:ios     # TestFlight
-$ npm run build:android                       # builds/tasky-0.2.0-20261024-1530.aab → Play Console
+$ npm run build:android                       # builds/azignia-0.2.0-20261024-1530.aab → Play Console
 $ git push && git push origin v0.2.0
 ```
 
@@ -94,7 +94,7 @@ Mac or any other set in `.env.local` (`EXPO_PUBLIC_API_URL`). A build is only fo
 ```bash
 npm run build:ios               # EAS, in Expo's cloud (iOS signing is the hard part; EAS does it)
 npm run submit:ios              # the latest iOS build → TestFlight
-npm run build:android           # EAS on this Mac (--local, free): builds/tasky-<version>-<time>.aab
+npm run build:android           # EAS on this Mac (--local, free): builds/azignia-<version>-<time>.aab
 npm run build:android -- apk    # an .apk to install directly on a phone
 ```
 
@@ -102,7 +102,7 @@ npm run build:android -- apk    # an .apk to install directly on a phone
 it asks before building anything that isn't the tagged release. Then:
 
 - **iOS:** `npm run submit:ios`, then in App Store Connect › TestFlight add the build to the testers' group.
-- **Android:** Play Console › Tasky › Test and release › Testing › **Internal testing** › Create new release, upload
+- **Android:** Play Console › Azignia › Test and release › Testing › **Internal testing** › Create new release, upload
   the `.aab`, paste the version's `CHANGELOG.md` section as release notes, Review release, Roll out.
 
 **The build's API address** is `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), e.g.
@@ -126,15 +126,7 @@ covers `credentials.json`, `*.keystore`, `*.jks`, `*.p12`, `*.p8`, `*.mobileprov
 
 ## One-time setup
 
-1. `npm install -g eas-cli`, then `eas login` (your Expo account).
-2. In `tasky-mobile`: `eas init` links the project (adds `extra.eas.projectId` to `app.json`; commit it).
-3. Set `EXPO_PUBLIC_API_URL` in `eas.json` (above).
-4. **iOS:** create the app in [App Store Connect](https://appstoreconnect.apple.com) with bundle id `com.ikobit.tasky`.
-   The first `npm run build:ios` asks for your Apple ID and creates the certificate and profile; say yes to each.
-5. **Android:** Java 17 and the Android SDK (`ANDROID_HOME`), as for Spenbify. The first `npm run build:android`
-   asks to create a keystore: say yes, then back it up (Signing). Create the app in
-   [Play Console](https://play.google.com/console) with package `com.ikobit.tasky`, and upload the first `.aab` to
-   Internal testing by hand (Google requires that for a new app).
+Accounts, tools, `eas init`, the first build on each platform, App Store Connect and Play Console: [Publishing](publishing.md).
 
 ## Not yet
 

@@ -24,8 +24,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name ?? 'Tasky',
-    slug: config.slug ?? 'tasky',
+    name: config.name ?? 'Azignia',
+    slug: config.slug ?? 'azignia',
     ios: {
       ...config.ios,
       infoPlist: { ...config.ios?.infoPlist, ...(cleartext ? { NSAppTransportSecurity: { NSAllowsArbitraryLoads: true } } : {}) },

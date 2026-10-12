@@ -81,7 +81,7 @@ function Root() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Navigation theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['tasky://'] }} />
+      <Navigation theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['azignia://'] }} />
       {status === 'signedIn' && (
         <>
           <QuickAddSheet />

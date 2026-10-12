@@ -61,6 +61,7 @@ Why each: [06-mobile.md › Stack](../tasky-docs/design/clients/apps/06-mobile.m
 |---|---|
 | [Auth](docs/auth/README.md) | [Launch](docs/auth/launch.md), [Sign in](docs/auth/sign-in.md), [Sign up](docs/auth/sign-up.md), [Password reset](docs/auth/password-reset.md), [Tokens and invalid tokens](docs/auth/tokens.md), [Sign out](docs/auth/sign-out.md) |
 | [Releases](docs/releases.md) | Versions, `scripts/release.sh`, builds for TestFlight and Play internal testing, signing |
+| [Publishing](docs/publishing.md) | First-time setup: accounts, tools, the app's identity, Expo, the first iOS and Android builds |
 | [Structure](docs/structure/README.md) | Folders, layers, import rules, naming: [app](docs/structure/app.md), [core](docs/structure/core.md), [data](docs/structure/data.md), [features](docs/structure/features.md), [shared](docs/structure/shared.md) |
 | [06-mobile.md](../tasky-docs/design/clients/apps/06-mobile.md) | The spec: stack, navigation, data, session, UI rules, decisions |
 | [Design hub](https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh) | Every screen's design, by area (source in `artifacts/tasky/`) |

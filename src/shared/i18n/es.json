@@ -19,7 +19,7 @@
       "email": "Correo",
       "password": "Contraseña",
       "submit": "Iniciar sesión",
-      "newHere": "¿Nuevo en Tasky?",
+      "newHere": "¿Nuevo en Azignia?",
       "createAccount": "Crear una cuenta",
       "forgot": "¿Olvidaste tu contraseña?"
     },
@@ -67,11 +67,11 @@
   },
   "session": {
     "unreachable": {
-      "title": "No se puede conectar con Tasky",
+      "title": "No se puede conectar con Azignia",
       "body": "Revisa tu conexión e inténtalo de nuevo. Tu sesión sigue abierta."
     },
     "update": {
-      "title": "Actualiza Tasky",
+      "title": "Actualiza Azignia",
       "body": "Esta versión ({{version}}) ya no es compatible. Instala la más reciente para continuar; tu sesión se mantiene.",
       "action": "Actualizar"
     }
@@ -386,8 +386,8 @@
     "email-not-verified": "Verifica tu correo antes de iniciar sesión. Te enviamos un código al registrarte.",
     "auth.account_deactivated": "Esta cuenta está desactivada. Contacta a tu administrador.",
     "auth.account_setup_pending": "Tu cuenta aún se está configurando. Inténtalo en un momento.",
-    "network": "No podemos conectar con Tasky. Revisa tu conexión e inténtalo de nuevo.",
-    "timeout": "Tasky está tardando en responder. Inténtalo de nuevo.",
+    "network": "No podemos conectar con Azignia. Revisa tu conexión e inténtalo de nuevo.",
+    "timeout": "Azignia está tardando en responder. Inténtalo de nuevo.",
     "unknown": "Algo salió mal. Inténtalo de nuevo.",
     "auth.invalid_code": "El código no es correcto o ya venció. Revisa el último correo o pide uno nuevo.",
     "task.title_only_tags": "Añade algo de texto además de las #etiquetas.",
@@ -592,7 +592,7 @@
     "thisDevice": "Este dispositivo · {{region}}",
     "timeZoneSaved": "Zona horaria: {{zone}}",
     "language": "Idioma",
-    "languageHint": "Para la app y todo lo que Tasky te envía: correos y notificaciones.",
+    "languageHint": "Para la app y todo lo que Azignia te envía: correos y notificaciones.",
     "security": "Cuenta",
     "email": "Correo",
     "changePassword": "Cambiar contraseña",
@@ -615,7 +615,7 @@
     "reminders": "Recordatorios",
     "remindersOn": "Activados",
     "remindersOff": "Desactivados",
-    "remindersOffHint": "Tasky no puede avisarte. Activa las notificaciones en Ajustes."
+    "remindersOffHint": "Azignia no puede avisarte. Activa las notificaciones en Ajustes."
   },
   "assign": {
     "me": "Yo ({{name}})",
@@ -633,7 +633,7 @@
     "byEmail": "Otra persona, por correo",
     "emailLabel": "Correo",
     "emailAssign": "Asignar",
-    "outsideNote": "Verá solo esta tarea, no la lista ni a sus personas. ¿No tiene cuenta en Tasky? Recibe un correo y la encuentra al registrarse.",
+    "outsideNote": "Verá solo esta tarea, no la lista ni a sus personas. ¿No tiene cuenta en Azignia? Recibe un correo y la encuentra al registrarse.",
     "invited": "Invitada"
   }
 }

@@ -19,7 +19,7 @@
       "email": "Email",
       "password": "Password",
       "submit": "Sign in",
-      "newHere": "New to Tasky?",
+      "newHere": "New to Azignia?",
       "createAccount": "Create an account",
       "forgot": "Forgot password?"
     },
@@ -67,11 +67,11 @@
   },
   "session": {
     "unreachable": {
-      "title": "Can't reach Tasky",
+      "title": "Can't reach Azignia",
       "body": "Check your connection and try again. You're still signed in."
     },
     "update": {
-      "title": "Update Tasky",
+      "title": "Update Azignia",
       "body": "This version ({{version}}) is no longer supported. Install the latest one to continue; you'll stay signed in.",
       "action": "Update"
     }
@@ -386,8 +386,8 @@
     "email-not-verified": "Verify your email before signing in. We sent you a code when you signed up.",
     "auth.account_deactivated": "This account has been deactivated. Contact your administrator.",
     "auth.account_setup_pending": "Your account is still being set up. Try again in a moment.",
-    "network": "Can't reach Tasky. Check your connection and try again.",
-    "timeout": "Tasky is taking too long to answer. Try again.",
+    "network": "Can't reach Azignia. Check your connection and try again.",
+    "timeout": "Azignia is taking too long to answer. Try again.",
     "unknown": "Something went wrong. Try again.",
     "auth.invalid_code": "The code is wrong or has expired. Check the latest email or ask for a new code.",
     "task.title_only_tags": "Add some words besides #tags.",
@@ -571,7 +571,7 @@
       "en": "English",
       "es": "Español"
     },
-    "signOutTitle": "Sign out of Tasky on this device?"
+    "signOutTitle": "Sign out of Azignia on this device?"
   },
   "about": {
     "title": "About",
@@ -592,7 +592,7 @@
     "thisDevice": "This device · {{region}}",
     "timeZoneSaved": "Time zone set to {{zone}}",
     "language": "Language",
-    "languageHint": "For the app and everything Tasky sends you: emails and notifications.",
+    "languageHint": "For the app and everything Azignia sends you: emails and notifications.",
     "security": "Account",
     "email": "Email",
     "changePassword": "Change password",
@@ -615,7 +615,7 @@
     "reminders": "Reminders",
     "remindersOn": "On",
     "remindersOff": "Off",
-    "remindersOffHint": "Tasky can’t alert you. Turn notifications on in Settings."
+    "remindersOffHint": "Azignia can’t alert you. Turn notifications on in Settings."
   },
   "assign": {
     "me": "Me ({{name}})",
@@ -633,7 +633,7 @@
     "byEmail": "Someone else, by email",
     "emailLabel": "Email",
     "emailAssign": "Assign",
-    "outsideNote": "They see this task only, not the list or its people. No Tasky account? They get an email and find it after signing up.",
+    "outsideNote": "They see this task only, not the list or its people. No Azignia account? They get an email and find it after signing up.",
     "invited": "Invited"
   }
 }

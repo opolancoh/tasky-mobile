@@ -11,10 +11,10 @@ import { syncReminders } from './reminders';
 /** A change to tasks settles before reminders are read again: waits for a burst of saves to end. */
 const AFTER_CHANGES = 1500;
 
-/** Opens a reminder's task (tasky://task/{id}, the TaskDetail link). */
+/** Opens a reminder's task (azignia://task/{id}, the TaskDetail link). */
 const openTask = (response: Notifications.NotificationResponse | null) => {
   const taskId = response?.notification.request.content.data?.taskId;
-  if (typeof taskId === 'string') Linking.openURL(`tasky://task/${taskId}`);
+  if (typeof taskId === 'string') Linking.openURL(`azignia://task/${taskId}`);
 };
 
 /**

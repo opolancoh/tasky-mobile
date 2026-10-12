@@ -17,7 +17,7 @@ How the code is organized: what each folder holds, what may import what, and whe
 ```
 tasky-mobile/
 ├── index.tsx              Registers src/app/App with Expo
-├── app.json               Name, scheme "tasky", icons, splash, iOS and Android settings
+├── app.json               Name, scheme "azignia", icons, splash, iOS and Android settings
 ├── app.config.ts          app.json + the active palette's colors (splash, Android icon)
 ├── eslint.config.js       Lint, the import rules and the no-hard-coded-colors rule
 ├── tsconfig.json          TypeScript strict; the @/ alias for src/
