@@ -26,7 +26,7 @@ type Item =
   | { type: 'team'; key: string; team: Team; count: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'success' | 'quiet'; count?: number; onPress(): void }
-  | { type: 'start'; key: string }
+  | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
   | { type: 'skeleton'; key: string; width: number };
 
@@ -97,24 +97,29 @@ export function BrowseScreen() {
 
     // Someone invited without an Inbox yet (D59): Start your own lists, which opens New list.
     if (!groups.inbox) {
-      if (!editing) items.push({ type: 'start', key: 'start' });
+      if (!editing) items.push({ type: 'action', key: 'start', label: t('browse.start'), body: t('browse.startBody'), icon: 'plus', onPress: () => showSheet({ kind: 'list' }) });
     } else {
-      items.push({ type: 'section', key: 's-mine', title: t('browse.myLists'), add: editing ? undefined : { label: t('browse.newList'), onPress: () => showSheet({ kind: 'list' }) } });
+      // Empty: the section's action is a row (New list), not the header's +.
+      const newList = () => showSheet({ kind: 'list' });
+      items.push({ type: 'section', key: 's-mine', title: t('browse.myLists'), add: editing || !groups.mine.length ? undefined : { label: t('browse.newList'), onPress: newList } });
       if (groups.mine.length) lists('mine', groups.mine);
-      else items.push({ type: 'hint', key: 'h-mine', text: t('browse.myListsEmpty') });
+      else if (!editing) items.push({ type: 'action', key: 'a-list', label: t('browse.newList'), body: t('browse.newListBody'), icon: 'plus', onPress: newList });
     }
     if (groups.shared.length) {
       items.push({ type: 'section', key: 's-shared', title: t('browse.sharedWithMe') });
       lists('shared', groups.shared);
     }
     if (!editing) {
-      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: { label: t('browse.newTeam'), onPress: () => showSheet({ kind: 'team' }) } });
+      const newTeam = () => showSheet({ kind: 'team' });
+      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length ? { label: t('browse.newTeam'), onPress: newTeam } : undefined });
       if (teamList.length) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) }));
-      else items.push({ type: 'hint', key: 'h-teams', text: t('browse.teamsEmpty') });
+      else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
     }
-    items.push({ type: 'section', key: 's-tags', title: t('browse.tags') });
-    if (tagList.length) tagList.forEach((tag, index) => items.push({ type: 'tag', key: `g-${tag.name}`, tag, index, size: tagList.length }));
-    else items.push({ type: 'hint', key: 'h-tags', text: t('browse.tagsEmpty') });
+    // Tags appear with the first one: they're added from a task, not here.
+    if (tagList.length) {
+      items.push({ type: 'section', key: 's-tags', title: t('browse.tags') });
+      tagList.forEach((tag, index) => items.push({ type: 'tag', key: `g-${tag.name}`, tag, index, size: tagList.length }));
+    }
 
     if (!editing) {
       const archivedCount = archived.data?.length ?? 0;
@@ -219,15 +224,16 @@ export function BrowseScreen() {
         const [bg, fg] = toneOf[item.tone];
         return <BrowseRow label={item.label} icon={tile(item.icon, fg)} tint={bg} count={item.count} onPress={item.onPress} />;
       }
-      case 'start':
+      case 'action':
+        // A section's first step (M38): a dashed + tile, the action in the accent color, an example under it.
         return (
-          <Pressable onPress={() => showSheet({ kind: 'list' })} accessibilityRole="button" style={[styles.start, { gap: space.md, marginTop: space.sm }]}>
-            <View style={[styles.startIcon, { backgroundColor: colors.accentSoft }]}>
-              <Feather name="plus" size={18} color={colors.accent} />
+          <Pressable onPress={item.onPress} accessibilityRole="button" accessibilityHint={item.body} style={[styles.start, { gap: space.md }]}>
+            <View style={[styles.startIcon, { borderColor: colors.accent }]}>
+              <Feather name={item.icon} size={18} color={colors.accent} />
             </View>
             <View style={styles.fill}>
-              <Text variant="bodyMedium" color="accent">{t('browse.start')}</Text>
-              <Text variant="footnote" color="ink3">{t('browse.startBody')}</Text>
+              <Text variant="bodyMedium" color="accent">{item.label}</Text>
+              <Text variant="footnote" color="ink3">{item.body}</Text>
             </View>
           </Pressable>
         );
@@ -260,6 +266,6 @@ const styles = StyleSheet.create({
   barButton: { minHeight: 44, justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10, marginVertical: -6 },
-  start: { flexDirection: 'row', alignItems: 'center', minHeight: 60 },
-  startIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  start: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },
+  startIcon: { width: 30, height: 30, borderRadius: 9, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
 });

@@ -11,7 +11,7 @@ export interface BrowseRowProps {
   icon: ReactNode;
   /** The tile's fill, e.g. the list's color, faint. */
   tint?: string;
-  /** Open count; omitted for rows without one (Completed). */
+  /** Open count; shown only above zero, and omitted for rows without one (Completed). */
   count?: number;
   /** What tells this row apart: a people icon (a list the user shares), the owner's name (shared with them). */
   aside?: ReactNode;
@@ -22,7 +22,7 @@ export interface BrowseRowProps {
   move?: { up?(): void; down?(): void };
 }
 
-/** A Browse row (M38): tile, name, aside, open count, chevron. 48 pt tall. Long press opens its menu. */
+/** A Browse row (M38): tile, name, aside, open count (hidden at 0), chevron. 48 pt tall. Long press opens its menu. */
 export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPress, move }: BrowseRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
@@ -48,7 +48,7 @@ export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPres
             </View>
           ) : (
             <>
-              {count !== undefined && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
+              {!!count && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
               <Feather name="chevron-right" size={18} color={colors.ink3} />
             </>
           )}
