@@ -2,7 +2,7 @@
 
 # `src/core`
 
-Plain TypeScript with no React, React Native or Expo imports (enforced by lint). It becomes the shared `api-client` and `domain` packages when the desktop app starts ([M4](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
+Plain TypeScript with no React, React Native or Expo imports (enforced by lint). It becomes the shared `api-client` and `domain` packages when the desktop app starts ([M4](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
 ```
 src/core/
@@ -58,11 +58,11 @@ Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives tod
 
 ## dates/reminders.ts
 
-`ReminderAt` (local date and time), `sameReminder`, and `reminderPresets(now)`: Later today 18:00 (until 17:00), Tomorrow, This weekend, Next week, all 9:00 ([M15](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
+`ReminderAt` (local date and time), `sameReminder`, and `reminderPresets(now)`: Later today 18:00 (until 17:00), Tomorrow, This weekend, Next week, all 9:00 ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
 ## validation/
 
-Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), the API's limits (`emailMax` 254, `passwordMin` 8…), and the tag name rule (`tags.ts` ↔ `TagNames.cs`: `newTagName`, `stripInvalidTagChars`). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../tasky-docs/design/clients/apps/06-mobile.md#validation)).
+Rules for kinds of values the API also checks, one per API attribute (`isEmail` ↔ `[Email]`), the API's limits (`emailMax` 254, `passwordMin` 8…), and the tag name rule (`tags.ts` ↔ `TagNames.cs`: `newTagName`, `stripInvalidTagChars`). When an API rule or limit changes, change its twin here ([06-mobile.md › Validation](../../../azignia-docs/design/clients/apps/06-mobile.md#validation)).
 
 ---
 

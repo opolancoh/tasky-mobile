@@ -31,7 +31,7 @@ sequenceDiagram
 |---|---|
 | Today | A **Sign out** link, until Settings exists |
 | Can't reach Azignia | **Sign out**, to use another account while the API is unreachable ([Launch](launch.md#cant-reach-azignia)) |
-| Settings (next) | Sign out, and the sessions list: sign out one device or all ([pending](../../../tasky-docs/design/pending-decisions.md#apps)) |
+| Settings (next) | Sign out, and the sessions list: sign out one device or all ([pending](../../../azignia-docs/design/pending-decisions.md#apps)) |
 
 When the server ends the session instead (another device, password change, deactivation), the app does steps 2–5 on its own: see [Tokens › When the server ends the session](tokens.md#when-the-server-ends-the-session).
 

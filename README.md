@@ -13,7 +13,7 @@ The Azignia app for iOS and Android: Expo (React Native) and TypeScript. v1 is o
 
 ## Run
 
-Needs Node LTS and `tasky-api` running on this Mac (port 5186).
+Needs Node LTS and `azignia-api` running on this Mac (port 5186).
 
 ```bash
 npm install
@@ -39,7 +39,7 @@ npx expo install --check   # package versions match the Expo SDK
 | Palette | Azure | `src/shared/ui/palettes/active.json` |
 | API address of builds for testers | None: required | `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), see [Releases](docs/releases.md) |
 
-The API must listen on all interfaces for phones to reach it: `tasky-api`'s launch profile uses `http://*:5186`.
+The API must listen on all interfaces for phones to reach it: `azignia-api`'s launch profile uses `http://*:5186`.
 
 ## Stack
 
@@ -53,7 +53,7 @@ The API must listen on all interfaces for phones to reach it: `tasky-api`'s laun
 | Languages | i18next: English and Spanish |
 | Design | Calm ocean · HIG in the Azure palette, Figtree |
 
-Why each: [06-mobile.md › Stack](../tasky-docs/design/clients/apps/06-mobile.md#stack) and its [decision log](../tasky-docs/design/clients/apps/06-mobile.md#decisions).
+Why each: [06-mobile.md › Stack](../azignia-docs/design/clients/apps/06-mobile.md#stack) and its [decision log](../azignia-docs/design/clients/apps/06-mobile.md#decisions).
 
 ## Documentation
 
@@ -63,7 +63,7 @@ Why each: [06-mobile.md › Stack](../tasky-docs/design/clients/apps/06-mobile.m
 | [Releases](docs/releases.md) | Versions, `scripts/release.sh`, builds for TestFlight and Play internal testing, signing |
 | [Publishing](docs/publishing.md) | First-time setup: accounts, tools, the app's identity, Expo, the first iOS and Android builds |
 | [Structure](docs/structure/README.md) | Folders, layers, import rules, naming: [app](docs/structure/app.md), [core](docs/structure/core.md), [data](docs/structure/data.md), [features](docs/structure/features.md), [shared](docs/structure/shared.md) |
-| [06-mobile.md](../tasky-docs/design/clients/apps/06-mobile.md) | The spec: stack, navigation, data, session, UI rules, decisions |
+| [06-mobile.md](../azignia-docs/design/clients/apps/06-mobile.md) | The spec: stack, navigation, data, session, UI rules, decisions |
 | [Design hub](https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh) | Every screen's design, by area (source in `artifacts/tasky/`) |
 
 ## Status

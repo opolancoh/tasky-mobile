@@ -3,8 +3,8 @@
 # Releases
 
 How the app is versioned, released and built for testers (TestFlight on iOS, Play internal testing on Android). Same
-flow as the API's ([tasky-api/docs/releases.md](../../tasky-api/docs/releases.md)); the reasons are in
-[06-mobile.md](../../tasky-docs/design/clients/apps/06-mobile.md#decisions) (M46–M49).
+flow as the API's ([azignia-api/docs/releases.md](../../azignia-api/docs/releases.md)); the reasons are in
+[06-mobile.md](../../azignia-docs/design/clients/apps/06-mobile.md#decisions) (M46–M49).
 
 ## Contents
 
@@ -42,7 +42,7 @@ scripts/release.sh patch    # 0.3.0 → 0.3.1: fixes only
 scripts/release.sh major    # 0.3.1 → 1.0.0: 1.0 for the stores, or a big change
 ```
 
-(`npm run release -- minor` works too.) From `tasky-mobile`, it:
+(`npm run release -- minor` works too.) From `azignia-mobile`, it:
 
 1. Checks you're on `main` with nothing uncommitted, and that `npm run check` passes.
 2. Sets the version in `app.json`.
@@ -130,7 +130,7 @@ Accounts, tools, `eas init`, the first build on each platform, App Store Connect
 
 ## Not yet
 
-- **Publishing in the stores**, beyond TestFlight and internal testing ([pending decisions](../../tasky-docs/design/pending-decisions.md#apps)).
+- **Publishing in the stores**, beyond TestFlight and internal testing ([pending decisions](../../azignia-docs/design/pending-decisions.md#apps)).
 - **Updates without a store build** (OTA, `expo-updates`): after the first test builds (M49).
 - **The API's minimum version:** the app handles `426`, but the API doesn't check `X-Client` against a minimum yet
-  ([pending decisions](../../tasky-docs/design/pending-decisions.md#apps)).
+  ([pending decisions](../../azignia-docs/design/pending-decisions.md#apps)).

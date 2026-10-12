@@ -2,7 +2,7 @@
 
 # Launch
 
-On every start the app restores the saved session instead of asking to sign in again. Only the server refusing the session sends you to Sign in; a bad connection doesn't ([M12](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
+On every start the app restores the saved session instead of asking to sign in again. Only the server refusing the session sends you to Sign in; a bad connection doesn't ([M12](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
 ## Contents
 
@@ -55,7 +55,7 @@ Every refresh gives a new refresh token and retires the old one. If an old one i
 
 Before M12 only the refresh token was saved, so every reload (including reloads while developing) had to refresh. A reload in the moment between the server issuing the new token and the app saving it left the app with the retired one, and the next launch ended the session. Saving the access token means a reload within its 15 minutes needs no refresh at all.
 
-The small remaining risk, during the rare refresh itself, is a [pending decision](../../../tasky-docs/design/pending-decisions.md#apps): letting the API accept the token it just replaced for a few seconds.
+The small remaining risk, during the rare refresh itself, is a [pending decision](../../../azignia-docs/design/pending-decisions.md#apps): letting the API accept the token it just replaced for a few seconds.
 
 Sessions saved before M12 (only `tasky.refreshToken`) are read once, refreshed and saved the new way.
 

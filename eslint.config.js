@@ -4,7 +4,7 @@ const path = require('node:path');
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
-// Import rules from tasky-docs/design/clients/apps/06-mobile.md (Folder structure › Import rules).
+// Import rules from azignia-docs/design/clients/apps/06-mobile.md (Folder structure › Import rules).
 const features = fs
   .readdirSync(path.join(__dirname, 'src/features'), { withFileTypes: true })
   .filter((d) => d.isDirectory())

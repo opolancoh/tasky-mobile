@@ -2,7 +2,7 @@
 
 # Auth
 
-How the app signs people in, keeps them signed in, and signs them out. v1 is email + password only; Google and Apple come later ([Platforms](../../../tasky-docs/design/clients/apps/05-platforms.md)).
+How the app signs people in, keeps them signed in, and signs them out. v1 is email + password only; Google and Apple come later ([Platforms](../../../azignia-docs/design/clients/apps/05-platforms.md)).
 
 ## Contents
 
@@ -26,7 +26,7 @@ How the app signs people in, keeps them signed in, and signs them out. v1 is ema
 
 ## Session status
 
-One app-wide value in `useSessionStore` ([M13](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)). It decides which navigation group exists; only that group's screens can be reached.
+One app-wide value in `useSessionStore` ([M13](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). It decides which navigation group exists; only that group's screens can be reached.
 
 | Status | Meaning | What shows |
 |---|---|---|
@@ -55,7 +55,7 @@ Changing status swaps the group: the old group's screens and their history go aw
 |---|---|---|
 | Used for | `Authorization: Bearer` on every signed-in request | Getting a new pair (`POST /auth/refresh`) |
 | Lifetime | 15 minutes | 30 days from its last use, and never beyond 90 days after sign-in |
-| Stored | Secure storage (Keychain / Keystore), key `tasky.tokens`, together with the refresh token and both expiry times ([M12](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)) | Same |
+| Stored | Secure storage (Keychain / Keystore), key `tasky.tokens`, together with the refresh token and both expiry times ([M12](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) | Same |
 | Rotation | — | Every refresh returns a new one; using an old one ends the session |
 
 Nothing else about the account is stored. `/me` is loaded after each sign-in and launch. The only other saved value is each user's last-used tags on this device (AsyncStorage, not secret).
@@ -100,4 +100,4 @@ All under `/api/v1/auth`, sent without an access token.
 | `POST /refresh` | [Tokens](tokens.md), [Launch](launch.md) |
 | `POST /logout` | [Sign out](sign-out.md) |
 
-The API side is in `tasky-api` (Identity module) and [access.md](../../../tasky-docs/design/access.md).
+The API side is in `azignia-api` (Identity module) and [access.md](../../../azignia-docs/design/access.md).

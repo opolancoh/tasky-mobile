@@ -1,5 +1,5 @@
 /**
- * The API's field limits, in one place. Mirrors tasky-api: Shared/Validation (email) and each
+ * The API's field limits, in one place. Mirrors azignia-api: Shared/Validation (email) and each
  * module's *Limits class. Change both sides together.
  */
 export const limits = {

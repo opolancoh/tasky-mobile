@@ -2,7 +2,7 @@
 
 # Structure
 
-How the code is organized: what each folder holds, what may import what, and where a new piece goes. The reasoning is in [06-mobile.md › Folder structure](../../../tasky-docs/design/clients/apps/06-mobile.md#folder-structure).
+How the code is organized: what each folder holds, what may import what, and where a new piece goes. The reasoning is in [06-mobile.md › Folder structure](../../../azignia-docs/design/clients/apps/06-mobile.md#folder-structure).
 
 ## Contents
 
@@ -15,7 +15,7 @@ How the code is organized: what each folder holds, what may import what, and whe
 ## The project
 
 ```
-tasky-mobile/
+azignia-mobile/
 ├── index.tsx              Registers src/app/App with Expo
 ├── app.json               Name, scheme "azignia", icons, splash, iOS and Android settings
 ├── app.config.ts          app.json + the active palette's colors (splash, Android icon)
@@ -45,7 +45,7 @@ tasky-mobile/
 
 ## Layers
 
-Data is grouped **by API module**; screens **by product area** ([M1](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)). The API's Tasks module owns views, collections, tags, steps and search, so a `tasks` folder holding its screens would hold most of the app.
+Data is grouped **by API module**; screens **by product area** ([M1](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). The API's Tasks module owns views, collections, tags, steps and search, so a `tasks` folder holding its screens would hold most of the app.
 
 ```mermaid
 flowchart TD
@@ -77,7 +77,7 @@ Checked by ESLint (`import/no-restricted-paths` in `eslint.config.js`): a wrong 
 | `data/x` | `core`, types from other `data/*` | React components, `shared`, `features`, `app` |
 | `core` | nothing outside `core` | React, React Native, Expo |
 
-`core` stays free of React so it can move into the shared packages when the desktop app starts ([M4](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
+`core` stays free of React so it can move into the shared packages when the desktop app starts ([M4](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
 Colors are also checked: a hex or `rgb()` literal anywhere in `src/` outside `shared/ui/palettes/` fails lint.
 
@@ -100,5 +100,5 @@ No `index.ts` barrels inside features; `shared/ui` has one, so screens import th
 2. **The screen** in `src/features/<area>/`, built from `shared/ui` and `shared/components`.
 3. **Its route** in `src/app/navigation/RootNavigator.tsx`, in the right group.
 4. **Strings** in `src/shared/i18n/en.json` and `es.json`.
-5. **Only what the API allows:** hide actions the user's role can't take ([roles and permissions](../../../tasky-api/docs/roles-and-permissions.md)).
+5. **Only what the API allows:** hide actions the user's role can't take ([roles and permissions](../../../azignia-api/docs/roles-and-permissions.md)).
 6. `npm run check`.

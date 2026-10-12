@@ -39,7 +39,7 @@ export function moveInOrder(all: Id[], group: Id[], id: Id, by: -1 | 1): Id[] {
   return next;
 }
 
-/** Who may do what to a list (tasky-api/docs/roles-and-permissions.md). */
+/** Who may do what to a list (azignia-api/docs/roles-and-permissions.md). */
 export const canManage = (c: Collection) => !c.isInbox && (c.role === 'owner' || c.role === 'admin');
 /** Invite: a list's owner outside a team; in a team, its owner and admins (read from the team). */
 export const canInvite = (c: Collection, team: Team | undefined) => !c.isInbox && (c.team ? !!team && team.role !== 'member' : c.role === 'owner');

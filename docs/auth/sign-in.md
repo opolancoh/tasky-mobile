@@ -34,14 +34,14 @@ sequenceDiagram
 1. **Check the form** on the phone (see [Form rules](#form-rules)). Nothing is sent while it's incomplete.
 2. **`POST /auth/login`** with the email (trimmed) and password. The request carries `X-Client` and `X-Device-Name`, which name this device in the sessions list.
 3. **Save the tokens** in secure storage ([Auth › Tokens](README.md#tokens)).
-4. **Load the account:** `GET /me`. The profile's language replaces the device's. There is no current workspace ([M31](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): every view shows everything the user can see.
+4. **Load the account:** `GET /me`. The profile's language replaces the device's. There is no current workspace ([M31](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): every view shows everything the user can see.
 5. **Status `signedIn`.** Navigation swaps groups: Sign in and its history go away, and the tabs open on Today.
 
 The same `signIn()` finishes [Sign up](sign-up.md) (after the code) and [Password reset](password-reset.md) (after the new password).
 
 ## Form rules
 
-HIG timing ([06-mobile.md › UI](../../../tasky-docs/design/clients/apps/06-mobile.md#hig-rules-every-screen-follows)):
+HIG timing ([06-mobile.md › UI](../../../azignia-docs/design/clients/apps/06-mobile.md#hig-rules-every-screen-follows)):
 
 | Field | Checked | Message |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 # `src/data`
 
-One folder per API module, mirroring `tasky-api`: endpoints, types and the cache around them. No UI.
+One folder per API module, mirroring `azignia-api`: endpoints, types and the cache around them. No UI.
 
 ```
 src/data/
@@ -39,9 +39,9 @@ src/data/
 - **Writes send `If-Match`** with the version last read. Task detail saves with `useSaveTask` (one PATCH with every change, D56; a `412` goes back to the screen, which rereads the task and keeps the edits). `useChangeTask` runs commands (complete, reopen, skip) one at a time (`scope`); a `412` rereads the task and runs the command once more.
 - **Optimistic only where it should feel instant:** complete, reopen, tick a step, reorder. Everything else waits for the response.
 - **After a write,** invalidate the item and every task list it can appear in (`taskKeys.views`).
-- **Types are written by hand** for now; generated from `/openapi/v1.json` once the contract settles ([M5](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)).
+- **Types are written by hand** for now; generated from `/openapi/v1.json` once the contract settles ([M5](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
-Details: [06-mobile.md › Data](../../../tasky-docs/design/clients/apps/06-mobile.md#data).
+Details: [06-mobile.md › Data](../../../azignia-docs/design/clients/apps/06-mobile.md#data).
 
 ---
 

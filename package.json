@@ -1,5 +1,5 @@
 {
-  "name": "tasky-mobile",
+  "name": "azignia-mobile",
   "main": "index.tsx",
   "scripts": {
     "start": "expo start",

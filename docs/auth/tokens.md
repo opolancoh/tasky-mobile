@@ -87,7 +87,7 @@ The last-used tags per user stay on the device (not secret).
 | Access token, refresh, one at a time | `createTokenManager()` in `src/core/auth/tokens.ts` |
 | `401` → refresh → resend | `request()` in `src/core/http/client.ts` |
 | What counts as refused, ending the session | `isSessionEnded` and `onEnded` in `src/app/services.ts` |
-| Rotation and reuse on the API | `TokenIssuer.cs` in `tasky-api` (Identity) |
+| Rotation and reuse on the API | `TokenIssuer.cs` in `azignia-api` (Identity) |
 
 ---
 
