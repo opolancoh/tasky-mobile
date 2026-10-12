@@ -42,6 +42,12 @@
     ],
     "experiments": {
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31d01168-081b-4bce-a297-98288cb6e194"
+      }
+    },
+    "owner": "opolancoh"
   }
 }

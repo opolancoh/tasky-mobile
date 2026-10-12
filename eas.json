@@ -7,7 +7,7 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": ""
+        "EXPO_PUBLIC_API_URL": "https://api.azignia.com/api/v1"
       }
     },
     "production-apk": {

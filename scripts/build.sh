@@ -16,7 +16,7 @@ case $platform in
 esac
 
 version=$(node -p 'require("./app.json").expo.version')
-api=$(node -p 'require("./eas.json").build.production.env.EXPO_PUBLIC_API_URL || ""')
+api=$(node -p 'require("./eas.json").build.production.env?.EXPO_PUBLIC_API_URL || ""')
 [[ -n $api ]] || { echo "Set EXPO_PUBLIC_API_URL in eas.json (build.production.env) first." >&2; exit 1; }
 eas whoami >/dev/null 2>&1 || { echo "Sign in to Expo first: eas login" >&2; exit 1; }
 if [[ $platform == android ]]; then
