@@ -114,7 +114,25 @@
     "movedToday": "Movida a hoy",
     "loading": "Cargando tu día",
     "declinedBy": "{{name}} la rechazó",
-    "completedBy": "{{name}} la completó"
+    "completedBy": "{{name}} la completó",
+    "firstDay": {
+      "title": "¿Por dónde empiezas?",
+      "welcome": "Te damos la bienvenida a {{name}}",
+      "body": "Elige una para empezar o escribe la tuya. Las tareas con fecha aparecen aquí ese día.",
+      "bodyCompany": "Empieza con tu propio trabajo. Las listas de tu equipo aparecen en Explorar cuando alguien te añade.",
+      "add": "Añadir tarea",
+      "starterHint": "Abre Añadir con este título"
+    },
+    "starters": {
+      "dentist": "Llamar al dentista",
+      "groceries": "Mercado",
+      "rent": "Pagar el arriendo",
+      "weekend": "Planear el fin de semana",
+      "report": "Informe semanal",
+      "client": "Responder a un cliente",
+      "meeting": "Agendar reunión de equipo",
+      "budget": "Revisar el presupuesto"
+    }
   },
   "taskRow": {
     "complete": "Completar {{title}}",

@@ -18,7 +18,7 @@ import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } 
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
-import { useQuickAdd } from './quickAddStore';
+import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 
 type Page = 'form' | 'collection' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
 
@@ -67,7 +67,8 @@ function QuickAddForm() {
   const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
   const create = useCreateTask();
 
-  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const startTitle = useQuickAdd((s) => s.title);
+  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle }));
   const [page, setPage] = useState<Page>('form');
   const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(EMPTY);   // the draft when a page opened: tapping outside restores it

@@ -17,7 +17,7 @@ import { CollectionScreen } from '@/features/browse/CollectionScreen';
 import { PeopleScreen } from '@/features/browse/PeopleScreen';
 import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
-import { useQuickAdd } from '@/features/quick-add/quickAddStore';
+import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
 import { AboutScreen } from '@/features/me/AboutScreen';
 import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';

@@ -15,6 +15,7 @@ import { MeButton } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, Notice, Pill, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
+import { FirstDayCard } from './components/FirstDayCard';
 import { AskRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
 
@@ -29,6 +30,7 @@ type Item =
   | { type: 'task'; key: string; task: TaskSummary; when: 'time' | 'day' }
   | { type: 'update'; key: string; notification: Notification }
   | { type: 'calm'; key: string; body: string }
+  | { type: 'firstDay'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
@@ -66,7 +68,9 @@ export function TodayScreen() {
   }
 
   if (data && today) {
-    if (!attentionCount && !todayCount) items.push({ type: 'calm', key: 'calm', body: t(data.comingUp.total ? 'today.caughtUpNext' : 'today.caughtUpBody') });
+    // First day (M51): nothing open anywhere and nothing to answer. Caught up is for people who have tasks.
+    if (!attentionCount && !data.openTotal) items.push({ type: 'firstDay', key: 'first' });
+    else if (!attentionCount && !todayCount) items.push({ type: 'calm', key: 'calm', body: t(data.comingUp.total ? 'today.caughtUpNext' : 'today.caughtUpBody') });
 
     // Needs attention: invitations, then answers, then follow-ups (D71), then overdue; 5 rows at most, See all for the rest.
     if (attentionCount) {
@@ -105,7 +109,7 @@ export function TodayScreen() {
 
   const summary = [
     attentionCount > 0 && t('today.needAttention', { count: attentionCount }),
-    t('today.forToday', { count: todayCount }),
+    todayCount > 0 && t('today.forToday', { count: todayCount }),
   ].filter(Boolean).join(' · ');
   const hour = Number(now?.time.slice(0, 2) ?? 9);
   const greeting = t(hour < 12 ? 'today.morning' : hour < 18 ? 'today.afternoon' : 'today.evening', { name: me?.displayName.split(' ')[0] ?? '' });
@@ -194,6 +198,8 @@ export function TodayScreen() {
             </View>
           </View>
         );
+      case 'firstDay':
+        return me ? <FirstDayCard tenantType={me.tenant.type} companyName={me.tenant.name} /> : null;
       case 'skeletonSection':
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':

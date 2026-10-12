@@ -281,6 +281,8 @@ export interface Home {
   comingUp: TaskPage;
   importantTotal: number;
   inboxTotal: number;
+  /** Every open task the caller can see; 0 with nothing to answer is a new user's first day (M51). */
+  openTotal: number;
 }
 
 export type TeamRole = 'owner' | 'admin' | 'member';

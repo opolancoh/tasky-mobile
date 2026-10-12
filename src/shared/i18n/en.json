@@ -114,7 +114,25 @@
     "movedToday": "Moved to today",
     "loading": "Loading your day",
     "declinedBy": "{{name}} declined",
-    "completedBy": "{{name}} completed it"
+    "completedBy": "{{name}} completed it",
+    "firstDay": {
+      "title": "What's first?",
+      "welcome": "Welcome to {{name}}",
+      "body": "Pick one to start, or write your own. Dated tasks show up here on their day.",
+      "bodyCompany": "Start with your own work. Your team's lists appear in Browse once someone adds you.",
+      "add": "Add a task",
+      "starterHint": "Opens Quick add with this title"
+    },
+    "starters": {
+      "dentist": "Call the dentist",
+      "groceries": "Groceries",
+      "rent": "Pay rent",
+      "weekend": "Plan the weekend",
+      "report": "Weekly report",
+      "client": "Reply to a client",
+      "meeting": "Book a team meeting",
+      "budget": "Review the budget"
+    }
   },
   "taskRow": {
     "complete": "Complete {{title}}",

@@ -14,7 +14,7 @@ src/features/
 │   ├── signUpDraft.ts  resetDraft.ts
 │   ├── useEmailField.ts
 │   └── validation.ts
-├── today/          TodayScreen.tsx (the first tab)  TodayListScreen.tsx (See all)  todaySections.ts  useNotificationText.ts
+├── today/          TodayScreen.tsx (the first tab)  TodayListScreen.tsx (See all)  todaySections.ts  useNotificationText.ts  starters.ts (first-day ideas per account type, M51)  components/FirstDayCard.tsx
 │   └── components/       StreamRows (the rows Today and See all share)
 ├── sharing/        InvitationScreen.tsx
 ├── activity/       ActivityScreen.tsx (the fifth tab)
@@ -25,7 +25,7 @@ src/features/
 │   ├── browseSections.ts Groups (Inbox, mine, shared with me, by team), reorder, who may do what
 │   └── components/       BrowseRow, CompletedRow, Faces (Avatar)
 ├── search/         SearchScreen.tsx  SearchRow.tsx  recentSearchesStore.ts
-├── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx  quickAddStore.ts
+├── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx (its store is shared/quickAdd)
 └── task/
     ├── TaskDetailScreen.tsx  TaskFieldSheet.tsx
     ├── components/       StepList, RepeatPicker
