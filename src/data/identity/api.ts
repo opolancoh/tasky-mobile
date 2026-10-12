@@ -1,4 +1,4 @@
-import { http } from '../http';
+import { http, type Page } from '../http';
 import type { ChangePasswordRequest, CodeRequestResponse, LoginRequest, RegisterRequest, ResetPasswordRequest, SessionInfo, TokenResponse, VerifyEmailRequest } from './types';
 
 export const identityApi = {
@@ -31,8 +31,8 @@ export const identityApi = {
   /** POST /auth/change-password: signed in; ends the other sessions and returns new tokens for this one. */
   changePassword: (body: ChangePasswordRequest) => http().post<TokenResponse>('/auth/change-password', { body }),
 
-  /** GET /auth/sessions: the devices where the user is signed in, this one marked. */
-  sessions: () => http().get<SessionInfo[]>('/auth/sessions'),
+  /** GET /auth/sessions: the devices where the user is signed in, this one marked; one page, at most 20 (D76). */
+  sessions: async () => (await http().get<Page<SessionInfo>>('/auth/sessions')).items,
 
   /** DELETE /auth/sessions/{id}: signs one device out (204). */
   revokeSession: (id: string) => http().delete(`/auth/sessions/${id}`),

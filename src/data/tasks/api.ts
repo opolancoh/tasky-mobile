@@ -1,6 +1,6 @@
 import type { Id, LocalDate, LocalTime } from '@/core/types';
 
-import { http } from '../http';
+import { getAll, http } from '../http';
 import type {
   Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
   UpdateCollectionRequest, UpdateTaskRequest,
@@ -11,10 +11,10 @@ type Versioned = { id: Id; version: number };
 
 export const tasksApi = {
   /** GET /collections: every collection the caller can see, Inbox first, with open counts. */
-  collections: () => http().get<Collection[]>('/collections'),
+  collections: () => getAll<Collection>('/collections'),
 
   /** GET /collections?archived=true: archived ones the caller can see. */
-  archivedCollections: () => http().get<Collection[]>('/collections', { query: { archived: true } }),
+  archivedCollections: () => getAll<Collection>('/collections', { archived: true }),
 
   /** POST /collections (201). */
   createCollection: (body: CreateCollectionRequest) => http().post<Collection>('/collections', { body }),
@@ -35,7 +35,7 @@ export const tasksApi = {
   reorderCollections: (ids: Id[]) => http().post('/collections:reorder', { body: { ids } }),
 
   /** GET /teams: the caller's teams, with their role. */
-  teams: () => http().get<Team[]>('/teams'),
+  teams: () => getAll<Team>('/teams'),
 
   /** POST /teams: the caller is its owner (201). */
   createTeam: (name: string) => http().post<Team>('/teams', { body: { name } }),
@@ -50,13 +50,13 @@ export const tasksApi = {
   restoreTeam: (item: Versioned) => http().post(`/teams/${item.id}:restore`, { ifMatch: item.version }),
 
   /** GET /teams/{id}/members or /collections/{id}/members. */
-  members: (of: MembersOf) => http().get<Member[]>(`/${of.kind}s/${of.id}/members`),
+  members: (of: MembersOf) => getAll<Member>(`/${of.kind}s/${of.id}/members`),
 
   /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
   removeMember: (of: MembersOf, userId: Id) => http().delete(`/${of.kind}s/${of.id}/members/${userId}`),
 
   /** GET …/invitations: open invitations (those who invite). */
-  openInvitations: (of: MembersOf) => http().get<OpenInvitation[]>(`/${of.kind}s/${of.id}/invitations`),
+  openInvitations: (of: MembersOf) => getAll<OpenInvitation>(`/${of.kind}s/${of.id}/invitations`),
 
   /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
   invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`/${of.kind}s/${of.id}/invitations`, { body: { email } }),
@@ -65,7 +65,7 @@ export const tasksApi = {
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),
 
   /** GET /tags: the caller's tags, with their color and open counts (D60). */
-  tags: () => http().get<Tag[]>('/tags'),
+  tags: () => getAll<Tag>('/tags'),
 
   /** PUT /tags/{name}: one of the caller's own tags, or its color for them. */
   saveTag: (name: string, color: string | null) => http().put(`/tags/${encodeURIComponent(name)}`, { body: { color } }),
@@ -170,7 +170,7 @@ export const tasksApi = {
   homeSection: (section: HomeSection, limit: number, cursor?: string) => http().get<TaskPage>(`/home/${section}`, { query: { limit, cursor } }),
 
   /** GET /invitations: invitations waiting for the caller, with who invited them and what joining shows. */
-  invitations: () => http().get<MyInvitation[]>('/invitations'),
+  invitations: () => getAll<MyInvitation>('/invitations'),
 
   /** POST /invitations/{id}:accept or :decline (D68), by the invited email (204). */
   answerInvitation: (id: Id, join: boolean) => http().post(`/invitations/${id}:${join ? 'accept' : 'decline'}`),

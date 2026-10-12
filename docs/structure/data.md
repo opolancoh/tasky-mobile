@@ -6,7 +6,7 @@ One folder per API module, mirroring `tasky-api`: endpoints, types and the cache
 
 ```
 src/data/
-├── http.ts              configureHttp() at startup; http() for every module
+├── http.ts              configureHttp() at startup; http() for every module; Page<T>, getAll() (follows nextCursor, D76)
 ├── identity/            Sign-in, sign-up, codes, refresh, sign-out
 │   ├── api.ts
 │   └── types.ts
