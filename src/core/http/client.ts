@@ -1,4 +1,5 @@
 import type { Version } from '../types';
+import type { HttpLogger } from './httpLog';
 import { ApiError, toApiError } from './problem';
 
 /** How the client gets and renews the access token. Set by the session once tokens exist. */
@@ -19,6 +20,8 @@ export interface HttpClientOptions {
   timeoutMs?: number;
   /** A 426: the API no longer accepts this app version (X-Client); the app asks the user to update. */
   onClientTooOld?: () => void;
+  /** Development only: every request, response and error (httpLog.ts). */
+  log?: HttpLogger;
 }
 
 export interface RequestOptions {
@@ -58,6 +61,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function createHttpClient(options: HttpClientOptions): HttpClient {
   const timeoutMs = options.timeoutMs ?? 15_000;
   let auth: AuthHooks | null = null;
+  let seq = 0;
+  const log = options.log;
 
   function url(path: string, query?: RequestOptions['query']): string {
     const params = Object.entries(query ?? {})
@@ -101,14 +106,20 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
   async function request<T>(method: Method, path: string, opts: RequestOptions = {}): Promise<T> {
     const idempotencyKey = method === 'POST' ? options.newId() : undefined;
     let refreshed = false;
+    const id = ++seq;
+    const target = log ? url(path, opts.query) : '';
 
     for (let attempt = 0; ; attempt++) {
+      const started = Date.now();
+      log?.request(id, method, target, opts.body, attempt);
       let response: Response;
       try {
         response = await send(method, path, opts, idempotencyKey);
       } catch (e) {
         const error = e as ApiError;
-        if (error.code !== 'aborted' && attempt < MAX_RETRIES) {
+        const retry = error.code !== 'aborted' && attempt < MAX_RETRIES;
+        log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${MAX_RETRIES}` : undefined);
+        if (retry) {
           await sleep(backoff(attempt));
           continue;
         }
@@ -116,19 +127,23 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       }
 
       if (response.ok) {
-        if (response.status === 204) return undefined as T;
-        const text = await response.text();
-        return (text ? JSON.parse(text) : undefined) as T;
+        const text = response.status === 204 ? '' : await response.text();
+        const body = text ? JSON.parse(text) : undefined;
+        log?.response(id, method, target, response.status, Date.now() - started, body);
+        return body as T;
       }
 
+      const error = await toApiError(response);
       if (response.status === 401 && !opts.anonymous && auth && !refreshed) {
         refreshed = true;
+        log?.error(id, method, target, error, Date.now() - started, 'refreshing');
         if (await auth.refresh()) continue;
       }
 
       if (response.status === 426) options.onClientTooOld?.();
-      const error = await toApiError(response);
-      if (RETRYABLE.has(response.status) && attempt < MAX_RETRIES) {
+      const retry = RETRYABLE.has(response.status) && attempt < MAX_RETRIES;
+      log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${MAX_RETRIES}` : undefined);
+      if (retry) {
         await sleep(error.retryAfter ? error.retryAfter * 1000 : backoff(attempt));
         continue;
       }

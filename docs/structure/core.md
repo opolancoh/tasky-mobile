@@ -9,6 +9,7 @@ src/core/
 ├── types.ts              Id, LocalDate, IsoDateTime, Version
 ├── http/
 │   ├── client.ts         fetch with the API's rules
+│   ├── httpLog.ts        Development log of every request, response and error
 │   └── problem.ts        Problem documents → ApiError
 ├── auth/
 │   └── tokens.ts         Access and refresh tokens, one refresh at a time
@@ -35,6 +36,15 @@ src/core/
 | Idempotency | Every `POST` gets an `Idempotency-Key`, reused by its retries |
 | Concurrency | `ifMatch` sends the row version as `If-Match` |
 | `anonymous` | No token and no refresh: sign-in, refresh, sign-out and the other `/auth` calls |
+| `log` | Development only (`__DEV__`, wired in `app/services.ts`): every request, response and error in the Metro terminal |
+
+**httpLog.ts** (`createConsoleHttpLogger`): one line per event in color (requests cyan, 2xx green, 4xx and retries yellow, 5xx and no response red), a request and its response or error paired by number, the time in ISO 8601, the path, and the body as compact JSON (arrays as `[n items]`, two levels, 120 characters; passwords, access and refresh tokens and a request's `code` as `***`; a validation error shows each field's first message). `EXPO_PUBLIC_HTTP_LOG` in `.env.local`: `all` (default), `errors`, `off`; restart Metro after changing it.
+
+```
+→ #14  2026-10-12T16:44:27.246Z  GET    /api/v1/home?limit=5
+← #14  2026-10-12T16:44:27.342Z  200    {"invitations":[0 items],"toAnswer":{…},…}  96ms
+✕ #16  2026-10-12T16:44:30.190Z  401    {"code":"auth.token_expired"}  12ms → refreshing
+```
 
 **problem.ts:** turns a problem document into `ApiError { status, code, errors, traceId, retryAfter }`. `status` 0 means no response (`code` `network` or `timeout`). Screens switch on `code`, never on the text.
 

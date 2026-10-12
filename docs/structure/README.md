@@ -24,7 +24,7 @@ tasky-mobile/
 ├── eas.json               EAS builds: the production profile, its API address (docs/releases.md)
 ├── CHANGELOG.md           Written by scripts/release.sh
 ├── scripts/               release.sh (version, changelog, tag), build.sh (EAS builds)
-├── .env.example           EXPO_PUBLIC_API_URL, only to reach an API somewhere else
+├── .env.example           Every EXPO_PUBLIC_* setting: EXPO_PUBLIC_API_URL (required), EXPO_PUBLIC_HTTP_LOG
 ├── docs/                  This documentation
 └── src/
     ├── app/               Startup and wiring                      → app.md

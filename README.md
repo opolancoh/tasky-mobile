@@ -35,7 +35,7 @@ npx expo install --check   # package versions match the Expo SDK
 
 | Setting | Default | Change it |
 |---|---|---|
-| API address | In development, the Mac that runs Metro, port 5186 (`/api/v1`) | `EXPO_PUBLIC_API_URL` in `.env.local` (copy `.env.example`), to reach an API somewhere else |
+| API address | None: required (`npx expo start` stops without it) | `EXPO_PUBLIC_API_URL` in `.env.local` (copy `.env.example`): `http://localhost:5186/api/v1` for the iOS simulator, this Mac's IP for a phone |
 | Palette | Azure | `src/shared/ui/palettes/active.json` |
 | API address of builds for testers | None: required | `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), see [Releases](docs/releases.md) |
 

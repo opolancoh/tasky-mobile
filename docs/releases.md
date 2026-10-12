@@ -89,7 +89,7 @@ To undo a release before pushing: `git tag -d vX` and `git reset --hard HEAD~1`.
 ## Building for testers
 
 Day to day, the app runs in **Expo Go** (no build): `npm run ios`, or the QR code on a phone, against the API on this
-Mac or any other set in `.env.local` (`EXPO_PUBLIC_API_URL`). A build is only for testers.
+Mac or any other, set in `.env.local` (`EXPO_PUBLIC_API_URL`, required). A build is only for testers.
 
 ```bash
 npm run build:ios               # EAS, in Expo's cloud (iOS signing is the hard part; EAS does it)

@@ -7,7 +7,7 @@ Startup and wiring only. The one layer that may import everything; nothing impor
 ```
 src/app/
 ├── App.tsx              Providers, fonts, splash, navigation theme
-├── config.ts            EXPO_PUBLIC_* settings: the API address
+├── config.ts            EXPO_PUBLIC_* settings: the API address, the development HTTP log level
 ├── services.ts          The single HTTP client and token manager, wired to Expo
 ├── queryClient.ts       TanStack Query defaults
 └── navigation/
@@ -30,7 +30,7 @@ Providers, outermost first:
 
 ## config.ts
 
-`apiUrl`: `EXPO_PUBLIC_API_URL` if set; otherwise, in development, the Mac that runs Metro (from the address the app loaded its bundle from) at port 5186. The simulator, an emulator and a phone on the same Wi-Fi all work without setup.
+The only place that reads `EXPO_PUBLIC_*` (set in `.env.local` in development, `eas.json` for builds). `apiUrl`: `EXPO_PUBLIC_API_URL`, **required** everywhere so it's always known which API the app calls; `app.config.ts` stops `npx expo start` and `eas build` without it, and prints the settings when Metro starts (`Config OK`, then one line per setting). `httpLog`: optional, `all` by default.
 
 ## services.ts
 

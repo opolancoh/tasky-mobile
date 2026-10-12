@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 
 import { createTokenManager, type TokenPair, type TokenStore } from '@/core/auth/tokens';
 import { createHttpClient } from '@/core/http/client';
+import { createConsoleHttpLogger } from '@/core/http/httpLog';
 import { isApiError } from '@/core/http/problem';
 import { configureHttp } from '@/data/http';
 import { identityApi } from '@/data/identity/api';
@@ -42,6 +43,8 @@ export const httpClient = createHttpClient({
   baseUrl: config.apiUrl,
   newId: randomUUID,
   onClientTooOld: () => useSessionStore.getState().requireUpdate(),
+  // Development only: every call in the Metro terminal; EXPO_PUBLIC_HTTP_LOG=off|errors|all (default all).
+  log: __DEV__ ? createConsoleHttpLogger(config.httpLog) : undefined,
   headers: () => ({
     'X-Client': `${Platform.OS}/${appInfo.version}`,
     ...(Device.deviceName ? { 'X-Device-Name': Device.deviceName } : {}),
