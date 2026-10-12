@@ -13,7 +13,7 @@ interface SessionState {
   status: SessionStatus;
   /** The signed-in user, from GET /me. */
   userId: Id | null;
-  /** The API answered 426: this version is too old; the app shows only "Update Tasky" (M48). */
+  /** The API answered 426: this version is too old; the app shows only "Update Azignia" (M48). */
   updateRequired: boolean;
   setStatus(status: SessionStatus): void;
   setUser(userId: Id | null): void;

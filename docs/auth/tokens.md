@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Auth](README.md) › Tokens and invalid tokens
+[Azignia mobile](../../README.md) › [Auth](README.md) › Tokens and invalid tokens
 
 # Tokens and invalid tokens
 

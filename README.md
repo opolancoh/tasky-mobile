@@ -1,6 +1,6 @@
-# Tasky mobile
+# Azignia mobile
 
-The Tasky app for iOS and Android: Expo (React Native) and TypeScript. v1 is online-only, with email + password sign-in.
+The Azignia app for iOS and Android: Expo (React Native) and TypeScript. v1 is online-only, with email + password sign-in.
 
 ## Contents
 

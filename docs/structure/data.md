@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Structure](README.md) › data
+[Azignia mobile](../../README.md) › [Structure](README.md) › data
 
 # `src/data`
 

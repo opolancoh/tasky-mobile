@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › Auth
+[Azignia mobile](../../README.md) › Auth
 
 # Auth
 
@@ -33,7 +33,7 @@ One app-wide value in `useSessionStore` ([M13](../../../tasky-docs/design/client
 | `loading` | The saved session is being checked | The splash screen |
 | `signedOut` | No session | Sign in, Sign up, Password reset |
 | `signedIn` | A confirmed session | The tabs, opening on Today |
-| `unreachable` | A saved session the API can't confirm right now (offline, timeout, `5xx`) | Can't reach Tasky, with Try again and Sign out |
+| `unreachable` | A saved session the API can't confirm right now (offline, timeout, `5xx`) | Can't reach Azignia, with Try again and Sign out |
 
 ```mermaid
 stateDiagram-v2
@@ -70,8 +70,8 @@ The app never shows the API's text. It maps the problem's `code` to `errors.<cod
 | `auth.account_deactivated` | The organization deactivated the account | This account has been deactivated. Contact your administrator. |
 | `auth.account_setup_pending` | Right after verifying, before the account is ready (retried first) | Your account is still being set up. Try again in a moment. |
 | `auth.invalid_code` | Wrong, used or expired 6-digit code | The code is wrong or has expired. Check the latest email or ask for a new code. |
-| `network` | No response | Can't reach Tasky. Check your connection and try again. |
-| `timeout` | No response within 15 seconds | Tasky is taking too long to answer. Try again. |
+| `network` | No response | Can't reach Azignia. Check your connection and try again. |
+| `timeout` | No response within 15 seconds | Azignia is taking too long to answer. Try again. |
 | anything else | — | Something went wrong. Try again. |
 
 ## Where the code is

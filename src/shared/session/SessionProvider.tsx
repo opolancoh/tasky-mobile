@@ -22,7 +22,7 @@ interface SessionContextValue {
   signOutEverywhere(): Promise<void>;
   /** Changes the password; this device stays signed in with new tokens. */
   changePassword(body: ChangePasswordRequest): Promise<void>;
-  /** From the "Can't reach Tasky" screen: checks the stored session again. */
+  /** From the "Can't reach Azignia" screen: checks the stored session again. */
   retry(): Promise<void>;
 }
 

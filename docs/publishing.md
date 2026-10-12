@@ -1,4 +1,4 @@
-[Tasky mobile](../README.md) › Publishing
+[Azignia mobile](../README.md) › Publishing
 
 # Publishing: first-time setup
 

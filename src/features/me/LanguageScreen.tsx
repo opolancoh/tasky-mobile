@@ -8,7 +8,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import i18n, { languages } from '@/shared/i18n/i18n';
 import { ListRow, Notice, Screen, Text, useTheme } from '@/shared/ui';
 
-/** Settings › Language (M41): the app's and everything Tasky sends (emails, notifications). A tap saves and goes back. */
+/** Settings › Language (M41): the app's and everything Azignia sends (emails, notifications). A tap saves and goes back. */
 export function LanguageScreen() {
   const { t } = useTranslation();
   const { space } = useTheme();

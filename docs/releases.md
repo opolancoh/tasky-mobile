@@ -1,4 +1,4 @@
-[Tasky mobile](../README.md) › Releases
+[Azignia mobile](../README.md) › Releases
 
 # Releases
 

@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Auth](README.md) › Password reset
+[Azignia mobile](../../README.md) › [Auth](README.md) › Password reset
 
 # Password reset
 
@@ -60,7 +60,7 @@ The email, `requestId` and checked code stay in memory only (`resetDraft`), neve
 | `400 auth.invalid_code` | Check your email | Under the code |
 | `400 auth.invalid_code` | New password (the code expired meanwhile) | The button becomes **Get a new code**, back to Reset your password with the email filled in |
 | `400` with field errors | New password | Under the field |
-| No response | Any step | "Can't reach Tasky…" |
+| No response | Any step | "Can't reach Azignia…" |
 
 ## Code
 

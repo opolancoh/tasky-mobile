@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › Structure
+[Azignia mobile](../../README.md) › Structure
 
 # Structure
 

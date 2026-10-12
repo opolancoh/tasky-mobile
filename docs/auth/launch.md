@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Auth](README.md) › Launch
+[Azignia mobile](../../README.md) › [Auth](README.md) › Launch
 
 # Launch
 
@@ -7,7 +7,7 @@ On every start the app restores the saved session instead of asking to sign in a
 ## Contents
 
 - [Steps](#steps)
-- [Can't reach Tasky](#cant-reach-tasky)
+- [Can't reach Azignia](#cant-reach-azignia)
 - [Why the access token is saved](#why-the-access-token-is-saved)
 - [Code](#code)
 
@@ -24,7 +24,7 @@ flowchart TD
     C -- no --> R[POST /auth/refresh]
     R -- new tokens --> D
     R -- 401 / 403 --> X[Delete the tokens] --> SO
-    R -- offline, timeout, 5xx --> U[Can't reach Tasky]
+    R -- offline, timeout, 5xx --> U[Can't reach Azignia]
     D -- OK --> T[Tabs, on Today]
     D -- 401 / 403 --> X
     D -- offline, timeout, 5xx --> U
@@ -35,9 +35,9 @@ flowchart TD
 3. **Load the account:** `GET /me`, into the query cache. The profile's language is applied, and the user id goes into the session store.
 4. **Show the app:** status `signedIn` → the tabs, which always open on the first tab, **Today**.
 
-A refused refresh (`401`, `403`) deletes the tokens and shows Sign in. Any other failure, at any step, shows [Can't reach Tasky](#cant-reach-tasky) and keeps the tokens.
+A refused refresh (`401`, `403`) deletes the tokens and shows Sign in. Any other failure, at any step, shows [Can't reach Azignia](#cant-reach-azignia) and keeps the tokens.
 
-## Can't reach Tasky
+## Can't reach Azignia
 
 Shown when there is a saved session but the API can't confirm it: no connection, a timeout, or a server error. Status `unreachable`.
 
@@ -67,7 +67,7 @@ Sessions saved before M12 (only `tasky.refreshToken`) are read once, refreshed a
 | Reading tokens, using or refreshing the access token | `accessToken()` in `src/core/auth/tokens.ts` |
 | Secure storage, the old-key read | `tokenStore` in `src/app/services.ts` |
 | Splash | `Root` in `src/app/App.tsx` |
-| Can't reach Tasky | `src/features/auth/UnreachableScreen.tsx` |
+| Can't reach Azignia | `src/features/auth/UnreachableScreen.tsx` |
 | Which screens exist per status | `src/app/navigation/RootNavigator.tsx` |
 
 ---

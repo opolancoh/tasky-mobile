@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Structure](README.md) › shared
+[Azignia mobile](../../README.md) › [Structure](README.md) › shared
 
 # `src/shared`
 
@@ -43,7 +43,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `TextField` | Label above, error or footer below, optional Show/Hide for passwords |
 | `Notice` | A message above a form: error or info |
 | `RuleCheck` | A rule that turns green as you type (password length) |
-| `Logo` | The Tasky mark and name |
+| `Logo` | The Azignia mark and name |
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
 | `Sheet` | The large size by default ([M28](../../../tasky-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner, M27) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |

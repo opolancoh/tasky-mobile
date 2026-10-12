@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Auth](README.md) › Sign in
+[Azignia mobile](../../README.md) › [Auth](README.md) › Sign in
 
 # Sign in
 
@@ -61,7 +61,7 @@ Shown in a notice above the form, or under a field for a `400` with field errors
 | `401 auth.invalid_credentials` | Wrong email or password. Also an account whose email was never verified: it has no password until its code is confirmed | "The email or password is incorrect." Ways out: Forgot password, or Create an account again |
 | `403 auth.account_deactivated` | An organization admin deactivated the account | "This account has been deactivated…" |
 | `503` with `Retry-After` | Right after verifying, the account is still being set up | Retried quietly (up to 3 times); if still not ready, "Your account is still being set up…" |
-| No response | Offline or a 15-second timeout, after 3 retries | "Can't reach Tasky…" / "Tasky is taking too long…" |
+| No response | Offline or a 15-second timeout, after 3 retries | "Can't reach Azignia…" / "Azignia is taking too long…" |
 
 A failed `/me` after a successful login shows the same messages; the saved tokens stay, so the next launch continues the session.
 

@@ -1,4 +1,4 @@
-[Tasky mobile](../../README.md) › [Auth](README.md) › Sign up
+[Azignia mobile](../../README.md) › [Auth](README.md) › Sign up
 
 # Sign up
 
@@ -62,7 +62,7 @@ sequenceDiagram
 | `400` with field errors (e.g. password rules) | Create your account | Under the field |
 | `400 auth.invalid_code` | Check your email | Under the code: "The code is wrong or has expired…" |
 | `503 auth.account_setup_pending` | Signing in right after verifying | Retried quietly; then the message |
-| No response | Either step | "Can't reach Tasky…" |
+| No response | Either step | "Can't reach Azignia…" |
 
 ## Code
 
