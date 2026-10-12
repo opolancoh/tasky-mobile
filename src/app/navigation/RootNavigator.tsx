@@ -20,6 +20,8 @@ import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
 import { AboutScreen } from '@/features/me/AboutScreen';
+import { NetworkLogEntryScreen } from '@/features/network-log/NetworkLogEntryScreen';
+import { NetworkLogScreen } from '@/features/network-log/NetworkLogScreen';
 import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';
 import { EditNameScreen } from '@/features/me/EditNameScreen';
 import { LanguageScreen } from '@/features/me/LanguageScreen';
@@ -106,6 +108,9 @@ const RootStack = createNativeStackNavigator({
         ChangePassword: { screen: ChangePasswordScreen, options: { headerShown: true } },
         Sessions: { screen: SessionsScreen, options: { headerShown: true } },
         About: { screen: AboutScreen, options: { headerShown: true } },
+        // Network log, from About (support and admin).
+        NetworkLog: { screen: NetworkLogScreen, options: { headerShown: true } },
+        NetworkLogEntry: { screen: NetworkLogEntryScreen, options: { headerShown: true } },
       },
     },
   },

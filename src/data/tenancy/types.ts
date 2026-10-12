@@ -15,6 +15,8 @@ export interface Me {
   tenantRole: TenantRole;
   /** A personal tenant has no name and is never shown. */
   tenant: { id: Id; type: TenantType; name: string | null };
+  /** "support" or "admin" for the people who run Azignia: they see the Network log. Absent for everyone else. */
+  platformRole?: 'support' | 'admin';
 }
 
 /** PATCH /me: none can be cleared. */

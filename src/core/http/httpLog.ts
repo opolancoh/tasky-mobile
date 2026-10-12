@@ -14,6 +14,26 @@ const MAX = 120;
 /** Keys never printed: passwords and tokens anywhere, and a request's `code` (the email code). */
 const SECRET = /password|secret|^(access|refresh)?token$/i;
 
+/** A copy with the same secrets as `summarize` replaced by "***", for a full view (the app's Network log). */
+export function redact(value: unknown, isRequest = false): unknown {
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((v) => redact(v, isRequest));
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, SECRET.test(k) || (isRequest && k === 'code') ? '***' : redact(v, isRequest)]),
+  );
+}
+
+/** Several loggers as one: the terminal log and the Network log. */
+export function combineLoggers(...loggers: (HttpLogger | undefined)[]): HttpLogger | undefined {
+  const all = loggers.filter((l): l is HttpLogger => !!l);
+  if (!all.length) return undefined;
+  return {
+    request: (...args) => all.forEach((l) => l.request(...args)),
+    response: (...args) => all.forEach((l) => l.response(...args)),
+    error: (...args) => all.forEach((l) => l.error(...args)),
+  };
+}
+
 /** Compact JSON: arrays as "[n items]", objects two levels deep, secrets as "***", cut at 120 characters. */
 export function summarize(value: unknown, isRequest = false): string {
   const text = compact(value, 0, isRequest);
@@ -37,7 +57,7 @@ const cyan = paint(36), green = paint(32), yellow = paint(33), red = paint(31), 
 const bold = (text: string) => `\x1b[1m${text}\x1b[22m`;
 
 /** "/api/v1/home?limit=5" from the full URL. */
-const pathOf = (url: string) => url.replace(/^https?:\/\/[^/]+/, '');
+export const pathOf = (url: string) => url.replace(/^https?:\/\/[^/]+/, '');
 const tag = (id: number) => `#${id}`.padEnd(5);
 
 /**

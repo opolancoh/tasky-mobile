@@ -597,7 +597,8 @@
     "version": "Version",
     "server": "Address",
     "expoGo": "Expo Go",
-    "unreachable": "Can't reach it"
+    "unreachable": "Can't reach it",
+    "support": "Support"
   },
   "settings": {
     "saved": "Saved",
@@ -652,5 +653,21 @@
     "emailAssign": "Assign",
     "outsideNote": "They see this task only, not the list or its people. No Azignia account? They get an email and find it after signing up.",
     "invited": "Invited"
+  },
+  "networkLog": {
+    "title": "Network log",
+    "record": "Record API calls",
+    "recordHint": "Kept only while the app is open, the last 100. Passwords and tokens are hidden.",
+    "clear": "Clear",
+    "empty": "Turn on recording, then use the app.",
+    "emptyRecording": "Recording. Use the app and the calls appear here.",
+    "gone": "This call is no longer in the log.",
+    "status": "Status",
+    "started": "Started",
+    "duration": "Duration",
+    "notes": "Notes",
+    "request": "Request",
+    "response": "Response",
+    "error": "Error"
   }
 }
