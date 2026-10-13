@@ -96,8 +96,10 @@ and raises it on every build; the stores reject a number they've seen.
 EAS builds and signs iOS in the cloud; the first build creates the certificate and profile from your Apple account.
 
 1. **Create the app.** [App Store Connect](https://appstoreconnect.apple.com) › Apps › + › New App: iOS, the name
-   (unique in the App Store; add a word if taken), the language, bundle id `com.ikobit.azignia` (not listed? add it in
-   Certificates, Identifiers & Profiles › Identifiers), an SKU (any code, e.g. `azignia`).
+   (unique in the App Store; add a word if taken), the language, bundle id `com.ikobit.azignia`, an SKU (any code, e.g.
+   `azignia`), User Access: Full Access. The bundle id isn't listed until it's registered: Certificates, Identifiers &
+   Profiles › Identifiers › + › App IDs › App, Explicit, no capabilities (EAS turns on what the app uses); or run the
+   first build, which registers it.
 2. **Build:** `npm run build:ios`. The first time it asks:
     1. to sign in with your Apple ID (a code on your phone);
     2. to create a distribution certificate and a provisioning profile: yes to both. EAS keeps them.
