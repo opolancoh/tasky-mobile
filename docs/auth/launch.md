@@ -30,7 +30,7 @@ flowchart TD
     D -- offline, timeout, 5xx --> U
 ```
 
-1. **Read the tokens** from secure storage (`tasky.tokens`). None → status `signedOut` → Sign in.
+1. **Read the tokens** from secure storage (`azignia.tokens`). None → status `signedOut` → Sign in.
 2. **Get a valid access token.** A saved one that is still valid for over a minute is used as it is, with no network call. Otherwise the app refreshes first ([tokens.md](tokens.md)).
 3. **Load the account:** `GET /me`, into the query cache. The profile's language is applied, and the user id goes into the session store.
 4. **Show the app:** status `signedIn` → the tabs, which always open on the first tab, **Today**.
@@ -56,8 +56,6 @@ Every refresh gives a new refresh token and retires the old one. If an old one i
 Before M12 only the refresh token was saved, so every reload (including reloads while developing) had to refresh. A reload in the moment between the server issuing the new token and the app saving it left the app with the retired one, and the next launch ended the session. Saving the access token means a reload within its 15 minutes needs no refresh at all.
 
 The small remaining risk, during the rare refresh itself, is a [pending decision](../../../azignia-docs/design/pending-decisions.md#apps): letting the API accept the token it just replaced for a few seconds.
-
-Sessions saved before M12 (only `tasky.refreshToken`) are read once, refreshed and saved the new way.
 
 ## Code
 

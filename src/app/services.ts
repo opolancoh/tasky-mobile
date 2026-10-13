@@ -19,24 +19,18 @@ import { queryClient } from './queryClient';
 
 /** The app's single instances: HTTP client and token manager, wired to Expo's platform APIs. */
 
-const TOKENS_KEY = 'tasky.tokens';
-/** Before M12 only the refresh token was kept, under this key; read once so those sessions carry on. */
-const OLD_REFRESH_TOKEN_KEY = 'tasky.refreshToken';
+const TOKENS_KEY = 'azignia.tokens';
 
 const tokenStore: TokenStore = {
   async get() {
     const saved = await SecureStore.getItemAsync(TOKENS_KEY);
-    if (saved) return JSON.parse(saved) as TokenPair;
-    const refreshToken = await SecureStore.getItemAsync(OLD_REFRESH_TOKEN_KEY);
-    return refreshToken ? { accessToken: '', accessTokenExpiresAt: new Date(0).toISOString(), refreshToken, refreshTokenExpiresAt: '' } : null;
+    return saved ? (JSON.parse(saved) as TokenPair) : null;
   },
   async set(tokens) {
     await SecureStore.setItemAsync(TOKENS_KEY, JSON.stringify(tokens));
-    await SecureStore.deleteItemAsync(OLD_REFRESH_TOKEN_KEY);
   },
   async clear() {
     await SecureStore.deleteItemAsync(TOKENS_KEY);
-    await SecureStore.deleteItemAsync(OLD_REFRESH_TOKEN_KEY);
   },
 };
 

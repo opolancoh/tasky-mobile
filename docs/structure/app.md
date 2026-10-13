@@ -39,7 +39,7 @@ Created once at startup:
 | Instance | Wiring |
 |---|---|
 | `httpClient` | The API address, 15-second timeout, headers on every request (`X-Client: ios/1.0.0`, `X-Device-Name`, `Accept-Language`), UUIDs for `Idempotency-Key` |
-| `tokenStore` | Secure storage (`expo-secure-store`), key `tasky.tokens` |
+| `tokenStore` | Secure storage (`expo-secure-store`), key `azignia.tokens` |
 | `tokenManager` | The store, `POST /auth/refresh`, and what a refused session does: clear the query cache and set the status to `signedOut` |
 
 `configureHttp(httpClient)` hands the client to `src/data`; `httpClient.setAuth(tokenManager)` adds the token to signed-in requests.

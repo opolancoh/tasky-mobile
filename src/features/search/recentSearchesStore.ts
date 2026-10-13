@@ -28,6 +28,6 @@ export const useRecentSearches = create<RecentSearchesState>()(
       forget: (userId, query) => set({ byUser: { ...get().byUser, [userId]: (get().byUser[userId] ?? []).filter((x) => x !== query) } }),
       clear: (userId) => set({ byUser: { ...get().byUser, [userId]: [] } }),
     }),
-    { name: 'tasky.recentSearches', storage: createJSONStorage(() => AsyncStorage) },
+    { name: 'azignia.recentSearches', storage: createJSONStorage(() => AsyncStorage) },
   ),
 );

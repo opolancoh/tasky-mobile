@@ -23,6 +23,6 @@ export const useRecentTags = create<RecentTagsState>()(
         set({ byUser: { ...get().byUser, [userId]: [...names, ...kept].slice(0, RECENT_TAGS_MAX) } });
       },
     }),
-    { name: 'tasky.recentTags.v2', storage: createJSONStorage(() => AsyncStorage) },
+    { name: 'azignia.recentTags', storage: createJSONStorage(() => AsyncStorage) },
   ),
 );
