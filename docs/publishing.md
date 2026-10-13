@@ -106,7 +106,9 @@ EAS builds and signs iOS in the cloud; the first build creates the certificate a
 3. **Send it:** `npm run submit:ios`. The first time it creates an App Store Connect API key: yes. Apple processes
    the build in about 10–30 minutes and emails you.
 4. **Testers.** App Store Connect › the app › TestFlight:
-    - **Internal testing:** people in your App Store Connect team (up to 100); a group, no review.
+    - **Internal testing:** people in your App Store Connect team (up to 100); a group, no review. `eas submit`
+      creates one, **Team (Expo)**, with only you. Add testers with the group's +; a user is listed only if Users
+      and Access › the user › Apps includes this app (or All Apps).
     - **External testing:** anyone, by email or a public link; the first build of each version needs a short Beta App
       Review (about a day) and the Test Information filled in.
 5. Testers install **TestFlight**, accept the invitation and install the app. New builds show up there.
