@@ -105,7 +105,7 @@ it asks before building anything that isn't the tagged release. Then:
 - **Android:** Play Console › Azignia › Test and release › Testing › **Internal testing** › Create new release, upload
   the `.aab`, paste the version's `CHANGELOG.md` section as release notes, Review release, Roll out.
 
-**The build's API address** is `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), e.g.
+**The build's API address** ([where each API address is set](../README.md#the-api-address)) is `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), e.g.
 `http://192.168.1.50:5186/api/v1` (a Raspberry Pi at home) or `https://api.example.com/api/v1`. It's not a secret.
 Builds refuse to start without it. An `http://` address also allows plain HTTP in that build (`app.config.ts`); an
 `https://` one doesn't. The same address goes to iOS and Android.

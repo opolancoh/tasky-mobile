@@ -17,10 +17,9 @@ Needs Node LTS and `azignia-api` running on this Mac (port 5186).
 
 ```bash
 npm install
+cp .env.example .env.local   # once: the API address (see Configuration)
 npm run ios        # or: npm run android, npm start (then scan the QR code with Expo Go)
 ```
-
-The simulator, an emulator and a phone on the same Wi-Fi reach the API with no setup (see [Configuration](#configuration)).
 
 ## Check
 
@@ -33,13 +32,25 @@ npx expo install --check   # package versions match the Expo SDK
 
 ## Configuration
 
+### The API address
+
+`EXPO_PUBLIC_API_URL`, required. Set it in one of two places:
+
+| To change the API of | Edit | Then |
+|---|---|---|
+| **Development** (Expo Go: simulator, emulator, your phone) | `.env.local` (not in git; copy `.env.example`) | Restart `npx expo start` |
+| **Builds** (TestFlight and Play, iOS and Android alike) | `eas.json` › `build.production.env` (in git) | Commit, build and submit again ([Releases](docs/releases.md#building-for-testers)) |
+
+Examples: `http://localhost:5186/api/v1` (iOS simulator), `http://<this Mac's IP>:5186/api/v1` (a phone or the
+Android emulator; `azignia-api` listens on all interfaces, `http://*:5186`), `https://api.azignia.com/api/v1` (builds).
+`npx expo start` and a build stop when it's missing.
+
+### Other settings
+
 | Setting | Default | Change it |
 |---|---|---|
-| API address | None: required (`npx expo start` stops without it) | `EXPO_PUBLIC_API_URL` in `.env.local` (copy `.env.example`): `http://localhost:5186/api/v1` for the iOS simulator, this Mac's IP for a phone |
+| HTTP log in the Metro terminal | `all` | `EXPO_PUBLIC_HTTP_LOG` in `.env.local`: `all`, `errors`, `off` |
 | Palette | Azure | `src/shared/ui/palettes/active.json` |
-| API address of builds for testers | None: required | `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), see [Releases](docs/releases.md) |
-
-The API must listen on all interfaces for phones to reach it: `azignia-api`'s launch profile uses `http://*:5186`.
 
 ## Stack
 
