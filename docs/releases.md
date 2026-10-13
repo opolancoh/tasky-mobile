@@ -108,7 +108,10 @@ it asks before building anything that isn't the tagged release. Then:
 **The build's API address** is `EXPO_PUBLIC_API_URL` in `eas.json` (`build.production.env`), e.g.
 `http://192.168.1.50:5186/api/v1` (a Raspberry Pi at home) or `https://api.example.com/api/v1`. It's not a secret.
 Builds refuse to start without it. An `http://` address also allows plain HTTP in that build (`app.config.ts`); an
-`https://` one doesn't. Changing it needs a new build.
+`https://` one doesn't. The same address goes to iOS and Android.
+
+Changing it: edit `eas.json`, commit, build and submit both platforms; installed copies keep the old address until
+testers update. Moving the API to another server needs no build: point `api.azignia.com` (DNS or the tunnel) at it.
 
 Native folders: a build runs `expo prebuild`, which writes `ios/` and `android/` from `app.json` and `app.config.ts`.
 They're generated and kept out of git; native settings go in `app.json` / `app.config.ts`, never in those folders.
