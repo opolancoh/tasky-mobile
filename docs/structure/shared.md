@@ -26,7 +26,7 @@ src/shared/
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx   TaskOrigin.tsx
-│   ├── UpdateRow.tsx   Faces.tsx (Avatar)   MeButton.tsx
+│   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
@@ -76,7 +76,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | Piece | Purpose |
 |---|---|
 | `TaskListIcon` | The Inbox tray or the list's color dot |
-| `UpdateRow` | A notification: unread dot, icon, one line and when; opening marks it read and opens its task (Today's Updates, Activity) |
+| `UpdateRow` | A notification: unread dot, icon, one line and when (Today's Updates, Activity). Needs you (Respond, Confirm), something to see, or nowhere to go, from `useActivityState` (M58) |
 | `Avatar` | Initials in a circle, colors by a hash of the user id (pickers, Me, a task row's assignee) |
 | `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); for a private or shared list's owner, Only this task by email (D70, M45) |
 | `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |

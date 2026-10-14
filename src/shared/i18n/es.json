@@ -584,7 +584,9 @@
     "earlier": "Anteriores",
     "markAllRead": "Marcar todo como leído",
     "empty": "Nada todavía",
-    "emptyBody": "Cuando compartan listas y equipos contigo, lo que hagan por ti aparece aquí."
+    "emptyBody": "Cuando compartan listas y equipos contigo, lo que hagan por ti aparece aquí.",
+    "respond": "Responder",
+    "confirm": "Confirmar"
   },
   "me": {
     "open": "Yo: perfil y ajustes",

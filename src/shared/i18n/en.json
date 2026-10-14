@@ -584,7 +584,9 @@
     "earlier": "Earlier",
     "markAllRead": "Mark all read",
     "empty": "Nothing yet",
-    "emptyBody": "When people share lists and teams with you, what they do for you shows here."
+    "emptyBody": "When people share lists and teams with you, what they do for you shows here.",
+    "respond": "Respond",
+    "confirm": "Confirm"
   },
   "me": {
     "open": "Me: profile and settings",
