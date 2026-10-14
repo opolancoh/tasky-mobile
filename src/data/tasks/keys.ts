@@ -6,11 +6,11 @@ import type { Id } from '@/core/types';
  */
 export const taskKeys = {
   all: ['tasks'] as const,
-  lists: ['tasks', 'lists'] as const,
+  taskLists: ['tasks', 'taskLists'] as const,
   tags: ['tasks', 'tags'] as const,
-  archived: ['tasks', 'lists', 'archived'] as const,
+  archived: ['tasks', 'taskLists', 'archived'] as const,
   teams: ['tasks', 'teams'] as const,
-  /** A team's or a list's people and open invitations. */
+  /** A team's or a task list's people and open invitations. */
   members: (kind: string, id: Id) => ['tasks', 'members', kind, id] as const,
   openInvitations: (kind: string, id: Id) => ['tasks', 'members', kind, id, 'invitations'] as const,
   /** Search results for a query: views too, so completing a task refetches them. */

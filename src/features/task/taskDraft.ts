@@ -22,7 +22,7 @@ export interface TaskDraft {
   dueDate: LocalDate | null;
   repeat: Repeat | null;
   /** Null for someone who sees the task only as its assignee (D70): they can't move it. */
-  list: TaskListRef | null;
+  taskList: TaskListRef | null;
   /** Who has it (M43); saved with :assign / :unassign after the PATCH, not in it. An email invited (D70) is `emailAssignee`. */
   assignee: UserRef | null;
   reminder: ReminderAt | null;
@@ -37,7 +37,7 @@ export function toDraft(task: Task): TaskDraft {
     isImportant: task.isImportant,
     dueDate: task.dueDate ?? null,
     repeat: task.repeat ? { ...task.repeat, nextDueDate: undefined } : null,   // the server's preview, not something to edit
-    list: task.collection,
+    taskList: task.taskList,
     assignee: task.assignee ? { id: task.assignee.id, displayName: task.assignee.displayName } : task.invitedEmail ? emailAssignee(task.invitedEmail) : null,
     reminder: reminderOf(task),
     tags: task.tags.map((g) => ({ name: g.name.toLowerCase(), color: g.color })),
@@ -65,7 +65,7 @@ export function patchOf(base: TaskDraft, draft: TaskDraft): UpdateTaskRequest {
     const r = draft.repeat;
     body.repeat = r && { pattern: r.pattern, interval: r.interval, mode: r.mode, ...(r.daysOfWeek?.length ? { daysOfWeek: r.daysOfWeek } : {}), ...(r.dayOfMonth ? { dayOfMonth: r.dayOfMonth } : {}) };
   }
-  if (keys.has('list') && draft.list) body.collectionId = draft.list.id;
+  if (keys.has('taskList') && draft.taskList) body.taskListId = draft.taskList.id;
   if (keys.has('reminder') || (!base.dueDate && draft.dueDate && !draft.reminder)) body.reminder = draft.reminder;
   if (keys.has('tags')) body.tags = draft.tags.map((g) => g.name);
   if (keys.has('steps')) body.steps = draft.steps.map((s) => ({ ...(s.id ? { id: s.id } : {}), title: s.title.trim(), isDone: s.isDone }));

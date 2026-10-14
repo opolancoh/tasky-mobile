@@ -2,40 +2,40 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  TaskList, CreateListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
-  UpdateListRequest, UpdateTaskRequest,
+  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
+  UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 type Versioned = { id: Id; version: number };
 
-/** A team's or a list's address in the API (lists are lists there). */
-const peopleOf = (of: MembersOf) => `/${of.kind === 'team' ? 'teams' : 'collections'}/${of.id}`;
+/** A team's or a task list's address: /teams/{id} or /task-lists/{id}. */
+const peopleOf = (of: MembersOf) => `/${of.kind === 'team' ? 'teams' : 'task-lists'}/${of.id}`;
 
 export const tasksApi = {
-  /** GET /collections: every list the caller can see, Inbox first, with open counts. */
-  lists: () => getAll<TaskList>('/collections'),
+  /** GET /task-lists: every task list the caller can see, Inbox first, with open counts. */
+  taskLists: () => getAll<TaskList>('/task-lists'),
 
-  /** GET /collections?archived=true: archived ones the caller can see. */
-  archivedLists: () => getAll<TaskList>('/collections', { archived: true }),
+  /** GET /task-lists?archived=true: archived ones the caller can see. */
+  archivedTaskLists: () => getAll<TaskList>('/task-lists', { archived: true }),
 
-  /** POST /collections (201). */
-  createList: (body: CreateListRequest) => http().post<TaskList>('/collections', { body }),
+  /** POST /task-lists (201). */
+  createTaskList: (body: CreateTaskListRequest) => http().post<TaskList>('/task-lists', { body }),
 
-  /** PATCH /collections/{id} with If-Match: name, color, sort (any member). */
-  updateList: (c: Versioned, body: UpdateListRequest) => http().patch<TaskList>(`/collections/${c.id}`, { body, ifMatch: c.version }),
+  /** PATCH /task-lists/{id} with If-Match: name, color, sort (any member). */
+  updateTaskList: (c: Versioned, body: UpdateTaskListRequest) => http().patch<TaskList>(`/task-lists/${c.id}`, { body, ifMatch: c.version }),
 
-  /** POST /collections/{id}:archive or :unarchive with If-Match (managers). */
-  archiveList: (c: Versioned, archive: boolean) => http().post<TaskList>(`/collections/${c.id}:${archive ? 'archive' : 'unarchive'}`, { ifMatch: c.version }),
+  /** POST /task-lists/{id}:archive or :unarchive with If-Match (managers). */
+  archiveTaskList: (c: Versioned, archive: boolean) => http().post<TaskList>(`/task-lists/${c.id}:${archive ? 'archive' : 'unarchive'}`, { ifMatch: c.version }),
 
-  /** DELETE /collections/{id} with If-Match: with its tasks, to Recently Deleted (managers). */
-  deleteList: (c: Versioned) => http().delete(`/collections/${c.id}`, { ifMatch: c.version }),
+  /** DELETE /task-lists/{id} with If-Match: with its tasks, to Recently Deleted (managers). */
+  deleteTaskList: (c: Versioned) => http().delete(`/task-lists/${c.id}`, { ifMatch: c.version }),
 
-  /** POST /collections/{id}:restore with the deleted list's version. */
-  restoreList: (item: Versioned) => http().post(`/collections/${item.id}:restore`, { ifMatch: item.version }),
+  /** POST /task-lists/{id}:restore with the deleted task list's version. */
+  restoreTaskList: (item: Versioned) => http().post(`/task-lists/${item.id}:restore`, { ifMatch: item.version }),
 
-  /** POST /collections:reorder: the caller's own Browse order (204). */
-  reorderLists: (ids: Id[]) => http().post('/collections:reorder', { body: { ids } }),
+  /** POST /task-lists:reorder: the caller's own Browse order (204). */
+  reorderTaskLists: (ids: Id[]) => http().post('/task-lists:reorder', { body: { ids } }),
 
   /** GET /teams: the caller's teams, with their role. */
   teams: () => getAll<Team>('/teams'),
@@ -46,13 +46,13 @@ export const tasksApi = {
   /** PATCH /teams/{id} with If-Match: rename (owner). */
   renameTeam: (team: Versioned, name: string) => http().patch<Team>(`/teams/${team.id}`, { body: { name }, ifMatch: team.version }),
 
-  /** DELETE /teams/{id} with If-Match: with its lists (owner). */
+  /** DELETE /teams/{id} with If-Match: with its task lists (owner). */
   deleteTeam: (team: Versioned) => http().delete(`/teams/${team.id}`, { ifMatch: team.version }),
 
   /** POST /teams/{id}:restore with the deleted team's version. */
   restoreTeam: (item: Versioned) => http().post(`/teams/${item.id}:restore`, { ifMatch: item.version }),
 
-  /** GET /teams/{id}/members or /collections/{id}/members. */
+  /** GET /teams/{id}/members or /task lists/{id}/members. */
   members: (of: MembersOf) => getAll<Member>(`${peopleOf(of)}/members`),
 
   /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
@@ -88,7 +88,7 @@ export const tasksApi = {
   /** POST /tags:reorder: the caller's own order (204). */
   reorderTags: (names: string[]) => http().post('/tags:reorder', { body: { names } }),
 
-  /** POST /tasks: a new task at the bottom of `collectionId`, or of the caller's Inbox (201). */
+  /** POST /tasks: a new task at the bottom of `taskListId`, or of the caller's Inbox (201). */
   createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body }),
 
   /** GET /tasks/{id}: the full task (D55). */
@@ -109,8 +109,8 @@ export const tasksApi = {
   /** POST /tasks/{id}:skip: a repeating task moves to its next date without a completion. */
   skip: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:skip`, { ifMatch: task.version }),
 
-  /** POST /tasks/{id}:move to the bottom of another list the caller can see. */
-  move: (task: Versioned, collectionId: Id) => http().post<Task>(`/tasks/${task.id}:move`, { body: { collectionId }, ifMatch: task.version }),
+  /** POST /tasks/{id}:move to the bottom of another task list the caller can see. */
+  move: (task: Versioned, taskListId: Id) => http().post<Task>(`/tasks/${task.id}:move`, { body: { taskListId }, ifMatch: task.version }),
 
   /** DELETE /tasks/{id}: to Recently Deleted for 30 days (204). */
   remove: (task: Versioned) => http().delete(`/tasks/${task.id}`, { ifMatch: task.version }),

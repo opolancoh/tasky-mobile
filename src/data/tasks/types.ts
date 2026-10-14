@@ -7,7 +7,7 @@ export type Sharing = 'private' | 'shared' | 'team';
 /** The caller's rights: `admin` manages it through its team. */
 export type TaskListRole = 'owner' | 'admin' | 'member';
 
-/** A list: an item of GET /collections (the API calls lists collections; its JSON keeps that name: `collectionId`, `collection`). Every list the caller can see, Inbox first, then their own order (D57, D61). */
+/** An item of GET /task-lists: every task list the caller can see, Inbox first, then their own order (D57, D61). */
 export interface TaskList {
   id: Id;
   name: string;
@@ -46,8 +46,8 @@ export interface TagChange {
 
 /** POST /tasks. The title is plain text: `#name` in it is not a tag (D60, M31). */
 export interface CreateTaskRequest {
-  /** The list; omitted: the caller's Inbox, created on first need (D59). */
-  collectionId?: Id;
+  /** The task list; omitted: the caller's Inbox, created on first need (D59). */
+  taskListId?: Id;
   title: string;
   notes?: string;
   dueDate?: LocalDate;
@@ -73,7 +73,7 @@ export interface TeamRef {
   name: string;
 }
 
-/** A task's list; `team` is set for a team's list ("Q3 launch · Design"). */
+/** A task's task list; `team` is set for a team's task list ("Q3 launch · Design"). */
 export interface TaskListRef {
   id: Id;
   name: string;
@@ -120,12 +120,12 @@ export type TaskStatus = 'open' | 'completed';
 export type AssignmentStatus = 'pending' | 'accepted' | 'declined';
 
 /**
- * GET /tasks/{id} (TaskResponse); times are UTC ISO-8601. Missing keys are null (the API omits nulls). `collection` is null
+ * GET /tasks/{id} (TaskResponse); times are UTC ISO-8601. Missing keys are null (the API omits nulls). `taskList` is null
  * for someone who sees the task only as its assignee: `assignedBy` says who it's from (D70).
  */
 export interface Task {
   id: Id;
-  collection: TaskListRef | null;
+  taskList: TaskListRef | null;
   title: string;
   notes?: string | null;
   isImportant: boolean;
@@ -154,10 +154,10 @@ export interface Task {
   version: Version;
 }
 
-/** A task in a list (TaskSummaryResponse): enough for one row. `collection`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
+/** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
 export interface TaskSummary {
   id: Id;
-  collection: TaskListRef | null;
+  taskList: TaskListRef | null;
   title: string;
   hasNotes: boolean;
   isImportant: boolean;
@@ -188,11 +188,11 @@ export interface TaskPage {
 export type DueFilter = 'overdue' | 'today' | 'upcoming' | 'none';
 
 /**
- * GET /tasks (D51, D61): everything the caller can see unless narrowed by `collectionId` or `teamId`; `mine` keeps the
- * caller's own tasks (Inbox, private lists, assigned to them). Filters combine with AND.
+ * GET /tasks (D51, D61): everything the caller can see unless narrowed by `taskListId` or `teamId`; `mine` keeps the
+ * caller's own tasks (Inbox, private task lists, assigned to them). Filters combine with AND.
  */
 export interface TaskFilter {
-  collectionId?: Id;
+  taskListId?: Id;
   teamId?: Id;
   mine?: boolean;
   status?: TaskStatus;
@@ -205,8 +205,8 @@ export interface TaskFilter {
   /** 'me', 'none' or a user id. */
   assignee?: string;
   assignment?: AssignmentStatus;
-  /** `collection` (default with collectionId): open tasks in its own order, whole; completed newest first, paged. */
-  sort?: 'due' | 'created' | 'collection';
+  /** `taskList` (default with taskListId): open tasks in its own order, whole; completed newest first, paged. */
+  sort?: 'due' | 'created' | 'taskList';
   limit?: number;
 }
 
@@ -226,8 +226,8 @@ export interface UpdateTaskRequest {
   dueDate?: LocalDate | null;
   isImportant?: boolean;
   repeat?: RepeatRequest | null;
-  /** Another list the caller can see. */
-  collectionId?: Id;
+  /** Another task list the caller can see. */
+  taskListId?: Id;
   /** The caller's reminder ("HH:mm"); null removes it. With a first due date it replaces the automatic 9:00 one. */
   reminder?: { date: LocalDate; time: string } | null;
   /** Tag names, exactly these; new names are created. */
@@ -238,26 +238,26 @@ export interface UpdateTaskRequest {
 
 /** An item of GET /recently-deleted (D54): restore it with its version as If-Match. Times are UTC ISO-8601. */
 export interface DeletedItem {
-  kind: 'task' | 'collection' | 'team';
+  kind: 'task' | 'taskList' | 'team';
   id: Id;
   name: string;
   deletedAt: string;
   restorableUntil: string;
   canRestore: boolean;
   version: Version;
-  collectionId?: Id | null;
-  /** The tasks a list takes with it. */
+  taskListId?: Id | null;
+  /** The tasks a task list takes with it. */
   taskCount?: number | null;
 }
 
 /**
- * An invitation waiting for the caller (GET /invitations, D67): a team's (`teamId`) or a list's (`collectionId`),
- * who invited them, the people in it, and its open tasks (a list) or lists (a team).
+ * An invitation waiting for the caller (GET /invitations, D67): a team's (`teamId`) or a task list's (`taskListId`),
+ * who invited them, the people in it, and its open tasks (a task list) or lists (a team).
  */
 export interface MyInvitation {
   id: Id;
   teamId?: Id | null;
-  collectionId?: Id | null;
+  taskListId?: Id | null;
   name: string;
   invitedBy?: UserRef | null;
   people: number;
@@ -298,8 +298,8 @@ export interface Team {
 }
 
 /**
- * Someone who sees a team or a list (GET …/members). `role`: owner, admin or member. `isGuest`: in a team's
- * list without being in the team; `isOutsider`: from another account.
+ * Someone who sees a team or a task list (GET …/members). `role`: owner, admin or member. `isGuest`: in a team's
+ * task list without being in the team; `isOutsider`: from another account.
  */
 export interface Member {
   userId: Id;
@@ -315,24 +315,24 @@ export interface Member {
 export interface OpenInvitation {
   id: Id;
   teamId?: Id | null;
-  collectionId?: Id | null;
+  taskListId?: Id | null;
   email: string;
   expiresAt: string;
   invitedBy?: Id | null;
 }
 
-/** Whose people: a team's or a list's (a list in the API). */
-export type MembersOf = { kind: 'team' | 'list'; id: Id };
+/** Whose people: a team's or a task list's. */
+export type MembersOf = { kind: 'team' | 'taskList'; id: Id };
 
-/** POST /collections: private, or in a team the caller is in. */
-export interface CreateListRequest {
+/** POST /task-lists: private, or in a team the caller is in. */
+export interface CreateTaskListRequest {
   name: string;
   color: string;
   teamId?: Id;
 }
 
-/** PATCH /collections/{id}: only what is sent changes. */
-export interface UpdateListRequest {
+/** PATCH /task-lists/{id}: only what is sent changes. */
+export interface UpdateTaskListRequest {
   name?: string;
   color?: string;
   sortMode?: SortMode;
@@ -342,7 +342,7 @@ export interface UpdateListRequest {
 /** One of the caller's upcoming reminders (GET /me/reminders, D11): what the device schedules. Time "HH:mm:ss". */
 export interface MyReminder {
   taskId: Id;
-  collectionId: Id;
+  taskListId: Id;
   title: string;
   dueDate?: LocalDate | null;
   date: LocalDate;
@@ -350,7 +350,7 @@ export interface MyReminder {
 }
 
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, listNameMax: 100 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, taskListNameMax: 100 } as const;
 
 
 /**

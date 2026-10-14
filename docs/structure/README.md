@@ -45,7 +45,7 @@ azignia-mobile/
 
 ## Layers
 
-Data is grouped **by API module**; screens **by product area** ([M1](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). The API's Tasks module owns views, collections, tags, steps and search, so a `tasks` folder holding its screens would hold most of the app.
+Data is grouped **by API module**; screens **by product area** ([M1](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). The API's Tasks module owns views, task lists, tags, steps and search, so a `tasks` folder holding its screens would hold most of the app.
 
 ```mermaid
 flowchart TD

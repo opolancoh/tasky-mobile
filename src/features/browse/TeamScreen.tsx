@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
-import { useLists, useMembers, useTeams } from '@/data/tasks/queries';
+import { useTaskLists, useMembers, useTeams } from '@/data/tasks/queries';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -30,7 +30,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   const me = useMe().data;
   const teams = useTeams();
   const team = teams.data?.find((x) => x.id === teamId);
-  const lists = (useLists().data ?? []).filter((c) => c.team?.id === teamId);
+  const lists = (useTaskLists().data ?? []).filter((c) => c.team?.id === teamId);
   const members = useMembers({ kind: 'team', id: teamId });
   const showSheet = useShowBrowseSheet();
   const { teamMenu, listMenu } = useBrowseMenus();
@@ -76,7 +76,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
       </View>
       {lists.length ? lists.map((c) => (
         <BrowseRow key={c.id} label={c.name} icon={<ColorDot color={c.color} size={10} />} tint={faint(c.color, scheme)} count={c.openTasks ?? 0}
-          onPress={() => navigation.navigate('List', { listId: c.id })} onLongPress={() => listMenu(c)} />
+          onPress={() => navigation.navigate('TaskList', { taskListId: c.id })} onLongPress={() => listMenu(c)} />
       )) : <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{t('browse.teamNoLists')}</Text>}
 
       <Text variant="label" color="ink2" accessibilityRole="header" style={{ marginTop: space.xl, marginBottom: space.xs }}>{t('browse.peopleTitle')}</Text>

@@ -21,13 +21,13 @@ export type NotificationKind =
 
 /**
  * One notification (GET /notifications). Names are read when listed, so a renamed task shows its current title;
- * `subject` is the team's or list's name as it was. `details`: a reject reason, a new due date or a role.
+ * `subject` is the team's or task list's name as it was. `details`: a reject reason, a new due date or a role.
  */
 export interface Notification {
   id: Id;
   kind: NotificationKind;
   teamId?: Id | null;
-  collectionId?: Id | null;
+  taskListId?: Id | null;
   subject?: string | null;
   taskId?: Id | null;
   taskTitle?: string | null;

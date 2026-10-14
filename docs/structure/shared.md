@@ -24,7 +24,7 @@ src/shared/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── ListIcon.tsx   ListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx   TaskOrigin.tsx
+│   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   Faces.tsx (Avatar)   MeButton.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
@@ -72,14 +72,14 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 
 | Piece | Purpose |
 |---|---|
-| `ListIcon` | The Inbox tray or the list's color dot |
+| `TaskListIcon` | The Inbox tray or the list's color dot |
 | `UpdateRow` | A notification: unread dot, icon, one line and when; opening marks it read and opens its task (Today's Updates, Activity) |
 | `Avatar` | Initials in a circle, colors by a hash of the user id (pickers, Me, a task row's assignee) |
-| `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /collections/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); for a private or shared list's owner, Only this task by email (D70, M45) |
+| `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); for a private or shared list's owner, Only this task by email (D70, M45) |
 | `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |
-| `ListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
+| `TaskListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |

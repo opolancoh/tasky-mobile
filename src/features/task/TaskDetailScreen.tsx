@@ -15,7 +15,7 @@ import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange
 import { useTask } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, ListIcon, TagsRow } from '@/shared/components';
+import { Avatar, TaskListIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
@@ -28,7 +28,7 @@ import { useRepeatText } from './useRepeatText';
 
 /**
  * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
- * title in place, the Important flag (a red edge when on, M24), the rows for TaskList, Assigned to (every task, M43, M44),
+ * title in place, the Important flag (a red edge when on, M24), the rows for Task list, Assigned to (every task, M43, M44),
  * Due date, Reminder, Repeat and Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
  * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
@@ -60,7 +60,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const leaving = useRef(false);   // set when the screen closes on purpose (after Delete): no discard prompt
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
-    useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, list: s.draft.list, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
+    useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, taskList: s.draft.taskList, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
   );
 
   // The task as read becomes the draft (unsaved edits of this task are kept); leaving drops it.
@@ -117,7 +117,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const locale = i18n.language;
   const status = assigneeStatus(task, fields.assignee, me.id);
   // Seen only as its assignee (D70): the list's people define it; this person works on it.
-  const outside = !task.collection;
+  const outside = !task.taskList;
   const fixed = outside ? ({ pointerEvents: 'none', accessibilityState: { disabled: true } } as const) : {};
   const completed = task.status === 'completed';
   const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
@@ -270,12 +270,12 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           </View>
         )}
         <View {...locked}>
-        {fields.list ? (
+        {fields.taskList ? (
           <ListRow
-            label={t('taskDetail.fields.list')}
-            icon={<ListIcon list={fields.list} />}
-            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.list.name}</Text>}
-            onPress={() => open('list')}
+            label={t('taskDetail.fields.taskList')}
+            icon={<TaskListIcon taskList={fields.taskList} />}
+            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.taskList.name}</Text>}
+            onPress={() => open('taskList')}
           />
         ) : (
           <ListRow label={t('taskDetail.from')} icon={<Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={22} />} value={assigner} />

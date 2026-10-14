@@ -13,7 +13,7 @@ import { Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/
 
 type Item = { type: 'header'; key: string } | { type: 'item'; key: string; item: DeletedItem } | { type: 'footer'; key: string };
 
-const ICON = { task: 'circle', collection: 'list', team: 'users' } as const;
+const ICON = { task: 'circle', taskList: 'list', team: 'users' } as const;
 
 /**
  * Recently Deleted (M38, D54): tasks, lists and teams the user could see, deleted in the last 30 days, newest first.
@@ -41,7 +41,7 @@ export function RecentlyDeletedScreen() {
         );
       case 'item': {
         const x = item.item;
-        const what = x.kind === 'collection' ? t('browse.deletedList', { count: x.taskCount ?? 0 }) : t(`browse.deletedKind.${x.kind}`);
+        const what = x.kind === 'taskList' ? t('browse.deletedList', { count: x.taskCount ?? 0 }) : t(`browse.deletedKind.${x.kind}`);
         return (
           <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
             <Feather name={ICON[x.kind]} size={18} color={colors.ink3} />

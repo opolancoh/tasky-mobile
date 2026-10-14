@@ -11,13 +11,13 @@ export interface BrowseGroups {
 }
 
 /**
- * Splits GET /collections (Inbox first, then the user's order) into Browse's groups. A list in a team the user is in
+ * Splits GET /task-lists (Inbox first, then the user's order) into Browse's groups. A list in a team the user is in
  * goes with the team; a guest's list (in a team they're not in) is "shared with me".
  */
-export function groupLists(lists: TaskList[], teams: Team[], meId: Id | undefined): BrowseGroups {
+export function groupTaskLists(taskLists: TaskList[], teams: Team[], meId: Id | undefined): BrowseGroups {
   const teamIds = new Set(teams.map((t) => t.id));
   const groups: BrowseGroups = { inbox: undefined, mine: [], shared: [], byTeam: new Map() };
-  for (const c of lists) {
+  for (const c of taskLists) {
     if (c.isInbox) groups.inbox = c;
     else if (c.team && teamIds.has(c.team.id)) groups.byTeam.set(c.team.id, [...(groups.byTeam.get(c.team.id) ?? []), c]);
     else if (c.owner.id === meId) groups.mine.push(c);
@@ -29,7 +29,7 @@ export function groupLists(lists: TaskList[], teams: Team[], meId: Id | undefine
 /** A team's open tasks: the sum of its lists' counts. */
 export const openInTeam = (groups: BrowseGroups, teamId: Id) => (groups.byTeam.get(teamId) ?? []).reduce((n, c) => n + (c.openTasks ?? 0), 0);
 
-/** Every list id with `id` moved one place up (-1) or down (1) among `group`, for POST /collections:reorder. */
+/** Every task list id with `id` moved one place up (-1) or down (1) among `group`, for POST /task-lists:reorder. */
 export function moveInOrder(all: Id[], group: Id[], id: Id, by: -1 | 1): Id[] {
   const neighbour = group[group.indexOf(id) + by];
   if (!neighbour) return all;

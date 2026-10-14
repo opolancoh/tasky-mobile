@@ -27,7 +27,7 @@ src/data/
 
 | File | Holds | Example |
 |---|---|---|
-| `types.ts` | Request and response types, in the API's shapes; JSON fields keep the API's names (`collectionId`, `collection`), types use the app's (`TaskList`: the API calls lists collections) | `Me`, `TaskList`, `TokenResponse` |
+| `types.ts` | Request and response types, in the API's shapes; JSON fields keep the API's names (`taskListId`, `taskList`), types use the app's (`TaskList`: the API calls lists task lists) | `Me`, `TaskList`, `TokenResponse` |
 | `api.ts` | One function per endpoint; calls `http()`, no caching | `identityApi.login(body)` |
 | `keys.ts` | Query key factories | `tenancyKeys.me` |
 | `queries.ts` | Query definitions and hooks | `meQuery`, `useMe()` |

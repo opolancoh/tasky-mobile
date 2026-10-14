@@ -21,7 +21,7 @@ export const givesOutside = (list: Pick<TaskList, 'owner' | 'team' | 'isInbox'> 
 
 export interface AssigneePickerProps {
   /** The list the task is in: its people are who can be picked. */
-  listId: Id;
+  taskListId: Id;
   /** The list's owner, outside a team (`givesOutside`): anyone can also be picked by email (D70). */
   canGiveOutside?: boolean;
   /** The signed-in user, listed first as "Me". */
@@ -38,10 +38,10 @@ export interface AssigneePickerProps {
  * the end. The list's owner also gets **Only this task**: someone picked by email sees that task only, not the list
  * (D70, M45). A tap picks and goes back.
  */
-export function AssigneePicker({ listId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
+export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const members = useMembers({ kind: 'list', id: listId });
+  const members = useMembers({ kind: 'taskList', id: taskListId });
   if (members.isPending) return <ScrollView>{[60, 45, 70].map((w) => <SkeletonRow key={w} width={w} />)}</ScrollView>;
   if (members.error) return <Notice>{errorMessage(members.error)}</Notice>;
   const people = [...(members.data ?? [])].sort((a, b) => Number(b.userId === meId) - Number(a.userId === meId));

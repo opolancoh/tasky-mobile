@@ -343,7 +343,7 @@
     "close": "Close",
     "fields": {
       "title": "Title",
-      "list": "List",
+      "taskList": "List",
       "important": "Important",
       "reminder": "Reminder",
       "dueDate": "Due date",
@@ -427,7 +427,7 @@
   },
   "taskDetail": {
     "fields": {
-      "list": "List",
+      "taskList": "List",
       "due": "Due date",
       "reminder": "Reminder",
       "repeat": "Repeat",
@@ -498,7 +498,7 @@
     "fromCompletion": "{{rule}}, after completing it",
     "hint": "Repeats from the due date. With no due date, it starts today."
   },
-  "lists": {
+  "taskLists": {
     "inbox": "Inbox"
   },
   "todayList": {

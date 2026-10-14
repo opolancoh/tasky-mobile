@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type TaskField = 'list' | 'assignee' | 'due' | 'reminder' | 'repeat' | 'tags';
+export type TaskField = 'taskList' | 'assignee' | 'due' | 'reminder' | 'repeat' | 'tags';
 
 /**
  * Which field's sheet is open over Task detail (it edits the draft in `taskDraftStore`). The sheet is mounted once, in App (sheets are overlays at the

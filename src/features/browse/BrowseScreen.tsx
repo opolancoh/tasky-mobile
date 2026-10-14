@@ -6,15 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { byName } from '@/core/text/collate';
-import { useReorderLists, useReorderTags } from '@/data/tasks/mutations';
-import { useArchivedLists, useLists, useTags, useTasks, useTeams } from '@/data/tasks/queries';
+import { useReorderTaskLists, useReorderTags } from '@/data/tasks/mutations';
+import { useArchivedTaskLists, useTaskLists, useTags, useTasks, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, faint, Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
-import { groupLists, moveInOrder, openInTeam } from './browseSections';
+import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
 import { useShowBrowseSheet } from './browseSheetStore';
 import { BrowseRow, OwnerMark, SharedMark } from './components/BrowseRow';
 
@@ -22,7 +22,7 @@ type Group = 'mine' | 'shared' | 'tags';
 type Item =
   | { type: 'header'; key: string }
   | { type: 'section'; key: string; title: string; add?: { label: string; onPress(): void } }
-  | { type: 'list'; key: string; list: TaskList; group?: Group; index: number; size: number; flat?: boolean }
+  | { type: 'list'; key: string; taskList: TaskList; group?: Group; index: number; size: number; flat?: boolean }
   | { type: 'team'; key: string; team: Team; count: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'success' | 'quiet'; count?: number; onPress(): void }
@@ -44,12 +44,12 @@ export function BrowseScreen() {
   const { colors, space, scheme } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
-  const listsQuery = useLists();
+  const taskLists = useTaskLists();
   const teams = useTeams();
   const tags = useTags();
-  const archived = useArchivedLists();
+  const archived = useArchivedTaskLists();
   const assigned = useTasks({ assignee: 'me', limit: 1 });
-  const reorderLists = useReorderLists();
+  const reorderLists = useReorderTaskLists();
   const reorderTags = useReorderTags();
   const showSheet = useShowBrowseSheet();
   const { listMenu, teamMenu, tagMenu } = useBrowseMenus();
@@ -57,14 +57,14 @@ export function BrowseScreen() {
   const [filter, setFilter] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const all = listsQuery.data ?? [];
+  const all = taskLists.data ?? [];
   const teamList = [...(teams.data ?? [])].sort(byName);
   const tagList = tags.data ?? [];
-  const groups = groupLists(all, teamList, me?.id);
+  const groups = groupTaskLists(all, teamList, me?.id);
   const many = all.length + teamList.length + tagList.length > FILTER_FROM;
   const query = filter.trim().toLowerCase().replace(/^#/, '');
 
-  const open = (c: TaskList) => navigation.navigate('List', { listId: c.id });
+  const open = (c: TaskList) => navigation.navigate('TaskList', { taskListId: c.id });
   const move = (group: Group, id: string, by: -1 | 1) => {
     if (group === 'tags') {
       const names = tagList.map((x) => x.name);
@@ -76,8 +76,8 @@ export function BrowseScreen() {
   };
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
-  const loading = listsQuery.isPending || teams.isPending;
-  const addLists = (group: Group, ls: TaskList[]) => ls.forEach((list, index) => items.push({ type: 'list', key: `l-${list.id}`, list, group, index, size: ls.length }));
+  const loading = taskLists.isPending || teams.isPending;
+  const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
   if (loading) [70, 55, 62, 48].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
   else if (query) {
@@ -85,14 +85,14 @@ export function BrowseScreen() {
     const ls = all.filter((c) => !c.isInbox && c.name.toLowerCase().includes(query));
     const ts = teamList.filter((x) => x.name.toLowerCase().includes(query));
     const gs = tagList.filter((x) => x.name.includes(query));
-    if (ls.length) items.push({ type: 'section', key: 's-fl', title: t('browse.lists') }, ...ls.map((list, index) => ({ type: 'list' as const, key: `l-${list.id}`, list, index, size: ls.length, flat: true })));
+    if (ls.length) items.push({ type: 'section', key: 's-fl', title: t('browse.lists') }, ...ls.map((taskList, index) => ({ type: 'list' as const, key: `l-${taskList.id}`, taskList, index, size: ls.length, flat: true })));
     if (ts.length) items.push({ type: 'section', key: 's-ft', title: t('browse.teams') }, ...ts.map((team) => ({ type: 'team' as const, key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })));
     if (gs.length) items.push({ type: 'section', key: 's-fg', title: t('browse.tags') }, ...gs.map((tag, index) => ({ type: 'tag' as const, key: `g-${tag.name}`, tag, index, size: gs.length })));
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
     // Inbox, then Assigned to me: the two lists that are only the user's.
     const assignedCount = assigned.data?.total ?? 0;
-    if (!editing && groups.inbox) items.push({ type: 'list', key: 'inbox', list: groups.inbox, index: 0, size: 1 });
+    if (!editing && groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
     if (!editing && assignedCount) items.push({ type: 'nav', key: 'assigned', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: assignedCount, onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) });
 
     // Someone invited without an Inbox yet (D59): Start your own lists, which opens New list.
@@ -102,12 +102,12 @@ export function BrowseScreen() {
       // Empty: the section's action is a row (New list), not the header's +.
       const newList = () => showSheet({ kind: 'list' });
       items.push({ type: 'section', key: 's-mine', title: t('browse.myLists'), add: editing || !groups.mine.length ? undefined : { label: t('browse.newList'), onPress: newList } });
-      if (groups.mine.length) addLists('mine', groups.mine);
+      if (groups.mine.length) lists('mine', groups.mine);
       else if (!editing) items.push({ type: 'action', key: 'a-list', label: t('browse.newList'), body: t('browse.newListBody'), icon: 'plus', onPress: newList });
     }
     if (groups.shared.length) {
       items.push({ type: 'section', key: 's-shared', title: t('browse.sharedWithMe') });
-      addLists('shared', groups.shared);
+      lists('shared', groups.shared);
     }
     if (!editing) {
       const newTeam = () => showSheet({ kind: 'team' });
@@ -132,7 +132,7 @@ export function BrowseScreen() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([listsQuery.refetch(), teams.refetch(), tags.refetch(), archived.refetch(), assigned.refetch()]);
+    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), archived.refetch(), assigned.refetch()]);
     setRefreshing(false);
   };
 
@@ -158,9 +158,9 @@ export function BrowseScreen() {
                 <SearchField value={filter} onChangeText={setFilter} placeholder={t('browse.filter')} clearLabel={t('browse.clearFilter')} />
               </View>
             )}
-            {(listsQuery.error || teams.error) && (
+            {(taskLists.error || teams.error) && (
               <View style={{ marginTop: space.md }}>
-                <Notice>{errorMessage(listsQuery.error ?? teams.error)}</Notice>
+                <Notice>{errorMessage(taskLists.error ?? teams.error)}</Notice>
               </View>
             )}
           </View>
@@ -177,7 +177,7 @@ export function BrowseScreen() {
           </View>
         );
       case 'list': {
-        const c = item.list, group = editing ? item.group : undefined;
+        const c = item.taskList, group = editing ? item.group : undefined;
         const aside = c.isInbox ? null
           : c.owner.id === me?.id && c.sharing === 'shared' ? <SharedMark />
           : !c.team || !teamList.some((x) => x.id === c.team!.id) ? (c.owner.id !== me?.id ? <OwnerMark name={c.owner.displayName} /> : null)

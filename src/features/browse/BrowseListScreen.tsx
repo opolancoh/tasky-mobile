@@ -18,7 +18,7 @@ import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { useBrowseMenus } from './browseMenus';
 import { CompletedRow } from './components/CompletedRow';
 
-/** The task lists Browse opens that aren't a list (M38). `id`: the tag's name or the team's id. */
+/** The task lists Browse opens that aren't a task list (M38). `id`: the tag's name or the team's id. */
 export type BrowseListKind = 'assigned' | 'completed' | 'tag' | 'team';
 
 const PAGE = 20;

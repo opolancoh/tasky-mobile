@@ -53,7 +53,7 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
               )}
             </Text>
             <View style={[styles.meta, { gap: space.xs }]}>
-              <TaskOrigin list={task.collection} assignedBy={task.assignedBy} />
+              <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
               {done && <Text variant="footnote" color="ink3">· {t('search.completed')}</Text>}
               {task.isImportant && !done && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
             </View>
