@@ -46,6 +46,8 @@ const INBOX = { isInbox: true, color: '' };
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
  * The form is a summary (Task list, then a row per set field, each with ✕) with a bottom icon bar (M18)
  * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /tasks) and closes the sheet.
+ * From a list's Add a task (M55): the task goes to that list, there is no List row, the title has the keyboard, and
+ * Add keeps the sheet open with an empty form for the next one.
  */
 export function QuickAddSheet() {
   const session = useQuickAdd((s) => s.session);
@@ -68,7 +70,8 @@ function QuickAddForm() {
   const create = useCreateTask();
 
   const startTitle = useQuickAdd((s) => s.title);
-  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle }));
+  const fixedListId = useQuickAdd((s) => s.taskListId);
+  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle, taskListId: fixedListId ?? undefined }));
   const [page, setPage] = useState<Page>('form');
   const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(EMPTY);   // the draft when a page opened: tapping outside restores it
@@ -103,7 +106,7 @@ function QuickAddForm() {
     create.mutate(
       {
         body: {
-          taskListId: taskList?.id,
+          taskListId: draft.taskListId ?? taskList?.id,   // a list's own, even before the lists load
           title: titleText,
           tags: tags.length ? tags : undefined,
           notes: draft.notes.trim() || undefined,
@@ -118,7 +121,9 @@ function QuickAddForm() {
       {
         onSuccess: () => {
           if (userId) useRecentTags.getState().used(userId, tags);
-          hide();
+          if (!fixedListId) return hide();
+          setDraft({ ...EMPTY, taskListId: fixedListId });   // from a list: ready for the next one
+          titleInput.current?.focus();
         },
       },
     );
@@ -182,6 +187,7 @@ function QuickAddForm() {
           <View style={styles.titleRow}>
             <TextInput
             ref={titleInput}
+            autoFocus={!!fixedListId}
             value={draft.title}
             onChangeText={(title) => update({ title })}
             placeholder={t('quickAdd.placeholder')}
@@ -189,9 +195,11 @@ function QuickAddForm() {
             selectionColor={colors.accent}
             accessibilityLabel={t('quickAdd.fields.title')}
             multiline
-            submitBehavior="blurAndSubmit"
+            // From a list, Return adds and keeps the keyboard for the next one; elsewhere it only closes the keyboard (M30).
+            submitBehavior={fixedListId ? 'submit' : 'blurAndSubmit'}
+            onSubmitEditing={fixedListId ? submit : undefined}
             maxLength={taskLimits.titleMax}
-            returnKeyType="done"
+            returnKeyType={fixedListId ? 'send' : 'done'}
             style={[styles.title, { fontFamily: type.headline.fontFamily, fontSize: type.headline.fontSize, color: colors.heading }]}
             />
             {draft.title.length > 0 && (
@@ -215,12 +223,14 @@ function QuickAddForm() {
           <View style={[styles.divider, { backgroundColor: colors.line, marginHorizontal: -space.lg }]} />
 
           <View>
-            <ListRow
-              label={t('quickAdd.fields.taskList')}
-              icon={<TaskListIcon taskList={taskList ?? INBOX} />}
-              value={<Text variant="bodyMedium" color="accent">{taskList?.name ?? t('taskLists.inbox')}</Text>}
-              onPress={() => openPage('taskList')}
-            />
+            {!fixedListId && (
+              <ListRow
+                label={t('quickAdd.fields.taskList')}
+                icon={<TaskListIcon taskList={taskList ?? INBOX} />}
+                value={<Text variant="bodyMedium" color="accent">{taskList?.name ?? t('taskLists.inbox')}</Text>}
+                onPress={() => openPage('taskList')}
+              />
+            )}
             {canAssign && draft.assignee && (
               <ListRow
                 label={t('quickAdd.fields.assignee')}

@@ -24,6 +24,8 @@ export interface TaskList {
   role: TaskListRole;
   version: Version;
   openTasks?: number;
+  /** Completed tasks in it (GET /task-lists): a list offers Show completed only when there are some. */
+  completedTasks?: number;
 }
 
 /**

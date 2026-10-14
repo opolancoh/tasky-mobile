@@ -183,7 +183,10 @@
     "moveDown": "Bajar",
     "ownersList": "Lista de {{name}}",
     "listEmpty": "Nada abierto aquí",
-    "listEmptyBody": "Toca + para añadir una tarea.",
+    "listEmptyBody": "Añade una abajo.",
+    "listAllDone": "Todo listo",
+    "showCompleted": "Mostrar completadas",
+    "hideCompleted": "Ocultar",
     "sort": {
       "manual": "Manual",
       "dueDate": "Fecha de vencimiento",

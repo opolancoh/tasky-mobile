@@ -183,7 +183,10 @@
     "moveDown": "Move down",
     "ownersList": "{{name}}’s list",
     "listEmpty": "Nothing open here",
-    "listEmptyBody": "Tap + to add a task.",
+    "listEmptyBody": "Add one below.",
+    "listAllDone": "All done",
+    "showCompleted": "Show completed",
+    "hideCompleted": "Hide",
     "sort": {
       "manual": "Manual",
       "dueDate": "Due date",

@@ -19,7 +19,7 @@ src/shared/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
 │   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show(title?) from the tab bar + or a first-day starter (M51)
+│   └── quickAddStore.ts   Quick add open or closed; show(title?) from the tab bar + or a first-day starter (M51), show('', taskListId) from a list's Add a task (M55)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
