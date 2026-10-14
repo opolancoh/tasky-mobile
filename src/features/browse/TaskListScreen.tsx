@@ -120,7 +120,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </View>
         );
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue onComplete={(task) => complete.mutate(task)} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={(task) => complete.mutate(task)} onPress={open} />;
       case 'empty':
         return (
           <View style={[styles.empty, { gap: space.xs, paddingVertical: space.huge }]}>
@@ -144,7 +144,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </Pressable>
         );
       case 'done':
-        return <CompletedRow task={item.task} onPress={() => open(item.task)} />;
+        return <CompletedRow task={item.task} showList={false} onPress={() => open(item.task)} />;
       case 'skeleton':
         return <SkeletonRow width={item.width} />;
     }

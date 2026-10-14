@@ -18,18 +18,20 @@ export interface TaskRowProps {
   today: LocalDate | undefined;
   /** Show the due date in the meta line (lists that mix days). */
   showDue?: boolean;
+  /** Off on a list's own screen: its name is already the title (M57). */
+  showList?: boolean;
   onComplete(task: TaskSummary): void;
   onPress?(task: TaskSummary): void;
 }
 
 /**
  * A task in a list (task lists, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
- * (its list, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
+ * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
  * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except in
  * the Inbox (M44). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
  * circle at once; the list refetches after the API answers.
  */
-export function TaskRow({ task, today, showDue = false, onComplete, onPress }: TaskRowProps) {
+export function TaskRow({ task, today, showDue = false, showList = true, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const labels = useDateLabels(today);
@@ -66,7 +68,7 @@ export function TaskRow({ task, today, showDue = false, onComplete, onPress }: T
               {task.title}
             </Text>
             <View style={[styles.meta, { gap: space.sm }]}>
-              <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
+              {showList && <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />}
               {task.dueDate && (showDue || overdue) && (
                 <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>
                   {labels.day(task.dueDate)}
