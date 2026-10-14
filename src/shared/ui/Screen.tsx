@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
@@ -11,10 +11,12 @@ export interface ScreenProps {
   /** Safe-area edges to pad. Screens under a header or tab bar leave those edges out. */
   edges?: Edge[];
   contentStyle?: ViewStyle;
+  /** The scroll view, with `scroll` (e.g. to bring an error at the top into view). */
+  scrollRef?: Ref<ScrollView>;
 }
 
 /** Every screen's root: background, safe areas, side padding, optional scrolling. */
-export function Screen({ children, scroll = false, edges = ['top', 'bottom'], contentStyle }: ScreenProps) {
+export function Screen({ children, scroll = false, edges = ['top', 'bottom'], contentStyle, scrollRef }: ScreenProps) {
   const { colors, space } = useTheme();
   const padding = { paddingHorizontal: space.xxl, flexGrow: 1 };
 
@@ -22,7 +24,7 @@ export function Screen({ children, scroll = false, edges = ['top', 'bottom'], co
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: colors.bg }]}>
       {scroll ? (
         <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ScrollView contentContainerStyle={[padding, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <ScrollView ref={scrollRef} contentContainerStyle={[padding, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
         </KeyboardAvoidingView>

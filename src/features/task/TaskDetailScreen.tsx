@@ -3,7 +3,7 @@ import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import { formatInstant, todayIn } from '@/core/dates/localDate';
@@ -18,7 +18,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { Avatar, TaskListIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, useTheme, useToast } from '@/shared/ui';
+import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
@@ -30,7 +30,7 @@ import { useRepeatText } from './useRepeatText';
  * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
  * title in place, the Important flag (a red edge when on, M24), the rows for Task list, Assigned to (every task, M43, M44),
  * Due date, Reminder, Repeat and Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
- * (D56); leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
+ * (D56) and goes back with a toast; an error keeps the screen and the edits (M59). Leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
  * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
  * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
@@ -57,7 +57,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { describe } = useRepeatText();
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
-  const leaving = useRef(false);   // set when the screen closes on purpose (after Delete): no discard prompt
+  const scroller = useRef<ScrollView>(null);
+  const leaving = useRef(false);   // set when the screen closes on purpose (after Save or Delete): no discard prompt
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
     useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, taskList: s.draft.taskList, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
@@ -96,15 +97,25 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     }
   };
 
+  /** Save (M59): the keyboard closes, fields lock while it saves; success goes back with a toast, an error stays. */
+  const saveAndLeave = async () => {
+    Keyboard.dismiss();
+    if (!(await saveDraft())) return scroller.current?.scrollTo({ y: 0, animated: true });   // the error is at the top
+    leaving.current = true;
+    navigation.goBack();
+    useToast.getState().show({ message: t('taskDetail.saved') });
+  };
+
   // Waiting for the caller's answer (M35): nothing changes until they accept, so there is no Save.
   const waiting = !!task && !!me && task.assignee?.id === me.id && task.assignmentStatus === 'pending';
   useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: waiting ? undefined : () => <SaveButton pending={save.isPending} onPress={saveDraft} /> });
+    navigation.setOptions({ headerRight: waiting ? undefined : () => <SaveButton pending={save.isPending} onPress={saveAndLeave} /> });
   });
 
-  // Leaving with unsaved changes asks first (HIG): Discard or Keep editing.
-  usePreventRemove(dirty, ({ data }) => {
+  // Leaving with unsaved changes asks first (HIG): Discard or Keep editing. Back does nothing while Save runs (M59).
+  usePreventRemove(dirty || save.isPending, ({ data }) => {
     if (leaving.current) return navigation.dispatch(data.action);
+    if (save.isPending) return;
     confirm({ title: t('taskDetail.discardTitle'), message: t('taskDetail.discardMessage'), confirmLabel: t('taskDetail.discard'), cancelLabel: t('taskDetail.keepEditing') }).then(
       (ok) => ok && navigation.dispatch(data.action),
     );
@@ -197,13 +208,13 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     });
   };
   const confirmDone = () => run({ run: (x) => tasksApi.confirm(x), optimistic: (x) => ({ ...x, awaitsConfirmation: false }) }, t('taskDetail.confirmed'));
-  // While waiting, the fields read only: dimmed, and taps don't reach them.
-  const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : {};
+  // While waiting, the fields read only: dimmed, and taps don't reach them. While Save runs, taps don't reach them (M59).
+  const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : save.isPending ? ({ pointerEvents: 'none' } as const) : {};
 
   const error = save.error ?? command.error ?? remove.error;
 
   return (
-    <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
+    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
       {error && (
         <View style={{ marginBottom: space.md }}>
           <Notice>{errorMessage(error)}</Notice>
@@ -397,21 +408,12 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   );
 }
 
-/** Save in the header: enabled once something changed (and the title isn't blank). */
+/** Save in the header: enabled once something changed (and the title isn't blank); busy while it saves (M56). */
 function SaveButton({ pending, onPress }: { pending: boolean; onPress(): void }) {
   const { t } = useTranslation();
   const dirty = useDirty();
   const titled = useTaskDraft((s) => !!s.draft?.title.trim());
-  const enabled = dirty && titled && !pending;
-  return (
-    <Pressable onPress={onPress} disabled={!enabled} accessibilityRole="button" accessibilityState={{ disabled: !enabled }} hitSlop={8} style={styles.save}>
-      {({ pressed }) => (
-        <Text variant="button" color={enabled ? 'accent' : 'ink3'} style={{ opacity: pressed ? 0.6 : 1 }}>
-          {t('taskDetail.save')}
-        </Text>
-      )}
-    </Pressable>
-  );
+  return <TextButton label={t('taskDetail.save')} onPress={onPress} disabled={!dirty || !titled} busy={pending} />;
 }
 
 /** The title, edited in place in the draft; only this field redraws while typing. */
@@ -482,7 +484,6 @@ const styles = StyleSheet.create({
   start: { alignItems: 'flex-start', marginTop: space.xs },
   notes: { minHeight: 96 },
   delete: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
-  save: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
   locked: { opacity: 0.55 },
   assignment: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
 });
