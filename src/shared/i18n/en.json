@@ -189,10 +189,10 @@
     "hideCompleted": "Hide",
     "sort": {
       "manual": "Manual",
+      "manualHint": "New tasks on top",
       "dueDate": "Due date",
       "important": "Important first",
-      "alphabetical": "Title (A–Z)",
-      "created": "Newest first"
+      "alphabetical": "Title (A–Z)"
     },
     "reopen": "Reopen {{title}}",
     "allTasks": "All tasks",

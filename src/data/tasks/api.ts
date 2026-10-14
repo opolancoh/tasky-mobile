@@ -88,7 +88,7 @@ export const tasksApi = {
   /** POST /tags:reorder: the caller's own order (204). */
   reorderTags: (names: string[]) => http().post('/tags:reorder', { body: { names } }),
 
-  /** POST /tasks: a new task at the bottom of `taskListId`, or of the caller's Inbox (201). */
+  /** POST /tasks: a new task at the top of `taskListId`, or of the caller's Inbox (201). */
   createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body }),
 
   /** GET /tasks/{id}: the full task (D55). */
@@ -109,7 +109,7 @@ export const tasksApi = {
   /** POST /tasks/{id}:skip: a repeating task moves to its next date without a completion. */
   skip: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:skip`, { ifMatch: task.version }),
 
-  /** POST /tasks/{id}:move to the bottom of another task list the caller can see. */
+  /** POST /tasks/{id}:move to the top of another task list the caller can see. */
   move: (task: Versioned, taskListId: Id) => http().post<Task>(`/tasks/${task.id}:move`, { body: { taskListId }, ifMatch: task.version }),
 
   /** DELETE /tasks/{id}: to Recently Deleted for 30 days (204). */

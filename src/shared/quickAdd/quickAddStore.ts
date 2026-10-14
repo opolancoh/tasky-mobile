@@ -10,6 +10,9 @@ interface QuickAddState {
   taskListId: Id | null;
   show(title?: string, taskListId?: Id): void;
   hide(): void;
+  /** The last list a task was added to from its own Add a task, counted, so that list can scroll to the new one (M60). */
+  added: { taskListId: Id; n: number } | null;
+  noteAdded(taskListId: Id): void;
 }
 
 /**
@@ -24,4 +27,6 @@ export const useQuickAdd = create<QuickAddState>()((set) => ({
   taskListId: null,
   show: (title = '', taskListId) => set((s) => ({ open: true, session: s.session + 1, title, taskListId: taskListId ?? null })),
   hide: () => set({ open: false }),
+  added: null,
+  noteAdded: (taskListId) => set((s) => ({ added: { taskListId, n: (s.added?.n ?? 0) + 1 } })),
 }));

@@ -17,7 +17,7 @@ import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, Te
 
 import { useBrowseSheet, type BrowseSheetTarget } from './browseSheetStore';
 
-const SORTS: SortMode[] = ['manual', 'dueDate', 'important', 'alphabetical', 'created'];
+const SORTS: SortMode[] = ['manual', 'dueDate', 'important', 'alphabetical'];
 
 /**
  * Browse's sheets (M38, large size, M28): New list and Edit list (name, color, where for a new one, sort), New team
@@ -163,7 +163,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
         {target.kind === 'list' && (
           <>
             <SectionLabel>{t('browse.sheet.sortBy')}</SectionLabel>
-            {SORTS.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} selected={sort === s} onPress={() => setSort(s)} divider={i < SORTS.length - 1} />)}
+            {SORTS.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} detail={s === 'manual' ? t('browse.sort.manualHint') : undefined} selected={sort === s} onPress={() => setSort(s)} divider={i < SORTS.length - 1} />)}
             {list && list.sharing !== 'private' && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.sameForAll')}</Text>}
           </>
         )}

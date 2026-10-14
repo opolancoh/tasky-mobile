@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
-import { FlashList } from '@shopify/flash-list';
-import { useLayoutEffect, useState } from 'react';
+import { FlashList, type FlashListRef } from '@shopify/flash-list';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -49,6 +49,13 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
   const complete = useCompleteTask();
   const { listMenu } = useBrowseMenus();
+  const list = useRef<FlashListRef<Item>>(null);
+  // Manual puts a new task on top (D85): after adding from Add a task, the list scrolls up to show it (M60).
+  const added = useQuickAdd((s) => (s.added?.taskListId === taskListId ? s.added.n : 0));
+  const manual = taskList?.sortMode === 'manual';
+  useEffect(() => {
+    if (added && manual) list.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [added, manual]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -153,6 +160,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        ref={list}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

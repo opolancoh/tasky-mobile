@@ -122,6 +122,7 @@ function QuickAddForm() {
         onSuccess: () => {
           if (userId) useRecentTags.getState().used(userId, tags);
           if (!fixedListId) return hide();
+          useQuickAdd.getState().noteAdded(fixedListId);
           setDraft({ ...EMPTY, taskListId: fixedListId });   // from a list: ready for the next one
           titleInput.current?.focus();
         },

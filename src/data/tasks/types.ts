@@ -1,6 +1,7 @@
 import type { Id, LocalDate, Version } from '@/core/types';
 
-export type SortMode = 'manual' | 'dueDate' | 'important' | 'alphabetical' | 'created';
+/** Manual puts new, reopened and moved tasks on top (D85, M60). */
+export type SortMode = 'manual' | 'dueDate' | 'important' | 'alphabetical';
 
 /** `private`: only its owner; `shared`: its own members; `team`: in a team (D57). */
 export type Sharing = 'private' | 'shared' | 'team';
