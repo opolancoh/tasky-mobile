@@ -33,10 +33,11 @@ interface ProblemDocument {
   traceId?: string;
 }
 
-export async function toApiError(response: Response): Promise<ApiError> {
+/** `text`: the response body as received. */
+export function toApiError(response: Response, text: string): ApiError {
   let body: ProblemDocument = {};
   try {
-    body = (await response.json()) as ProblemDocument;
+    body = (JSON.parse(text) ?? {}) as ProblemDocument;
   } catch {
     // Not JSON (a proxy's error page): keep the status only.
   }

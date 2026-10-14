@@ -657,17 +657,37 @@
   "networkLog": {
     "title": "Registro de red",
     "record": "Registrar llamadas a la API",
-    "recordHint": "Solo mientras la app está abierta, las últimas 100. Contraseñas y tokens ocultos.",
+    "recordHint": "Solo mientras la app está abierta, las últimas 100. Contraseñas, tokens y códigos de correo ocultos.",
+    "recordingOn": "Registrando",
+    "share": "Compartir",
     "clear": "Borrar",
+    "clearTitle": "¿Borrar el registro de red?",
+    "clearBody": "Se quitan las llamadas registradas.",
+    "filter": {
+      "all": "Todas",
+      "errors": "Errores",
+      "slow": "Lentas"
+    },
     "empty": "Activa el registro y usa la app.",
     "emptyRecording": "Registrando. Usa la app y las llamadas aparecen aquí.",
+    "emptyFilter": "No hay llamadas aquí.",
     "gone": "Esta llamada ya no está en el registro.",
     "status": "Estado",
     "started": "Inicio",
     "duration": "Duración",
+    "size": "Tamaño",
+    "token": "Token de acceso",
+    "tokenSent": "Enviado",
+    "tokenNotSent": "No enviado",
     "notes": "Notas",
-    "request": "Solicitud",
-    "response": "Respuesta",
-    "error": "Error"
+    "traceId": "Trace id",
+    "noTraceId": "Ninguno: no respondió la API",
+    "copied": "Copiado",
+    "copyCurl": "Copiar como curl",
+    "url": "URL",
+    "requestHeaders": "Encabezados de la solicitud",
+    "request": "Cuerpo de la solicitud",
+    "responseHeaders": "Encabezados de la respuesta",
+    "response": "Cuerpo de la respuesta"
   }
 }

@@ -1,18 +1,25 @@
 import type { ApiError } from './problem';
 
+/** What came back besides the parsed body: the headers and the body as received ('' when none). */
+export interface HttpExchange {
+  headers: Headers;
+  text: string;
+}
+
 /** What the HTTP client reports, one call per event; `id` pairs a request with its response or error. */
 export interface HttpLogger {
-  request(id: number, method: string, url: string, body: unknown, attempt: number): void;
-  response(id: number, method: string, url: string, status: number, ms: number, body: unknown): void;
-  /** `next`: what the client does about it ("retry 1/3", "refreshing"); none when it gives up. */
-  error(id: number, method: string, url: string, error: ApiError, ms: number, next?: string): void;
+  /** `headers`: as sent, the Authorization header included (mask it with `redactHeaders`). */
+  request(id: number, method: string, url: string, body: unknown, attempt: number, headers: Record<string, string>): void;
+  response(id: number, method: string, url: string, status: number, ms: number, body: unknown, exchange: HttpExchange): void;
+  /** `next`: what the client does about it ("retry 1/3", "refreshing"); none when it gives up. `exchange`: none without a response. */
+  error(id: number, method: string, url: string, error: ApiError, ms: number, next?: string, exchange?: HttpExchange): void;
 }
 
 export type HttpLogLevel = 'off' | 'errors' | 'all';
 
 const MAX = 120;
-/** Keys never printed: passwords and tokens anywhere, and a request's `code` (the email code). */
-const SECRET = /password|secret|^(access|refresh)?token$/i;
+/** Keys never printed: passwords, secrets and tokens anywhere, and a request's `code` (the email code). */
+const SECRET = /password|secret|token$/i;
 
 /** A copy with the same secrets as `summarize` replaced by "***", for a full view (the app's Network log). */
 export function redact(value: unknown, isRequest = false): unknown {
@@ -22,6 +29,10 @@ export function redact(value: unknown, isRequest = false): unknown {
     Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, SECRET.test(k) || (isRequest && k === 'code') ? '***' : redact(v, isRequest)]),
   );
 }
+
+/** Headers with the Authorization value as "Bearer ***". */
+export const redactHeaders = (headers: Record<string, string>): Record<string, string> =>
+  Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, k.toLowerCase() === 'authorization' ? `${v.split(' ')[0]} ***` : v]));
 
 /** Several loggers as one: the terminal log and the Network log. */
 export function combineLoggers(...loggers: (HttpLogger | undefined)[]): HttpLogger | undefined {

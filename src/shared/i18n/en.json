@@ -657,17 +657,37 @@
   "networkLog": {
     "title": "Network log",
     "record": "Record API calls",
-    "recordHint": "Kept only while the app is open, the last 100. Passwords and tokens are hidden.",
+    "recordHint": "Kept only while the app is open, the last 100. Passwords, tokens and email codes are hidden.",
+    "recordingOn": "Recording",
+    "share": "Share",
     "clear": "Clear",
+    "clearTitle": "Clear the Network log?",
+    "clearBody": "The recorded calls are removed.",
+    "filter": {
+      "all": "All",
+      "errors": "Errors",
+      "slow": "Slow"
+    },
     "empty": "Turn on recording, then use the app.",
     "emptyRecording": "Recording. Use the app and the calls appear here.",
+    "emptyFilter": "No calls here.",
     "gone": "This call is no longer in the log.",
     "status": "Status",
     "started": "Started",
     "duration": "Duration",
+    "size": "Size",
+    "token": "Access token",
+    "tokenSent": "Sent",
+    "tokenNotSent": "Not sent",
     "notes": "Notes",
-    "request": "Request",
-    "response": "Response",
-    "error": "Error"
+    "traceId": "Trace id",
+    "noTraceId": "None: the API didn't answer",
+    "copied": "Copied",
+    "copyCurl": "Copy as curl",
+    "url": "URL",
+    "requestHeaders": "Request headers",
+    "request": "Request body",
+    "responseHeaders": "Response headers",
+    "response": "Response body"
   }
 }

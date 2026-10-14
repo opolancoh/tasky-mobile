@@ -20,6 +20,7 @@ import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
+import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
@@ -88,6 +89,7 @@ function Root() {
           <TaskFieldSheet />
           <BrowseSheet />
           <ReminderSync />
+          <NetworkLogAccess />
         </>
       )}
       <ToastHost />

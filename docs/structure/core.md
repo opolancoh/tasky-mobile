@@ -9,7 +9,7 @@ src/core/
 ├── types.ts              Id, LocalDate, IsoDateTime, Version
 ├── http/
 │   ├── client.ts         fetch with the API's rules
-│   ├── httpLog.ts        Development log of every request, response and error
+│   ├── httpLog.ts        HttpLogger (each request with its headers, response or error with headers and raw body), masking, the development terminal log
 │   └── problem.ts        Problem documents → ApiError
 ├── auth/
 │   └── tokens.ts         Access and refresh tokens, one refresh at a time
@@ -36,9 +36,9 @@ src/core/
 | Idempotency | Every `POST` gets an `Idempotency-Key`, reused by its retries |
 | Concurrency | `ifMatch` sends the row version as `If-Match` |
 | `anonymous` | No token and no refresh: sign-in, refresh, sign-out and the other `/auth` calls |
-| `log` | Development only (`__DEV__`, wired in `app/services.ts`): every request, response and error in the Metro terminal |
+| `log` | Every request (with its headers), response and error (with headers and the body as received), wired in `app/services.ts`: the Metro terminal in development, and the Network log (M53) |
 
-**httpLog.ts** (`createConsoleHttpLogger`): one line per event in color (requests cyan, 2xx green, 4xx and retries yellow, 5xx and no response red), a request and its response or error paired by number, the time in ISO 8601, the path, and the body as compact JSON (arrays as `[n items]`, two levels, 120 characters; passwords, access and refresh tokens and a request's `code` as `***`; a validation error shows each field's first message). `EXPO_PUBLIC_HTTP_LOG` in `.env.local`: `all` (default), `errors`, `off`; restart Metro after changing it.
+**httpLog.ts** (`createConsoleHttpLogger`): one line per event in color (requests cyan, 2xx green, 4xx and retries yellow, 5xx and no response red), a request and its response or error paired by number, the time in ISO 8601, the path, and the body as compact JSON (arrays as `[n items]`, two levels, 120 characters; passwords, secrets, any key ending in `token` and a request's `code` as `***`; `redactHeaders` shows Authorization as `Bearer ***`; a validation error shows each field's first message). `EXPO_PUBLIC_HTTP_LOG` in `.env.local`: `all` (default), `errors`, `off`; restart Metro after changing it.
 
 ```
 → #14  2026-10-12T16:44:27.246Z  GET    /api/v1/home?limit=5

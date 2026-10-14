@@ -6,6 +6,7 @@ import { systemApi } from '@/data/system/api';
 import { useApiVersion } from '@/data/system/queries';
 import { useMe } from '@/data/tenancy/queries';
 import { appInfo } from '@/shared/appInfo';
+import { useNetworkLog } from '@/shared/network/networkLog';
 import { ListRow, Screen, SectionLabel, Text, useTheme } from '@/shared/ui';
 
 /**
@@ -18,6 +19,7 @@ export function AboutScreen() {
   const api = useApiVersion();
   const navigation = useNavigation();
   const staff = !!useMe().data?.platformRole;
+  const recording = useNetworkLog((s) => s.recording);
   const build = appInfo.expoGo ? t('about.expoGo') : appInfo.build;
 
   return (
@@ -36,7 +38,12 @@ export function AboutScreen() {
       {staff && (
         <>
           <SectionLabel>{t('about.support')}</SectionLabel>
-          <ListRow label={t('networkLog.title')} onPress={() => navigation.navigate('NetworkLog')} divider={false} />
+          <ListRow
+            label={t('networkLog.title')}
+            value={recording ? <Text variant="body" color="danger">{`● ${t('networkLog.recordingOn')}`}</Text> : undefined}
+            onPress={() => navigation.navigate('NetworkLog')}
+            divider={false}
+          />
         </>
       )}
     </Screen>

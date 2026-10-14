@@ -14,7 +14,7 @@ src/features/
 │   ├── signUpDraft.ts  resetDraft.ts
 │   ├── useEmailField.ts
 │   └── validation.ts
-├── network-log/    NetworkLogScreen.tsx  NetworkLogEntryScreen.tsx (Me › About, support and admin, M53)
+├── network-log/    NetworkLogScreen.tsx  NetworkLogEntryScreen.tsx  shareText.ts (Share, curl)  useSessionInfo.ts (Me › About, support and admin, M53)
 ├── today/          TodayScreen.tsx (the first tab)  TodayListScreen.tsx (See all)  todaySections.ts  useNotificationText.ts  starters.ts (first-day ideas per account type, M51)  components/FirstDayCard.tsx
 │   └── components/       StreamRows (the rows Today and See all share)
 ├── sharing/        InvitationScreen.tsx

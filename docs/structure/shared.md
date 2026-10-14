@@ -16,7 +16,8 @@ src/shared/
 ├── notifications/     reminders.ts (sync the phone's reminders with GET /me/reminders, permission state), useReminders.ts (ReminderSync, mounted in App)
 ├── appInfo.ts             This app's version, build number (store builds), Expo Go or not, where to update (M46, M48)
 ├── network/
-│   └── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
+│   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
+│   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
 ├── quickAdd/
 │   └── quickAddStore.ts   Quick add open or closed; show(title?) from the tab bar + or a first-day starter (M51)
 ├── session/
