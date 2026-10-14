@@ -1,4 +1,5 @@
 import { isApiError } from '@/core/http/problem';
+import { useToast } from '@/shared/ui';
 
 import i18n from './i18n';
 
@@ -21,3 +22,6 @@ export function fieldErrors(error: unknown): Record<string, string> {
       .map(([field, messages]) => [field, messages[0]!]),
   );
 }
+
+/** An error from an action with no form to show it in (a row's or a menu's), as a toast (M56). */
+export const toastError = (error: unknown) => useToast.getState().show({ message: errorMessage(error) });

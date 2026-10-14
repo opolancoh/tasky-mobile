@@ -13,7 +13,7 @@ import type { Member, MembersOf, OpenInvitation } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
-import { confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { confirm, Notice, Screen, SkeletonRow, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
 
@@ -142,24 +142,37 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   );
 }
 
-/** Invite by email: the typed text lives here, not in the screen (docs/performance.md). Invalid until it's an email. */
+/**
+ * Invite by email (M56): the typed text lives here, not in the screen (docs/performance.md). Invite waits for an email,
+ * then for the API: busy at once, a spinner after 300 ms, while the field stays editable and the keyboard up. Success
+ * clears the field (unless it changed meanwhile) for the next person; errors show under it, until the next keystroke.
+ */
 function InviteField({ of }: { of: MembersOf }) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const invite = useInvite(of);
   const [email, setEmail] = useState('');
   const valid = isEmail(email.trim());
+  const change = (text: string) => {
+    setEmail(text);
+    if (invite.error) invite.reset();
+  };
   const send = () => {
     const value = email.trim();
-    if (!isEmail(value)) return;
-    invite.mutate(value, { onSuccess: () => { setEmail(''); useToast.getState().show({ message: t('browse.invited', { email: value }) }); } });
+    if (!isEmail(value) || invite.isPending) return;
+    invite.mutate(value, {
+      onSuccess: ({ again }) => {
+        setEmail((current) => (current.trim() === value ? '' : current));
+        useToast.getState().show({ message: t(again ? 'browse.invitedAgain' : 'browse.invited', { email: value }) });
+      },
+    });
   };
   return (
     <View style={{ marginTop: space.lg, gap: space.xs }}>
       <View style={[styles.invite, { gap: space.sm, borderBottomColor: invite.error ? colors.danger : colors.accent }]}>
         <TextInput
           value={email}
-          onChangeText={setEmail}
+          onChangeText={change}
           placeholder={t('browse.invitePlaceholder')}
           placeholderTextColor={colors.ink3}
           selectionColor={colors.accent}
@@ -168,15 +181,18 @@ function InviteField({ of }: { of: MembersOf }) {
           autoCorrect={false}
           autoComplete="email"
           returnKeyType="send"
+          submitBehavior="submit"
           onSubmitEditing={send}
           accessibilityLabel={t('browse.inviteLabel')}
           style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
         />
-        <Pressable onPress={send} disabled={!valid || invite.isPending} accessibilityRole="button" style={styles.send}>
-          <Text variant="button" color={valid && !invite.isPending ? 'accent' : 'ink3'}>{t('browse.invite')}</Text>
-        </Pressable>
+        <TextButton label={t('browse.invite')} onPress={send} disabled={!valid} busy={invite.isPending} />
       </View>
-      {invite.error && <Text variant="footnote" color="danger">{errorMessage(invite.error)}</Text>}
+      {invite.error && (
+        <Text variant="footnote" color="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {errorMessage(invite.error)}
+        </Text>
+      )}
     </View>
   );
 }

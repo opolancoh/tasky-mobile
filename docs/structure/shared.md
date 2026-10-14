@@ -8,7 +8,8 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
-│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast  confirm  Skeleton  Pill
+│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast  confirm  Skeleton  Pill  TextButton
+│   ├── useDelayedFlag.ts  The 300 ms before a busy control shows its spinner (M56)
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
@@ -32,7 +33,7 @@ src/shared/
 └── i18n/
     ├── i18n.ts            i18next setup, device language and time zone
     ├── en.json  es.json   Every string
-    └── errors.ts          errorMessage(), fieldErrors()
+    └── errors.ts          errorMessage(), fieldErrors(), toastError() (an error with no form to show it in, M56)
 ```
 
 Before writing something new in a feature, look here and in `core/`. When a second feature needs a piece, move it here (strings to a neutral namespace such as `tags.*`, `reminders.*`, `dates.*`).
@@ -44,16 +45,18 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | Piece | Purpose |
 |---|---|
 | `Text` | Every text, by variant (`largeTitle`, `title`, `body`, `callout`, `label`…) and color role |
-| `Button` | `primary` (one per screen) or `link`; 44 pt minimum touch target |
+| `Button` | `primary` (one per screen) or `link`; 44 pt minimum touch target; `loading` while saving (M56) |
 | `TextField` | Label above, error or footer below, optional Show/Hide for passwords |
 | `Notice` | A message above a form: error or info |
 | `RuleCheck` | A rule that turns green as you type (password length) |
 | `Logo` | The Azignia mark and name |
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling |
-| `Sheet` | The large size by default ([M28](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner, M27) |
-| `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below |
+| `Sheet` | The large size by default ([M28](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner after 300 ms, M27, M56) |
+| `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below; `busy` while saving what the tap chose (a spinner in the chevron's place, M56) |
 | `confirm` | `await confirm({ title, message, confirmLabel, cancelLabel })`: an action sheet on iOS, an alert on Android. **Every delete asks through it**, and so does discarding edits. `askReason(...)`: the same with an optional reason (a text prompt on iOS; Android, with no text alert, asks without it); resolves the reason or null. `chooseAction({ title, actions, cancelLabel })`: a native menu of actions for one thing (Browse's long press and •••); resolves the index or null |
-| `Pill` | A small rounded button for one action in a row or a chip under a heading ("Join", "Accept", "⚑ 3 important"): `accent`, `quiet` or `danger`, 32 pt with a 44 pt hit area |
+| `Pill` | A small rounded button for one action in a row or a chip under a heading ("Join", "Accept", "⚑ 3 important"): `accent`, `quiet` or `danger`, 32 pt with a 44 pt hit area; `busy` while saving (M56) |
+| `TextButton` | A text-only action in a header or beside a field or row (Save, Invite, Revoke): `accent` or `quiet`, 44 pt target, `busy` while saving (M56) |
+| `useDelayedFlag` | Busy controls (M56): disabled and busy for screen readers at once, the spinner only after 300 ms (`BUSY_DELAY_MS`), so a fast answer shows none. Screens pass `busy={mutation.isPending}`, nothing more |
 | `Skeleton`, `SkeletonRow` | A grey placeholder with a soft shimmer (UI thread; still with Reduce Motion; hidden from screen readers), and a task-row-shaped one: circle and two lines ([M27](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `Toast` | `useToast.getState().show({ message, action })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |

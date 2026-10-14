@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ClearButton } from './ClearButton';
 import { Text } from './Text';
 import { useTheme } from './theme';
+import { useDelayedFlag } from './useDelayedFlag';
 
 export interface ListRowProps {
   label: string;
@@ -27,12 +28,15 @@ export interface ListRowProps {
   strong?: boolean;
   /** A line under the row; off for the last row of a list. */
   divider?: boolean;
+  /** Saving what a tap on the row chose (M56): no more taps and busy for screen readers at once; a spinner in place of the chevron or check after 300 ms. */
+  busy?: boolean;
   accessibilityLabel?: string;
 }
 
 /** A settings-style row: icon, label, value or detail, chevron. At least 44 pt tall; grows with the text size. */
-export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, chevron = true, divider = true, accessibilityLabel }: ListRowProps) {
+export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, chevron = true, divider = true, busy = false, accessibilityLabel }: ListRowProps) {
   const { colors, space } = useTheme();
+  const spinner = useDelayedFlag(busy);
   const valueNode = typeof value === 'string' ? <Text variant="body" color="ink2" numberOfLines={1}>{value}</Text> : value;
 
   const content = (pressed: boolean) => (
@@ -55,7 +59,9 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
           valueNode && <View style={styles.value}>{valueNode}</View>
         )}
       </View>
-      {onClear ? (
+      {spinner ? (
+        <ActivityIndicator size="small" color={colors.ink3} style={styles.trailing} />
+      ) : onClear ? (
         <ClearButton onPress={onClear} accessibilityLabel={clearLabel ?? ''} />
       ) : selected !== undefined ? (
         <View style={styles.trailing}>{selected && <Feather name="check" size={20} color={colors.accent} />}</View>
@@ -69,9 +75,10 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
   return (
     <Pressable
       onPress={onPress}
+      disabled={busy}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={selected !== undefined ? { selected } : undefined}
+      accessibilityState={{ selected, busy, disabled: busy }}
     >
       {({ pressed }) => content(pressed)}
     </Pressable>

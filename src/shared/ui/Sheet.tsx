@@ -7,6 +7,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
+import { useDelayedFlag } from './useDelayedFlag';
 
 /** A header button: text, an icon, or both (icon first, e.g. "‹ Task"). */
 export interface SheetAction {
@@ -16,7 +17,7 @@ export interface SheetAction {
   /** Semibold, for the action that confirms (Add, Done). */
   emphasis?: boolean;
   disabled?: boolean;
-  /** A small spinner in its place while the action runs (M27); not pressable meanwhile. */
+  /** A small spinner in its place while the action runs (M27), after 300 ms (M56); not pressable meanwhile. */
   busy?: boolean;
   /** Needed when there is only an icon. */
   accessibilityLabel?: string;
@@ -136,6 +137,7 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
 function HeaderAction({ action }: { action: SheetAction }) {
   const { colors, type } = useTheme();
   const { label, icon, onPress, emphasis, disabled, busy, accessibilityLabel } = action;
+  const spinner = useDelayedFlag(!!busy);
   return (
     <Pressable
       onPress={onPress}
@@ -148,7 +150,7 @@ function HeaderAction({ action }: { action: SheetAction }) {
     >
       {({ pressed }) => {
         const color = disabled ? colors.ink3 : pressed ? colors.accentPressed : colors.accent;
-        if (busy) return <ActivityIndicator size="small" color={colors.accent} />;
+        if (spinner) return <ActivityIndicator size="small" color={colors.accent} />;
         return (
           <>
             {icon && <Feather name={icon} size={label ? 24 : 22} color={color} style={label ? styles.iconWithLabel : undefined} />}

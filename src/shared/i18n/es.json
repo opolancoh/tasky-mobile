@@ -223,6 +223,7 @@
     "inviteTeamHint": "Reciben un correo y ven todas las listas del equipo al unirse. Las invitaciones duran 14 días.",
     "inviteListHint": "Reciben un correo y ven esta lista al unirse. Las invitaciones duran 14 días.",
     "invited": "Invitación enviada a {{email}}",
+    "invitedAgain": "Invitación enviada de nuevo a {{email}}",
     "invitedTitle": "Invitados",
     "expires": "Vence el {{date}}",
     "revoke": "Revocar",
@@ -415,7 +416,11 @@
     "task.too_many_steps": "Una tarea puede tener como máximo 100 pasos.",
     "task.completed": "Reabre la tarea para añadir pasos.",
     "tag.name_taken": "Ya hay una etiqueta con ese nombre.",
-    "task.not_found": "Esta tarea ya no existe."
+    "task.not_found": "Esta tarea ya no existe.",
+    "sharing.already_member": "Esta persona ya puede verlo.",
+    "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
+    "sharing.inbox_private": "La Bandeja de entrada no se puede compartir.",
+    "invitation.user_deactivated": "La cuenta de esta persona está desactivada."
   },
   "languages": {
     "en": "Inglés",

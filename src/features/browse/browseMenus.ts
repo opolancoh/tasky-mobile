@@ -5,7 +5,7 @@ import { useArchiveTaskList, useDeleteTaskList, useDeleteTag, useDeleteTeam, use
 import { useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { errorMessage } from '@/shared/i18n/errors';
+import { toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, useToast, type ActionChoice } from '@/shared/ui';
 
 import { canInvite, canLeave, canManage } from './browseSections';
@@ -19,8 +19,6 @@ async function open(title: string, items: (Item | false)[], cancelLabel: string)
   const i = await chooseAction({ title, actions: list, cancelLabel });
   if (i !== null) list[i].run();
 }
-
-const toastError = (e: unknown) => useToast.getState().show({ message: errorMessage(e) });
 
 /**
  * The menus Browse opens from a long press on a row, or from ••• on a list or team (M38): only what the user's role

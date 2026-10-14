@@ -2,17 +2,20 @@ import { ActivityIndicator, Pressable, StyleSheet, type PressableProps } from 'r
 
 import { Text } from './Text';
 import { useTheme } from './theme';
+import { useDelayedFlag } from './useDelayedFlag';
 
 export interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   title: string;
   /** primary: filled accent · link: accent text only */
   variant?: 'primary' | 'link';
+  /** Saving (M56): disabled and busy for screen readers at once; the label turns into a spinner after 300 ms. */
   loading?: boolean;
 }
 
 export function Button({ title, variant = 'primary', loading = false, disabled, ...rest }: ButtonProps) {
   const { colors, radius, type } = useTheme();
   const inactive = disabled || loading;
+  const spinner = useDelayedFlag(loading);
 
   if (variant === 'link') {
     return (
@@ -41,7 +44,7 @@ export function Button({ title, variant = 'primary', loading = false, disabled, 
       ]}
       {...rest}
     >
-      {loading ? (
+      {spinner ? (
         <ActivityIndicator color={colors.onAccent} />
       ) : (
         <Text style={[type.button, { color: disabled ? colors.onAccentDisabled : colors.onAccent }]}>{title}</Text>

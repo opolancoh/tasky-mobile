@@ -6,7 +6,7 @@ import type { Id } from '@/core/types';
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
 import { assignTarget } from './types';
-import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, Tag, Task, TaskSummary, Team, UpdateTaskListRequest, UpdateTaskRequest } from './types';
+import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
 /**
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
@@ -242,11 +242,22 @@ export function useRemoveMember() {
 }
 
 /** Invite an email to a team or task list, or revoke an open invitation: the open list refetches. */
+/**
+ * Invite by email (M56). `again`: that email already had an open invitation, which the API replaced (a new email goes
+ * out). The new invitation joins the open ones at once, in place of the old one, even if the screen has closed.
+ */
 export function useInvite(of: MembersOf) {
   const queryClient = useQueryClient();
+  const key = taskKeys.openInvitations(of.kind, of.id);
+  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
   return useMutation({
-    mutationFn: (email: string) => tasksApi.invite(of, email),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
+    mutationFn: async (email: string) => {
+      const again = !!queryClient.getQueryData<OpenInvitation[]>(key)?.some((x) => same(x.email, email));
+      return { invitation: await tasksApi.invite(of, email), again };
+    },
+    onSuccess: ({ invitation }) =>
+      queryClient.setQueryData<OpenInvitation[]>(key, (open) => [...(open ?? []).filter((x) => !same(x.email, invitation.email)), invitation]),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
   });
 }
 
