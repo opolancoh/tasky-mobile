@@ -1,5 +1,5 @@
-export { CollectionIcon } from './CollectionIcon';
-export { CollectionPicker } from './CollectionPicker';
+export { ListIcon } from './ListIcon';
+export { ListPicker } from './ListPicker';
 export { DueDatePicker } from './DueDatePicker';
 export { ReminderPicker } from './ReminderPicker';
 export { TagPicker } from './tags/TagPicker';

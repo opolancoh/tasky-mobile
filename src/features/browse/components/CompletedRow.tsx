@@ -31,7 +31,7 @@ export function CompletedRow({ task, onPress }: { task: TaskSummary; onPress(): 
           <View style={styles.main}>
             <Text variant="bodyMedium" color="ink3" numberOfLines={2} style={styles.done}>{task.title}</Text>
             <View style={[styles.meta, { gap: space.xs }]}>
-              <TaskOrigin collection={task.collection} assignedBy={task.assignedBy} />
+              <TaskOrigin list={task.collection} assignedBy={task.assignedBy} />
             </View>
           </View>
         </View>

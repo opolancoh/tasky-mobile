@@ -13,7 +13,7 @@ import { ActivityScreen } from '@/features/activity/ActivityScreen';
 import { ArchivedScreen } from '@/features/browse/ArchivedScreen';
 import { BrowseListScreen } from '@/features/browse/BrowseListScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
-import { CollectionScreen } from '@/features/browse/CollectionScreen';
+import { ListScreen } from '@/features/browse/ListScreen';
 import { PeopleScreen } from '@/features/browse/PeopleScreen';
 import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
@@ -94,7 +94,7 @@ const RootStack = createNativeStackNavigator({
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
         // Browse (M38): a list, a team, a list's or team's people, the other task lists, Archived, Recently Deleted.
-        Collection: { screen: CollectionScreen, options: { headerShown: true } },
+        List: { screen: ListScreen, options: { headerShown: true } },
         Team: { screen: TeamScreen, options: { headerShown: true } },
         People: { screen: PeopleScreen, options: { headerShown: true } },
         BrowseList: { screen: BrowseListScreen, options: { headerShown: true } },

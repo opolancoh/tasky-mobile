@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import type { Id } from '@/core/types';
 import { isEmail } from '@/core/validation/rules';
 import { useMembers } from '@/data/tasks/queries';
-import { emailAssignee, isEmailAssignee, type AssignmentStatus, type Collection, type UserRef } from '@/data/tasks/types';
+import { emailAssignee, isEmailAssignee, type AssignmentStatus, type TaskList, type UserRef } from '@/data/tasks/types';
 import { ListRow, Notice, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { errorMessage } from '@/shared/i18n/errors';
 
@@ -16,12 +16,12 @@ import { Avatar } from './Faces';
  * Whether the user may give a task in this list to someone who doesn't see it (D70): they own it, and it's a private or
  * shared list outside a team (a team's lists are everyone's in the team; the Inbox is only yours).
  */
-export const givesOutside = (list: Pick<Collection, 'owner' | 'team' | 'isInbox'> | undefined, meId: Id | null | undefined): boolean =>
+export const givesOutside = (list: Pick<TaskList, 'owner' | 'team' | 'isInbox'> | undefined, meId: Id | null | undefined): boolean =>
   !!list && !list.isInbox && !list.team && list.owner.id === meId;
 
 export interface AssigneePickerProps {
   /** The list the task is in: its people are who can be picked. */
-  collectionId: Id;
+  listId: Id;
   /** The list's owner, outside a team (`givesOutside`): anyone can also be picked by email (D70). */
   canGiveOutside?: boolean;
   /** The signed-in user, listed first as "Me". */
@@ -38,10 +38,10 @@ export interface AssigneePickerProps {
  * the end. The list's owner also gets **Only this task**: someone picked by email sees that task only, not the list
  * (D70, M45). A tap picks and goes back.
  */
-export function AssigneePicker({ collectionId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
+export function AssigneePicker({ listId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const members = useMembers({ kind: 'collection', id: collectionId });
+  const members = useMembers({ kind: 'list', id: listId });
   if (members.isPending) return <ScrollView>{[60, 45, 70].map((w) => <SkeletonRow key={w} width={w} />)}</ScrollView>;
   if (members.error) return <Notice>{errorMessage(members.error)}</Notice>;
   const people = [...(members.data ?? [])].sort((a, b) => Number(b.userId === meId) - Number(a.userId === meId));

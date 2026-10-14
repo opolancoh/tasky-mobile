@@ -83,5 +83,5 @@ Why each: [06-mobile.md › Stack](../azignia-docs/design/clients/apps/06-mobile
 |---|---|
 | Auth | Built: sign in, sign up with a code, password reset, session kept across restarts and bad connections |
 | Tabs | Today · Upcoming · + · Browse · Search; Today shows the date, the others are shells |
-| Quick add | Built: the new-task form in a sheet from the + (collection, priority, tags, due date, reminder with date and time wheels, notes) |
+| Quick add | Built: the new-task form in a sheet from the + (list, priority, tags, due date, reminder with date and time wheels, notes) |
 | Next | Today's tasks, Task detail, account settings |

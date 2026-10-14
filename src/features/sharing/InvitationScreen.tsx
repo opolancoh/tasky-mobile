@@ -14,7 +14,7 @@ import { confirm, ListRow, Notice, Screen, space, Text, useTheme, useToast } fro
 
 /**
  * An invitation (06-mobile.md, M34), pushed from its Needs attention row: who invited, the people, the open tasks
- * (a collection) or lists (a team), when it expires, and what joining shows. **Join** in the header, where Save goes;
+ * (a list) or lists (a team), when it expires, and what joining shows. **Join** in the header, where Save goes;
  * **Decline invitation** as red text at the end (D68). Either answer goes back.
  */
 export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id }>) {

@@ -13,7 +13,7 @@ src/data/
 ├── tenancy/             GET /me
 │   ├── api.ts  keys.ts  queries.ts  types.ts
 │   ├── api.ts  keys.ts  queries.ts  types.ts
-├── tasks/               Collections (create, edit, archive, delete, reorder), teams, people and invitations to them, tags (color, rename, merge,
+├── tasks/               Lists (create, edit, archive, delete, reorder), teams, people and invitations to them, tags (color, rename, merge,
 │   │                    delete, reorder), Recently Deleted, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore;
 │   │                    the Today tab (GET /home, GET /home/{section}, D67, D69; named after the API) and the caller's invitations (join, decline, D68): the API's Tasks module holds sharing (D64)
 │   ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
@@ -27,7 +27,7 @@ src/data/
 
 | File | Holds | Example |
 |---|---|---|
-| `types.ts` | Request and response types, in the API's names and shapes | `Me`, `Collection`, `TokenResponse` |
+| `types.ts` | Request and response types, in the API's shapes; JSON fields keep the API's names (`collectionId`, `collection`), types use the app's (`TaskList`: the API calls lists collections) | `Me`, `TaskList`, `TokenResponse` |
 | `api.ts` | One function per endpoint; calls `http()`, no caching | `identityApi.login(body)` |
 | `keys.ts` | Query key factories | `tenancyKeys.me` |
 | `queries.ts` | Query definitions and hooks | `meQuery`, `useMe()` |

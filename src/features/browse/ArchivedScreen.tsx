@@ -2,24 +2,24 @@ import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { useArchiveCollection } from '@/data/tasks/mutations';
-import { useArchivedCollections } from '@/data/tasks/queries';
-import type { Collection } from '@/data/tasks/types';
+import { useArchiveList } from '@/data/tasks/mutations';
+import { useArchivedLists } from '@/data/tasks/queries';
+import type { TaskList } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { canManage } from './browseSections';
 
-type Item = { type: 'header'; key: string } | { type: 'list'; key: string; collection: Collection } | { type: 'footer'; key: string };
+type Item = { type: 'header'; key: string } | { type: 'list'; key: string; list: TaskList } | { type: 'footer'; key: string };
 
 /** Archived lists (M38): finished projects, out of Browse and the pickers for everyone in them. Managers unarchive. */
 export function ArchivedScreen() {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const archived = useArchivedCollections();
-  const unarchive = useArchiveCollection();
+  const archived = useArchivedLists();
+  const unarchive = useArchiveList();
   const lists = archived.data ?? [];
-  const items: Item[] = [{ type: 'header', key: 'header' }, ...lists.map((collection) => ({ type: 'list' as const, key: collection.id, collection })), { type: 'footer', key: 'footer' }];
+  const items: Item[] = [{ type: 'header', key: 'header' }, ...lists.map((list) => ({ type: 'list' as const, key: list.id, list })), { type: 'footer', key: 'footer' }];
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -32,7 +32,7 @@ export function ArchivedScreen() {
           </View>
         );
       case 'list': {
-        const c = item.collection;
+        const c = item.list;
         return (
           <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
             <ColorDot color={c.color} size={12} />
@@ -42,7 +42,7 @@ export function ArchivedScreen() {
             </View>
             {canManage(c) && (
               <Pressable
-                onPress={() => unarchive.mutate({ collection: c, archive: false }, { onSuccess: () => useToast.getState().show({ message: t('browse.unarchived', { name: c.name }) }) })}
+                onPress={() => unarchive.mutate({ list: c, archive: false }, { onSuccess: () => useToast.getState().show({ message: t('browse.unarchived', { name: c.name }) }) })}
                 disabled={unarchive.isPending}
                 accessibilityRole="button"
                 style={styles.action}

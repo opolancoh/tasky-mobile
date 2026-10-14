@@ -8,12 +8,12 @@ import type { Id } from '@/core/types';
 import { limits } from '@/core/validation/limits';
 import { newTagName, stripInvalidTagChars, TAG_NAME_MAX } from '@/core/validation/tags';
 import { tasksApi } from '@/data/tasks/api';
-import { useCreateCollection, useCreateTeam, useRenameTag, useRenameTeam, useSaveTag, useUpdateCollection } from '@/data/tasks/mutations';
-import { useCollections, useTags, useTeams } from '@/data/tasks/queries';
+import { useCreateList, useCreateTeam, useRenameTag, useRenameTeam, useSaveTag, useUpdateList } from '@/data/tasks/mutations';
+import { useLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { SortMode } from '@/data/tasks/types';
 import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { collectionColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast } from '@/shared/ui';
+import { listColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast } from '@/shared/ui';
 
 import { useBrowseSheet, type BrowseSheetTarget } from './browseSheetStore';
 
@@ -35,17 +35,17 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   const open = useBrowseSheet((s) => s.open);
   const hide = useBrowseSheet((s) => s.hide);
   const onCreated = useBrowseSheet((s) => s.onCreated);
-  const collections = useCollections().data ?? [];
+  const lists = useLists().data ?? [];
   const teams = useTeams().data ?? [];
   const tags = useTags().data ?? [];
 
-  const list = target.kind === 'list' && target.id ? collections.find((c) => c.id === target.id) : undefined;
+  const list = target.kind === 'list' && target.id ? lists.find((c) => c.id === target.id) : undefined;
   const team = target.kind === 'team' && target.id ? teams.find((x) => x.id === target.id) : undefined;
   const tag = target.kind === 'tag' ? tags.find((x) => x.name === target.name) : undefined;
-  const used = new Set(collections.map((c) => c.color));
+  const used = new Set(lists.map((c) => c.color));
   const [initial] = useState(() => ({
     name: list?.name ?? team?.name ?? tag?.name ?? '',
-    color: list?.color ?? tag?.color ?? (target.kind === 'list' ? (collectionColors.find((c) => !used.has(c)) ?? collectionColors[0]) : null),
+    color: list?.color ?? tag?.color ?? (target.kind === 'list' ? (listColors.find((c) => !used.has(c)) ?? listColors[0]) : null),
     sort: list?.sortMode ?? ('manual' as SortMode),
     teamId: target.kind === 'list' ? target.teamId : undefined,
   }));
@@ -54,8 +54,8 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   const [sort, setSort] = useState<SortMode>(initial.sort);
   const [teamId, setTeamId] = useState<Id | undefined>(initial.teamId);
 
-  const createList = useCreateCollection();
-  const updateList = useUpdateCollection();
+  const createList = useCreateList();
+  const updateList = useUpdateList();
   const createTeam = useCreateTeam();
   const renameTeam = useRenameTeam();
   const saveTag = useSaveTag();
@@ -84,7 +84,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
     if (target.kind === 'list') {
       if (list) {
         updateList.mutate(
-          { collection: list, body: { ...(inbox || trimmed === list.name ? {} : { name: trimmed }), ...(inbox || color === list.color ? {} : { color: color! }), ...(sort === list.sortMode ? {} : { sortMode: sort }) } },
+          { list, body: { ...(inbox || trimmed === list.name ? {} : { name: trimmed }), ...(inbox || color === list.color ? {} : { color: color! }), ...(sort === list.sortMode ? {} : { sortMode: sort }) } },
           { onSuccess: () => done(t('browse.saved')) },
         );
       } else {
@@ -144,7 +144,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
             value={name}
             onChangeText={(v) => setName(target.kind === 'tag' ? stripInvalidTagChars(v.replace(/\s/g, '-')).toLowerCase() : v)}
             placeholder={t(target.kind === 'tag' ? 'browse.sheet.tagPlaceholder' : target.kind === 'team' ? 'browse.sheet.teamPlaceholder' : 'browse.sheet.listPlaceholder')}
-            maxLength={target.kind === 'tag' ? TAG_NAME_MAX : target.kind === 'team' ? limits.teamNameMax : taskLimits.collectionNameMax}
+            maxLength={target.kind === 'tag' ? TAG_NAME_MAX : target.kind === 'team' ? limits.teamNameMax : taskLimits.listNameMax}
             autoCapitalize={target.kind === 'tag' ? 'none' : 'sentences'}
             autoCorrect={target.kind !== 'tag'}
             hint={target.kind === 'tag' ? t('browse.sheet.tagHint') : target.kind === 'team' ? t('browse.sheet.teamHint') : undefined}
@@ -172,11 +172,11 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   );
 }
 
-/** The color swatches (user data, collectionColors); tags may have none (gray). */
+/** The color swatches (user data, listColors); tags may have none (gray). */
 function Swatches({ value, onChange, allowNone }: { value: string | null; onChange(color: string | null): void; allowNone: boolean }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const options: (string | null)[] = allowNone ? [null, ...collectionColors] : [...collectionColors];
+  const options: (string | null)[] = allowNone ? [null, ...listColors] : [...listColors];
   return (
     <>
       <SectionLabel>{t('browse.sheet.color')}</SectionLabel>

@@ -7,18 +7,18 @@ import type { HomeSection, MembersOf, TaskFilter } from './types';
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
 
-/** Every collection the caller can see, Inbox first. */
-export const useCollections = () => useQuery({ queryKey: taskKeys.collections, queryFn: tasksApi.collections });
+/** Every list the caller can see, Inbox first. */
+export const useLists = () => useQuery({ queryKey: taskKeys.lists, queryFn: tasksApi.lists });
 
 /** The caller's tags (D60). */
 export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });
 
 /**
  * The first page of a task list (D51, D61) over everything the caller can see, e.g.
- * `{ important: true, mine: true, due: ['upcoming', 'none'], limit: 3 }`; add `collectionId` for one collection.
+ * `{ important: true, mine: true, due: ['upcoming', 'none'], limit: 3 }`; add `collectionId` for one list.
  * `enabled: false` waits (e.g. for today's date).
  */
-export const useTaskList = (filter: TaskFilter, enabled = true) =>
+export const useTasks = (filter: TaskFilter, enabled = true) =>
   useQuery({ queryKey: taskKeys.list(filter), queryFn: () => tasksApi.list(filter), enabled });
 
 /** Rows each Today section shows (M32); its See all pages by `HOME_PAGE`. Named after the API's GET /home. */
@@ -47,16 +47,16 @@ export const useInvitations = (enabled = true) => useQuery({ queryKey: taskKeys.
 /** The full task (D55). */
 export const useTask = (taskId: Id) => useQuery({ queryKey: taskKeys.detail(taskId), queryFn: () => tasksApi.get(taskId) });
 
-/** Archived collections the caller can see (Browse › Archived). */
-export const useArchivedCollections = () => useQuery({ queryKey: taskKeys.archived, queryFn: tasksApi.archivedCollections });
+/** Archived lists the caller can see (Browse › Archived). */
+export const useArchivedLists = () => useQuery({ queryKey: taskKeys.archived, queryFn: tasksApi.archivedLists });
 
 /** The caller's teams and their role (GET /teams). */
 export const useTeams = () => useQuery({ queryKey: taskKeys.teams, queryFn: tasksApi.teams });
 
-/** A team's or a collection's people. */
+/** A team's or a list's people. */
 export const useMembers = (of: MembersOf, enabled = true) => useQuery({ queryKey: taskKeys.members(of.kind, of.id), queryFn: () => tasksApi.members(of), enabled });
 
-/** Open invitations to a team or collection; only for those who invite (`enabled`). */
+/** Open invitations to a team or list; only for those who invite (`enabled`). */
 export const useOpenInvitations = (of: MembersOf, enabled: boolean) =>
   useQuery({ queryKey: taskKeys.openInvitations(of.kind, of.id), queryFn: () => tasksApi.openInvitations(of), enabled });
 

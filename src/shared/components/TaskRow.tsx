@@ -23,7 +23,7 @@ export interface TaskRowProps {
 }
 
 /**
- * A task in a list (collections, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
+ * A task in a list (lists, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
  * (its list, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
  * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except in
  * the Inbox (M44). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
@@ -66,7 +66,7 @@ export function TaskRow({ task, today, showDue = false, onComplete, onPress }: T
               {task.title}
             </Text>
             <View style={[styles.meta, { gap: space.sm }]}>
-              <TaskOrigin collection={task.collection} assignedBy={task.assignedBy} />
+              <TaskOrigin list={task.collection} assignedBy={task.assignedBy} />
               {task.dueDate && (showDue || overdue) && (
                 <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>
                   {labels.day(task.dueDate)}

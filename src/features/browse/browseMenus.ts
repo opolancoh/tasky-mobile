@@ -1,9 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
-import { useArchiveCollection, useDeleteCollection, useDeleteTag, useDeleteTeam, useRemoveMember } from '@/data/tasks/mutations';
+import { useArchiveList, useDeleteList, useDeleteTag, useDeleteTeam, useRemoveMember } from '@/data/tasks/mutations';
 import { useTeams } from '@/data/tasks/queries';
-import type { Collection, Tag, Team } from '@/data/tasks/types';
+import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
 import { chooseAction, confirm, useToast, type ActionChoice } from '@/shared/ui';
@@ -33,26 +33,26 @@ export function useBrowseMenus() {
   const me = useMe().data;
   const teams = useTeams().data ?? [];
   const showSheet = useShowBrowseSheet();
-  const archive = useArchiveCollection();
-  const removeList = useDeleteCollection();
+  const archive = useArchiveList();
+  const removeList = useDeleteList();
   const removeTeam = useDeleteTeam();
   const removeMember = useRemoveMember();
   const removeTag = useDeleteTag();
   const cancel = t('common.cancel');
 
-  const listMenu = (c: Collection, onGone?: () => void) => {
+  const listMenu = (c: TaskList, onGone?: () => void) => {
     if (c.isInbox) return open(t('browse.inbox'), [{ label: t('browse.menu.sort'), run: () => showSheet({ kind: 'list', id: c.id }) }], cancel);
     const team = c.team ? teams.find((x) => x.id === c.team!.id) : undefined;
     const leave = canLeave(c, team, me?.id);
     return open(c.name, [
       { label: t('browse.menu.editList'), run: () => showSheet({ kind: 'list', id: c.id }) },
-      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), run: () => navigation.navigate('People', { kind: 'collection', id: c.id }) },
+      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), run: () => navigation.navigate('People', { kind: 'list', id: c.id }) },
       canManage(c) && {
         label: t('browse.menu.archive'),
-        run: () => archive.mutate({ collection: c, archive: true }, {
+        run: () => archive.mutate({ list: c, archive: true }, {
           onSuccess: (archived) => {
             onGone?.();
-            useToast.getState().show({ message: t('browse.archived', { name: c.name }), action: { label: t('common.undo'), onPress: () => archive.mutate({ collection: archived, archive: false }) } });
+            useToast.getState().show({ message: t('browse.archived', { name: c.name }), action: { label: t('common.undo'), onPress: () => archive.mutate({ list: archived, archive: false }) } });
           },
           onError: toastError,
         }),
@@ -70,7 +70,7 @@ export function useBrowseMenus() {
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.leaveTitle', { name: c.name }), message: t('browse.leaveListBody', { name: c.owner.displayName }), confirmLabel: t('browse.menu.leaveList'), cancelLabel: cancel });
-          if (ok) removeMember.mutate({ of: { kind: 'collection', id: c.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: c.name }) }); }, onError: toastError });
+          if (ok) removeMember.mutate({ of: { kind: 'list', id: c.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: c.name }) }); }, onError: toastError });
         },
       },
     ], cancel);

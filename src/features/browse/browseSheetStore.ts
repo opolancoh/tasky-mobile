@@ -35,5 +35,5 @@ export function useShowBrowseSheet() {
   const navigation = useNavigation();
   const show = useBrowseSheet((s) => s.show);
   return (target: BrowseSheetTarget) =>
-    show(target, (id) => (target.kind === 'team' ? navigation.navigate('Team', { teamId: id }) : navigation.navigate('Collection', { collectionId: id })));
+    show(target, (id) => (target.kind === 'team' ? navigation.navigate('Team', { teamId: id }) : navigation.navigate('List', { listId: id })));
 }

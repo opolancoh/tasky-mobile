@@ -8,11 +8,11 @@ import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
 import { useCreateTask } from '@/data/tasks/mutations';
-import { useCollections, useTags } from '@/data/tasks/queries';
+import { useLists, useTags } from '@/data/tasks/queries';
 import { taskLimits, type UserRef } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { AssigneePicker, Avatar, givesOutside, CollectionIcon, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, givesOutside, ListIcon, ListPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -20,13 +20,13 @@ import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 
-type Page = 'form' | 'collection' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
+type Page = 'form' | 'list' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
 
 interface Draft {
   title: string;
   notes: string;
   /** Undefined: the Inbox. */
-  collectionId?: string;
+  listId?: string;
   /** The Important flag (a bar icon toggles it, no page). */
   isImportant: boolean;
   dueDate?: LocalDate;
@@ -39,12 +39,12 @@ interface Draft {
 
 const EMPTY: Draft = { title: '', notes: '', isImportant: false, reminder: null, tags: [] };
 const NO_NAMES: string[] = [];
-/** The Inbox's mark before the collections arrive. */
+/** The Inbox's mark before the lists arrive. */
 const INBOX = { isInbox: true, color: '' };
 
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
- * The form is a summary (Collection, then a row per set field, each with ✕) with a bottom icon bar (M18)
+ * The form is a summary (TaskList, then a row per set field, each with ✕) with a bottom icon bar (M18)
  * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /tasks) and closes the sheet.
  */
 export function QuickAddSheet() {
@@ -60,9 +60,9 @@ function QuickAddForm() {
 
   const me = useMe().data;
   const userId = useSessionStore((s) => s.userId);
-  const collectionsQuery = useCollections();
+  const listsQuery = useLists();
   const tagsQuery = useTags();
-  const collections = collectionsQuery.data ?? [];
+  const lists = listsQuery.data ?? [];
   const myTags = tagsQuery.data ?? [];
   const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
   const create = useCreateTask();
@@ -80,15 +80,15 @@ function QuickAddForm() {
   };
 
   const today = now?.date;
-  const inbox = collections.find((c) => c.isInbox);
-  const collection = collections.find((c) => c.id === draft.collectionId) ?? inbox;
+  const inbox = lists.find((c) => c.isInbox);
+  const list = lists.find((c) => c.id === draft.listId) ?? inbox;
   const tags = draft.tags;
   // Assigning is on every list (M44); the Inbox and private lists offer only Me.
-  const canAssign = !!collection;
+  const canAssign = !!list;
   const titleText = draft.title.trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
-  // Never waits for the lists (M27): with none picked the task goes to the user's Inbox (POST without a collection, M31).
+  // Never waits for the lists (M27): with none picked the task goes to the user's Inbox (POST without a list, M31).
   const canAdd = titleText.length > 0 && !create.isPending;
 
   const labels = useDateLabels(today);
@@ -103,7 +103,7 @@ function QuickAddForm() {
     create.mutate(
       {
         body: {
-          collectionId: collection?.id,
+          collectionId: list?.id,
           title: titleText,
           tags: tags.length ? tags : undefined,
           notes: draft.notes.trim() || undefined,
@@ -146,7 +146,7 @@ function QuickAddForm() {
 
   const back = { icon: 'chevron-left' as const, label: t('quickAdd.task'), onPress: () => setPage('form') };
   const titles: Record<Exclude<Page, 'form'>, string> = {
-    collection: t('quickAdd.fields.collection'),
+    list: t('quickAdd.fields.list'),
     tags: t('quickAdd.fields.tags'),
     due: t('quickAdd.fields.dueDate'),
     reminder: t('quickAdd.fields.reminder'),
@@ -216,10 +216,10 @@ function QuickAddForm() {
 
           <View>
             <ListRow
-              label={t('quickAdd.fields.collection')}
-              icon={<CollectionIcon collection={collection ?? INBOX} />}
-              value={<Text variant="bodyMedium" color="accent">{collection?.name ?? t('collections.inbox')}</Text>}
-              onPress={() => openPage('collection')}
+              label={t('quickAdd.fields.list')}
+              icon={<ListIcon list={list ?? INBOX} />}
+              value={<Text variant="bodyMedium" color="accent">{list?.name ?? t('lists.inbox')}</Text>}
+              onPress={() => openPage('list')}
             />
             {canAssign && draft.assignee && (
               <ListRow
@@ -282,10 +282,10 @@ function QuickAddForm() {
         </ScrollView>
       )}
 
-      {page === 'collection' && <CollectionPicker collections={collections} loading={collectionsQuery.isPending} selectedId={collection?.id} onPick={(c) => pick({ collectionId: c.id, ...(c.id === collection?.id ? {} : { assignee: undefined }) })} />}
+      {page === 'list' && <ListPicker lists={lists} loading={listsQuery.isPending} selectedId={list?.id} onPick={(c) => pick({ listId: c.id, ...(c.id === list?.id ? {} : { assignee: undefined }) })} />}
 
-      {page === 'assignee' && collection && userId && (
-        <AssigneePicker collectionId={collection.id} canGiveOutside={givesOutside(collection, userId)} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />
+      {page === 'assignee' && list && userId && (
+        <AssigneePicker listId={list.id} canGiveOutside={givesOutside(list, userId)} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />
       )}
 
       {page === 'notes' && <NotesPage value={draft.notes} onChange={(notes) => update({ notes })} />}

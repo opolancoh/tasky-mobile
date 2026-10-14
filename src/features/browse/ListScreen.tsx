@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
-import { useCollections, useMembers, useTaskList, useTaskPages } from '@/data/tasks/queries';
+import { useLists, useMembers, useTasks, useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
@@ -32,28 +32,28 @@ type Item =
  * "Share…" on a private list ("Only you · Ana and Luis have tasks" once tasks went to people outside it, D70, M45); a tap
  * opens People. The header holds •••, the list's menu by role.
  */
-export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id }>) {
-  const { collectionId } = route.params;
+export function ListScreen({ route }: StaticScreenProps<{ listId: Id }>) {
+  const { listId } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
-  const collection = useCollections().data?.find((c) => c.id === collectionId);
-  const tasks = useTaskList({ collectionId, sort: 'collection' });
+  const list = useLists().data?.find((c) => c.id === listId);
+  const tasks = useTasks({ collectionId: listId, sort: 'collection' });
   const [showDone, setShowDone] = useState(false);
-  const done = useTaskPages({ collectionId, status: 'completed', limit: 20 }, showDone);
-  const shared = !!collection && collection.sharing !== 'private';
-  const members = useMembers({ kind: 'collection', id: collectionId }, shared);
+  const done = useTaskPages({ collectionId: listId, status: 'completed', limit: 20 }, showDone);
+  const shared = !!list && list.sharing !== 'private';
+  const members = useMembers({ kind: 'list', id: listId }, shared);
   const complete = useCompleteTask();
   const { listMenu } = useBrowseMenus();
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: collection
+      headerRight: list
         ? () => (
             <View style={styles.headerRight}>
-              <Pressable onPress={() => listMenu(collection, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+              <Pressable onPress={() => listMenu(list, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>
@@ -79,13 +79,13 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
   // People with tasks here who aren't in it (D70): named on a private list's line.
   const outsiders = [...new Set(rows.filter((r) => r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id)).map((r) => r.assignee!.displayName.split(' ')[0]))];
   // Who is in it (M44): nothing on the Inbox; "Share…" on a private list (only its owner sees it).
-  const who = !collection || collection.isInbox ? null
+  const who = !list || list.isInbox ? null
     : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : t('browse.share'))
     : !members.data ? null
-    : collection.team ? `${collection.team.name} · ${count}`
-    : collection.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })
-    : `${t('browse.ownersList', { name: collection.owner.displayName.split(' ')[0] })} · ${count}`;
-  const eyebrow = !collection || collection.isInbox ? '' : collection.team ? collection.team.name : collection.owner.id !== me?.id ? t('browse.ownersList', { name: collection.owner.displayName.split(' ')[0] }) : '';
+    : list.team ? `${list.team.name} · ${count}`
+    : list.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })
+    : `${t('browse.ownersList', { name: list.owner.displayName.split(' ')[0] })} · ${count}`;
+  const eyebrow = !list || list.isInbox ? '' : list.team ? list.team.name : list.owner.id !== me?.id ? t('browse.ownersList', { name: list.owner.displayName.split(' ')[0] }) : '';
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -94,16 +94,16 @@ export function CollectionScreen({ route }: StaticScreenProps<{ collectionId: Id
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             {eyebrow ? <Text variant="label" color="ink3">{eyebrow}</Text> : null}
             <View style={[styles.title, { gap: space.sm }]}>
-              {collection?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={collection?.color} size={14} />}
-              <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.fill}>{collection ? (collection.isInbox ? t('browse.inbox') : collection.name) : ''}</Text>
+              {list?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={list?.color} size={14} />}
+              <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.fill}>{list ? (list.isInbox ? t('browse.inbox') : list.name) : ''}</Text>
             </View>
-            {collection && (
+            {list && (
               <Text variant="subhead" color="ink2">
-                {`${t('browse.openCount', { count: tasks.data?.total ?? rows.length })} · ${t(`browse.sort.${collection.sortMode}`)}`}
+                {`${t('browse.openCount', { count: tasks.data?.total ?? rows.length })} · ${t(`browse.sort.${list.sortMode}`)}`}
               </Text>
             )}
             {who && (
-              <Pressable onPress={() => navigation.navigate('People', { kind: 'collection', id: collectionId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
+              <Pressable onPress={() => navigation.navigate('People', { kind: 'list', id: listId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
                 <Feather name="users" size={15} color={colors.accent} />
                 <Text variant="subhead" color="accent" numberOfLines={1} style={styles.shrink}>{who}</Text>
                 <Feather name="chevron-right" size={14} color={colors.accent} />

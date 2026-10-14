@@ -6,10 +6,10 @@ import { nowIn } from '@/core/dates/localDate';
 import type { ReminderAt } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { taskKeys } from '@/data/tasks/keys';
-import { useCollections, useTags } from '@/data/tasks/queries';
+import { useLists, useTags } from '@/data/tasks/queries';
 import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { givesOutside, AssigneePicker, CollectionPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
+import { givesOutside, AssigneePicker, ListPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { Sheet } from '@/shared/ui';
 
@@ -21,7 +21,7 @@ import { useTaskSheet, type TaskField } from './taskSheetStore';
 const NO_NAMES: string[] = [];
 
 /**
- * Task detail's field pages (M25, M26), one sheet over the screen: Collection, Due date, Reminder, Repeat, Tags. They
+ * Task detail's field pages (M25, M26), one sheet over the screen: TaskList, Due date, Reminder, Repeat, Tags. They
  * change the draft, which Save sends: a quick choice applies and closes, the wheels and tag changes apply with Done,
  * Cancel or a tap outside drops them (M21). Mounted once in App; `useTaskSheet` says which field.
  */
@@ -89,10 +89,10 @@ interface PageProps {
 }
 
 function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
-  const collectionsQuery = useCollections();
+  const listsQuery = useLists();
   const tagsQuery = useTags();
   const userId = useSessionStore((s) => s.userId);
-  const collections = collectionsQuery.data ?? [];
+  const lists = listsQuery.data ?? [];
   const myTags = tagsQuery.data ?? [];
   const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
   const today = now.date;
@@ -101,22 +101,22 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
   const assignmentStatus = assigneeStatus(task, draft.assignee, userId);
 
   switch (field) {
-    case 'collection':
+    case 'list':
       return (
-        <CollectionPicker
-          collections={collections}
-          loading={collectionsQuery.isPending}
-          selectedId={draft.collection?.id}
+        <ListPicker
+          lists={lists}
+          loading={listsQuery.isPending}
+          selectedId={draft.list?.id}
           // The Inbox is only yours: someone else who had the task loses it there (the API drops them too). Into your own
           // private or shared list they keep it, seeing only that task (D70).
-          onPick={(c) => apply({ collection: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
+          onPick={(c) => apply({ list: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
         />
       );
     case 'assignee':
-      return userId && draft.collection ? (
+      return userId && draft.list ? (
         <AssigneePicker
-          collectionId={draft.collection.id}
-          canGiveOutside={givesOutside(collections.find((c) => c.id === draft.collection?.id), userId)}
+          listId={draft.list.id}
+          canGiveOutside={givesOutside(lists.find((c) => c.id === draft.list?.id), userId)}
           meId={userId}
           selected={draft.assignee}
           status={assignmentStatus}

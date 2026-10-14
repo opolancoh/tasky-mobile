@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { formatInstant } from '@/core/dates/localDate';
 import { isEmail } from '@/core/validation/rules';
 import { useInvite, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
-import { useCollections, useMembers, useOpenInvitations, useTeams } from '@/data/tasks/queries';
+import { useLists, useMembers, useOpenInvitations, useTeams } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
@@ -37,20 +37,20 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const navigation = useNavigation();
   const me = useMe().data;
   const teams = useTeams().data ?? [];
-  const collections = useCollections().data;
-  const collection = of.kind === 'collection' ? collections?.find((c) => c.id === of.id) : undefined;
-  const team = of.kind === 'team' ? teams.find((x) => x.id === of.id) : collection?.team ? teams.find((x) => x.id === collection.team!.id) : undefined;
-  const invites = of.kind === 'team' ? !!team && team.role !== 'member' : !!collection && canInvite(collection, team);
-  const leaves = of.kind === 'team' ? !!team && team.role !== 'owner' : !!collection && canLeave(collection, team, me?.id);
+  const lists = useLists().data;
+  const list = of.kind === 'list' ? lists?.find((c) => c.id === of.id) : undefined;
+  const team = of.kind === 'team' ? teams.find((x) => x.id === of.id) : list?.team ? teams.find((x) => x.id === list.team!.id) : undefined;
+  const invites = of.kind === 'team' ? !!team && team.role !== 'member' : !!list && canInvite(list, team);
+  const leaves = of.kind === 'team' ? !!team && team.role !== 'owner' : !!list && canLeave(list, team, me?.id);
   const members = useMembers(of);
   const open = useOpenInvitations(of, invites);
   const revoke = useRevokeInvitation(of);
   const remove = useRemoveMember();
-  const name = of.kind === 'team' ? team?.name : collection?.name;
+  const name = of.kind === 'team' ? team?.name : list?.name;
 
   const leave = async () => {
     if (!me || !name) return;
-    const ok = await confirm({ title: t('browse.leaveTitle', { name }), message: t(of.kind === 'team' ? 'browse.leaveTeamBody' : 'browse.leaveListBody', { name: collection?.owner.displayName }), confirmLabel: t(of.kind === 'team' ? 'browse.menu.leaveTeam' : 'browse.menu.leaveList'), cancelLabel: t('common.cancel') });
+    const ok = await confirm({ title: t('browse.leaveTitle', { name }), message: t(of.kind === 'team' ? 'browse.leaveTeamBody' : 'browse.leaveListBody', { name: list?.owner.displayName }), confirmLabel: t(of.kind === 'team' ? 'browse.menu.leaveTeam' : 'browse.menu.leaveList'), cancelLabel: t('common.cancel') });
     if (ok) remove.mutate({ of, userId: me.id }, { onSuccess: () => { navigation.navigate('Tabs', { screen: 'Browse' }); useToast.getState().show({ message: t('browse.left', { name }) }); } });
   };
 

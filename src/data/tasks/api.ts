@@ -2,37 +2,40 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  Collection, CreateCollectionRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
-  UpdateCollectionRequest, UpdateTaskRequest,
+  TaskList, CreateListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
+  UpdateListRequest, UpdateTaskRequest,
 } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 type Versioned = { id: Id; version: number };
 
+/** A team's or a list's address in the API (lists are lists there). */
+const peopleOf = (of: MembersOf) => `/${of.kind === 'team' ? 'teams' : 'collections'}/${of.id}`;
+
 export const tasksApi = {
-  /** GET /collections: every collection the caller can see, Inbox first, with open counts. */
-  collections: () => getAll<Collection>('/collections'),
+  /** GET /collections: every list the caller can see, Inbox first, with open counts. */
+  lists: () => getAll<TaskList>('/collections'),
 
   /** GET /collections?archived=true: archived ones the caller can see. */
-  archivedCollections: () => getAll<Collection>('/collections', { archived: true }),
+  archivedLists: () => getAll<TaskList>('/collections', { archived: true }),
 
   /** POST /collections (201). */
-  createCollection: (body: CreateCollectionRequest) => http().post<Collection>('/collections', { body }),
+  createList: (body: CreateListRequest) => http().post<TaskList>('/collections', { body }),
 
   /** PATCH /collections/{id} with If-Match: name, color, sort (any member). */
-  updateCollection: (c: Versioned, body: UpdateCollectionRequest) => http().patch<Collection>(`/collections/${c.id}`, { body, ifMatch: c.version }),
+  updateList: (c: Versioned, body: UpdateListRequest) => http().patch<TaskList>(`/collections/${c.id}`, { body, ifMatch: c.version }),
 
   /** POST /collections/{id}:archive or :unarchive with If-Match (managers). */
-  archiveCollection: (c: Versioned, archive: boolean) => http().post<Collection>(`/collections/${c.id}:${archive ? 'archive' : 'unarchive'}`, { ifMatch: c.version }),
+  archiveList: (c: Versioned, archive: boolean) => http().post<TaskList>(`/collections/${c.id}:${archive ? 'archive' : 'unarchive'}`, { ifMatch: c.version }),
 
   /** DELETE /collections/{id} with If-Match: with its tasks, to Recently Deleted (managers). */
-  deleteCollection: (c: Versioned) => http().delete(`/collections/${c.id}`, { ifMatch: c.version }),
+  deleteList: (c: Versioned) => http().delete(`/collections/${c.id}`, { ifMatch: c.version }),
 
-  /** POST /collections/{id}:restore with the deleted collection's version. */
-  restoreCollection: (item: Versioned) => http().post(`/collections/${item.id}:restore`, { ifMatch: item.version }),
+  /** POST /collections/{id}:restore with the deleted list's version. */
+  restoreList: (item: Versioned) => http().post(`/collections/${item.id}:restore`, { ifMatch: item.version }),
 
   /** POST /collections:reorder: the caller's own Browse order (204). */
-  reorderCollections: (ids: Id[]) => http().post('/collections:reorder', { body: { ids } }),
+  reorderLists: (ids: Id[]) => http().post('/collections:reorder', { body: { ids } }),
 
   /** GET /teams: the caller's teams, with their role. */
   teams: () => getAll<Team>('/teams'),
@@ -43,23 +46,23 @@ export const tasksApi = {
   /** PATCH /teams/{id} with If-Match: rename (owner). */
   renameTeam: (team: Versioned, name: string) => http().patch<Team>(`/teams/${team.id}`, { body: { name }, ifMatch: team.version }),
 
-  /** DELETE /teams/{id} with If-Match: with its collections (owner). */
+  /** DELETE /teams/{id} with If-Match: with its lists (owner). */
   deleteTeam: (team: Versioned) => http().delete(`/teams/${team.id}`, { ifMatch: team.version }),
 
   /** POST /teams/{id}:restore with the deleted team's version. */
   restoreTeam: (item: Versioned) => http().post(`/teams/${item.id}:restore`, { ifMatch: item.version }),
 
   /** GET /teams/{id}/members or /collections/{id}/members. */
-  members: (of: MembersOf) => getAll<Member>(`/${of.kind}s/${of.id}/members`),
+  members: (of: MembersOf) => getAll<Member>(`${peopleOf(of)}/members`),
 
   /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
-  removeMember: (of: MembersOf, userId: Id) => http().delete(`/${of.kind}s/${of.id}/members/${userId}`),
+  removeMember: (of: MembersOf, userId: Id) => http().delete(`${peopleOf(of)}/members/${userId}`),
 
   /** GET …/invitations: open invitations (those who invite). */
-  openInvitations: (of: MembersOf) => getAll<OpenInvitation>(`/${of.kind}s/${of.id}/invitations`),
+  openInvitations: (of: MembersOf) => getAll<OpenInvitation>(`${peopleOf(of)}/invitations`),
 
   /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
-  invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`/${of.kind}s/${of.id}/invitations`, { body: { email } }),
+  invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email } }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),
@@ -106,7 +109,7 @@ export const tasksApi = {
   /** POST /tasks/{id}:skip: a repeating task moves to its next date without a completion. */
   skip: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:skip`, { ifMatch: task.version }),
 
-  /** POST /tasks/{id}:move to the bottom of another collection the caller can see. */
+  /** POST /tasks/{id}:move to the bottom of another list the caller can see. */
   move: (task: Versioned, collectionId: Id) => http().post<Task>(`/tasks/${task.id}:move`, { body: { collectionId }, ifMatch: task.version }),
 
   /** DELETE /tasks/{id}: to Recently Deleted for 30 days (204). */

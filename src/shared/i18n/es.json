@@ -343,7 +343,7 @@
     "close": "Cerrar",
     "fields": {
       "title": "Título",
-      "collection": "Colección",
+      "list": "Lista",
       "important": "Importante",
       "reminder": "Recordatorio",
       "dueDate": "Fecha límite",
@@ -427,7 +427,7 @@
   },
   "taskDetail": {
     "fields": {
-      "collection": "Colección",
+      "list": "Lista",
       "due": "Fecha límite",
       "reminder": "Recordatorio",
       "repeat": "Repetir",
@@ -498,7 +498,7 @@
     "fromCompletion": "{{rule}}, tras completarla",
     "hint": "Se repite desde la fecha límite. Sin fecha límite, empieza hoy."
   },
-  "collections": {
+  "lists": {
     "inbox": "Bandeja de entrada"
   },
   "todayList": {
