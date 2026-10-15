@@ -45,13 +45,13 @@ scripts/release.sh major    # 0.3.1 → 1.0.0: 1.0 for the stores, or a big chan
 (`npm run release -- minor` works too.) From `azignia-mobile`, it:
 
 1. Checks you're on `main` with nothing uncommitted, and that `npm run check` passes.
-2. Sets the version in `app.json`.
+2. Sets the next version in `app.json`.
 3. Adds a section to the top of `CHANGELOG.md` with the commit messages since the last tag (the first release just
    says "First release.").
-4. **Waits while you review it:** edit `CHANGELOG.md` in any editor, save, press Enter (`n` cancels and puts everything
+4. **Waits while you review it:** edit `CHANGELOG.md` in any editor, save, press Enter (`n`, Ctrl+C or Ctrl+D cancels and puts everything
    back).
 5. Shows the section as you left it, asks once more, then commits `Release x.y.z` and tags `vx.y.z`.
-6. Prints how to build and push. Nothing is built or pushed.
+6. Prints how to push and publish. Nothing leaves your machine, and nothing is built: that's [Building for testers](#building-for-testers).
 
 ### Example
 
@@ -69,10 +69,13 @@ Release 0.2.0:
 Commit and tag v0.2.0? [Y/n]
 Tagged v0.2.0 (local only).
 
-$ npm run build:ios && npm run submit:ios     # TestFlight
-$ npm run build:android                       # builds/azignia-0.2.0-20261024-1530.aab → Play Console
-$ git push && git push origin v0.2.0
+When you want it on GitHub:
+  git push && git push origin v0.2.0
+Then, for a GitHub Release, paste this section of CHANGELOG.md at:
+  https://github.com/opolancoh/tasky-mobile/releases/new?tag=v0.2.0
 ```
+
+Then build it for testers ([Building for testers](#building-for-testers)).
 
 ### When it stops
 
