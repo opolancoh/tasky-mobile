@@ -10,9 +10,9 @@
     "ts": "tsc --noEmit",
     "check": "tsc --noEmit && expo lint",
     "release": "scripts/release.sh",
-    "build:ios": "scripts/build.sh ios",
+    "build:ios": "eas build --platform ios --profile production",
     "submit:ios": "eas submit --platform ios --latest",
-    "build:android": "scripts/build.sh android"
+    "build:android": "scripts/android-build.sh"
   },
   "dependencies": {
     "@expo-google-fonts/figtree": "^0.4.1",

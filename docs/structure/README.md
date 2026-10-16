@@ -18,12 +18,14 @@ How the code is organized: what each folder holds, what may import what, and whe
 azignia-mobile/
 ├── index.tsx              Registers src/app/App with Expo
 ├── app.json               Name, scheme "azignia", icons, splash, iOS and Android settings
-├── app.config.ts          app.json + the active palette's colors (splash, Android icon)
+├── app.config.ts          app.json + the active palette's colors (splash, Android icon), Android's versionCode
+├── plugins/               withReleaseSigning.js (Android release signing from keystore.properties, M61)
+├── keystore.properties    The Android upload key's path and passwords; gitignored, per Mac (docs/releases.md)
 ├── eslint.config.js       Lint, the import rules and the no-hard-coded-colors rule
 ├── tsconfig.json          TypeScript strict; the @/ alias for src/
-├── eas.json               EAS builds: the production profile, its API address (docs/releases.md)
+├── eas.json               iOS's EAS build profile; the builds' API address (Android's too) (docs/releases.md)
 ├── CHANGELOG.md           Written by scripts/release.sh
-├── scripts/               release.sh (version, changelog, tag), build.sh (EAS builds)
+├── scripts/               release.sh (version, changelog, tag), android-build.sh (an Android build of a release)
 ├── .env.example           Every EXPO_PUBLIC_* setting: EXPO_PUBLIC_API_URL (required), EXPO_PUBLIC_HTTP_LOG
 ├── docs/                  This documentation
 └── src/

@@ -6,7 +6,8 @@ import active from './src/shared/ui/palettes/active.json';
  * app.json plus the colors that come from the active palette (splash and Android icon background),
  * so changing src/shared/ui/palettes/active.json changes them too. Native colors need a rebuild to show.
  * The API address is required everywhere, so it's always known which API the app calls: `.env.local` in
- * development, eas.json for a store build (EAS, docs/releases.md). `npx expo start` and `eas build` stop without it.
+ * development, eas.json's build.production.env for a tester's build (EAS for iOS, scripts/android-build.sh for Android,
+ * docs/releases.md). `npx expo start` and the builds stop without it.
  * Plain HTTP is allowed in a build only when that address is http:// (an API at home); Expo Go allows it anyway.
  * EAS CLI commands that only read this config (`eas submit`, `eas credentials`) run without .env files
  * (EXPO_NO_DOTENV) or the build's env: they don't need the address, so it isn't required there.
@@ -38,6 +39,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       : plugin,
   );
   plugins.push(['expo-build-properties', { android: { usesCleartextTraffic: cleartext } }]);
+  plugins.push('./plugins/withReleaseSigning');   // Android release signing from keystore.properties (M61)
+
+  // Android's versionCode comes from the version (0.3.1 → 301), so a release fixes it and a build changes no file (M61).
+  const [major, minor, patch] = (config.version ?? '').split('.').map(Number);
+  if (![major, minor, patch].every((n) => Number.isInteger(n) && n >= 0) || minor > 99 || patch > 99) {
+    throw new Error(`app.json's version "${config.version}" must be x.y.z with y and z up to 99.`);
+  }
 
   return {
     ...config,
@@ -50,6 +58,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       ...config.android,
       adaptiveIcon: { ...config.android?.adaptiveIcon, backgroundColor: light.accentGradient[1] },
+      versionCode: major * 10000 + minor * 100 + patch,
     },
     plugins,
   };

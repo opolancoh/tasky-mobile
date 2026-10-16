@@ -81,15 +81,15 @@ Set in `app.json` before the first build. The bundle id can never change: Apple 
     "production": {
       "autoIncrement": true,
       "env": { "EXPO_PUBLIC_API_URL": "https://api.example.com/api/v1" }
-    },
-    "production-apk": { "extends": "production", "android": { "buildType": "apk" } }
+    }
   },
   "submit": { "production": {} }
 }
 ```
 
-`appVersionSource: remote` and `autoIncrement`: EAS keeps the build number (iOS `buildNumber`, Android `versionCode`)
-and raises it on every build; the stores reject a number they've seen.
+`appVersionSource: remote` and `autoIncrement`: EAS keeps iOS's build number and raises it on every build; the stores
+reject a number they've seen. Android doesn't use EAS: its `versionCode` comes from the version (`app.config.ts`), and
+its build reads the same `EXPO_PUBLIC_API_URL` from here.
 
 ## 5. iOS: the first build to TestFlight
 
@@ -115,14 +115,15 @@ EAS builds and signs iOS in the cloud; the first build creates the certificate a
 
 ## 6. Android: the first build to internal testing
 
-EAS keeps the signing key and the build number; the build runs on the Mac. Google requires the first upload of a new
+The build runs on the Mac with Gradle (no EAS), signed with your upload key. Google requires the first upload of a new
 app by hand.
 
 1. **Create the app.** [Play Console](https://play.google.com/console) › Create app: the name, the language, App, Free,
    the declarations. The first upload sets the package.
-2. **Build:** `npm run build:android` (an `.aab` in `builds/`). The first time it asks to generate a keystore: yes.
-3. **Back up the key now:** `eas credentials` › Android › production › Download keystore. The `.jks` file and its
-   passwords go in your password manager, never in git.
+2. **The upload key:** create it with `keytool` and write `keystore.properties` ([Releases › Signing](releases.md#signing)).
+   Back it up now: the `.jks` file and its passwords go in your password manager, never in git.
+3. **Build:** `npm run build:android` (an `.aab` in `builds/`; it prints the full path). It builds only a release
+   commit, and offers to cut the first release if there's none ([Releases](releases.md#building-for-testers)).
 4. **Upload.** Play Console › the app › Test and release › Testing › **Internal testing**:
     1. Testers: an email list with the testers' Google accounts (up to 100).
     2. Create new release: accept **Play App Signing** (Google signs what users get; yours is only the upload key,
@@ -139,4 +140,4 @@ app by hand.
 - [ ] Bundle id, name, version, icon, encryption flag in `app.json` ([3](#3-the-apps-identity))
 - [ ] `eas init`; the API's URL in `eas.json` ([4](#4-link-the-project-to-expo))
 - [ ] App Store Connect app, first iOS build, submit, a TestFlight group ([5](#5-ios-the-first-build-to-testflight))
-- [ ] Play Console app, first Android build, keystore backed up, first `.aab` by hand, testers ([6](#6-android-the-first-build-to-internal-testing))
+- [ ] Play Console app, upload key created and backed up, first Android build, first `.aab` by hand, testers ([6](#6-android-the-first-build-to-internal-testing))

@@ -10,12 +10,6 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.azignia.com/api/v1"
       }
-    },
-    "production-apk": {
-      "extends": "production",
-      "android": {
-        "buildType": "apk"
-      }
     }
   },
   "submit": {
