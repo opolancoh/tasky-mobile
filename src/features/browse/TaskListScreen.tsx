@@ -1,23 +1,25 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
-import { useCompleteTask } from '@/data/tasks/mutations';
+import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import { useTaskLists, useMembers, useTasks, useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
-import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
-import { ColorDot, Notice, radius, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { useSessionStore } from '@/shared/session/sessionStore';
+import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
+import { AddTaskField } from './components/AddTaskField';
 import { CompletedRow } from './components/CompletedRow';
+import { useFoldedLists } from './foldedListsStore';
 
 type Item =
   | { type: 'header'; key: string }
@@ -28,9 +30,10 @@ type Item =
   | { type: 'skeleton'; key: string; width: number };
 
 /**
- * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. **Add a task** floats at the bottom,
- * empty list or full (M55): it opens Quick add for this list, which stays open for the next task. **Show completed**
- * after the open tasks only when the list has some (`completedTasks`); they load when asked, newest first, paged (D54). Under the title a line says who is in it (M44): "Shared with Luis", "Family · 3 people", or
+ * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. A field docked at the bottom, empty
+ * list or full, adds a task by its title (M62); the list and the field ride above the keyboard. After the open tasks,
+ * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
+ * list on the device, its tasks fetched only while open, newest first, paged (D54). Under the title a line says who is in it (M44): "Shared with Luis", "Family · 3 people", or
  * "Share…" on a private list ("Only you · Ana and Luis have tasks" once tasks went to people outside it, D70, M45); a tap
  * opens People. The header holds •••, the list's menu by role.
  */
@@ -43,19 +46,27 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const today = me ? todayIn(me.timeZone) : undefined;
   const taskList = useTaskLists().data?.find((c) => c.id === taskListId);
   const tasks = useTasks({ taskListId, sort: 'taskList' });
-  const [showDone, setShowDone] = useState(false);
-  const done = useTaskPages({ taskListId, status: 'completed', limit: 20 }, showDone);
+  const userId = useSessionStore((s) => s.userId);
+  const folded = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
+  const doneCount = taskList?.completedTasks ?? 0;
+  const showDone = doneCount > 0 && !folded;
+  const done = useTaskPages({ taskListId, status: 'completed', limit: 20 }, showDone);   // nothing fetched while folded
   const shared = !!taskList && taskList.sharing !== 'private';
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
   const complete = useCompleteTask();
+  const reopen = useReopenTask();
+  const toggleDone = () => userId && useFoldedLists.getState().setFolded(userId, taskListId, !folded);
+  // Completing hides the task while Completed is folded, so it offers Undo (M56); open, the task shows up there.
+  const completeTask = (task: TaskSummary) =>
+    complete.mutate(task, {
+      onSuccess: () => folded && useToast.getState().show({ message: t('browse.completedToast', { title: task.title }), action: { label: t('common.undo'), onPress: () => reopen.mutate(task) } }),
+    });
   const { listMenu } = useBrowseMenus();
   const list = useRef<FlashListRef<Item>>(null);
-  // Manual puts a new task on top (D85): after adding from Add a task, the list scrolls up to show it (M60).
-  const added = useQuickAdd((s) => (s.added?.taskListId === taskListId ? s.added.n : 0));
-  const manual = taskList?.sortMode === 'manual';
-  useEffect(() => {
-    if (added && manual) list.current?.scrollToOffset({ offset: 0, animated: true });
-  }, [added, manual]);
+  // Manual puts a new task on top (D85): after adding, the list scrolls up to show it (M60).
+  const added = () => {
+    if (taskList?.sortMode === 'manual') list.current?.scrollToOffset({ offset: 0, animated: true });
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -77,12 +88,12 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   if (tasks.isPending) [70, 55, 62].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
   else if (rows.length) rows.forEach((task) => items.push({ type: 'task', key: task.id, task }));
   else items.push({ type: 'empty', key: 'empty' });
-  const hasDone = showDone || (taskList?.completedTasks ?? 0) > 0;
-  if (!tasks.isPending && hasDone) {
+  if (!tasks.isPending && doneCount > 0) {
     items.push({ type: 'doneHead', key: 'doneHead' });
-    if (showDone) (done.data?.pages.flatMap((p) => p.items) ?? []).forEach((task) => items.push({ type: 'done', key: `d-${task.id}`, task }));
+    if (showDone && done.isPending) [62, 48].forEach((width) => items.push({ type: 'skeleton', key: `dk${width}`, width }));
+    else if (showDone) (done.data?.pages.flatMap((p) => p.items) ?? []).forEach((task) => items.push({ type: 'done', key: `d-${task.id}`, task }));
   }
-  const doneTotal = done.data?.pages[0]?.total;
+  const doneTotal = done.data?.pages[0]?.total ?? doneCount;
   const people = members.data ?? [];
   const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
   const count = t('browse.people', { count: people.length });
@@ -127,7 +138,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </View>
         );
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={completeTask} onPress={open} />;
       case 'empty':
         return (
           <View style={[styles.empty, { gap: space.xs, paddingVertical: space.huge }]}>
@@ -137,17 +148,16 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </View>
         );
       case 'doneHead':
-        return showDone ? (
-          <View style={[styles.doneHead, { gap: space.sm, marginTop: space.lg }]}>
-            <Text variant="label" color="ink2">{doneTotal !== undefined && doneTotal !== null ? `${t('browse.completed')} · ${doneTotal}` : t('browse.completed')}</Text>
-            <View style={styles.fill} />
-            <Pressable onPress={() => setShowDone(false)} accessibilityRole="button" hitSlop={8} style={styles.doneAction}>
-              <Text variant="subhead" color="accent">{t('browse.hideCompleted')}</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable onPress={() => setShowDone(true)} accessibilityRole="button" style={[styles.showDone, { marginTop: space.lg }]}>
-            <Text variant="label" color="accent">{t('browse.showCompleted')}</Text>
+        return (
+          <Pressable
+            onPress={toggleDone}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: !folded }}
+            style={[styles.doneHead, { gap: space.xs, marginTop: space.lg }]}
+          >
+            <Feather name="chevron-right" size={16} color={colors.ink2} style={!folded && styles.turned} />
+            <Text variant="label" color="ink2">{t('browse.completed')}</Text>
+            <Text variant="label" color="ink3">{doneTotal}</Text>
           </Pressable>
         );
       case 'done':
@@ -158,7 +168,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   };
 
   return (
-    <Screen edges={['bottom']} contentStyle={styles.fill}>
+    <Screen edges={['bottom']} contentStyle={styles.fill} followKeyboard>
       <FlashList
         ref={list}
         data={items}
@@ -168,34 +178,12 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
         onEndReached={() => showDone && done.hasNextPage && !done.isFetchingNextPage && done.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: ADD_HEIGHT + space.huge }}
+        keyboardShouldPersistTaps="handled"   // a row's circle still completes while the keyboard is up
+        keyboardDismissMode="interactive"   // dragging the list closes the keyboard; the typed title stays
+        contentContainerStyle={{ paddingBottom: space.lg }}
       />
-      <AddTask taskListId={taskListId} />
+      <AddTaskField taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />
     </Screen>
-  );
-}
-
-const ADD_HEIGHT = 48;
-
-/** The floating Add a task (M55): opens Quick add for this list, the List row hidden and the keyboard up. */
-function AddTask({ taskListId }: { taskListId: Id }) {
-  const { t } = useTranslation();
-  const { colors, space } = useTheme();
-  return (
-    <Pressable
-      onPress={() => useQuickAdd.getState().show('', taskListId)}
-      accessibilityRole="button"
-      accessibilityLabel={t('quickAdd.placeholder')}
-      style={({ pressed }) => [
-        styles.add,
-        { left: space.lg, right: space.lg, bottom: space.sm, gap: space.sm, paddingHorizontal: space.sm, backgroundColor: pressed ? colors.surface2 : colors.surface, shadowColor: colors.heading },
-      ]}
-    >
-      <View style={[styles.addPlus, { backgroundColor: colors.accentSoft }]}>
-        <Feather name="plus" size={16} color={colors.accent} />
-      </View>
-      <Text variant="body" color="ink3">{t('quickAdd.placeholder')}</Text>
-    </Pressable>
   );
 }
 
@@ -207,19 +195,6 @@ const styles = StyleSheet.create({
   shrink: { flexShrink: 1 },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   empty: { alignItems: 'center' },
-  doneHead: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
-  doneAction: { minHeight: 44, justifyContent: 'center' },
-  showDone: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: 16 },
-  add: {
-    position: 'absolute',
-    height: ADD_HEIGHT,
-    borderRadius: radius.pill,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowOpacity: 0.16,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  addPlus: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  doneHead: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44 },
+  turned: { transform: [{ rotate: '90deg' }] },
 });

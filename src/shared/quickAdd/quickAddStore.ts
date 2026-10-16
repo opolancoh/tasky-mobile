@@ -1,32 +1,22 @@
 import { create } from 'zustand';
 
-import type { Id } from '@/core/types';
-
 interface QuickAddState {
   open: boolean;
   session: number;
   title: string;
-  /** Set when opened from a list's Add a task: the task goes there, the List row hides and the form stays open after Add. */
-  taskListId: Id | null;
-  show(title?: string, taskListId?: Id): void;
+  show(title?: string): void;
   hide(): void;
-  /** The last list a task was added to from its own Add a task, counted, so that list can scroll to the new one (M60). */
-  added: { taskListId: Id; n: number } | null;
-  noteAdded(taskListId: Id): void;
 }
 
 /**
- * Whether Quick add is open. The + in the tab bar calls `show()`, a list's Add a task `show('', listId)`; the sheet
- * is mounted once, in App. `session` changes on every `show()`, so the form starts fresh each time (it's the form's
- * React key), with `title` filled in when given (a first-day starter, M51).
+ * Whether Quick add is open. The + in the tab bar calls `show()`; the sheet is mounted once, in App. `session` changes
+ * on every `show()`, so the form starts fresh each time (it's the form's React key), with `title` filled in when given
+ * (a first-day starter, M51).
  */
 export const useQuickAdd = create<QuickAddState>()((set) => ({
   open: false,
   session: 0,
   title: '',
-  taskListId: null,
-  show: (title = '', taskListId) => set((s) => ({ open: true, session: s.session + 1, title, taskListId: taskListId ?? null })),
+  show: (title = '') => set((s) => ({ open: true, session: s.session + 1, title })),
   hide: () => set({ open: false }),
-  added: null,
-  noteAdded: (taskListId) => set((s) => ({ added: { taskListId, n: (s.added?.n ?? 0) + 1 } })),
 }));
