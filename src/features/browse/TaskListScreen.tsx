@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
-import { useTaskLists, useMembers, useTasks, useTaskPages } from '@/data/tasks/queries';
+import { useTaskLists, useMembers, useTasks, useTaskPages, useTeams } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
@@ -17,6 +17,7 @@ import { useSessionStore } from '@/shared/session/sessionStore';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
+import { canInvite } from './browseSections';
 import { AddTaskField } from './components/AddTaskField';
 import { CompletedRow } from './components/CompletedRow';
 import { useFoldedLists } from './foldedListsStore';
@@ -31,11 +32,13 @@ type Item =
 
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. A field docked at the bottom, empty
- * list or full, adds a task by its title (M62); the list and the field ride above the keyboard. After the open tasks,
+ * list or full, adds a task by its title (M62); the list and the field ride above the keyboard. The top (M64): the title,
+ * then one line, "3 open · Shared with Luis" (only the count on a private list); add people beside ••• for those who
+ * invite, and ••• opens the list's menu as a sheet. After the open tasks,
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
- * list on the device, its tasks fetched only while open, newest first, paged (D54). Under the title a line says who is in it (M44): "Shared with Luis", "Family · 3 people", or
- * "Share…" on a private list ("Only you · Ana and Luis have tasks" once tasks went to people outside it, D70, M45); a tap
- * opens People. The header holds •••, the list's menu by role.
+ * list on the device, its tasks fetched only while open, newest first, paged (D54). Who is in it (M44): "Shared with
+ * Luis", "Family · 3 people", or on a private list "Only you · Ana and Luis have tasks" once tasks went to people outside
+ * it (D70, M45); a tap opens People.
  */
 export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>) {
   const { taskListId } = route.params;
@@ -62,6 +65,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
       onSuccess: () => folded && useToast.getState().show({ message: t('browse.completedToast', { title: task.title }), action: { label: t('common.undo'), onPress: () => reopen.mutate(task) } }),
     });
   const { listMenu } = useBrowseMenus();
+  const teams = useTeams().data;
+  const team = taskList?.team ? teams?.find((x) => x.id === taskList.team!.id) : undefined;
   const list = useRef<FlashListRef<Item>>(null);
   // Manual puts a new task on top (D85): after adding, the list scrolls up to show it (M60).
   const added = () => {
@@ -73,6 +78,11 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
       headerRight: taskList
         ? () => (
             <View style={styles.headerRight}>
+              {canInvite(taskList, team) && (
+                <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
+                  <Feather name="user-plus" size={21} color={colors.accent} />
+                </Pressable>
+              )}
               <Pressable onPress={() => listMenu(taskList, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
@@ -94,41 +104,40 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
     else if (showDone) (done.data?.pages.flatMap((p) => p.items) ?? []).forEach((task) => items.push({ type: 'done', key: `d-${task.id}`, task }));
   }
   const doneTotal = done.data?.pages[0]?.total ?? doneCount;
+  const openTotal = tasks.data?.total ?? rows.length;
   const people = members.data ?? [];
   const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
   const count = t('browse.people', { count: people.length });
   // People with tasks here who aren't in it (D70): named on a private list's line.
   const outsiders = [...new Set(rows.filter((r) => r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id)).map((r) => r.assignee!.displayName.split(' ')[0]))];
-  // Who is in it (M44): nothing on the Inbox; "Share…" on a private list (only its owner sees it).
+  // Who is in it (M44): nothing on the Inbox or a private list, unless tasks went to people outside it (D70).
   const who = !taskList || taskList.isInbox ? null
-    : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : t('browse.share'))
+    : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : null)
     : !members.data ? null
     : taskList.team ? `${taskList.team.name} · ${count}`
     : taskList.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })
     : `${t('browse.ownersList', { name: taskList.owner.displayName.split(' ')[0] })} · ${count}`;
-  const eyebrow = !taskList || taskList.isInbox ? '' : taskList.team ? taskList.team.name : taskList.owner.id !== me?.id ? t('browse.ownersList', { name: taskList.owner.displayName.split(' ')[0] }) : '';
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
       case 'header':
         return (
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
-            {eyebrow ? <Text variant="label" color="ink3">{eyebrow}</Text> : null}
             <View style={[styles.title, { gap: space.sm }]}>
               {taskList?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={taskList?.color} size={14} />}
               <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.fill}>{taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''}</Text>
             </View>
-            {taskList && (
-              <Text variant="subhead" color="ink2">
-                {`${t('browse.openCount', { count: tasks.data?.total ?? rows.length })} · ${t(`browse.sort.${taskList.sortMode}`)}`}
-              </Text>
-            )}
-            {who && (
-              <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
-                <Feather name="users" size={15} color={colors.accent} />
-                <Text variant="subhead" color="accent" numberOfLines={1} style={styles.shrink}>{who}</Text>
-                <Feather name="chevron-right" size={14} color={colors.accent} />
-              </Pressable>
+            {taskList && !tasks.isPending && (
+              <View style={[styles.line, { gap: space.xs }]}>
+                <Text variant="subhead" color="ink3">{openTotal ? t('browse.openShort', { count: openTotal }) : t('browse.noTasksYet')}</Text>
+                {who && (
+                  <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
+                    <Text variant="subhead" color="ink3">·</Text>
+                    <Feather name="users" size={14} color={colors.ink2} />
+                    <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{who}</Text>
+                  </Pressable>
+                )}
+              </View>
             )}
             {tasks.error && (
               <View style={{ marginTop: space.md }}>
@@ -191,7 +200,8 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   title: { flexDirection: 'row', alignItems: 'center' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  who: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44 },
+  line: { flexDirection: 'row', alignItems: 'center' },
+  who: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minHeight: 44 },
   shrink: { flexShrink: 1 },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   empty: { alignItems: 'center' },

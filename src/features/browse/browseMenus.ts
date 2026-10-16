@@ -1,19 +1,19 @@
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
-import { useArchiveTaskList, useDeleteTaskList, useDeleteTag, useDeleteTeam, useRemoveMember } from '@/data/tasks/mutations';
+import { useArchiveTaskList, useDeleteTaskList, useDeleteTag, useDeleteTeam, useRemoveMember, useUpdateTaskList } from '@/data/tasks/mutations';
 import { useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, useToast, type ActionChoice } from '@/shared/ui';
 
-import { canInvite, canLeave, canManage } from './browseSections';
+import { canInvite, canLeave, canManage, SORT_MODES } from './browseSections';
 import { useShowBrowseSheet } from './browseSheetStore';
 
 type Item = ActionChoice & { run(): void };
 
-/** Shows a native menu of `items` and runs the one picked. */
+/** Shows a menu of `items` (a sheet from the bottom, M64) and runs the one picked. */
 async function open(title: string, items: (Item | false)[], cancelLabel: string) {
   const list = items.filter((x): x is Item => !!x);
   const i = await chooseAction({ title, actions: list, cancelLabel });
@@ -21,8 +21,8 @@ async function open(title: string, items: (Item | false)[], cancelLabel: string)
 }
 
 /**
- * The menus Browse opens from a long press on a row, or from ••• on a list or team (M38): only what the user's role
- * allows (roles doc). Deletes and leaving ask first (`confirm`). `onGone` runs after the thing left the user's Browse
+ * The menus Browse opens from a long press on a row, or from ••• on a list or team (M38, M64): only what the user's
+ * role allows (roles doc). Sort opens its own menu, the current one checked. Deletes and leaving ask first (`confirm`). `onGone` runs after the thing left the user's Browse
  * (e.g. go back from its screen).
  */
 export function useBrowseMenus() {
@@ -36,17 +36,28 @@ export function useBrowseMenus() {
   const removeTeam = useDeleteTeam();
   const removeMember = useRemoveMember();
   const removeTag = useDeleteTag();
+  const update = useUpdateTaskList();
   const cancel = t('common.cancel');
 
+  const chooseSort = (c: TaskList) =>
+    open(t('browse.menu.sort'), SORT_MODES.map((s) => ({
+      label: t(`browse.sort.${s}`),
+      selected: s === c.sortMode,
+      run: () => s !== c.sortMode && update.mutate({ taskList: c, body: { sortMode: s } }, { onError: toastError }),
+    })), cancel);
+
   const listMenu = (c: TaskList, onGone?: () => void) => {
-    if (c.isInbox) return open(t('browse.inbox'), [{ label: t('browse.menu.sort'), run: () => showSheet({ kind: 'list', id: c.id }) }], cancel);
+    const sort: Item = { label: t('browse.menu.sort'), icon: { community: 'swap-vertical' }, value: t(`browse.sort.${c.sortMode}`), more: true, run: () => chooseSort(c) };
+    if (c.isInbox) return open(t('browse.inbox'), [sort], cancel);
     const team = c.team ? teams.find((x) => x.id === c.team!.id) : undefined;
     const leave = canLeave(c, team, me?.id);
     return open(c.name, [
-      { label: t('browse.menu.editList'), run: () => showSheet({ kind: 'list', id: c.id }) },
-      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
+      { label: t('browse.menu.editList'), icon: 'edit-2', run: () => showSheet({ kind: 'list', id: c.id }) },
+      sort,
+      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
       canManage(c) && {
         label: t('browse.menu.archive'),
+        icon: 'archive',
         run: () => archive.mutate({ taskList: c, archive: true }, {
           onSuccess: (archived) => {
             onGone?.();
@@ -57,6 +68,7 @@ export function useBrowseMenus() {
       },
       canManage(c) && {
         label: t('browse.menu.deleteList'),
+        icon: 'trash-2',
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.deleteListTitle', { name: c.name }), message: t(c.sharing === 'private' ? 'browse.deleteListBody' : 'browse.deleteSharedListBody', { count: c.openTasks ?? 0 }), confirmLabel: t('browse.menu.deleteList'), cancelLabel: cancel });
@@ -65,6 +77,7 @@ export function useBrowseMenus() {
       },
       leave && !!me && {
         label: t('browse.menu.leaveList'),
+        icon: 'log-out',
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.leaveTitle', { name: c.name }), message: t('browse.leaveListBody', { name: c.owner.displayName }), confirmLabel: t('browse.menu.leaveList'), cancelLabel: cancel });
@@ -77,11 +90,12 @@ export function useBrowseMenus() {
   const teamMenu = (team: Team, onGone?: () => void) => {
     const owner = team.role === 'owner';
     return open(team.name, [
-      { label: t(owner || team.role === 'admin' ? 'browse.menu.peopleInvite' : 'browse.menu.people'), run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
-      { label: t('browse.menu.newListIn', { name: team.name }), run: () => showSheet({ kind: 'list', teamId: team.id }) },
-      owner && { label: t('browse.menu.renameTeam'), run: () => showSheet({ kind: 'team', id: team.id }) },
+      { label: t(owner || team.role === 'admin' ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: 'users', run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
+      { label: t('browse.menu.newListIn', { name: team.name }), icon: 'plus', run: () => showSheet({ kind: 'list', teamId: team.id }) },
+      owner && { label: t('browse.menu.renameTeam'), icon: 'edit-2', run: () => showSheet({ kind: 'team', id: team.id }) },
       owner && {
         label: t('browse.menu.deleteTeam'),
+        icon: 'trash-2',
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.deleteTeamTitle', { name: team.name }), message: t('browse.deleteTeamBody'), confirmLabel: t('browse.menu.deleteTeam'), cancelLabel: cancel });
@@ -90,6 +104,7 @@ export function useBrowseMenus() {
       },
       !owner && !!me && {
         label: t('browse.menu.leaveTeam'),
+        icon: 'log-out',
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.leaveTitle', { name: team.name }), message: t('browse.leaveTeamBody'), confirmLabel: t('browse.menu.leaveTeam'), cancelLabel: cancel });
@@ -101,9 +116,10 @@ export function useBrowseMenus() {
 
   const tagMenu = (tag: Tag, onGone?: () => void) =>
     open(`#${tag.name}`, [
-      { label: t('browse.menu.editTag'), run: () => showSheet({ kind: 'tag', name: tag.name }) },
+      { label: t('browse.menu.editTag'), icon: 'edit-2', run: () => showSheet({ kind: 'tag', name: tag.name }) },
       {
         label: t('browse.menu.deleteTag'),
+        icon: 'trash-2',
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.deleteTagTitle', { name: tag.name }), message: t('browse.deleteTagBody'), confirmLabel: t('browse.menu.deleteTag'), cancelLabel: cancel });

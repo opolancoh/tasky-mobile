@@ -261,8 +261,8 @@
     "restored": "Restauraste {{name}}",
     "menu": {
       "title": "Más",
-      "sort": "Ordenar y mostrar completadas",
-      "editList": "Editar nombre, color y orden",
+      "sort": "Ordenar",
+      "editList": "Editar",
       "share": "Compartir lista",
       "people": "Personas",
       "peopleInvite": "Personas e invitaciones",
@@ -320,10 +320,13 @@
       "privateHint": "Privada hasta que la compartas",
       "teamListHint": "Todos en {{name}} la ven",
       "sortBy": "Ordenar tareas por",
-      "sameForAll": "El nombre, el color y el orden son los mismos para todos en esta lista."
+      "sameForAll": "El nombre y el color son los mismos para todos en esta lista."
     },
     "sharedWith": "Compartida con {{names}}",
-    "share": "Compartir…",
+    "openShort_one": "{{count}} abierta",
+    "openShort_other": "{{count}} abiertas",
+    "noTasksYet": "Aún no hay tareas",
+    "addPeople": "Añadir personas",
     "onlyYouWith": "Solo tú · {{names}} tienen tareas"
   },
   "search": {

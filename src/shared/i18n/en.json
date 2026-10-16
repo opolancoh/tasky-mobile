@@ -261,8 +261,8 @@
     "restored": "Restored {{name}}",
     "menu": {
       "title": "More",
-      "sort": "Sort and show completed",
-      "editList": "Edit name, color and sort",
+      "sort": "Sort",
+      "editList": "Edit",
       "share": "Share list",
       "people": "People",
       "peopleInvite": "People and invitations",
@@ -320,10 +320,13 @@
       "privateHint": "Private until you share it",
       "teamListHint": "Everyone in {{name}} sees it",
       "sortBy": "Sort tasks by",
-      "sameForAll": "Name, color and sort are the same for everyone in this list."
+      "sameForAll": "Name and color are the same for everyone in this list."
     },
     "sharedWith": "Shared with {{names}}",
-    "share": "Share…",
+    "openShort_one": "{{count}} open",
+    "openShort_other": "{{count}} open",
+    "noTasksYet": "No tasks yet",
+    "addPeople": "Add people",
     "onlyYouWith": "Only you · {{names}} have tasks"
   },
   "search": {

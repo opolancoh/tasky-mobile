@@ -1,5 +1,5 @@
 import type { Id } from '@/core/types';
-import type { TaskList, Team } from '@/data/tasks/types';
+import type { SortMode, TaskList, Team } from '@/data/tasks/types';
 
 /** Browse's groups (M38): the Inbox, the user's lists, other people's lists outside their teams, and each team's lists. */
 export interface BrowseGroups {
@@ -42,6 +42,9 @@ export function moveInOrder(all: Id[], group: Id[], id: Id, by: -1 | 1): Id[] {
 /** Who may do what to a list (azignia-api/docs/roles-and-permissions.md). */
 export const canManage = (c: TaskList) => !c.isInbox && (c.role === 'owner' || c.role === 'admin');
 /** Invite: a list's owner outside a team; in a team, its owner and admins (read from the team). */
+/** A list's sort modes, in the order the Sort menu and the Edit list sheet show them (M60). */
+export const SORT_MODES: SortMode[] = ['manual', 'dueDate', 'important', 'alphabetical'];
+
 export const canInvite = (c: TaskList, team: Team | undefined) => !c.isInbox && (c.team ? !!team && team.role !== 'member' : c.role === 'owner');
 /** Leave: someone else's list outside the user's teams (shared with them, or as a guest). */
 export const canLeave = (c: TaskList, team: Team | undefined, meId: Id | undefined) => !c.isInbox && !team && c.owner.id !== meId;

@@ -24,7 +24,7 @@ import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
+import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
 
 import { Navigation } from './navigation/RootNavigator';
 import { queryClient } from './queryClient';
@@ -88,6 +88,7 @@ function Root() {
           <QuickAddSheet />
           <TaskFieldSheet />
           <BrowseSheet />
+          <ActionSheetHost />
           <ReminderSync />
           <NetworkLogAccess />
         </>

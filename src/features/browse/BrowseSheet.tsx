@@ -15,12 +15,11 @@ import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast } from '@/shared/ui';
 
+import { SORT_MODES } from './browseSections';
 import { useBrowseSheet, type BrowseSheetTarget } from './browseSheetStore';
 
-const SORTS: SortMode[] = ['manual', 'dueDate', 'important', 'alphabetical'];
-
 /**
- * Browse's sheets (M38, large size, M28): New list and Edit list (name, color, where for a new one, sort), New team
+ * Browse's sheets (M38, large size, M28): New list (name, color, where, sort) and Edit list (name and color; sort is in the list's menu, M64), New team
  * and Rename team, Edit tag (name, the user's own color). A draft saved with Create or Save; Cancel with changes asks
  * first (M26). Mounted once in App; `useBrowseSheet` says what it edits.
  */
@@ -151,6 +150,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
           />
         )}
         {target.kind !== 'team' && !inbox && <Swatches value={color} onChange={setColor} allowNone={target.kind === 'tag'} />}
+        {list && !inbox && list.sharing !== 'private' && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.sameForAll')}</Text>}
         {target.kind === 'list' && isNew && teams.length > 0 && (
           <>
             <SectionLabel>{t('browse.sheet.in')}</SectionLabel>
@@ -160,11 +160,10 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
             ))}
           </>
         )}
-        {target.kind === 'list' && (
+        {target.kind === 'list' && isNew && (
           <>
             <SectionLabel>{t('browse.sheet.sortBy')}</SectionLabel>
-            {SORTS.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} detail={s === 'manual' ? t('browse.sort.manualHint') : undefined} selected={sort === s} onPress={() => setSort(s)} divider={i < SORTS.length - 1} />)}
-            {list && list.sharing !== 'private' && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.sameForAll')}</Text>}
+            {SORT_MODES.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} detail={s === 'manual' ? t('browse.sort.manualHint') : undefined} selected={sort === s} onPress={() => setSort(s)} divider={i < SORT_MODES.length - 1} />)}
           </>
         )}
       </ScrollView>

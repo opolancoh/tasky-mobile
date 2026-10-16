@@ -39,7 +39,8 @@ export interface SheetProps {
   footer?: ReactNode;
   /**
    * `large` (the standard, M28): the top sits just below the status bar and never moves. `fit`: as tall as the content,
-   * only for a short form that grows when the person adds something, never while typing (Quick add's form, M29).
+   * only for a short form that grows when the person adds something, never while typing (Quick add's form, M29), and
+   * for a menu of actions (`chooseAction`, M64).
    */
   size?: 'large' | 'fit';
 }
@@ -50,7 +51,7 @@ const DURATION = 220;
  * A bottom sheet over the whole app: a dimmed backdrop that closes it when tapped, a grabber, an
  * optional header (title, left and right actions), the content and an optional footer kept above the
  * keyboard. The large size by default (M28): its top sits just below the status bar on every page and never moves while
- * typing or filtering; the keyboard only lifts its bottom, and the content scrolls inside. `size="fit"` is only for Quick add's form (M29).
+ * typing or filtering; the keyboard only lifts its bottom, and the content scrolls inside. `size="fit"` is only for Quick add's form (M29) and menus (M64).
  * Mount it at the app root (after the navigator), like QuickAddSheet: it draws as an overlay,
  * not a native Modal. Opening, closing and following the keyboard run on the UI thread (Reanimated), with
  * no re-render per frame (docs/performance.md). `visible` false plays the closing animation before it leaves.
