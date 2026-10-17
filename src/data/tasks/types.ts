@@ -270,10 +270,10 @@ export interface MyInvitation {
   expiresAt: string;
 }
 
-/** The Today tab's task sections (GET /home/{section}, D67). */
-export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'important' | 'inbox';
+/** Home's task sections (GET /home/{section}, D67, D86). */
+export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'assigned' | 'important' | 'inbox';
 
-/** GET /home (D67, D69): the Today tab's invitations, each section's first page, and the totals behind its chips. */
+/** GET /home (D67, D69, D86): Home's invitations, each section's first page, and the totals behind its cards. */
 export interface Home {
   invitations: MyInvitation[];
   toAnswer: TaskPage;
@@ -282,6 +282,10 @@ export interface Home {
   overdue: TaskPage;
   today: TaskPage;
   comingUp: TaskPage;
+  /** Accepted tasks others gave the caller, past Coming up or undated: not in any section above (D86). */
+  assigned: TaskPage;
+  /** Today's tasks already completed: "2 of 9 done" with `today.total` (D86). */
+  doneToday: number;
   importantTotal: number;
   inboxTotal: number;
   /** Every open task the caller can see; 0 with nothing to answer is a new user's first day (M51). */

@@ -41,8 +41,8 @@ import { activityTab, AddTabScreen, addTabOptions, tab, tabScreenOptions } from 
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
-    // The first tab is Today (M36): what is pending, at a glance.
-    Today: { screen: TodayScreen, options: tab('check-circle', 'tabs.today') },
+    // The first tab is Home (M65): where the user lands and gets their bearings. The route keeps its name.
+    Today: { screen: TodayScreen, options: tab('home', 'tabs.home') },
     Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
     Add: {
       screen: AddTabScreen,
@@ -90,7 +90,7 @@ const RootStack = createNativeStackNavigator({
         // Titled after the open tab, so a pushed screen's back button reads "‹ Today".
         Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${(getFocusedRouteNameFromRoute(route) ?? 'Today').toLowerCase()}`) }) },
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
-        // See all, the chips and the shared line (M33); an invitation from Needs attention (M34).
+        // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
         // Browse (M38): a list, a team, a list's or team's people, the other task lists, Archived, Recently Deleted.

@@ -6,40 +6,47 @@ import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, nowIn } from '@/core/dates/localDate';
-import type { Notification } from '@/data/collaboration/types';
-import { useUnreadCount, useUnreadNotifications } from '@/data/collaboration/queries';
-import { HOME_PREVIEW, useHome } from '@/data/tasks/queries';
-import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
+import { HOME_PREVIEW, useHome, useTasks } from '@/data/tasks/queries';
+import type { Home, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { MeButton } from '@/shared/components';
+import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Button, Notice, Pill, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { FirstDayCard } from './components/FirstDayCard';
-import { AskRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
+import { HomeCards, HomeCardsSkeleton } from './components/HomeCards';
+import { homeRequests, RequestRow, type Request } from './components/RequestRows';
+import { AssignedRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
+import { useHomeDismissed } from './homeDismissedStore';
 import type { TodayListSection } from './todaySections';
 
-/** Today's rows, one list (FlashList) so long sections stay fast (docs/performance.md). */
+/** Requests and Assigned to me show 3 rows on Home; Today and Coming up show HOME_PREVIEW (5). */
+const SHORT = 3;
+const NO_DISMISSED: string[] = [];
+
+/** Home's rows, one list (FlashList) so long sections stay fast (docs/performance.md). */
 type Item =
   | { type: 'header'; key: string }
+  | { type: 'cards'; key: string }
+  | { type: 'cardsSkeleton'; key: string }
   | { type: 'section'; key: string; title: string; count: number; seeAll?: TodayListSection }
-  | { type: 'invitation'; key: string; invitation: MyInvitation }
-  | { type: 'ask'; key: string; task: TaskSummary }
-  | { type: 'follow'; key: string; task: TaskSummary }
-  | { type: 'overdue'; key: string; task: TaskSummary }
+  | { type: 'request'; key: string; request: Request }
+  | { type: 'requestsRow'; key: string; count: number }
   | { type: 'task'; key: string; task: TaskSummary; when: 'time' | 'day' }
-  | { type: 'update'; key: string; notification: Notification }
-  | { type: 'calm'; key: string; body: string }
+  | { type: 'assigned'; key: string; task: TaskSummary }
+  | { type: 'undated'; key: string; task: TaskSummary }
+  | { type: 'allDone'; key: string }
   | { type: 'firstDay'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
 /**
- * Today, the first tab: "my pending stuff" (06-mobile.md, M32–M37) in one stream by urgency, over everything the user
- * can see (M37). Needs attention (invitations, assignments to answer, overdue), Today (due today or a reminder today),
- * Coming up (next 7 days), Updates (unread notifications), each with its count, its first 5 rows and See all; chips
- * for Important and the Inbox. Data: GET /home (D67, D69) beside the unread notifications; every count opens its list
- * (TodayList, M33). Me behind the avatar at the top (M39).
+ * Home, the first tab (06-mobile.md, M65): the date and what's next; four cards (Today, Overdue, Important, Inbox);
+ * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
+ * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
+ * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
+ * to plan (M66).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -47,72 +54,85 @@ export function TodayScreen() {
   const navigation = useNavigation();
   const me = useMe().data;
   const home = useHome();
-  const updates = useUnreadNotifications(HOME_PREVIEW);
-  const unread = useUnreadCount();
+  const dismissed = useHomeDismissed((s) => (me ? s.byUser[me.id] : undefined)) ?? NO_DISMISSED;
   const [refreshing, setRefreshing] = useState(false);
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
+  const labels = useDateLabels(today);
   const data = home.data;
-  const seeAll = (section: TodayListSection) => navigation.navigate('TodayList', { section });
-
-  const attentionCount = data ? data.invitations.length + (data.toAnswer.total ?? 0) + (data.followUp.total ?? 0) + (data.overdue.total ?? 0) : 0;
-  const todayCount = data?.today.total ?? 0;
-  const unreadCount = unread.data?.count ?? updates.data?.items.length ?? 0;
+  // Nothing scheduled (M66): no requests, nothing overdue, today, assigned or coming up, but open tasks somewhere.
+  const quiet = !!data && data.openTotal > 0 && !data.doneToday
+    && !homeRequests(data, dismissed).left && ![data.overdue, data.today, data.assigned, data.comingUp].some((p) => p.total);
+  const undated = useTasks({ due: ['none'], sort: 'created', limit: SHORT }, quiet);
+  const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
-  // First load (M27): skeleton sections and rows where the sections will be.
+  // First load (M27): skeleton cards, then sections and rows where they will be.
   if (!data && home.isPending) {
+    items.push({ type: 'cardsSkeleton', key: 'kc' });
     items.push({ type: 'skeletonSection', key: 'ks1' }, ...[72, 55, 64].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr1-${i}`, width })));
-    items.push({ type: 'skeletonSection', key: 'ks2' }, ...[48, 60].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr2-${i}`, width })));
+    items.push({ type: 'skeletonSection', key: 'ks2' }, ...[60, 48].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr2-${i}`, width })));
   }
 
-  if (data && today) {
-    // First day (M51): nothing open anywhere and nothing to answer. Caught up is for people who have tasks.
-    if (!attentionCount && !data.openTotal) items.push({ type: 'firstDay', key: 'first' });
-    else if (!attentionCount && !todayCount) items.push({ type: 'calm', key: 'calm', body: t(data.comingUp.total ? 'today.caughtUpNext' : 'today.caughtUpBody') });
+  if (data && today && me) {
+    const requests = homeRequests(data, dismissed);
+    // First day (M51): nothing open anywhere and nothing to answer; no cards until there is something to count.
+    if (!requests.total && !data.openTotal) items.push({ type: 'firstDay', key: 'first' });
+    else {
+      items.push({ type: 'cards', key: 'cards' });
 
-    // Needs attention: invitations, then answers, then follow-ups (D71), then overdue; 5 rows at most, See all for the rest.
-    if (attentionCount) {
-      items.push({ type: 'section', key: 's-attention', title: t('today.attention'), count: attentionCount, seeAll: attentionCount > HOME_PREVIEW ? 'attention' : undefined });
-      const rows: Item[] = [
-        ...data.invitations.map((invitation) => ({ type: 'invitation' as const, key: `v-${invitation.id}`, invitation })),
-        ...data.toAnswer.items.map((task) => ({ type: 'ask' as const, key: `a-${task.id}`, task })),
-        ...data.followUp.items.map((task) => ({ type: 'follow' as const, key: `f-${task.id}`, task })),
-        ...data.overdue.items.map((task) => ({ type: 'overdue' as const, key: `o-${task.id}`, task })),
-      ];
-      items.push(...rows.slice(0, HOME_PREVIEW));
-    }
+      // Requests: 3 rows; all dismissed from Home → one row that opens them (M65).
+      if (requests.shown.length) {
+        items.push({ type: 'section', key: 's-requests', title: t('home.requests'), count: requests.left, seeAll: requests.left > SHORT ? 'requests' : undefined });
+        requests.shown.slice(0, SHORT).forEach((request) => items.push({ type: 'request', key: request.key, request }));
+      } else if (requests.left > 0) items.push({ type: 'requestsRow', key: 'requests-row', count: requests.left });
 
-    if (todayCount) {
-      items.push({ type: 'section', key: 's-today', title: t('today.today'), count: todayCount, seeAll: todayCount > HOME_PREVIEW ? 'today' : undefined });
-      data.today.items.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, when: 'time' }));
-    }
+      const todayCount = data.today.total ?? 0;
+      if (todayCount) {
+        items.push({ type: 'section', key: 's-today', title: t('home.today'), count: todayCount, seeAll: todayCount > HOME_PREVIEW ? 'today' : undefined });
+        data.today.items.forEach((task) => items.push({ type: 'task', key: `t-${task.id}`, task, when: 'time' }));
+      } else if (!data.overdue.total && data.doneToday) items.push({ type: 'allDone', key: 'all-done' });
 
-    const coming = data.comingUp.total ?? 0;
-    if (coming) {
-      items.push({ type: 'section', key: 's-coming', title: t('today.comingUp'), count: coming, seeAll: coming > HOME_PREVIEW ? 'coming-up' : undefined });
-      data.comingUp.items.forEach((task) => items.push({ type: 'task', key: `c-${task.id}`, task, when: 'day' }));
-    }
+      const assigned = data.assigned.total ?? 0;
+      if (assigned) {
+        items.push({ type: 'section', key: 's-assigned', title: t('home.assigned'), count: assigned, seeAll: assigned > SHORT ? 'assigned' : undefined });
+        data.assigned.items.slice(0, SHORT).forEach((task) => items.push({ type: 'assigned', key: `g-${task.id}`, task }));
+      }
 
-    if (unreadCount && updates.data?.items.length) {
-      items.push({ type: 'section', key: 's-updates', title: t('today.updates'), count: unreadCount, seeAll: unreadCount > HOME_PREVIEW ? 'updates' : undefined });
-      updates.data.items.forEach((notification) => items.push({ type: 'update', key: `u-${notification.id}`, notification }));
+      const coming = data.comingUp.total ?? 0;
+      if (coming) {
+        items.push({ type: 'section', key: 's-coming', title: t('home.comingUp'), count: coming, seeAll: coming > HOME_PREVIEW ? 'coming-up' : undefined });
+        data.comingUp.items.forEach((task) => items.push({ type: 'task', key: `c-${task.id}`, task, when: 'day' }));
+      }
+
+      const plan = quiet ? (undated.data?.total ?? 0) : 0;
+      if (plan && undated.data) {
+        items.push({ type: 'section', key: 's-undated', title: t('home.fromLists'), count: plan, seeAll: plan > SHORT ? 'undated' : undefined });
+        undated.data.items.forEach((task) => items.push({ type: 'undated', key: `n-${task.id}`, task }));
+      }
     }
   }
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([home.refetch(), updates.refetch(), unread.refetch()]);
+    await Promise.all([home.refetch(), quiet && undated.refetch()]);
     setRefreshing(false);
   };
 
-  const summary = [
-    attentionCount > 0 && t('today.needAttention', { count: attentionCount }),
-    todayCount > 0 && t('today.forToday', { count: todayCount }),
-  ].filter(Boolean).join(' · ');
-  const hour = Number(now?.time.slice(0, 2) ?? 9);
-  const greeting = t(hour < 12 ? 'today.morning' : hour < 18 ? 'today.afternoon' : 'today.evening', { name: me?.displayName.split(' ')[0] ?? '' });
+  /** The line under the date: the next reminder later today, else overdue, else today's count; all done says what's next. */
+  const nextLine = (d: Home) => {
+    const next = d.today.items.find((task) => !!task.reminder && task.reminder.date === today && task.reminder.time.slice(0, 5) > now!.time);
+    if (next) return <>{t('home.next')} <Text variant="subhead" style={{ fontFamily: fonts.semibold }}>{next.title}</Text> {t('home.at', { time: labels.time(next.reminder!.time) })}</>;
+    const overdue = d.overdue.total ?? 0;
+    if (overdue) return <Text variant="subhead" color="danger">{t('home.overdueSince', { count: overdue, date: labels.day(d.overdue.items[0].dueDate!) })}</Text>;
+    if (d.today.total) return t('home.forToday', { count: d.today.total });
+    if (d.doneToday) {
+      const after = d.comingUp.items[0];
+      return after ? t('home.allDoneNext', { title: after.title, day: labels.day(after.dueDate!) }) : t('home.allDoneWeek');
+    }
+    return t('home.nothingToday');
+  };
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -123,30 +143,16 @@ export function TodayScreen() {
             <View style={styles.bar}>
               <MeButton />
             </View>
-            <Text variant="label" color="ink3">
-              {today ? formatLocalDate(today, i18n.language, { weekday: 'long', month: 'long', day: 'numeric' }) : ''}
+            <Text variant="title" numberOfLines={1} accessibilityRole="header">
+              {today ? formatLocalDate(today, i18n.language, { weekday: 'long', month: 'short', day: 'numeric' }) : ''}
             </Text>
-            <Text variant="title" numberOfLines={1}>
-              {greeting}
-            </Text>
-            {data ? (
-              <Text variant="subhead" color="ink2">
-                {summary}
+            {data && today ? (
+              <Text variant="subhead" color="ink2" numberOfLines={1}>
+                {nextLine(data)}
               </Text>
             ) : (
-              <View accessible accessibilityLabel={t('today.loading')} style={{ paddingTop: space.xs }}>
-                <Skeleton width={150} height={12} />
-              </View>
-            )}
-            {/* Important and the Inbox: a count each, opening its list (M32, M33). */}
-            {data && (data.importantTotal > 0 || data.inboxTotal > 0) && (
-              <View style={[styles.chips, { gap: space.sm, marginTop: space.sm }]}>
-                {data.importantTotal > 0 && (
-                  <Pill tone="danger" icon={<Feather name="flag" size={13} color={colors.danger} />} label={t('today.importantCount', { count: data.importantTotal })} onPress={() => seeAll('important')} />
-                )}
-                {data.inboxTotal > 0 && (
-                  <Pill icon={<Feather name="inbox" size={13} color={colors.accent} />} label={t('today.toSort', { count: data.inboxTotal })} onPress={() => seeAll('inbox')} />
-                )}
+              <View accessible accessibilityLabel={t('home.loading')} style={{ paddingTop: space.xs }}>
+                <Skeleton width={170} height={12} />
               </View>
             )}
             {home.error && (
@@ -156,6 +162,10 @@ export function TodayScreen() {
             )}
           </View>
         );
+      case 'cards':
+        return <HomeCards data={data!} today={today!} open={open} />;
+      case 'cardsSkeleton':
+        return <HomeCardsSkeleton />;
       case 'section':
         return (
           <View style={[styles.sectionHead, { marginTop: space.xl, gap: space.sm }]}>
@@ -167,37 +177,47 @@ export function TodayScreen() {
             </Text>
             {item.seeAll && (
               <View style={styles.push}>
-                <Button variant="link" title={t('today.seeAll')} onPress={() => seeAll(item.seeAll!)} />
+                <Button variant="link" title={t('home.seeAll')} onPress={() => open(item.seeAll!)} />
               </View>
             )}
           </View>
         );
-      case 'invitation':
-        return <InvitationRow invitation={item.invitation} />;
-      case 'ask':
-        return <AskRow task={item.task} today={today!} />;
-      case 'follow':
-        return <FollowUpRow task={item.task} />;
-      case 'overdue':
-        return <OverdueRow task={item.task} today={today!} />;
+      case 'request':
+        return <RequestRow userId={me!.id} request={item.request} today={today!} />;
+      case 'requestsRow':
+        return (
+          <View style={{ marginTop: space.lg }}>
+            <ListRow
+              label={t('home.requests')}
+              icon={<Feather name="user" size={18} color={colors.warn} />}
+              value={String(item.count)}
+              onPress={() => open('requests')}
+            />
+          </View>
+        );
       case 'task':
         return <TaskStreamRow task={item.task} today={today!} when={item.when} />;
-      case 'update':
-        return <UpdateRow notification={item.notification} />;
-      case 'calm':
+      case 'assigned':
+        return <AssignedRow task={item.task} today={today!} />;
+      case 'undated':
+        return <UndatedRow task={item.task} today={today!} />;
+      case 'allDone': {
+        const after = data!.comingUp.items[0];
         return (
-          <View style={[styles.calm, { backgroundColor: colors.surface2, padding: space.md, gap: space.md, marginTop: space.xs }]}>
+          <View style={[styles.calm, { backgroundColor: colors.surface2, padding: space.md, gap: space.md, marginTop: space.lg }]}>
             <View style={[styles.calmIcon, { backgroundColor: colors.successSoft }]}>
               <Feather name="check" size={18} color={colors.success} />
             </View>
             <View style={styles.fill}>
-              <Text variant="bodyMedium">{t('today.caughtUp')}</Text>
+              <Text variant="bodyMedium">{t('home.allDoneTitle')}</Text>
               <Text variant="footnote" color="ink2" numberOfLines={2}>
-                {item.body}
+                {t('home.completed', { count: data!.doneToday })}
+                {after ? ` ${t('home.nextIs', { title: after.title, day: labels.day(after.dueDate!) })}` : ''}
               </Text>
             </View>
           </View>
         );
+      }
       case 'firstDay':
         return me ? <FirstDayCard tenantType={me.tenant.type} companyName={me.tenant.name} /> : null;
       case 'skeletonSection':
@@ -224,7 +244,6 @@ export function TodayScreen() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap' },
   sectionHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   push: { marginLeft: 'auto' },
   calm: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.lg },

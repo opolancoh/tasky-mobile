@@ -1,13 +1,9 @@
-import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
+import type { StaticScreenProps } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { addDays, todayIn } from '@/core/dates/localDate';
-import type { Notification } from '@/data/collaboration/types';
-import { useMarkRead } from '@/data/collaboration/mutations';
-import { useNotifications } from '@/data/collaboration/queries';
 import { HOME_PAGE, useHomeSection, useInvitations, useTaskPages } from '@/data/tasks/queries';
 import type { HomeSection, MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
@@ -15,7 +11,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { AskRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UpdateRow } from './components/StreamRows';
+import { AskRow, AssignedRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
 
 type Item =
@@ -26,90 +22,69 @@ type Item =
   | { type: 'follow'; key: string; task: TaskSummary }
   | { type: 'overdue'; key: string; task: TaskSummary }
   | { type: 'task'; key: string; task: TaskSummary; due?: boolean }
-  | { type: 'update'; key: string; notification: Notification }
+  | { type: 'assigned'; key: string; task: TaskSummary }
+  | { type: 'undated'; key: string; task: TaskSummary }
   | { type: 'footer'; key: string };
 
-/** The task section behind each See all (D67); Needs attention pages its answers, then its follow-ups (D71), then its overdue tasks. */
-const TASK_SECTION: Partial<Record<TodayListSection, HomeSection>> = {
-  today: 'today', 'coming-up': 'coming-up', important: 'important', inbox: 'inbox',
+/** The task section behind each See all (D67, D86); Requests pages its answers, then its follow-ups (D71). From your lists is GET /tasks (M66). */
+const TASK_SECTION: Record<Exclude<TodayListSection, 'undated'>, HomeSection> = {
+  requests: 'to-answer', overdue: 'overdue', today: 'today', 'coming-up': 'coming-up', assigned: 'assigned', important: 'important', inbox: 'inbox',
 };
 const WHEN = { today: 'time', 'coming-up': 'none', important: 'due', inbox: 'none' } as const;
 
 /**
- * See all (06-mobile.md, M33): a whole Today section on its own screen, pushed from its See all or a chip. Title, total and what it holds; the same rows as Home (Coming up under day headings); 20 at a time, the next
+ * See all (06-mobile.md, M33): a whole Home section on its own screen, pushed from its See all or a card (M65). Title, total and what it holds; the same rows as Home (Coming up under day headings); 20 at a time, the next
  * page as the list nears its end (keyset cursor), "All N shown" at the end.
  */
 export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayListSection }>) {
   const { section } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
-  const markRead = useMarkRead();
 
-  const attention = section === 'attention';
-  const tasks = useHomeSection(TASK_SECTION[section] ?? 'to-answer', !!TASK_SECTION[section] || attention);
-  const toAnswerDone = attention && tasks.isSuccess && !tasks.hasNextPage;
+  const requests = section === 'requests';
+  const isUndated = section === 'undated';
+  const homeTasks = useHomeSection(isUndated ? 'today' : TASK_SECTION[section], !isUndated);
+  const undatedTasks = useTaskPages({ due: ['none'], sort: 'created', limit: HOME_PAGE }, isUndated);
+  const tasks = isUndated ? undatedTasks : homeTasks;
+  const toAnswerDone = requests && tasks.isSuccess && !tasks.hasNextPage;
   const followUp = useHomeSection('follow-up', toAnswerDone);
-  const followDone = toAnswerDone && followUp.isSuccess && !followUp.hasNextPage;
-  const overdue = useHomeSection('overdue', followDone);
   // Coming up's See all ends with Later: due after the next 7 days (M39), once the 7 days are all loaded.
   const coming = section === 'coming-up';
   const later = useTaskPages({ due: ['upcoming'], dueFrom: today ? addDays(today, 8) : undefined, sort: 'due', limit: HOME_PAGE }, coming && !!today && tasks.isSuccess && !tasks.hasNextPage);
   const laterItems = coming ? (later.data?.pages.flatMap((p) => p.items) ?? []) : [];
-  const isUpdates = section === 'updates';
-  const invitations = useInvitations(attention);
-  const updates = useNotifications(HOME_PAGE, isUpdates);
+  const invitations = useInvitations(requests);
 
   const taskItems = tasks.data?.pages.flatMap((p) => p.items) ?? [];
-  const followItems = attention ? (followUp.data?.pages.flatMap((p) => p.items) ?? []) : [];
-  const overdueItems = overdue.data?.pages.flatMap((p) => p.items) ?? [];
-  const notifications = isUpdates ? (updates.data?.pages.flatMap((p) => p.items) ?? []) : [];
-  const invitationItems = attention ? (invitations.data ?? []) : [];
+  const followItems = requests ? (followUp.data?.pages.flatMap((p) => p.items) ?? []) : [];
+  const invitationItems = requests ? (invitations.data ?? []) : [];
 
-  const total = isUpdates ? undefined
-    : attention ? invitationItems.length + (tasks.data?.pages[0]?.total ?? 0) + (followUp.data?.pages[0]?.total ?? 0) + (overdue.data?.pages[0]?.total ?? 0)
+  const total = requests ? invitationItems.length + (tasks.data?.pages[0]?.total ?? 0) + (followUp.data?.pages[0]?.total ?? 0)
     : coming && tasks.data?.pages[0]?.total != null ? tasks.data.pages[0].total + (later.data?.pages[0]?.total ?? 0)
     : tasks.data?.pages[0]?.total ?? undefined;
-  const shown = isUpdates ? notifications.length : invitationItems.length + taskItems.length + followItems.length + overdueItems.length + laterItems.length;
-  const hasMore = isUpdates ? !!updates.hasNextPage : attention ? !!tasks.hasNextPage || !followDone || !!overdue.hasNextPage : !!tasks.hasNextPage || (coming && (!later.isSuccess || !!later.hasNextPage));
-  const loading = isUpdates ? updates.isPending : tasks.isPending;
-  const error = isUpdates ? updates.error : (tasks.error ?? followUp.error ?? overdue.error ?? invitations.error);
+  const shown = invitationItems.length + taskItems.length + followItems.length + laterItems.length;
+  const hasMore = requests ? !!tasks.hasNextPage || !followUp.isSuccess || !!followUp.hasNextPage : !!tasks.hasNextPage || (coming && (!later.isSuccess || !!later.hasNextPage));
+  const loading = tasks.isPending;
+  const error = tasks.error ?? followUp.error ?? invitations.error;
 
   const loadMore = () => {
-    if (isUpdates) {
-      if (updates.hasNextPage && !updates.isFetchingNextPage) updates.fetchNextPage();
-    } else if (tasks.hasNextPage) {
+    if (tasks.hasNextPage) {
       if (!tasks.isFetchingNextPage) tasks.fetchNextPage();
-    } else if (attention && followUp.hasNextPage) {
-      if (!followUp.isFetchingNextPage) followUp.fetchNextPage();
-    } else if (attention && overdue.hasNextPage && !overdue.isFetchingNextPage) overdue.fetchNextPage();
+    } else if (requests && followUp.hasNextPage && !followUp.isFetchingNextPage) followUp.fetchNextPage();
     else if (coming && later.hasNextPage && !later.isFetchingNextPage) later.fetchNextPage();
   };
 
-  // Updates: Mark all read in the header.
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: isUpdates && notifications.some((n) => !n.readAt)
-        ? () => (
-            <Pressable onPress={() => markRead.mutate('all')} hitSlop={8} accessibilityRole="button" style={styles.headerButton}>
-              <Text variant="button" color="accent">{t('todayList.markAllRead')}</Text>
-            </Pressable>
-          )
-        : undefined,
-    });
-  });
-
   const items: Item[] = [{ type: 'header', key: 'header' }];
-  if (isUpdates) notifications.forEach((notification) => items.push({ type: 'update', key: `u-${notification.id}`, notification }));
-  else if (attention) {
+  if (requests) {
     invitationItems.forEach((invitation) => items.push({ type: 'invitation', key: `v-${invitation.id}`, invitation }));
     taskItems.forEach((task) => items.push({ type: 'ask', key: `a-${task.id}`, task }));
     followItems.forEach((task) => items.push({ type: 'follow', key: `f-${task.id}`, task }));
-    overdueItems.forEach((task) => items.push({ type: 'overdue', key: `o-${task.id}`, task }));
-  } else {
+  } else if (section === 'overdue') taskItems.forEach((task) => items.push({ type: 'overdue', key: `o-${task.id}`, task }));
+  else if (section === 'assigned') taskItems.forEach((task) => items.push({ type: 'assigned', key: `g-${task.id}`, task }));
+  else if (isUndated) taskItems.forEach((task) => items.push({ type: 'undated', key: `n-${task.id}`, task }));
+  else {
     let day = '';
     taskItems.forEach((task) => {
       if (section === 'coming-up' && task.dueDate && task.dueDate !== day) {
@@ -135,7 +110,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             <Text variant="title" accessibilityRole="header">{title}</Text>
             <Text variant="subhead" color="ink2">
-              {total !== undefined ? `${t(isUpdates ? 'todayList.updates' : 'todayList.items', { count: total })} · ${subtitle}` : subtitle}
+              {total !== undefined ? `${t('todayList.items', { count: total })} · ${subtitle}` : subtitle}
             </Text>
             {error && (
               <View style={{ marginTop: space.md }}>
@@ -160,8 +135,10 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
         return <OverdueRow task={item.task} today={today!} />;
       case 'task':
         return <TaskStreamRow task={item.task} today={today!} when={item.due ? 'due' : (WHEN[section as keyof typeof WHEN] ?? 'none')} />;
-      case 'update':
-        return <UpdateRow notification={item.notification} />;
+      case 'assigned':
+        return <AssignedRow task={item.task} today={today!} />;
+      case 'undated':
+        return <UndatedRow task={item.task} today={today!} />;
       case 'footer':
         return loading ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
@@ -198,5 +175,4 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 56 },
-  headerButton: { minHeight: 44, justifyContent: 'center' },
 });

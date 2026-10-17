@@ -7,13 +7,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { LocalDate } from '@/core/types';
 import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { Avatar } from '@/shared/components';
+import { Avatar, TaskOrigin } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 
 
 /**
- * Today's rows (M32), shared by Today and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
+ * Home's rows (M32, M65), shared by Home and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
  * task), the title on one line, one line saying when or why, and one action. Tapping the row opens what it is about.
  */
 function StreamRow({ lead, title, sub, action, onPress, label }: { lead: ReactNode; title: string; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string }) {
@@ -189,7 +189,31 @@ export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today:
   return <StreamRow lead={<Check task={task} />} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
 }
 
-export { UpdateRow } from '@/shared/components';
+/** A task with no date (From your lists, M66): where it lives, and Today, which gives it today's date. */
+export function UndatedRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
+  const { t } = useTranslation();
+  const open = useOpenTask();
+  const update = useUpdateTask();
+  return (
+    <StreamRow
+      lead={<Check task={task} />}
+      title={task.title}
+      sub={<TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />}
+      onPress={() => open(task)}
+      action={<Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />}
+    />
+  );
+}
+
+/** A task someone else gave the caller and they accepted (Assigned to me, D86): who it's from and when it's due. */
+export function AssignedRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
+  const { t } = useTranslation();
+  const labels = useDateLabels(today);
+  const open = useOpenTask();
+  const from = task.assignedBy?.displayName ? t('home.from', { name: task.assignedBy.displayName.split(' ')[0] }) : t('today.assigned');
+  const sub = task.dueDate ? `${from} · ${labels.day(task.dueDate)}` : from;
+  return <StreamRow lead={<Check task={task} />} title={task.title} sub={task.isImportant ? <>{sub}  <Flag /></> : sub} onPress={() => open(task)} />;
+}
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
