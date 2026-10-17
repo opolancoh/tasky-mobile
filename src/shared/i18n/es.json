@@ -121,10 +121,8 @@
     "nothingTodayShort": "Nada para hoy",
     "welcome": "Te damos la bienvenida a Azignia, {{name}}",
     "welcomeTo": "Te damos la bienvenida a {{name}}",
-    "addTask": "Añadir una tarea",
     "getStarted": {
       "title": "Primeros pasos",
-      "progress": "{{done}} de {{total}}",
       "task": "Añade tu primera tarea",
       "taskSub": "Lo que tengas en mente",
       "date": "Ponle fecha a una tarea",

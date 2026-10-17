@@ -11,7 +11,6 @@ import type { Home, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -39,7 +38,6 @@ type Item =
   | { type: 'undated'; key: string; task: TaskSummary }
   | { type: 'allDone'; key: string }
   | { type: 'getStarted'; key: string }
-  | { type: 'addFirst'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
@@ -48,7 +46,7 @@ type Item =
  * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
  * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
  * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
- * to plan (M66). With no open task and nothing to answer, Get started and Add a task under the cards (M67).
+ * to plan (M66). With no open task and nothing to answer, Get started under the cards (M67).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -58,7 +56,6 @@ export function TodayScreen() {
   const home = useHome();
   const dismissed = useHomeDismissed((s) => (me ? s.byUser[me.id] : undefined)) ?? NO_DISMISSED;
   const [refreshing, setRefreshing] = useState(false);
-  const showQuickAdd = useQuickAdd((s) => s.show);
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
@@ -82,9 +79,9 @@ export function TodayScreen() {
 
   if (data && today && me) {
     const requests = homeRequests(data, dismissed);
-    // The cards always; with no open task and nothing to answer, Get started and Add a task under them (M67).
+    // The cards always; with no open task and nothing to answer, Get started under them (M67).
     items.push({ type: 'cards', key: 'cards' });
-    if (firstDay) items.push({ type: 'getStarted', key: 'get-started' }, { type: 'addFirst', key: 'add-first' });
+    if (firstDay) items.push({ type: 'getStarted', key: 'get-started' });
     else {
 
       // Requests: 3 rows; all dismissed from Home → one row that opens them (M65).
@@ -227,12 +224,6 @@ export function TodayScreen() {
       }
       case 'getStarted':
         return <GetStartedCard userId={me!.id} />;
-      case 'addFirst':
-        return (
-          <View style={{ marginTop: space.lg }}>
-            <Button title={t('home.addTask')} onPress={() => showQuickAdd()} />
-          </View>
-        );
       case 'skeletonSection':
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':

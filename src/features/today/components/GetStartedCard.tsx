@@ -42,9 +42,8 @@ export function GetStartedCard({ userId }: { userId: Id }) {
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface2, paddingHorizontal: space.lg, marginTop: space.lg }]}>
-      <View style={[styles.head, { gap: space.sm }]}>
+      <View style={styles.head}>
         <Text variant="headline" accessibilityRole="header">{t('home.getStarted.title')}</Text>
-        <Text variant="footnote" color="ink3">{t('home.getStarted.progress', { done: STEPS.filter((s) => done[s]).length, total: STEPS.length })}</Text>
       </View>
       {STEPS.map((step) => {
         const ok = done[step];
