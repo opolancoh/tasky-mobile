@@ -12,7 +12,7 @@ import type { Id } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
-import { useTask } from '@/data/tasks/queries';
+import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, TaskListIcon, TagsRow } from '@/shared/components';
@@ -120,6 +120,11 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
       (ok) => ok && navigation.dispatch(data.action),
     );
   });
+
+  // On a shared list, an assignee who isn't among its people has only this task (D88, M71): "Outside the list".
+  const listOf = useTaskLists().data?.find((c) => c.id === task?.taskList?.id);
+  const sharedList = !!listOf && listOf.sharing !== 'private';
+  const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
   if (!task || !me || !today || !fields) {
     return <Screen edges={['bottom']}>{query.error && !missing ? <Notice>{errorMessage(query.error)}</Notice> : null}</Screen>;
@@ -307,6 +312,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
                 <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
                 {status && <Text variant="caption" color={status === 'declined' ? 'danger' : status === 'accepted' ? 'success' : 'ink2'} numberOfLines={2}>
                   {status === 'declined' && task.declineReason ? t('taskDetail.declinedReason', { reason: task.declineReason }) : t(`assign.status.${status}`)}
+                  {sharedList && people && fields.assignee.id === task.assignee?.id && !people.some((m) => m.userId === fields.assignee?.id) ? ` · ${t('taskRow.outsideList')}` : ''}
                 </Text>}
               </View>
             }

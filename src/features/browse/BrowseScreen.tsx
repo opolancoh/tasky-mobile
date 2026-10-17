@@ -36,7 +36,7 @@ const FILTER_FROM = 25;
 
 /**
  * Spaces, the second tab (06-mobile.md, M38, M70; the route keeps the name Browse): everything the user can see. Four rows
- * that are always there: Personal, Important, Assigned to me, All tasks; then My lists, Shared with me, Teams (a row each,
+ * that are always there: Personal, Important, Assigned to me, Assigned by me (M71), All tasks; then My lists, Shared with me, Teams (a row each,
  * A–Z) and Tags, each folding from its heading (kept on the device); More (Completed, Archived, Recently Deleted) has no
  * counts and loads nothing until opened. Every count opens its list. Edit reorders lists inside their section and tags
  * (arrows); a long press opens a row's menu (what the role allows).
@@ -52,6 +52,7 @@ export function BrowseScreen() {
   // The rows' counts: `total` on a one-task page (GET /tasks, open). Important is the user's own, as on Home (D61, M31).
   const important = useTasks({ important: true, mine: true, limit: 1 });
   const assigned = useTasks({ assignee: 'me', limit: 1 });
+  const assignedBy = useTasks({ assignedBy: 'me', limit: 1 });
   const allTasks = useTasks({ limit: 1 });
   const folded = useFoldedSections((s) => (me ? s.byUser[me.id] : undefined)) ?? {};
   const toggleFold = useFoldedSections((s) => s.toggle);
@@ -90,6 +91,7 @@ export function BrowseScreen() {
     items.push(
       { type: 'nav', key: 'important', label: t('browse.important'), icon: 'flag', tone: 'danger', count: important.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
       { type: 'nav', key: 'assigned', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: assigned.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) },
+      { type: 'nav', key: 'assignedBy', label: t('browse.assignedBy'), icon: 'send', tone: 'accent', count: assignedBy.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'assignedBy' }) },
       { type: 'nav', key: 'all', label: t('browse.allTasks'), icon: 'layers', tone: 'quiet', count: allTasks.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'all' }) },
     );
   };
@@ -116,7 +118,7 @@ export function BrowseScreen() {
     if (gs.length) items.push({ type: 'section', key: 's-fg', title: t('browse.tags') }, ...gs.map((tag, index) => ({ type: 'tag' as const, key: `g-${tag.name}`, tag, index, size: gs.length })));
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
-    // Personal, Important, Assigned to me, All tasks (M70): always there, in this order.
+    // Personal, Important, Assigned to me, Assigned by me, All tasks (M70, M71): always there, in this order.
     if (!editing) {
       if (groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
       pushRows();
@@ -158,7 +160,7 @@ export function BrowseScreen() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), important.refetch(), assigned.refetch(), allTasks.refetch()]);
+    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), important.refetch(), assigned.refetch(), assignedBy.refetch(), allTasks.refetch()]);
     setRefreshing(false);
   };
 

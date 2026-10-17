@@ -11,32 +11,42 @@ import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTags, useTaskLists, useTaskPages, useTeams } from '@/data/tasks/queries';
 import type { TaskFilter, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { TaskRow } from '@/shared/components';
+import { Avatar, TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, Notice, Screen, Segmented, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
+import { useAssignedByGroup, type AssignedByGroup } from './assignedByGroupStore';
 import { useBrowseMenus } from './browseMenus';
 import { CompletedRow } from './components/CompletedRow';
 
 /** The task lists Spaces opens that aren't a task list (M38, M70). `id`: the tag's name or the team's id. */
-export type BrowseListKind = 'all' | 'important' | 'assigned' | 'completed' | 'tag' | 'team';
+export type BrowseListKind = 'all' | 'important' | 'assigned' | 'assignedBy' | 'completed' | 'tag' | 'team';
 
 /** All tasks and Important (M70): soonest first (sort=due), grouped by list on the device, or newest first (sort=created). */
 type Order = 'due' | 'list' | 'created';
 const ORDERS: Order[] = ['due', 'list', 'created'];
+const GROUPS: AssignedByGroup[] = ['person', 'status'];
+
+/** Assigned by me's status groups (M71): what needs the user first. */
+type StatusGroup = 'needsYou' | 'pending' | 'accepted';
+const statusGroup = (task: TaskSummary): StatusGroup =>
+  task.awaitsConfirmation || task.assignmentStatus === 'declined' ? 'needsYou' : task.assignmentStatus === 'pending' ? 'pending' : 'accepted';
+const needsYou = (task: TaskSummary) => statusGroup(task) === 'needsYou';
 
 const PAGE = 20;
 
 type Item =
   | { type: 'header'; key: string }
   | { type: 'group'; key: string; name: string; color: string; count: number }
+  | { type: 'person'; key: string; id: Id; name: string; count: number }
   | { type: 'task'; key: string; task: TaskSummary }
   | { type: 'footer'; key: string };
 
 /**
  * A task list from Spaces (M38, M70): All tasks, Important, Assigned to me, Completed, a tag, or a team's tasks (the count
- * on its All tasks row). Everything the user can see (D61), 20 at a time as the list scrolls (keyset). A tag has its menu
- * in the header. All tasks and Important choose their order; By list loads every page, then groups in the user's list order.
+ * on its All tasks row), or Assigned by me (M71). Everything the user can see (D61), 20 at a time as the list scrolls (keyset).
+ * A tag has its menu in the header. All tasks and Important choose their order; By list loads every page, then groups in
+ * the user's list order. Assigned by me loads every page too and groups by person or by status (kept on the device).
  */
 export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string }>) {
   const { kind, id } = route.params;
@@ -52,6 +62,11 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const ordered = kind === 'all' || kind === 'important';
   const [order, setOrder] = useState<Order>('due');
   const byList = ordered && order === 'list';
+  const userId = me?.id ?? '';
+  const group = useAssignedByGroup((s) => s.byUser[userId] ?? 'person');
+  const setGroup = useAssignedByGroup((s) => s.set);
+  const given = kind === 'assignedBy';
+  const whole = byList || given;   // groups need every page
   const taskLists = useTaskLists();
 
   const sort: TaskFilter['sort'] = order === 'created' ? 'created' : 'due';
@@ -59,6 +74,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     all: { sort },
     important: { important: true, mine: true, sort },   // the user's own, as on Home (D61)
     assigned: { assignee: 'me' },
+    assignedBy: { assignedBy: 'me' as const },
     completed: { status: 'completed' as const },
     tag: { tag: id },
     team: { teamId: id as Id },
@@ -67,10 +83,10 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const tasks = pages.data?.pages.flatMap((p) => p.items) ?? [];
   const total = pages.data?.pages[0]?.total;
 
-  // By list groups everything, so it loads the rest of the pages first.
+  // By list and Assigned by me group everything, so they load the rest of the pages first.
   useEffect(() => {
-    if (byList && pages.hasNextPage && !pages.isFetchingNextPage) pages.fetchNextPage();
-  }, [byList, pages]);
+    if (whole && pages.hasNextPage && !pages.isFetchingNextPage) pages.fetchNextPage();
+  }, [whole, pages]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -99,7 +115,26 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         items.push({ type: 'group', key: `g-${k}`, name: ref?.isInbox ? t('browse.inbox') : (ref?.name ?? ''), color: ref?.color ?? colors.ink3, count: ts.length });
         ts.forEach((task) => items.push({ type: 'task', key: task.id, task }));
       });
-  } else if (!byList) tasks.forEach((task) => items.push({ type: 'task', key: task.id, task }));
+  } else if (given && !pages.hasNextPage) {
+    // Declined and completed-to-confirm first in each group, then soonest (the API's order).
+    const first = (ts: TaskSummary[]) => [...ts].sort((a, b) => Number(needsYou(b)) - Number(needsYou(a)));
+    if (group === 'person') {
+      const people = new Map<Id, TaskSummary[]>();
+      tasks.forEach((task) => task.assignee && people.set(task.assignee.id, [...(people.get(task.assignee.id) ?? []), task]));
+      [...people.values()].sort((a, b) => b.length - a.length).forEach((ts) => {
+        const who = ts[0].assignee!;
+        items.push({ type: 'person', key: `p-${who.id}`, id: who.id, name: who.displayName, count: ts.length });
+        first(ts).forEach((task) => items.push({ type: 'task', key: task.id, task }));
+      });
+    } else {
+      (['needsYou', 'pending', 'accepted'] as const).forEach((g) => {
+        const ts = tasks.filter((task) => statusGroup(task) === g);
+        if (!ts.length) return;
+        items.push({ type: 'group', key: `s-${g}`, name: t(`browse.assignedByGroup.${g}`), color: '', count: ts.length });
+        ts.forEach((task) => items.push({ type: 'task', key: task.id, task }));
+      });
+    }
+  } else if (!whole) tasks.forEach((task) => items.push({ type: 'task', key: task.id, task }));
   items.push({ type: 'footer', key: 'footer' });
   const open = (task: { id: Id }) => navigation.navigate('TaskDetail', { taskId: task.id });
 
@@ -116,6 +151,11 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
                 <Segmented<Order> options={ORDERS.map((o) => ({ value: o, label: t(`browse.order.${o}`) }))} value={order} onChange={setOrder} accessibilityLabel={t('browse.order.label')} />
               </View>
             )}
+            {given && !!tasks.length && (
+              <View style={{ marginTop: space.md }}>
+                <Segmented<AssignedByGroup> options={GROUPS.map((g) => ({ value: g, label: t(`browse.assignedByGroup.${g}`) }))} value={group} onChange={(g) => setGroup(userId, g)} accessibilityLabel={t('browse.assignedByGroup.label')} />
+              </View>
+            )}
             {pages.error && (
               <View style={{ marginTop: space.md }}>
                 <Notice>{errorMessage(pages.error)}</Notice>
@@ -126,7 +166,15 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       case 'group':
         return (
           <View style={[styles.group, { gap: space.sm, marginTop: space.lg }]}>
-            <ColorDot color={item.color} size={8} />
+            {!!item.color && <ColorDot color={item.color} size={8} />}
+            <Text variant="label" color="ink2" accessibilityRole="header">{item.name}</Text>
+            <Text variant="label" color="ink3">{item.count}</Text>
+          </View>
+        );
+      case 'person':
+        return (
+          <View style={[styles.group, { gap: space.sm, marginTop: space.lg }]}>
+            <Avatar name={item.name} seed={item.id} size={22} />
             <Text variant="label" color="ink2" accessibilityRole="header">{item.name}</Text>
             <Text variant="label" color="ink3">{item.count}</Text>
           </View>
@@ -134,9 +182,9 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       case 'task':
         return kind === 'completed'
           ? <CompletedRow task={item.task} onPress={() => open(item.task)} />
-          : <TaskRow task={item.task} today={today} showDue showList={!byList} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+          : <TaskRow task={item.task} today={today} showDue showList={!byList} showAssignment={given} hideFace={given && group === 'person'} onComplete={(task) => complete.mutate(task)} onPress={open} />;
       case 'footer':
-        return pages.isPending || (byList && pages.hasNextPage) ? (
+        return pages.isPending || (whole && pages.hasNextPage) ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
         ) : pages.hasNextPage ? (
           <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>

@@ -157,7 +157,7 @@ export interface Task {
   version: Version;
 }
 
-/** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
+/** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `declineReason`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
 export interface TaskSummary {
   id: Id;
   taskList: TaskListRef | null;
@@ -171,6 +171,7 @@ export interface TaskSummary {
   assignee?: UserRef | null;
   assignmentStatus: AssignmentStatus | null;
   assignedBy?: UserRef | null;
+  declineReason?: string | null;
   awaitsConfirmation: boolean;
   invitedEmail?: string | null;
   stepsDone: number;
@@ -208,6 +209,8 @@ export interface TaskFilter {
   /** 'me', 'none' or a user id. */
   assignee?: string;
   assignment?: AssignmentStatus;
+  /** Tasks the caller gave someone else (D88), open and completed ones waiting for their confirmation. */
+  assignedBy?: 'me';
   /** `taskList` (default with taskListId): open tasks in its own order, whole; completed newest first, paged. */
   sort?: 'due' | 'created' | 'taskList';
   limit?: number;

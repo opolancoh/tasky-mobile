@@ -163,7 +163,10 @@
     "declined": "Declined",
     "completed": "Completed",
     "confirm": "Confirm",
-    "invited": "Invited"
+    "invited": "Invited",
+    "pending": "Pending",
+    "declinedReason": "Declined · {{reason}}",
+    "outsideList": "Outside the list"
   },
   "browse": {
     "title": "Spaces",
@@ -256,7 +259,8 @@
       "assigned": "soonest first",
       "completed": "newest first",
       "tag": "in everything you can see",
-      "team": "in every list of the team"
+      "team": "in every list of the team",
+      "assignedBy": "what you gave others"
     },
     "listEmptyFor": {
       "all": "Nothing open. Tasks you add, or that people share with you, show here.",
@@ -264,7 +268,8 @@
       "assigned": "Nothing assigned to you.",
       "completed": "Nothing completed yet.",
       "tag": "No open tasks with this tag.",
-      "team": "Nothing open in this team."
+      "team": "Nothing open in this team.",
+      "assignedBy": "Nothing given out. Tasks you give someone show here, from any list."
     },
     "allShown": "All {{count}} shown",
     "archivedSub": "Finished lists: out of Browse and the pickers for everyone in them; their tasks stay searchable.",
@@ -358,6 +363,23 @@
       "due": "Soonest",
       "list": "By list",
       "created": "Newest"
+    },
+    "assignedBy": "Assigned by me",
+    "assignedByGroup": {
+      "label": "Group by",
+      "person": "Person",
+      "status": "Status",
+      "needsYou": "Needs you",
+      "pending": "Pending",
+      "accepted": "Accepted"
+    },
+    "shareOutside": {
+      "title_one": "{{names}} has a task in this list",
+      "title_other": "{{names}} have tasks in this list",
+      "invite_one": "Invite them too",
+      "invite_other": "Invite them too",
+      "keep_one": "Keep it as it is: only their task",
+      "keep_other": "Keep them as they are: only their task"
     }
   },
   "search": {

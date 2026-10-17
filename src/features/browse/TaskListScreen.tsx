@@ -109,9 +109,10 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
   const count = t('browse.people', { count: people.length });
   // People with tasks here who aren't in it (D70): named on a private list's line.
-  const outsiders = [...new Set(rows.filter((r) => r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id)).map((r) => r.assignee!.displayName.split(' ')[0]))];
-  // Who is in it (M44): nothing on the Inbox or a private list, unless tasks went to people outside it (D70).
-  const who = !taskList || taskList.isInbox ? null
+  const outsideOf = (r: TaskSummary) => !!r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id);
+  const outsiders = [...new Set(rows.filter(outsideOf).map((r) => r.assignee!.displayName.split(' ')[0]))];
+  // Who is in it (M44): nothing on Personal or a private list, unless tasks went to people outside it (D70, D88).
+  const who = !taskList ? null
     : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : null)
     : !members.data ? null
     : taskList.team ? `${taskList.team.name} · ${count}`
@@ -147,7 +148,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </View>
         );
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={completeTask} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue showList={false} outside={shared && !!members.data && outsideOf(item.task)} onComplete={completeTask} onPress={open} />;
       case 'empty':
         return (
           <View style={[styles.empty, { gap: space.xs, paddingVertical: space.huge }]}>

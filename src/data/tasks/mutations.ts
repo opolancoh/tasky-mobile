@@ -261,6 +261,15 @@ export function useInvite(of: MembersOf) {
   });
 }
 
+/** Invites, by user id, people with tasks given from a list that is being shared (D88, M71): "Invite them too". */
+export function useInviteAssignees(taskListId: Id) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(taskListId, userId))),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations('taskList', taskListId) }),
+  });
+}
+
 export function useRevokeInvitation(of: MembersOf) {
   const queryClient = useQueryClient();
   return useMutation({

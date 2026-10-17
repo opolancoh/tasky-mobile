@@ -163,7 +163,10 @@
     "declined": "Rechazada",
     "completed": "Completada",
     "confirm": "Confirmar",
-    "invited": "Invitada"
+    "invited": "Invitada",
+    "pending": "Pendiente",
+    "declinedReason": "Rechazada · {{reason}}",
+    "outsideList": "Fuera de la lista"
   },
   "browse": {
     "title": "Espacios",
@@ -256,7 +259,8 @@
       "assigned": "las más próximas primero",
       "completed": "las más recientes primero",
       "tag": "en todo lo que puedes ver",
-      "team": "en todas las listas del equipo"
+      "team": "en todas las listas del equipo",
+      "assignedBy": "lo que diste a otros"
     },
     "listEmptyFor": {
       "all": "Nada pendiente. Las tareas que agregues, o que te compartan, aparecen aquí.",
@@ -264,7 +268,8 @@
       "assigned": "No tienes nada asignado.",
       "completed": "Aún no has completado nada.",
       "tag": "No hay tareas abiertas con esta etiqueta.",
-      "team": "No hay nada abierto en este equipo."
+      "team": "No hay nada abierto en este equipo.",
+      "assignedBy": "No has dado nada. Las tareas que das a alguien aparecen aquí, de cualquier lista."
     },
     "allShown": "Se muestran las {{count}}",
     "archivedSub": "Listas terminadas: fuera de Explorar y de los selectores para todos; sus tareas se pueden buscar.",
@@ -358,6 +363,23 @@
       "due": "Próximas",
       "list": "Por lista",
       "created": "Recientes"
+    },
+    "assignedBy": "Asignadas por mí",
+    "assignedByGroup": {
+      "label": "Agrupar por",
+      "person": "Persona",
+      "status": "Estado",
+      "needsYou": "Te necesitan",
+      "pending": "Pendientes",
+      "accepted": "Aceptadas"
+    },
+    "shareOutside": {
+      "title_one": "{{names}} tiene una tarea en esta lista",
+      "title_other": "{{names}} tienen tareas en esta lista",
+      "invite_one": "Invitarla también",
+      "invite_other": "Invitarlos también",
+      "keep_one": "Dejarla así: solo su tarea",
+      "keep_other": "Dejarlos así: solo su tarea"
     }
   },
   "search": {

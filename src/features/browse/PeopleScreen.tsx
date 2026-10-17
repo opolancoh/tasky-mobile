@@ -7,13 +7,13 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import { isEmail } from '@/core/validation/rules';
-import { useInvite, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
-import { useTaskLists, useMembers, useOpenInvitations, useTeams } from '@/data/tasks/queries';
-import type { Member, MembersOf, OpenInvitation } from '@/data/tasks/types';
+import { useInvite, useInviteAssignees, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
+import { useTaskLists, useMembers, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
+import type { Member, MembersOf, OpenInvitation, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
-import { confirm, Notice, Screen, SkeletonRow, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, confirm, Notice, Screen, SkeletonRow, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
 
@@ -47,6 +47,12 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const revoke = useRevokeInvitation(of);
   const remove = useRemoveMember();
   const name = of.kind === 'team' ? team?.name : taskList?.name;
+  // Sharing a private list that has tasks given outside it (D88, M71): the first invitation asks about those people.
+  const privateList = !!taskList && taskList.sharing === 'private' && invites;
+  const listTasks = useTasks({ taskListId: of.id, sort: 'taskList' }, privateList);
+  const outsiders = privateList && !open.data?.length
+    ? [...new Map((listTasks.data?.items ?? []).filter((x) => x.assignee && x.assignee.id !== me?.id).map((x) => [x.assignee!.id, x.assignee!])).values()]
+    : [];
 
   const leave = async () => {
     if (!me || !name) return;
@@ -76,7 +82,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
             {name ? <Text variant="label" color="ink3">{name}</Text> : null}
             <Text variant="title" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
             <Text variant="subhead" color="ink2">{t(invites ? 'browse.peopleCanInvite' : of.kind === 'team' ? 'browse.peopleTeamOnly' : 'browse.peopleOwnerOnly')}</Text>
-            {invites && <InviteField of={of} />}
+            {invites && <InviteField of={of} outsiders={outsiders} />}
             {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
             {(members.error || remove.error) && (
               <View style={{ marginTop: space.md }}>
@@ -147,23 +153,37 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
  * then for the API: busy at once, a spinner after 300 ms, while the field stays editable and the keyboard up. Success
  * clears the field (unless it changed meanwhile) for the next person; errors show under it, until the next keystroke.
  */
-function InviteField({ of }: { of: MembersOf }) {
+function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] }) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const invite = useInvite(of);
+  const inviteThem = useInviteAssignees(of.id);
   const [email, setEmail] = useState('');
   const valid = isEmail(email.trim());
   const change = (text: string) => {
     setEmail(text);
     if (invite.error) invite.reset();
   };
-  const send = () => {
+  const send = async () => {
     const value = email.trim();
     if (!isEmail(value) || invite.isPending) return;
+    // People with a task given from this list (D88): invite them too, or keep them seeing only their task.
+    let alsoThem = false;
+    if (outsiders.length) {
+      const names = outsiders.map((p) => p.displayName.split(' ')[0]).join(', ');
+      const choice = await chooseAction({
+        title: t('browse.shareOutside.title', { names, count: outsiders.length }),
+        actions: [{ label: t('browse.shareOutside.invite', { count: outsiders.length }), icon: 'user-plus' }, { label: t('browse.shareOutside.keep', { count: outsiders.length }), icon: 'user' }],
+        cancelLabel: t('common.cancel'),
+      });
+      if (choice === null) return;
+      alsoThem = choice === 0;
+    }
     invite.mutate(value, {
       onSuccess: ({ again }) => {
         setEmail((current) => (current.trim() === value ? '' : current));
         useToast.getState().show({ message: t(again ? 'browse.invitedAgain' : 'browse.invited', { email: value }) });
+        if (alsoThem) inviteThem.mutate(outsiders.map((p) => p.id));
       },
     });
   };

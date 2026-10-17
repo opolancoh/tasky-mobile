@@ -63,6 +63,8 @@ export const tasksApi = {
 
   /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
   invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email } }),
+  /** POST /task-lists/{id}/invitations { userId } (201): someone with a task given from the list (D88). */
+  inviteUser: (taskListId: Id, userId: Id) => http().post<OpenInvitation>(`/task-lists/${taskListId}/invitations`, { body: { userId } }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),

@@ -7,6 +7,7 @@ import type { LocalDate } from '@/core/types';
 import { useConfirmTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
+import { useSessionStore } from '@/shared/session/sessionStore';
 import { Pill, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
@@ -20,6 +21,12 @@ export interface TaskRowProps {
   showDue?: boolean;
   /** Off on a list's own screen: its name is already the title (M57). */
   showList?: boolean;
+  /** Assigned by me (M71): Pending too, and why it was declined. */
+  showAssignment?: boolean;
+  /** The assignee doesn't see its shared list: they have only this task (D88, M71). */
+  outside?: boolean;
+  /** Hide the initials at the right (a list grouped by person). */
+  hideFace?: boolean;
   onComplete(task: TaskSummary): void;
   onPress?(task: TaskSummary): void;
 }
@@ -27,11 +34,11 @@ export interface TaskRowProps {
 /**
  * A task in a list (task lists, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
  * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
- * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except in
- * the Inbox (M44). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
+ * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except
+ * yours in the Inbox (M44; someone given a task from it shows, D88). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
  * circle at once; the list refetches after the API answers.
  */
-export function TaskRow({ task, today, showDue = false, showList = true, onComplete, onPress }: TaskRowProps) {
+export function TaskRow({ task, today, showDue = false, showList = true, showAssignment = false, outside = false, hideFace = false, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const labels = useDateLabels(today);
@@ -40,8 +47,9 @@ export function TaskRow({ task, today, showDue = false, showList = true, onCompl
   const [tickedNow, setTicked] = useState(false);
   const ticked = tickedNow || awaiting;
   const overdue = !awaiting && !!task.dueDate && !!today && task.dueDate < today;
-  // Whoever has it, you included (M44); none in the Inbox, which is only ever yours.
-  const who = task.assignee && !task.taskList?.isInbox ? task.assignee : null;
+  const meId = useSessionStore((s) => s.userId);
+  // Whoever has it, you included (M44); not you in the Inbox, which is only ever yours (someone given a task from it, D88).
+  const who = task.assignee && !hideFace && !(task.taskList?.isInbox && task.assignee.id === meId) ? task.assignee : null;
 
   const complete = () => {
     if (ticked) return;
@@ -80,7 +88,11 @@ export function TaskRow({ task, today, showDue = false, showList = true, onCompl
                 </Text>
               )}
               {task.repeats && <Feather name="repeat" size={12} color={colors.ink3} />}
-              {task.assignmentStatus === 'declined' && <Text variant="footnote" color="danger">{t('taskRow.declined')}</Text>}
+              {showAssignment && task.assignmentStatus === 'pending' && <Text variant="footnote" style={{ color: colors.warn }}>{t('taskRow.pending')}</Text>}
+              {task.assignmentStatus === 'declined' && (
+                <Text variant="footnote" color="danger" numberOfLines={2}>{showAssignment && task.declineReason ? t('taskRow.declinedReason', { reason: task.declineReason }) : t('taskRow.declined')}</Text>
+              )}
+              {outside && <Text variant="footnote" color="ink3">{t('taskRow.outsideList')}</Text>}
               {awaiting && <Text variant="footnote" color="success">{t('taskRow.completed')}</Text>}
               {task.invitedEmail && <Text variant="footnote" color="ink3" numberOfLines={1}>{`${t('taskRow.invited')} · ${task.invitedEmail}`}</Text>}
               {task.isImportant && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} />}

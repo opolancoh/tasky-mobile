@@ -13,16 +13,16 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { Avatar } from './Faces';
 
 /**
- * Whether the user may give a task in this list to someone who doesn't see it (D70): they own it, and it's a private or
- * shared list outside a team (a team's lists are everyone's in the team; the Inbox is only yours).
+ * Whether the user may give a task in this list to someone who doesn't see it (D70, D88): it's theirs and nobody else
+ * sees it (Personal or a private list). A shared list, alone or in a team, is shared whole: its tasks go to its people.
  */
-export const givesOutside = (list: Pick<TaskList, 'owner' | 'team' | 'isInbox'> | undefined, meId: Id | null | undefined): boolean =>
-  !!list && !list.isInbox && !list.team && list.owner.id === meId;
+export const givesOutside = (list: Pick<TaskList, 'owner' | 'sharing'> | undefined, meId: Id | null | undefined): boolean =>
+  !!list && list.sharing === 'private' && list.owner.id === meId;
 
 export interface AssigneePickerProps {
   /** The list the task is in: its people are who can be picked. */
   taskListId: Id;
-  /** The list's owner, outside a team (`givesOutside`): anyone can also be picked by email (D70). */
+  /** Personal or a private list of the user's (`givesOutside`): anyone can also be picked by email (D70, D88). */
   canGiveOutside?: boolean;
   /** The signed-in user, listed first as "Me". */
   meId: Id;
@@ -35,8 +35,8 @@ export interface AssigneePickerProps {
 /**
  * Who a task is assigned to (M43, M44; Task detail and Quick add, on every list): the people who can see its list, you
  * first as "Me" (the only one on a private list or the Inbox), the current one checked with its status, and Unassign at
- * the end. The list's owner also gets **Only this task**: someone picked by email sees that task only, not the list
- * (D70, M45). A tap picks and goes back.
+ * the end. On Personal and the user's private lists there is also **Only this task**: someone picked by email sees that
+ * task only, not the list (D70, D88, M45, M71). A tap picks and goes back.
  */
 export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
