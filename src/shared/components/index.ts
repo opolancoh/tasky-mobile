@@ -12,3 +12,4 @@ export { Avatar } from './Faces';
 export { TaskOrigin } from './TaskOrigin';
 export { MeButton } from './MeButton';
 export { AssigneePicker, givesOutside, type AssigneePickerProps } from './AssigneePicker';
+export { PeoplePicker, type PeoplePickerProps } from './PeoplePicker';

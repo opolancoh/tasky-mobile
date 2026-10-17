@@ -82,7 +82,8 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `TaskListIcon` | The Inbox tray or the list's color dot |
 | `UpdateRow` | A notification: unread dot, icon, one line and when (Today's Updates, Activity). Needs you (Respond, Confirm), something to see, or nowhere to go, from `useActivityState` (M58) |
 | `Avatar` | Initials in a circle, colors by a hash of the user id (pickers, Me, a task row's assignee) |
-| `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); for a private or shared list's owner, Only this task by email (D70, M45) |
+| `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); on Personal and the user's private lists, Only this task with `PeoplePicker` (D70, D88, M45, M73) |
+| `PeoplePicker` | Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most (`GET /people`, `usePeople`, kept 5 minutes); typing searches after 250 ms, colleagues under Your company; a typed email ends with Invite by email / Give it by email. Used by `AssigneePicker`'s Only this task and People's Invite |
 | `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |

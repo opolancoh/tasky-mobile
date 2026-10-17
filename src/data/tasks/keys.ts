@@ -13,6 +13,8 @@ export const taskKeys = {
   /** A team's or a task list's people and open invitations. */
   members: (kind: string, id: Id) => ['tasks', 'members', kind, id] as const,
   openInvitations: (kind: string, id: Id) => ['tasks', 'members', kind, id, 'invitations'] as const,
+  /** People to pick (GET /people) for a query. */
+  people: (q: string) => ['tasks', 'people', q] as const,
   /** Search results for a query: views too, so completing a task refetches them. */
   search: (q: string) => ['tasks', 'views', 'search', q] as const,
   /** Recently Deleted: changes with every delete and restore. */

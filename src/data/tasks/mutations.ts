@@ -261,12 +261,15 @@ export function useInvite(of: MembersOf) {
   });
 }
 
-/** Invites, by user id, people with tasks given from a list that is being shared (D88, M71): "Invite them too". */
-export function useInviteAssignees(taskListId: Id) {
+/**
+ * Invites by user id (D89): someone picked from GET /people, or the people with tasks given from a list being shared
+ * (D88, M71: "Invite them too"). The open invitations refetch.
+ */
+export function useInvitePeople(of: MembersOf) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(taskListId, userId))),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations('taskList', taskListId) }),
+    mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(of, userId))),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
   });
 }
 

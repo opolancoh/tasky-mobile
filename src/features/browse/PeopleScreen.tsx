@@ -1,19 +1,18 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
-import { isEmail } from '@/core/validation/rules';
-import { useInvite, useInviteAssignees, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
+import type { Id } from '@/core/types';
+import { useInvite, useInvitePeople, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
 import { useTaskLists, useMembers, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
-import type { Member, MembersOf, OpenInvitation, UserRef } from '@/data/tasks/types';
+import type { Member, MembersOf, OpenInvitation, Person, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar } from '@/shared/components';
+import { Avatar, PeoplePicker } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
-import { chooseAction, confirm, Notice, Screen, SkeletonRow, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
 
@@ -82,7 +81,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
             {name ? <Text variant="label" color="ink3">{name}</Text> : null}
             <Text variant="title" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
             <Text variant="subhead" color="ink2">{t(invites ? 'browse.peopleCanInvite' : of.kind === 'team' ? 'browse.peopleTeamOnly' : 'browse.peopleOwnerOnly')}</Text>
-            {invites && <InviteField of={of} outsiders={outsiders} />}
+            {invites && <InviteField of={of} outsiders={outsiders} exclude={(members.data ?? []).map((m) => m.userId)} />}
             {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
             {(members.error || remove.error) && (
               <View style={{ marginTop: space.md }}>
@@ -149,68 +148,65 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
 }
 
 /**
- * Invite by email (M56): the typed text lives here, not in the screen (docs/performance.md). Invite waits for an email,
- * then for the API: busy at once, a spinner after 300 ms, while the field stays editable and the keyboard up. Success
- * clears the field (unless it changed meanwhile) for the next person; errors show under it, until the next keystroke.
+ * Invite (M56, M73): find someone the user works with, or a colleague (GET /people, D89), or type an email for someone new.
+ * Saving shows busy at once; errors show under it, until the next pick. The first invitation of a private list with tasks
+ * given outside it asks about those people first (D88, M71).
  */
-function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] }) {
+function InviteField({ of, outsiders, exclude }: { of: MembersOf; outsiders: UserRef[]; exclude: Id[] }) {
   const { t } = useTranslation();
-  const { colors, space, type } = useTheme();
+  const { space } = useTheme();
   const invite = useInvite(of);
-  const inviteThem = useInviteAssignees(of.id);
-  const [email, setEmail] = useState('');
-  const valid = isEmail(email.trim());
-  const change = (text: string) => {
-    setEmail(text);
-    if (invite.error) invite.reset();
+  const invitePeople = useInvitePeople(of);
+  const error = invite.error ?? invitePeople.error;
+
+  /** People with a task given from this list (D88): invite them too (true), keep them (false), or cancel (null). */
+  const askAboutOutsiders = async (): Promise<boolean | null> => {
+    if (!outsiders.length) return false;
+    const names = outsiders.map((p) => p.displayName.split(' ')[0]).join(', ');
+    const choice = await chooseAction({
+      title: t('browse.shareOutside.title', { names, count: outsiders.length }),
+      actions: [{ label: t('browse.shareOutside.invite', { count: outsiders.length }), icon: 'user-plus' }, { label: t('browse.shareOutside.keep', { count: outsiders.length }), icon: 'user' }],
+      cancelLabel: t('common.cancel'),
+    });
+    return choice === null ? null : choice === 0;
   };
-  const send = async () => {
-    const value = email.trim();
-    if (!isEmail(value) || invite.isPending) return;
-    // People with a task given from this list (D88): invite them too, or keep them seeing only their task.
-    let alsoThem = false;
-    if (outsiders.length) {
-      const names = outsiders.map((p) => p.displayName.split(' ')[0]).join(', ');
-      const choice = await chooseAction({
-        title: t('browse.shareOutside.title', { names, count: outsiders.length }),
-        actions: [{ label: t('browse.shareOutside.invite', { count: outsiders.length }), icon: 'user-plus' }, { label: t('browse.shareOutside.keep', { count: outsiders.length }), icon: 'user' }],
-        cancelLabel: t('common.cancel'),
-      });
-      if (choice === null) return;
-      alsoThem = choice === 0;
-    }
-    invite.mutate(value, {
+  const alsoThem = (yes: boolean, except: Id | null = null) => {
+    const ids = outsiders.map((p) => p.id).filter((id) => id !== except);
+    if (yes && ids.length) invitePeople.mutate(ids);
+  };
+
+  const byEmail = async (email: string) => {
+    if (invite.isPending) return;
+    invite.reset();
+    invitePeople.reset();
+    const yes = await askAboutOutsiders();
+    if (yes === null) return;
+    invite.mutate(email, {
       onSuccess: ({ again }) => {
-        setEmail((current) => (current.trim() === value ? '' : current));
-        useToast.getState().show({ message: t(again ? 'browse.invitedAgain' : 'browse.invited', { email: value }) });
-        if (alsoThem) inviteThem.mutate(outsiders.map((p) => p.id));
+        useToast.getState().show({ message: t(again ? 'browse.invitedAgain' : 'browse.invited', { email }) });
+        alsoThem(yes);
+      },
+    });
+  };
+  const byPerson = async (person: Person) => {
+    if (invitePeople.isPending) return;
+    invite.reset();
+    invitePeople.reset();
+    const yes = await askAboutOutsiders();
+    if (yes === null) return;
+    invitePeople.mutate([person.id], {
+      onSuccess: () => {
+        useToast.getState().show({ message: t('browse.invited', { email: person.displayName }) });
+        alsoThem(yes, person.id);
       },
     });
   };
   return (
     <View style={{ marginTop: space.lg, gap: space.xs }}>
-      <View style={[styles.invite, { gap: space.sm, borderBottomColor: invite.error ? colors.danger : colors.accent }]}>
-        <TextInput
-          value={email}
-          onChangeText={change}
-          placeholder={t('browse.invitePlaceholder')}
-          placeholderTextColor={colors.ink3}
-          selectionColor={colors.accent}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          returnKeyType="send"
-          submitBehavior="submit"
-          onSubmitEditing={send}
-          accessibilityLabel={t('browse.inviteLabel')}
-          style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
-        />
-        <TextButton label={t('browse.invite')} onPress={send} disabled={!valid} busy={invite.isPending} />
-      </View>
-      {invite.error && (
+      <PeoplePicker exclude={exclude} emailLabel={t('people.inviteByEmail')} onPickPerson={byPerson} onEmail={byEmail} busy={invite.isPending || invitePeople.isPending} />
+      {error && (
         <Text variant="footnote" color="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">
-          {errorMessage(invite.error)}
+          {errorMessage(error)}
         </Text>
       )}
     </View>
@@ -219,10 +215,8 @@ function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] })
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  invite: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1.5 },
-  input: { flex: 1, minHeight: 44, paddingVertical: 10 },
-  send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   mail: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   leave: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
+  send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
 });

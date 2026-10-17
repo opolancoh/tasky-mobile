@@ -243,9 +243,6 @@
     "peopleCanInvite": "You can invite and remove people.",
     "peopleTeamOnly": "The team’s owner and admins invite people.",
     "peopleOwnerOnly": "Only the owner invites people.",
-    "invitePlaceholder": "name@example.com",
-    "inviteLabel": "Email to invite",
-    "invite": "Invite",
     "inviteTeamHint": "They get an email and see every list in the team once they join. Invitations last 14 days.",
     "inviteListHint": "They get an email and see this list once they join. Invitations last 14 days.",
     "invited": "Invitation sent to {{email}}",
@@ -728,9 +725,6 @@
     "note": "They get it as Pending and answer Accept or Reject. Assigning yourself needs no answer.",
     "onlyYou": "Only you see this list. Assigning it to yourself puts it in Assigned to me.",
     "outside": "Only this task",
-    "byEmail": "Someone else, by email",
-    "emailLabel": "Email",
-    "emailAssign": "Assign",
     "outsideNote": "They see this task only, not the list or its people. No Azignia account? They get an email and find it after signing up.",
     "invited": "Invited"
   },
@@ -769,5 +763,14 @@
     "request": "Request body",
     "responseHeaders": "Response headers",
     "response": "Response body"
+  },
+  "people": {
+    "search": "Name or email",
+    "recent": "People you work with",
+    "workWith": "People you work with",
+    "company": "Your company",
+    "noneFound": "No one found. Type their email to invite them.",
+    "inviteByEmail": "Invite by email",
+    "giveByEmail": "Give it by email"
   }
 }

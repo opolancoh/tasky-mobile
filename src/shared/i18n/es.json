@@ -243,9 +243,6 @@
     "peopleCanInvite": "Puedes invitar y quitar personas.",
     "peopleTeamOnly": "El propietario y los administradores del equipo invitan.",
     "peopleOwnerOnly": "Solo el propietario invita.",
-    "invitePlaceholder": "nombre@ejemplo.com",
-    "inviteLabel": "Correo a invitar",
-    "invite": "Invitar",
     "inviteTeamHint": "Reciben un correo y ven todas las listas del equipo al unirse. Las invitaciones duran 14 días.",
     "inviteListHint": "Reciben un correo y ven esta lista al unirse. Las invitaciones duran 14 días.",
     "invited": "Invitación enviada a {{email}}",
@@ -728,9 +725,6 @@
     "note": "La reciben como Pendiente y responden Aceptar o Rechazar. Si te la asignas tú, no hace falta responder.",
     "onlyYou": "Solo tú ves esta lista. Asignártela la pone en Asignadas a mí.",
     "outside": "Solo esta tarea",
-    "byEmail": "Otra persona, por correo",
-    "emailLabel": "Correo",
-    "emailAssign": "Asignar",
     "outsideNote": "Verá solo esta tarea, no la lista ni a sus personas. ¿No tiene cuenta en Azignia? Recibe un correo y la encuentra al registrarse.",
     "invited": "Invitada"
   },
@@ -769,5 +763,14 @@
     "request": "Cuerpo de la solicitud",
     "responseHeaders": "Encabezados de la respuesta",
     "response": "Cuerpo de la respuesta"
+  },
+  "people": {
+    "search": "Nombre o correo",
+    "recent": "Personas con las que trabajas",
+    "workWith": "Personas con las que trabajas",
+    "company": "Tu compañía",
+    "noneFound": "No encontramos a nadie. Escribe su correo para invitarlo.",
+    "inviteByEmail": "Invitar por correo",
+    "giveByEmail": "Dársela por correo"
   }
 }

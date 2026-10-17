@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
+  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
   UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
@@ -63,8 +63,10 @@ export const tasksApi = {
 
   /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
   invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email } }),
-  /** POST /task-lists/{id}/invitations { userId } (201): someone with a task given from the list (D88). */
-  inviteUser: (taskListId: Id, userId: Id) => http().post<OpenInvitation>(`/task-lists/${taskListId}/invitations`, { body: { userId } }),
+  /** POST …/invitations { userId } (201): someone from GET /people, or with a task given from the list (D88, D89). */
+  inviteUser: (of: MembersOf, userId: Id) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId } }),
+  /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names. */
+  people: (q: string, limit: number) => http().get<Person[]>('/people', { query: { q: q || undefined, limit } }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),

@@ -1,16 +1,15 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
-import { isEmail } from '@/core/validation/rules';
 import { useMembers } from '@/data/tasks/queries';
 import { emailAssignee, isEmailAssignee, type AssignmentStatus, type TaskList, type UserRef } from '@/data/tasks/types';
 import { ListRow, Notice, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { errorMessage } from '@/shared/i18n/errors';
 
 import { Avatar } from './Faces';
+import { PeoplePicker } from './PeoplePicker';
 
 /**
  * Whether the user may give a task in this list to someone who doesn't see it (D70, D88): it's theirs and nobody else
@@ -36,7 +35,7 @@ export interface AssigneePickerProps {
  * Who a task is assigned to (M43, M44; Task detail and Quick add, on every list): the people who can see its list, you
  * first as "Me" (the only one on a private list or the Inbox), the current one checked with its status, and Unassign at
  * the end. On Personal and the user's private lists there is also **Only this task**: someone picked by email sees that
- * task only, not the list (D70, D88, M45, M71). A tap picks and goes back.
+ * task only, not the list (D70, D88, M45, M71), found by name among the people they work with or typed as an email (M73). A tap picks and goes back.
  */
 export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
@@ -74,7 +73,12 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
               selected
             />
           )}
-          <EmailField onPick={(email) => onPick(emailAssignee(email))} />
+          <PeoplePicker
+            exclude={[...people.map((m) => m.userId), ...(selected ? [selected.id] : [])]}
+            emailLabel={t('people.giveByEmail')}
+            onPickPerson={(p) => onPick({ id: p.id, displayName: p.displayName })}
+            onEmail={(email) => onPick(emailAssignee(email))}
+          />
           <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.sm }]}>{t('assign.outsideNote')}</Text>
         </View>
       )}
@@ -84,41 +88,6 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
   );
 }
 
-/** Someone else, by email: the typed text lives here (docs/performance.md); Assign once it's an email. */
-function EmailField({ onPick }: { onPick(email: string): void }) {
-  const { t } = useTranslation();
-  const { colors, space, type } = useTheme();
-  const [email, setEmail] = useState('');
-  const value = email.trim().toLowerCase();
-  const valid = isEmail(value);
-  const send = () => valid && onPick(value);
-  return (
-    <View style={[styles.field, { gap: space.sm, borderBottomColor: colors.accent }]}>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder={t('assign.byEmail')}
-        placeholderTextColor={colors.ink3}
-        selectionColor={colors.accent}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        returnKeyType="done"
-        onSubmitEditing={send}
-        accessibilityLabel={t('assign.emailLabel')}
-        style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
-      />
-      <Pressable onPress={send} disabled={!valid} accessibilityRole="button" style={styles.send}>
-        <Text variant="button" color={valid ? 'accent' : 'ink3'}>{t('assign.emailAssign')}</Text>
-      </Pressable>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   note: { paddingHorizontal: 2 },
-  field: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1.5 },
-  input: { flex: 1, minHeight: 44, paddingVertical: 10 },
-  send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
 });

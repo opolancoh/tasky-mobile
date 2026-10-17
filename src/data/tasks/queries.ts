@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import type { Id } from '@/core/types';
 
@@ -9,6 +9,11 @@ import { taskKeys } from './keys';
 
 /** Every task list the caller can see, Inbox first. */
 export const useTaskLists = () => useQuery({ queryKey: taskKeys.taskLists, queryFn: tasksApi.taskLists });
+
+/** Whom the caller can pick without an email (D89): kept a few minutes, and the last answer stays while the next loads. */
+export const PEOPLE_LIMIT = 8;
+export const usePeople = (q: string) =>
+  useQuery({ queryKey: taskKeys.people(q), queryFn: () => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
 
 /** The caller's tags (D60). */
 export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });

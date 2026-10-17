@@ -311,6 +311,14 @@ export interface Team {
  * Someone who sees a team or a task list (GET …/members). `role`: owner, admin or member. `isGuest`: in a team's
  * task list without being in the team; `isOutsider`: from another account.
  */
+/** Someone to pick without an email (GET /people, D89): `via` a list or team you share; `colleague` in your company. */
+export interface Person {
+  id: Id;
+  displayName: string;
+  via: string | null;
+  colleague: boolean;
+}
+
 export interface Member {
   userId: Id;
   displayName: string;
