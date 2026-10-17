@@ -14,7 +14,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { GetStartedCard } from './components/GetStartedCard';
+import { NothingOpen } from './components/NothingOpen';
 import { HomeCards, HomeCardsSkeleton } from './components/HomeCards';
 import { homeRequests, RequestRow, type Request } from './components/RequestRows';
 import { AssignedRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
@@ -37,7 +37,7 @@ type Item =
   | { type: 'assigned'; key: string; task: TaskSummary }
   | { type: 'undated'; key: string; task: TaskSummary }
   | { type: 'allDone'; key: string }
-  | { type: 'getStarted'; key: string }
+  | { type: 'nothingOpen'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
@@ -46,7 +46,7 @@ type Item =
  * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
  * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
  * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
- * to plan (M66). With no open task and nothing to answer, Get started under the cards (M67).
+ * to plan (M66). With no open task and nothing to answer, an empty state and five ways to start under the cards (M67).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -67,6 +67,9 @@ export function TodayScreen() {
   const undated = useTasks({ due: ['none'], sort: 'created', limit: SHORT }, quiet);
   // First day (M51, M67): no open task anywhere and nothing to answer.
   const firstDay = !!data && !data.openTotal && !homeRequests(data, dismissed).total;
+  // "All done" rather than "Nothing open here" when completed tasks are left: done today, or one completed at all.
+  const completed = useTasks({ status: 'completed', limit: 1 }, firstDay && !data.doneToday);
+  const allDone = !firstDay ? undefined : data.doneToday > 0 ? true : completed.data ? (completed.data.total ?? 0) > 0 : undefined;
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
@@ -79,9 +82,9 @@ export function TodayScreen() {
 
   if (data && today && me) {
     const requests = homeRequests(data, dismissed);
-    // The cards always; with no open task and nothing to answer, Get started under them (M67).
+    // The cards always; with no open task and nothing to answer, a list's empty state and ways to start under them (M67).
     items.push({ type: 'cards', key: 'cards' });
-    if (firstDay) items.push({ type: 'getStarted', key: 'get-started' });
+    if (firstDay) items.push({ type: 'nothingOpen', key: 'nothing-open' });
     else {
 
       // Requests: 3 rows; all dismissed from Home → one row that opens them (M65).
@@ -124,6 +127,7 @@ export function TodayScreen() {
 
   /** The line under the date: the next reminder later today, else overdue, else today's count; all done says what's next. */
   const nextLine = (d: Home) => {
+    if (firstDay && allDone) return t('home.nothingToday');
     if (firstDay)
       return me?.tenant.type === 'organization' && me.tenant.name ? t('home.welcomeTo', { name: me.tenant.name }) : t('home.welcome', { name: me?.displayName.split(' ')[0] ?? '' });
     const next = d.today.items.find((task) => !!task.reminder && task.reminder.date === today && task.reminder.time.slice(0, 5) > now!.time);
@@ -222,8 +226,8 @@ export function TodayScreen() {
           </View>
         );
       }
-      case 'getStarted':
-        return <GetStartedCard userId={me!.id} />;
+      case 'nothingOpen':
+        return <NothingOpen done={allDone} />;
       case 'skeletonSection':
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':

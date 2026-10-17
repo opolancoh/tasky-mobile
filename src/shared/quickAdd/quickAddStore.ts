@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-/** A Quick add page it can open on instead of the form (Get started's steps, M67). */
+/** A Quick add page it can open on instead of the form (Home's ways to start, M67). */
 export type QuickAddStartPage = 'due' | 'reminder';
 
 interface QuickAddState {

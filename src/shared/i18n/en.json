@@ -121,9 +121,11 @@
     "nothingTodayShort": "Nothing today",
     "welcome": "Welcome to Azignia, {{name}}",
     "welcomeTo": "Welcome to {{name}}",
-    "getStarted": {
-      "title": "Get started",
-      "task": "Add your first task",
+    "start": {
+      "nothingOpen": "Nothing open here",
+      "allDone": "All done",
+      "line": "Start with one of these.",
+      "task": "Add a task",
       "taskSub": "Anything on your mind",
       "date": "Give a task a date",
       "dateSub": "It shows up here on its day",
