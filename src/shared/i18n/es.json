@@ -78,7 +78,7 @@
   },
   "tabs": {
     "home": "Inicio",
-    "browse": "Explorar",
+    "spaces": "Espacios",
     "search": "Buscar",
     "activity": "Actividad"
   },
@@ -166,7 +166,7 @@
     "invited": "Invitada"
   },
   "browse": {
-    "title": "Explorar",
+    "title": "Espacios",
     "edit": "Editar",
     "editHint": "Usa las flechas para cambiar tu orden. Los equipos van de la A a la Z.",
     "filter": "Filtrar listas, equipos y etiquetas",
@@ -251,12 +251,16 @@
     "expires": "Vence el {{date}}",
     "revoke": "Revocar",
     "listSub": {
+      "all": "todas las listas que ves",
+      "important": "en todo lo que ves",
       "assigned": "las más próximas primero",
       "completed": "las más recientes primero",
       "tag": "en todo lo que puedes ver",
       "team": "en todas las listas del equipo"
     },
     "listEmptyFor": {
+      "all": "Nada pendiente. Las tareas que agregues, o que te compartan, aparecen aquí.",
+      "important": "Nada marcado. Marca una tarea como importante en sus detalles para verla aquí.",
       "assigned": "No tienes nada asignado.",
       "completed": "Aún no has completado nada.",
       "tag": "No hay tareas abiertas con esta etiqueta.",
@@ -347,7 +351,14 @@
     "openShort_other": "{{count}} abiertas",
     "noTasksYet": "Aún no hay tareas",
     "addPeople": "Añadir personas",
-    "onlyYouWith": "Solo tú · {{names}} tienen tareas"
+    "onlyYouWith": "Solo tú · {{names}} tienen tareas",
+    "important": "Importantes",
+    "order": {
+      "label": "Orden",
+      "due": "Próximas",
+      "list": "Por lista",
+      "created": "Recientes"
+    }
   },
   "search": {
     "title": "Buscar",

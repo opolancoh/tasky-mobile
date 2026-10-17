@@ -11,6 +11,7 @@ export { Pill, type PillProps } from './Pill';
 export { RuleCheck } from './RuleCheck';
 export { Screen, type ScreenProps } from './Screen';
 export { SectionLabel } from './SectionLabel';
+export { Segmented, type SegmentedProps } from './Segmented';
 export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
 export { Skeleton, SkeletonRow, type SkeletonProps } from './Skeleton';

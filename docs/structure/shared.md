@@ -8,7 +8,7 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
-│   ├── ClearButton  SectionLabel  ColorDot  SearchField  Toast  confirm  ActionSheet  Skeleton  Pill  TextButton
+│   ├── ClearButton  SectionLabel  Segmented  ColorDot  SearchField  Toast  confirm  ActionSheet  Skeleton  Pill  TextButton
 │   ├── useDelayedFlag.ts  The 300 ms before a busy control shows its spinner (M56)
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
@@ -65,6 +65,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM") |
+| `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); All tasks' order (M70) |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |

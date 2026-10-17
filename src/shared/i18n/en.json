@@ -78,7 +78,7 @@
   },
   "tabs": {
     "home": "Home",
-    "browse": "Browse",
+    "spaces": "Spaces",
     "search": "Search",
     "activity": "Activity"
   },
@@ -166,7 +166,7 @@
     "invited": "Invited"
   },
   "browse": {
-    "title": "Browse",
+    "title": "Spaces",
     "edit": "Edit",
     "editHint": "Use the arrows to change your order. Teams stay A–Z.",
     "filter": "Filter lists, teams and tags",
@@ -251,12 +251,16 @@
     "expires": "Expires {{date}}",
     "revoke": "Revoke",
     "listSub": {
+      "all": "every list you can see",
+      "important": "in everything you can see",
       "assigned": "soonest first",
       "completed": "newest first",
       "tag": "in everything you can see",
       "team": "in every list of the team"
     },
     "listEmptyFor": {
+      "all": "Nothing open. Tasks you add, or that people share with you, show here.",
+      "important": "Nothing flagged. Flag a task in its details to see it here.",
       "assigned": "Nothing assigned to you.",
       "completed": "Nothing completed yet.",
       "tag": "No open tasks with this tag.",
@@ -347,7 +351,14 @@
     "openShort_other": "{{count}} open",
     "noTasksYet": "No tasks yet",
     "addPeople": "Add people",
-    "onlyYouWith": "Only you · {{names}} have tasks"
+    "onlyYouWith": "Only you · {{names}} have tasks",
+    "important": "Important",
+    "order": {
+      "label": "Order",
+      "due": "Soonest",
+      "list": "By list",
+      "created": "Newest"
+    }
   },
   "search": {
     "title": "Search",

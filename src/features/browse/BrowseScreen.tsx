@@ -7,7 +7,7 @@ import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { byName } from '@/core/text/collate';
 import { useReorderTaskLists, useReorderTags } from '@/data/tasks/mutations';
-import { useArchivedTaskLists, useTaskLists, useTags, useTasks, useTeams } from '@/data/tasks/queries';
+import { useTaskLists, useTags, useTasks, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -17,15 +17,16 @@ import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow, OwnerMark, SharedMark } from './components/BrowseRow';
+import { useFoldedSections, type SpacesSection } from './foldedSectionsStore';
 
 type Group = 'mine' | 'shared' | 'tags';
 type Item =
   | { type: 'header'; key: string }
-  | { type: 'section'; key: string; title: string; add?: { label: string; onPress(): void } }
+  | { type: 'section'; key: string; title: string; add?: { label: string; onPress(): void }; fold?: { section: SpacesSection; folded: boolean; count: number } }
   | { type: 'list'; key: string; taskList: TaskList; group?: Group; index: number; size: number; flat?: boolean }
   | { type: 'team'; key: string; team: Team; count: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
-  | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'success' | 'quiet'; count?: number; onPress(): void }
+  | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'danger' | 'success' | 'quiet'; count?: number; onPress(): void }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
   | { type: 'skeleton'; key: string; width: number };
@@ -34,10 +35,11 @@ type Item =
 const FILTER_FROM = 25;
 
 /**
- * Browse, the second tab (06-mobile.md, M38, option B): everything the user can see. Inbox and Assigned to me; My
- * lists; Shared with me; Teams, a row each (A–Z), opening the team; Tags; More (Completed, Archived, Recently Deleted).
- * Every count opens its list. Edit reorders lists inside their section and tags (arrows); a long press opens a row's
- * menu (what the role allows).
+ * Spaces, the second tab (06-mobile.md, M38, M70; the route keeps the name Browse): everything the user can see. Four rows
+ * that are always there: Personal, Important, Assigned to me, All tasks; then My lists, Shared with me, Teams (a row each,
+ * A–Z) and Tags, each folding from its heading (kept on the device); More (Completed, Archived, Recently Deleted) has no
+ * counts and loads nothing until opened. Every count opens its list. Edit reorders lists inside their section and tags
+ * (arrows); a long press opens a row's menu (what the role allows).
  */
 export function BrowseScreen() {
   const { t } = useTranslation();
@@ -47,8 +49,12 @@ export function BrowseScreen() {
   const taskLists = useTaskLists();
   const teams = useTeams();
   const tags = useTags();
-  const archived = useArchivedTaskLists();
+  // The rows' counts: `total` on a one-task page (GET /tasks, everything visible, open).
+  const important = useTasks({ important: true, limit: 1 });
   const assigned = useTasks({ assignee: 'me', limit: 1 });
+  const allTasks = useTasks({ limit: 1 });
+  const folded = useFoldedSections((s) => (me ? s.byUser[me.id] : undefined)) ?? {};
+  const toggleFold = useFoldedSections((s) => s.toggle);
   const reorderLists = useReorderTaskLists();
   const reorderTags = useReorderTags();
   const showSheet = useShowBrowseSheet();
@@ -79,8 +85,28 @@ export function BrowseScreen() {
   const loading = taskLists.isPending || teams.isPending;
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
-  if (loading) [70, 55, 62, 48].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
-  else if (query) {
+  // After Personal: Important, Assigned to me, All tasks; their counts arrive on their own.
+  const pushRows = () => {
+    items.push(
+      { type: 'nav', key: 'important', label: t('browse.important'), icon: 'flag', tone: 'danger', count: important.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
+      { type: 'nav', key: 'assigned', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: assigned.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) },
+      { type: 'nav', key: 'all', label: t('browse.allTasks'), icon: 'layers', tone: 'quiet', count: allTasks.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'all' }) },
+    );
+  };
+  // More (M70): no counts, the same three rows always; each loads only when opened.
+  const pushMore = () => {
+    items.push({ type: 'section', key: 's-more', title: t('browse.more') });
+    items.push({ type: 'nav', key: 'done', label: t('browse.completed'), icon: 'check-circle', tone: 'success', onPress: () => navigation.navigate('BrowseList', { kind: 'completed' }) });
+    items.push({ type: 'nav', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', onPress: () => navigation.navigate('Archived') });
+    items.push({ type: 'nav', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') });
+  };
+
+  // Loading: the fixed rows and More at once; the sections wait as skeleton rows.
+  if (loading) {
+    pushRows();
+    [70, 55, 62, 48].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
+    pushMore();
+  } else if (query) {
     // Filtering: flat results, by kind.
     const ls = all.filter((c) => !c.isInbox && c.name.toLowerCase().includes(query));
     const ts = teamList.filter((x) => x.name.toLowerCase().includes(query));
@@ -90,10 +116,14 @@ export function BrowseScreen() {
     if (gs.length) items.push({ type: 'section', key: 's-fg', title: t('browse.tags') }, ...gs.map((tag, index) => ({ type: 'tag' as const, key: `g-${tag.name}`, tag, index, size: gs.length })));
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
-    // Inbox, then Assigned to me: the two lists that are only the user's.
-    const assignedCount = assigned.data?.total ?? 0;
-    if (!editing && groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
-    if (!editing && assignedCount) items.push({ type: 'nav', key: 'assigned', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: assignedCount, onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) });
+    // Personal, Important, Assigned to me, All tasks (M70): always there, in this order.
+    if (!editing) {
+      if (groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
+      pushRows();
+    }
+    // A section folds from its heading (not while editing): its rows go, its count shows.
+    const fold = (section: SpacesSection, count: number) => (editing ? undefined : { section, folded: !!folded[section], count });
+    const isOpen = (section: SpacesSection) => editing || !folded[section];
 
     // Someone invited without an Inbox yet (D59): Start your own lists, which opens New list.
     if (!groups.inbox) {
@@ -101,43 +131,39 @@ export function BrowseScreen() {
     } else {
       // Empty: the section's action is a row (New list), not the header's +.
       const newList = () => showSheet({ kind: 'list' });
-      items.push({ type: 'section', key: 's-mine', title: t('browse.myLists'), add: editing || !groups.mine.length ? undefined : { label: t('browse.newList'), onPress: newList } });
-      if (groups.mine.length) lists('mine', groups.mine);
+      items.push({ type: 'section', key: 's-mine', title: t('browse.myLists'), add: editing || !groups.mine.length || folded.mine ? undefined : { label: t('browse.newList'), onPress: newList }, fold: groups.mine.length ? fold('mine', groups.mine.length) : undefined });
+      if (groups.mine.length) { if (isOpen('mine')) lists('mine', groups.mine); }
       else if (!editing) items.push({ type: 'action', key: 'a-list', label: t('browse.newList'), body: t('browse.newListBody'), icon: 'plus', onPress: newList });
     }
     if (groups.shared.length) {
-      items.push({ type: 'section', key: 's-shared', title: t('browse.sharedWithMe') });
-      lists('shared', groups.shared);
+      items.push({ type: 'section', key: 's-shared', title: t('browse.sharedWithMe'), fold: fold('shared', groups.shared.length) });
+      if (isOpen('shared')) lists('shared', groups.shared);
     }
     if (!editing) {
       const newTeam = () => showSheet({ kind: 'team' });
-      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length ? { label: t('browse.newTeam'), onPress: newTeam } : undefined });
-      if (teamList.length) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) }));
+      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
+      if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })); }
       else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
     }
     // Tags appear with the first one: they're added from a task, not here.
     if (tagList.length) {
-      items.push({ type: 'section', key: 's-tags', title: t('browse.tags') });
-      tagList.forEach((tag, index) => items.push({ type: 'tag', key: `g-${tag.name}`, tag, index, size: tagList.length }));
+      items.push({ type: 'section', key: 's-tags', title: t('browse.tags'), fold: fold('tags', tagList.length) });
+      if (isOpen('tags')) tagList.forEach((tag, index) => items.push({ type: 'tag', key: `g-${tag.name}`, tag, index, size: tagList.length }));
     }
 
     if (!editing) {
-      const archivedCount = archived.data?.length ?? 0;
-      items.push({ type: 'section', key: 's-more', title: t('browse.more') });
-      items.push({ type: 'nav', key: 'done', label: t('browse.completed'), icon: 'check-circle', tone: 'success', onPress: () => navigation.navigate('BrowseList', { kind: 'completed' }) });
-      if (archivedCount) items.push({ type: 'nav', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', count: archivedCount, onPress: () => navigation.navigate('Archived') });
-      items.push({ type: 'nav', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') });
+      pushMore();
     }
   }
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), archived.refetch(), assigned.refetch()]);
+    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), important.refetch(), assigned.refetch(), allTasks.refetch()]);
     setRefreshing(false);
   };
 
   const tile = (name: ComponentProps<typeof Feather>['name'], color: string) => <Feather name={name} size={17} color={color} />;
-  const toneOf = { accent: [colors.accentSoft, colors.accent], success: [colors.successSoft, colors.success], quiet: [colors.surface2, colors.ink2] } as const;
+  const toneOf = { accent: [colors.accentSoft, colors.accent], danger: [colors.dangerSoft, colors.danger], success: [colors.successSoft, colors.success], quiet: [colors.surface2, colors.ink2] } as const;
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -168,7 +194,21 @@ export function BrowseScreen() {
       case 'section':
         return (
           <View style={[styles.section, { marginTop: space.xl }]}>
-            <Text variant="label" color="ink2" accessibilityRole="header" style={styles.fill}>{item.title}</Text>
+            {item.fold ? (
+              <Pressable
+                onPress={() => me && toggleFold(me.id, item.fold!.section)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: !item.fold.folded }}
+                hitSlop={8}
+                style={[styles.fill, styles.foldHead, { gap: space.xs }]}
+              >
+                <Text variant="label" color="ink2" accessibilityRole="header">{item.title}</Text>
+                <Feather name={item.fold.folded ? 'chevron-right' : 'chevron-down'} size={14} color={colors.ink3} />
+                {item.fold.folded && <Text variant="label" color="ink3">{item.fold.count}</Text>}
+              </Pressable>
+            ) : (
+              <Text variant="label" color="ink2" accessibilityRole="header" style={styles.fill}>{item.title}</Text>
+            )}
             {item.add && (
               <Pressable onPress={item.add.onPress} accessibilityRole="button" accessibilityLabel={item.add.label} style={styles.add}>
                 <Feather name="plus" size={20} color={colors.accent} />
@@ -265,6 +305,7 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
   barButton: { minHeight: 44, justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
+  foldHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10, marginVertical: -6 },
   start: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },
   startIcon: { width: 30, height: 30, borderRadius: 9, borderWidth: 1.5, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },

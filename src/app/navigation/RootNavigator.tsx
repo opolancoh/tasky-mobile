@@ -38,8 +38,8 @@ import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/sessio
 
 import { activityTab, AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
-/** A tab route's key in tabs.*: the first tab's route is still Today, its name Home (M65). */
-const tabKey = (route: string) => (route === 'Today' ? 'home' : route.toLowerCase());
+/** A tab route's key in tabs.*: the routes keep their names; Today is shown as Home (M65), Browse as Spaces (M70). */
+const tabKey = (route: string) => (route === 'Today' ? 'home' : route === 'Browse' ? 'spaces' : route.toLowerCase());
 
 /** The signed-in home: stock bottom tabs with a + in the middle that opens Quick add (M11). */
 const Tabs = createBottomTabNavigator({
@@ -47,7 +47,8 @@ const Tabs = createBottomTabNavigator({
   screens: {
     // The first tab is Home (M65): where the user lands and gets their bearings. The route keeps its name.
     Today: { screen: TodayScreen, options: tab('home', 'tabs.home') },
-    Browse: { screen: BrowseScreen, options: tab('list', 'tabs.browse') },
+    // The second tab is Spaces (M70): everything the user can see. The route keeps its name.
+    Browse: { screen: BrowseScreen, options: tab('grid', 'tabs.spaces') },
     Add: {
       screen: AddTabScreen,
       options: addTabOptions,
