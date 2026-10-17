@@ -118,7 +118,24 @@
     "completed_other": "{{count}} completed.",
     "nextIs": "Next: {{title}}, {{day}}.",
     "fromLists": "From your lists",
-    "nothingTodayShort": "Nothing today"
+    "nothingTodayShort": "Nothing today",
+    "welcome": "Welcome to Azignia, {{name}}",
+    "welcomeTo": "Welcome to {{name}}",
+    "addTask": "Add a task",
+    "getStarted": {
+      "title": "Get started",
+      "progress": "{{done}} of {{total}}",
+      "task": "Add your first task",
+      "taskSub": "Anything on your mind",
+      "date": "Give a task a date",
+      "dateSub": "It shows up here on its day",
+      "list": "Make a list",
+      "listSub": "Groceries, a project, a trip",
+      "share": "Share a list",
+      "shareSub": "Plan it with family or a team",
+      "reminder": "Set a reminder",
+      "reminderSub": "Azignia rings at that time"
+    }
   },
   "today": {
     "invitedBy": "{{name}} invited you · {{kind}}",
@@ -135,25 +152,7 @@
     "accepted": "Accepted",
     "movedToday": "Moved to today",
     "declinedBy": "{{name}} declined",
-    "completedBy": "{{name}} completed it",
-    "firstDay": {
-      "title": "What's first?",
-      "welcome": "Welcome to {{name}}",
-      "body": "Pick one to start, or write your own. Dated tasks show up here on their day.",
-      "bodyCompany": "Start with your own work. Your team's lists appear in Browse once someone adds you.",
-      "add": "Add a task",
-      "starterHint": "Opens Quick add with this title"
-    },
-    "starters": {
-      "dentist": "Call the dentist",
-      "groceries": "Groceries",
-      "rent": "Pay rent",
-      "weekend": "Plan the weekend",
-      "report": "Weekly report",
-      "client": "Reply to a client",
-      "meeting": "Book a team meeting",
-      "budget": "Review the budget"
-    }
+    "completedBy": "{{name}} completed it"
   },
   "taskRow": {
     "complete": "Complete {{title}}",

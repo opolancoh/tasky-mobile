@@ -118,7 +118,24 @@
     "completed_other": "{{count}} completadas.",
     "nextIs": "Siguiente: {{title}}, {{day}}.",
     "fromLists": "De tus listas",
-    "nothingTodayShort": "Nada para hoy"
+    "nothingTodayShort": "Nada para hoy",
+    "welcome": "Te damos la bienvenida a Azignia, {{name}}",
+    "welcomeTo": "Te damos la bienvenida a {{name}}",
+    "addTask": "Añadir una tarea",
+    "getStarted": {
+      "title": "Primeros pasos",
+      "progress": "{{done}} de {{total}}",
+      "task": "Añade tu primera tarea",
+      "taskSub": "Lo que tengas en mente",
+      "date": "Ponle fecha a una tarea",
+      "dateSub": "Aparece aquí ese día",
+      "list": "Crea una lista",
+      "listSub": "La compra, un proyecto, un viaje",
+      "share": "Comparte una lista",
+      "shareSub": "Planéala con tu familia o un equipo",
+      "reminder": "Pon un recordatorio",
+      "reminderSub": "Azignia te avisa a esa hora"
+    }
   },
   "today": {
     "invitedBy": "{{name}} te invitó · {{kind}}",
@@ -135,25 +152,7 @@
     "accepted": "Aceptada",
     "movedToday": "Movida a hoy",
     "declinedBy": "{{name}} la rechazó",
-    "completedBy": "{{name}} la completó",
-    "firstDay": {
-      "title": "¿Por dónde empiezas?",
-      "welcome": "Te damos la bienvenida a {{name}}",
-      "body": "Elige una para empezar o escribe la tuya. Las tareas con fecha aparecen aquí ese día.",
-      "bodyCompany": "Empieza con tu propio trabajo. Las listas de tu equipo aparecen en Explorar cuando alguien te añade.",
-      "add": "Añadir tarea",
-      "starterHint": "Abre Añadir con este título"
-    },
-    "starters": {
-      "dentist": "Llamar al dentista",
-      "groceries": "Mercado",
-      "rent": "Pagar el arriendo",
-      "weekend": "Planear el fin de semana",
-      "report": "Informe semanal",
-      "client": "Responder a un cliente",
-      "meeting": "Agendar reunión de equipo",
-      "budget": "Revisar el presupuesto"
-    }
+    "completedBy": "{{name}} la completó"
   },
   "taskRow": {
     "complete": "Completar {{title}}",

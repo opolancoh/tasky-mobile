@@ -11,10 +11,11 @@ import type { Home, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
+import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { FirstDayCard } from './components/FirstDayCard';
+import { GetStartedCard } from './components/GetStartedCard';
 import { HomeCards, HomeCardsSkeleton } from './components/HomeCards';
 import { homeRequests, RequestRow, type Request } from './components/RequestRows';
 import { AssignedRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
@@ -37,7 +38,8 @@ type Item =
   | { type: 'assigned'; key: string; task: TaskSummary }
   | { type: 'undated'; key: string; task: TaskSummary }
   | { type: 'allDone'; key: string }
-  | { type: 'firstDay'; key: string }
+  | { type: 'getStarted'; key: string }
+  | { type: 'addFirst'; key: string }
   | { type: 'skeletonSection'; key: string }
   | { type: 'skeletonRow'; key: string; width: number };
 
@@ -46,7 +48,7 @@ type Item =
  * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
  * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
  * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
- * to plan (M66).
+ * to plan (M66). On a first day (not one task yet), Get started and Add a task instead (M67).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -56,6 +58,7 @@ export function TodayScreen() {
   const home = useHome();
   const dismissed = useHomeDismissed((s) => (me ? s.byUser[me.id] : undefined)) ?? NO_DISMISSED;
   const [refreshing, setRefreshing] = useState(false);
+  const showQuickAdd = useQuickAdd((s) => s.show);
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
@@ -65,6 +68,11 @@ export function TodayScreen() {
   const quiet = !!data && data.openTotal > 0 && !data.doneToday
     && !homeRequests(data, dismissed).left && ![data.overdue, data.today, data.assigned, data.comingUp].some((p) => p.total);
   const undated = useTasks({ due: ['none'], sort: 'created', limit: SHORT }, quiet);
+  // First day (M51, M67): not one task in the account, open or completed, and nothing to answer. GET /home counts
+  // only open tasks, so one completed task is asked for when nothing is open.
+  const noOpen = !!data && !data.openTotal && !data.doneToday && !homeRequests(data, dismissed).total;
+  const completed = useTasks({ status: 'completed', limit: 1 }, noOpen);
+  const firstDay = noOpen && completed.data?.total === 0;
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
@@ -77,8 +85,9 @@ export function TodayScreen() {
 
   if (data && today && me) {
     const requests = homeRequests(data, dismissed);
-    // First day (M51): nothing open anywhere and nothing to answer; no cards until there is something to count.
-    if (!requests.total && !data.openTotal) items.push({ type: 'firstDay', key: 'first' });
+    // First day: Get started and Add a task; no cards until there is something to count (M51, M67).
+    if (noOpen && completed.isPending) items.push({ type: 'cardsSkeleton', key: 'kc' });
+    else if (firstDay) items.push({ type: 'getStarted', key: 'get-started' }, { type: 'addFirst', key: 'add-first' });
     else {
       items.push({ type: 'cards', key: 'cards' });
 
@@ -116,12 +125,14 @@ export function TodayScreen() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([home.refetch(), quiet && undated.refetch()]);
+    await Promise.all([home.refetch(), quiet && undated.refetch(), noOpen && completed.refetch()]);
     setRefreshing(false);
   };
 
   /** The line under the date: the next reminder later today, else overdue, else today's count; all done says what's next. */
   const nextLine = (d: Home) => {
+    if (firstDay)
+      return me?.tenant.type === 'organization' && me.tenant.name ? t('home.welcomeTo', { name: me.tenant.name }) : t('home.welcome', { name: me?.displayName.split(' ')[0] ?? '' });
     const next = d.today.items.find((task) => !!task.reminder && task.reminder.date === today && task.reminder.time.slice(0, 5) > now!.time);
     if (next) return <>{t('home.next')} <Text variant="subhead" style={{ fontFamily: fonts.semibold }}>{next.title}</Text> {t('home.at', { time: labels.time(next.reminder!.time) })}</>;
     const overdue = d.overdue.total ?? 0;
@@ -218,8 +229,14 @@ export function TodayScreen() {
           </View>
         );
       }
-      case 'firstDay':
-        return me ? <FirstDayCard tenantType={me.tenant.type} companyName={me.tenant.name} /> : null;
+      case 'getStarted':
+        return <GetStartedCard userId={me!.id} />;
+      case 'addFirst':
+        return (
+          <View style={{ marginTop: space.lg }}>
+            <Button title={t('home.addTask')} onPress={() => showQuickAdd()} />
+          </View>
+        );
       case 'skeletonSection':
         return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':

@@ -37,6 +37,9 @@ import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/sessio
 
 import { activityTab, AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
+/** A tab route's key in tabs.*: the first tab's route is still Today, its name Home (M65). */
+const tabKey = (route: string) => (route === 'Today' ? 'home' : route.toLowerCase());
+
 /** The signed-in home: stock bottom tabs with a + in the middle that opens Quick add (M11). */
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
@@ -88,7 +91,7 @@ const RootStack = createNativeStackNavigator({
       if: useIsSignedIn,
       screens: {
         // Titled after the open tab, so a pushed screen's back button reads "‹ Today".
-        Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${(getFocusedRouteNameFromRoute(route) ?? 'Today').toLowerCase()}`) }) },
+        Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${tabKey(getFocusedRouteNameFromRoute(route) ?? 'Today')}`) }) },
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
