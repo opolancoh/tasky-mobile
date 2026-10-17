@@ -9,7 +9,7 @@ import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { radius, Text, useTheme } from '@/shared/ui';
 
-const STEPS = ['task', 'date', 'list', 'share', 'reminder'] as const;
+const STEPS = ['task', 'reminder', 'date', 'list', 'share'] as const;
 type Step = (typeof STEPS)[number];
 
 /**
