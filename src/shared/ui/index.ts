@@ -22,5 +22,6 @@ export { WheelColumn, WheelFrame, WHEEL_ROW, type WheelColumnProps } from './Whe
 export { TextField, type TextFieldProps } from './TextField';
 export { BUSY_DELAY_MS, useDelayedFlag } from './useDelayedFlag';
 export { ThemeProvider, useTheme, type Theme } from './theme';
+export { useAppearance, useAppearanceHydrated, type AppearanceChoice } from './appearance';
 export * from './tokens';
 export { defaultPalette, palettes, type Palette, type PaletteColors, type PaletteId } from './palettes';

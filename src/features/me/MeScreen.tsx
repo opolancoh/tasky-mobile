@@ -9,7 +9,7 @@ import { appInfo } from '@/shared/appInfo';
 import { Avatar } from '@/shared/components';
 import { useReminderPermission } from '@/shared/notifications/reminders';
 import { useSession } from '@/shared/session/SessionProvider';
-import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useAppearance, useTheme } from '@/shared/ui';
 
 /**
  * Me (M39, M41), pushed from the avatar on Today and Activity: who the user is; Settings: name, time zone and language
@@ -22,6 +22,7 @@ export function MeScreen() {
   const navigation = useNavigation();
   const me = useMe().data;
   const permission = useReminderPermission((s) => s.status);
+  const appearance = useAppearance((s) => s.appearance);
   const company = me?.tenant.type === 'organization' && !!me.tenant.name;
 
   const leave = async () => {
@@ -44,6 +45,10 @@ export function MeScreen() {
       <ListRow label={t('me.timeZone')} value={zoneCity(me.timeZone)} onPress={() => navigation.navigate('TimeZone')} />
       <ListRow label={t('me.language')} value={t(`me.languages.${me.language}`, { defaultValue: me.language })} onPress={() => navigation.navigate('Language')} divider={!company} />
       {company ? <ListRow label={t('me.company')} value={me.tenant.name!} divider={false} /> : null}
+
+      {/* How the app looks is the device's, not the account's (M68). */}
+      <SectionLabel>{t('settings.thisDevice')}</SectionLabel>
+      <ListRow label={t('settings.appearance')} value={t(`settings.appearances.${appearance}`)} onPress={() => navigation.navigate('Appearance')} divider={false} />
 
       <SectionLabel>{t('settings.notifications')}</SectionLabel>
       <ListRow

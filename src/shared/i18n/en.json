@@ -645,7 +645,7 @@
     "timeZone": "Time zone",
     "timeZoneHint": "When your day starts and when your reminders fire.",
     "searchZone": "Search cities",
-    "thisDevice": "This device · {{region}}",
+    "thisDevice": "This device",
     "timeZoneSaved": "Time zone set to {{zone}}",
     "language": "Language",
     "languageHint": "For the app and everything Azignia sends you: emails and notifications.",
@@ -671,7 +671,16 @@
     "reminders": "Reminders",
     "remindersOn": "On",
     "remindersOff": "Off",
-    "remindersOffHint": "Azignia can’t alert you. Turn notifications on in Settings."
+    "remindersOffHint": "Azignia can’t alert you. Turn notifications on in Settings.",
+    "appearance": "Appearance",
+    "appearanceHint": "System follows your phone's setting, and changes when it does.",
+    "appearanceNow": "{{scheme}} now",
+    "thisDeviceHint": "Only on this device; your other devices keep their own.",
+    "appearances": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    }
   },
   "assign": {
     "me": "Me ({{name}})",

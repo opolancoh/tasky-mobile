@@ -1,5 +1,7 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { Appearance, useColorScheme } from 'react-native';
+
+import { useAppearance } from './appearance';
 
 import { defaultPalette, palettes } from './palettes';
 import { radius, space, type, type Colors } from './tokens';
@@ -16,9 +18,17 @@ const makeTheme = (scheme: 'light' | 'dark'): Theme => ({ scheme, colors: palett
 
 const ThemeContext = createContext<Theme>(makeTheme('light'));
 
-/** The active palette (palettes/active.json); light or dark follows the OS (05-platforms.md). */
+/**
+ * The active palette (palettes/active.json) in the user's Appearance (M68): Light (default), Dark, or System, which
+ * follows the phone. The choice also goes to the OS, so alerts, the keyboard and pickers match.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const appearance = useAppearance((s) => s.appearance);
+  const os = useColorScheme();
+  useEffect(() => {
+    Appearance.setColorScheme(appearance === 'system' ? 'unspecified' : appearance);
+  }, [appearance]);
+  const scheme = appearance === 'system' ? (os === 'dark' ? 'dark' : 'light') : appearance;
   const theme = useMemo(() => makeTheme(scheme), [scheme]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

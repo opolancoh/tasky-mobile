@@ -24,7 +24,7 @@ import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useTheme } from '@/shared/ui';
+import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useAppearanceHydrated, useTheme } from '@/shared/ui';
 
 import { Navigation } from './navigation/RootNavigator';
 import { queryClient } from './queryClient';
@@ -49,13 +49,14 @@ export function App() {
   );
 }
 
-/** Keeps the splash screen up until fonts are loaded and the stored session is checked. */
+/** Keeps the splash screen up until fonts are loaded, the stored session is checked and Appearance is read (M68). */
 function Root() {
   const [fontsLoaded] = useFonts({ Figtree_400Regular, Figtree_500Medium, Figtree_600SemiBold, Figtree_700Bold });
   const { status } = useSession();
   const updateRequired = useSessionStore((s) => s.updateRequired);
   const { colors, scheme } = useTheme();
-  const ready = fontsLoaded && status !== 'loading';
+  const appearanceRead = useAppearanceHydrated();
+  const ready = fontsLoaded && status !== 'loading' && appearanceRead;
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
