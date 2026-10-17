@@ -96,7 +96,7 @@
     "today": "Today",
     "overdue": "Overdue",
     "important": "Important",
-    "inbox": "Inbox",
+    "inbox": "Personal",
     "doneOf": "{{done}} of {{total}} done",
     "allDoneCount": "All {{count}} done",
     "since": "Since {{date}}",
@@ -172,7 +172,7 @@
     "filter": "Filter lists, teams and tags",
     "clearFilter": "Clear filter",
     "noMatch": "No lists, teams or tags match “{{query}}”.",
-    "inbox": "Inbox",
+    "inbox": "Personal",
     "assigned": "Assigned to me",
     "myLists": "My lists",
     "sharedWithMe": "Shared with me",
@@ -189,7 +189,7 @@
     "newTeamBody": "Share lists with family or coworkers",
     "create": "Create",
     "start": "Start your own lists",
-    "startBody": "Your Inbox and lists, private until you share them",
+    "startBody": "Your Personal list and other lists, private until you share them",
     "openCount_one": "{{count}} open task",
     "openCount_other": "{{count}} open tasks",
     "taskCount_one": "{{count}} task",
@@ -445,7 +445,7 @@
     "task.not_found": "This task no longer exists.",
     "sharing.already_member": "This person can already see it.",
     "sharing.outsider_team": "People from outside the company can join its lists, not its teams.",
-    "sharing.inbox_private": "The Inbox can't be shared.",
+    "sharing.inbox_private": "Your Personal list can't be shared.",
     "invitation.user_deactivated": "This person's account is deactivated."
   },
   "languages": {
@@ -534,7 +534,7 @@
     "hint": "Repeats from the due date. With no due date, it starts today."
   },
   "taskLists": {
-    "inbox": "Inbox"
+    "inbox": "Personal"
   },
   "todayList": {
     "title": {
@@ -543,7 +543,7 @@
       "today": "Today",
       "coming-up": "Coming up",
       "important": "Important",
-      "inbox": "Inbox",
+      "inbox": "Personal",
       "assigned": "Assigned to me",
       "undated": "From your lists"
     },

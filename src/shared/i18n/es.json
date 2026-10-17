@@ -96,7 +96,7 @@
     "today": "Hoy",
     "overdue": "Atrasadas",
     "important": "Importantes",
-    "inbox": "Bandeja de entrada",
+    "inbox": "Personal",
     "doneOf": "{{done}} de {{total}} hechas",
     "allDoneCount": "Las {{count}} hechas",
     "since": "Desde {{date}}",
@@ -172,7 +172,7 @@
     "filter": "Filtrar listas, equipos y etiquetas",
     "clearFilter": "Borrar filtro",
     "noMatch": "Ninguna lista, equipo o etiqueta coincide con “{{query}}”.",
-    "inbox": "Bandeja de entrada",
+    "inbox": "Personal",
     "assigned": "Asignadas a mí",
     "myLists": "Mis listas",
     "sharedWithMe": "Compartidas conmigo",
@@ -189,7 +189,7 @@
     "newTeamBody": "Comparte listas con tu familia o tu equipo",
     "create": "Crear",
     "start": "Empieza tus propias listas",
-    "startBody": "Tu bandeja de entrada y tus listas, privadas hasta que las compartas",
+    "startBody": "Tu lista Personal y tus otras listas, privadas hasta que las compartas",
     "openCount_one": "{{count}} tarea abierta",
     "openCount_other": "{{count}} tareas abiertas",
     "taskCount_one": "{{count}} tarea",
@@ -445,7 +445,7 @@
     "task.not_found": "Esta tarea ya no existe.",
     "sharing.already_member": "Esta persona ya puede verlo.",
     "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
-    "sharing.inbox_private": "La Bandeja de entrada no se puede compartir.",
+    "sharing.inbox_private": "Tu lista Personal no se puede compartir.",
     "invitation.user_deactivated": "La cuenta de esta persona está desactivada."
   },
   "languages": {
@@ -534,7 +534,7 @@
     "hint": "Se repite desde la fecha límite. Sin fecha límite, empieza hoy."
   },
   "taskLists": {
-    "inbox": "Bandeja de entrada"
+    "inbox": "Personal"
   },
   "todayList": {
     "title": {
@@ -543,7 +543,7 @@
       "today": "Hoy",
       "coming-up": "Próximamente",
       "important": "Importantes",
-      "inbox": "Bandeja de entrada",
+      "inbox": "Personal",
       "assigned": "Asignadas a mí",
       "undated": "De tus listas"
     },
