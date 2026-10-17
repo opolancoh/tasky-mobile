@@ -49,8 +49,8 @@ export function BrowseScreen() {
   const taskLists = useTaskLists();
   const teams = useTeams();
   const tags = useTags();
-  // The rows' counts: `total` on a one-task page (GET /tasks, everything visible, open).
-  const important = useTasks({ important: true, limit: 1 });
+  // The rows' counts: `total` on a one-task page (GET /tasks, open). Important is the user's own, as on Home (D61, M31).
+  const important = useTasks({ important: true, mine: true, limit: 1 });
   const assigned = useTasks({ assignee: 'me', limit: 1 });
   const allTasks = useTasks({ limit: 1 });
   const folded = useFoldedSections((s) => (me ? s.byUser[me.id] : undefined)) ?? {};

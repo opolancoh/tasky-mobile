@@ -252,7 +252,7 @@
     "revoke": "Revoke",
     "listSub": {
       "all": "every list you can see",
-      "important": "in everything you can see",
+      "important": "yours and assigned to you",
       "assigned": "soonest first",
       "completed": "newest first",
       "tag": "in everything you can see",

@@ -252,7 +252,7 @@
     "revoke": "Revocar",
     "listSub": {
       "all": "todas las listas que ves",
-      "important": "en todo lo que ves",
+      "important": "tuyas y asignadas a ti",
       "assigned": "las más próximas primero",
       "completed": "las más recientes primero",
       "tag": "en todo lo que puedes ver",

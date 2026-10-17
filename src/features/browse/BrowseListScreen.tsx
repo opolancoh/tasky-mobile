@@ -57,7 +57,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const sort: TaskFilter['sort'] = order === 'created' ? 'created' : 'due';
   const filter: TaskFilter = {
     all: { sort },
-    important: { important: true, sort },
+    important: { important: true, mine: true, sort },   // the user's own, as on Home (D61)
     assigned: { assignee: 'me' },
     completed: { status: 'completed' as const },
     tag: { tag: id },
