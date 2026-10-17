@@ -19,8 +19,10 @@ src/shared/
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
 │   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
+├── browseSheet/
+│   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen, e.g. Get started's Make a list (M67)
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show(title?) from the tab bar + or a first-day starter (M51)
+│   └── quickAddStore.ts   Quick add open or closed; show(title?, page?) from the tab bar +, or on its due date or reminder picker from Get started (M67)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry

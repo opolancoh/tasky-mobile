@@ -16,7 +16,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast } from '@/shared/ui';
 
 import { SORT_MODES } from './browseSections';
-import { useBrowseSheet, type BrowseSheetTarget } from './browseSheetStore';
+import { useBrowseSheet, type BrowseSheetTarget } from '@/shared/browseSheet/browseSheetStore';
 
 /**
  * Browse's sheets (M38, large size, M28): New list (name, color, where, sort) and Edit list (name and color; sort is in the list's menu, M64), New team

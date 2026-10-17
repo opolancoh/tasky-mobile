@@ -9,7 +9,7 @@ import { toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, useToast, type ActionChoice } from '@/shared/ui';
 
 import { canInvite, canLeave, canManage, SORT_MODES } from './browseSections';
-import { useShowBrowseSheet } from './browseSheetStore';
+import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 
 type Item = ActionChoice & { run(): void };
 

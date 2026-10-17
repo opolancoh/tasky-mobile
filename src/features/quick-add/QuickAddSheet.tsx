@@ -68,10 +68,11 @@ function QuickAddForm() {
   const create = useCreateTask();
 
   const startTitle = useQuickAdd((s) => s.title);
+  const startPage = useQuickAdd((s) => s.page);
   const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle }));
-  const [page, setPage] = useState<Page>('form');
+  const [page, setPage] = useState<Page>(startPage ?? 'form');
   const titleInput = useRef<TextInput>(null);
-  const [beforePage, setBeforePage] = useState<Draft>(EMPTY);   // the draft when a page opened: tapping outside restores it
+  const [beforePage, setBeforePage] = useState<Draft>(() => ({ ...EMPTY, title: startTitle }));   // the draft when a page opened: tapping outside restores it
   const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this Quick add, in the profile's zone
 
   const update = (changes: Partial<Draft>) => {

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
 import { useTaskLists } from '@/data/tasks/queries';
+import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { radius, Text, useTheme } from '@/shared/ui';
 
@@ -12,15 +13,16 @@ const STEPS = ['task', 'date', 'list', 'share', 'reminder'] as const;
 type Step = (typeof STEPS)[number];
 
 /**
- * Get started (M67), only on a first day: not one task in the account yet. Five steps, each opening where it's done
- * (Quick add, or Browse for lists and sharing). Making or sharing a list ticks its step, from the task lists; the
- * steps about tasks can't be done without leaving the first day, and the card goes with it.
+ * Get started (M67), only with no open task anywhere and nothing to answer. Five steps, each opening where it's done:
+ * Quick add (on its due date or reminder picker for those steps), New list (then the list), Browse for sharing. Making or sharing a list ticks its step, from the task lists; adding a
+ * task ends it, and the card goes with it.
  */
 export function GetStartedCard({ userId }: { userId: Id }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
   const showQuickAdd = useQuickAdd((s) => s.show);
+  const showSheet = useShowBrowseSheet();
   const lists = useTaskLists().data;
 
   const done: Record<Step, boolean> = {
@@ -32,14 +34,14 @@ export function GetStartedCard({ userId }: { userId: Id }) {
   };
   const go: Record<Step, () => void> = {
     task: () => showQuickAdd(),
-    date: () => showQuickAdd(),
-    list: () => navigation.navigate('Tabs', { screen: 'Browse' }),
+    date: () => showQuickAdd('', 'due'),
+    list: () => showSheet({ kind: 'list' }),
     share: () => navigation.navigate('Tabs', { screen: 'Browse' }),
-    reminder: () => showQuickAdd(),
+    reminder: () => showQuickAdd('', 'reminder'),
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface2, paddingHorizontal: space.lg, marginTop: space.xs }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface2, paddingHorizontal: space.lg, marginTop: space.lg }]}>
       <View style={[styles.head, { gap: space.sm }]}>
         <Text variant="headline" accessibilityRole="header">{t('home.getStarted.title')}</Text>
         <Text variant="footnote" color="ink3">{t('home.getStarted.progress', { done: STEPS.filter((s) => done[s]).length, total: STEPS.length })}</Text>

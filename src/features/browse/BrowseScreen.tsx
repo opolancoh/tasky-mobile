@@ -15,7 +15,7 @@ import { ColorDot, faint, Notice, Screen, SearchField, SkeletonRow, Text, useThe
 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
-import { useShowBrowseSheet } from './browseSheetStore';
+import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow, OwnerMark, SharedMark } from './components/BrowseRow';
 
 type Group = 'mine' | 'shared' | 'tags';

@@ -48,7 +48,7 @@ type Item =
  * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
  * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
  * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
- * to plan (M66). On a first day (not one task yet), Get started and Add a task instead (M67).
+ * to plan (M66). With no open task and nothing to answer, Get started and Add a task under the cards (M67).
  */
 export function TodayScreen() {
   const { t, i18n } = useTranslation();
@@ -68,11 +68,8 @@ export function TodayScreen() {
   const quiet = !!data && data.openTotal > 0 && !data.doneToday
     && !homeRequests(data, dismissed).left && ![data.overdue, data.today, data.assigned, data.comingUp].some((p) => p.total);
   const undated = useTasks({ due: ['none'], sort: 'created', limit: SHORT }, quiet);
-  // First day (M51, M67): not one task in the account, open or completed, and nothing to answer. GET /home counts
-  // only open tasks, so one completed task is asked for when nothing is open.
-  const noOpen = !!data && !data.openTotal && !data.doneToday && !homeRequests(data, dismissed).total;
-  const completed = useTasks({ status: 'completed', limit: 1 }, noOpen);
-  const firstDay = noOpen && completed.data?.total === 0;
+  // First day (M51, M67): no open task anywhere and nothing to answer.
+  const firstDay = !!data && !data.openTotal && !homeRequests(data, dismissed).total;
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
@@ -85,11 +82,10 @@ export function TodayScreen() {
 
   if (data && today && me) {
     const requests = homeRequests(data, dismissed);
-    // First day: Get started and Add a task; no cards until there is something to count (M51, M67).
-    if (noOpen && completed.isPending) items.push({ type: 'cardsSkeleton', key: 'kc' });
-    else if (firstDay) items.push({ type: 'getStarted', key: 'get-started' }, { type: 'addFirst', key: 'add-first' });
+    // The cards always; with no open task and nothing to answer, Get started and Add a task under them (M67).
+    items.push({ type: 'cards', key: 'cards' });
+    if (firstDay) items.push({ type: 'getStarted', key: 'get-started' }, { type: 'addFirst', key: 'add-first' });
     else {
-      items.push({ type: 'cards', key: 'cards' });
 
       // Requests: 3 rows; all dismissed from Home → one row that opens them (M65).
       if (requests.shown.length) {
@@ -125,7 +121,7 @@ export function TodayScreen() {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([home.refetch(), quiet && undated.refetch(), noOpen && completed.refetch()]);
+    await Promise.all([home.refetch(), quiet && undated.refetch()]);
     setRefreshing(false);
   };
 

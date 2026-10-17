@@ -12,7 +12,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, faint, ListRow, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
-import { useShowBrowseSheet } from './browseSheetStore';
+import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow } from './components/BrowseRow';
 
 /** People shown on the team page before All people. */
