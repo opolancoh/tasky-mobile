@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, nowIn } from '@/core/dates/localDate';
-import { HOME_PREVIEW, useHome, useTasks } from '@/data/tasks/queries';
+import { HOME_PREVIEW, useHome, useTaskLists, useTasks } from '@/data/tasks/queries';
 import type { Home, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { MeButton } from '@/shared/components';
@@ -71,6 +71,10 @@ export function TodayScreen() {
   const completed = useTasks({ status: 'completed', limit: 1 }, firstDay && !data.doneToday);
   const allDone = !firstDay ? undefined : data.doneToday > 0 ? true : completed.data ? (completed.data.total ?? 0) > 0 : undefined;
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
+  // Important and Personal open the same screens as Spaces (one list each, the same rows). No Personal yet (D59): nothing to open.
+  const personal = useTaskLists().data?.find((c) => c.isInbox);
+  const openImportant = () => navigation.navigate('BrowseList', { kind: 'important' });
+  const openPersonal = () => personal && navigation.navigate('TaskList', { taskListId: personal.id });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
   // First load (M27): skeleton cards, then sections and rows where they will be.
@@ -171,7 +175,7 @@ export function TodayScreen() {
           </View>
         );
       case 'cards':
-        return <HomeCards data={data!} today={today!} open={open} />;
+        return <HomeCards data={data!} today={today!} open={open} openImportant={openImportant} openPersonal={openPersonal} />;
       case 'cardsSkeleton':
         return <HomeCardsSkeleton />;
       case 'section':

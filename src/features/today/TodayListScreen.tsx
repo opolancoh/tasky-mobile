@@ -28,9 +28,9 @@ type Item =
 
 /** The task section behind each See all (D67, D86); Requests pages its answers, then its follow-ups (D71). From your lists is GET /tasks (M66). */
 const TASK_SECTION: Record<Exclude<TodayListSection, 'undated'>, HomeSection> = {
-  requests: 'to-answer', overdue: 'overdue', today: 'today', 'coming-up': 'coming-up', assigned: 'assigned', important: 'important', inbox: 'inbox',
+  requests: 'to-answer', overdue: 'overdue', today: 'today', 'coming-up': 'coming-up', assigned: 'assigned',
 };
-const WHEN = { today: 'time', 'coming-up': 'none', important: 'due', inbox: 'none' } as const;
+const WHEN = { today: 'time', 'coming-up': 'none' } as const;
 
 /**
  * See all (06-mobile.md, M33): a whole Home section on its own screen, pushed from its See all or a card (M65). Title, total and what it holds; the same rows as Home (Coming up under day headings); 20 at a time, the next

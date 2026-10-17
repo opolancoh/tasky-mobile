@@ -572,8 +572,6 @@
       "overdue": "Overdue",
       "today": "Today",
       "coming-up": "Coming up",
-      "important": "Important",
-      "inbox": "Personal",
       "assigned": "Assigned to me",
       "undated": "From your lists"
     },
@@ -582,8 +580,6 @@
       "overdue": "Open tasks due before today, oldest first",
       "today": "Due today, or with a reminder today",
       "coming-up": "Next 7 days, then later",
-      "important": "All your important tasks, soonest first",
-      "inbox": "Tasks with no list or date yet",
       "assigned": "Accepted tasks others gave you, after the next 7 days or with no date",
       "undated": "Open tasks with no date, newest first"
     },

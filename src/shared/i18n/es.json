@@ -572,8 +572,6 @@
       "overdue": "Atrasadas",
       "today": "Hoy",
       "coming-up": "Próximamente",
-      "important": "Importantes",
-      "inbox": "Personal",
       "assigned": "Asignadas a mí",
       "undated": "De tus listas"
     },
@@ -582,8 +580,6 @@
       "overdue": "Tareas abiertas de antes de hoy, las más antiguas primero",
       "today": "Para hoy, o con un recordatorio hoy",
       "coming-up": "Los próximos 7 días, luego más adelante",
-      "important": "Todas tus tareas importantes, las más próximas primero",
-      "inbox": "Tareas aún sin lista ni fecha",
       "assigned": "Tareas que otros te dieron y aceptaste, después de 7 días o sin fecha",
       "undated": "Tareas abiertas sin fecha, las más nuevas primero"
     },

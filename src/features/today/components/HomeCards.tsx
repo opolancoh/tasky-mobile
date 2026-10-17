@@ -43,8 +43,11 @@ function Progress({ done, total }: { done: number; total: number }) {
   );
 }
 
-/** Home's four cards (M65): Today, Overdue, Important, Inbox; each opens its full list. */
-export function HomeCards({ data, today, open }: { data: Home; today: LocalDate; open(section: TodayListSection): void }) {
+/**
+ * Home's four cards (M65): Today, Overdue, Important, Personal; each opens its full list. Important and Personal open the
+ * same screens as Spaces, so their rows are the same everywhere.
+ */
+export function HomeCards({ data, today, open, openImportant, openPersonal }: { data: Home; today: LocalDate; open(section: TodayListSection): void; openImportant(): void; openPersonal(): void }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const labels = useDateLabels(today);
@@ -61,8 +64,8 @@ export function HomeCards({ data, today, open }: { data: Home; today: LocalDate;
         <Card tone={left ? 'accent' : 'plain'} icon="calendar" count={left} label={t('home.today')} sub={total ? t('home.doneOf', { done: data.doneToday, total }) : t('home.nothingTodayShort')} bar={total ? <Progress done={data.doneToday} total={total} /> : undefined} onPress={() => open('today')} />
       )}
       <Card tone={overdue ? 'danger' : 'plain'} icon="clock" count={overdue} label={t('home.overdue')} sub={overdue && oldest ? t('home.since', { date: labels.day(oldest) }) : t('home.nothingLate')} onPress={() => open('overdue')} />
-      <Card tone={data.importantTotal ? 'danger' : 'plain'} icon="flag" count={data.importantTotal} label={t('home.important')} sub={t(data.importantTotal ? 'home.soonestFirst' : 'home.noneFlagged')} onPress={() => open('important')} />
-      <Card tone={data.inboxTotal ? 'accent' : 'plain'} icon="inbox" count={data.inboxTotal} label={t('home.inbox')} sub={t(data.inboxTotal ? 'home.notInList' : 'home.allSorted')} onPress={() => open('inbox')} />
+      <Card tone={data.importantTotal ? 'danger' : 'plain'} icon="flag" count={data.importantTotal} label={t('home.important')} sub={t(data.importantTotal ? 'home.soonestFirst' : 'home.noneFlagged')} onPress={openImportant} />
+      <Card tone={data.inboxTotal ? 'accent' : 'plain'} icon="inbox" count={data.inboxTotal} label={t('home.inbox')} sub={t(data.inboxTotal ? 'home.notInList' : 'home.allSorted')} onPress={openPersonal} />
     </View>
   );
 }
