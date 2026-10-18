@@ -5,6 +5,7 @@ import type { Id } from '@/core/types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
+import { moveTask, settleTask, type Move } from './optimistic';
 import { assignTarget } from './types';
 import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
@@ -42,17 +43,33 @@ function useRefetchTasks() {
   };
 }
 
-/** POST /tasks/{id}:complete. */
-export function useCompleteTask() {
-  const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.complete(task), onSettled: refetch });
+/**
+ * A toggle that shows at once (M56, M75): `onMutate` moves the task in every cache (`moveTask`), an error puts them back
+ * and shows a toast (`meta.toastError`, app/queryClient.ts). The answer's version goes into the caches, and the mutation
+ * stays pending until the refetch is in: rows read that (`key`) and keep the task locked, so a second tap never sends a
+ * stale version or races the first one.
+ */
+function useTaskToggle(key: readonly string[], send: (task: TaskSummary) => Promise<Task>, to: Move) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: key,
+    mutationFn: send,
+    onMutate: (task: TaskSummary) => moveTask(queryClient, task, to),
+    onSuccess: (saved) => settleTask(queryClient, saved),
+    onError: (_error, _task, restore) => restore?.(),
+    onSettled: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: taskKeys.views }),
+      queryClient.invalidateQueries({ queryKey: taskKeys.taskLists }),
+    ]),
+    meta: { toastError: true },
+  });
 }
 
+/** POST /tasks/{id}:complete. */
+export const useCompleteTask = () => useTaskToggle(taskKeys.completing, tasksApi.complete, 'completed');
+
 /** POST /tasks/{id}:confirm: the assignee completed it for the caller, who saw it (D71). It leaves the open tasks. */
-export function useConfirmTask() {
-  const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.confirm(task), onSettled: refetch });
-}
+export const useConfirmTask = () => useTaskToggle(taskKeys.confirming, tasksApi.confirm, 'completed');
 
 /** PATCH /tasks/{id}, e.g. `{ dueDate: today }` to move a task to today. */
 export function useUpdateTask() {
@@ -297,8 +314,5 @@ export const useRestoreItem = () =>
     onSettled: useRefetchBrowse(),
   });
 
-/** POST /tasks/{id}:reopen from a list (Completed rows). */
-export function useReopenTask() {
-  const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: (task: TaskSummary) => tasksApi.reopen(task), onSettled: refetch });
-}
+/** POST /tasks/{id}:reopen from a list (Completed rows, search). */
+export const useReopenTask = () => useTaskToggle(taskKeys.reopening, tasksApi.reopen, 'open');

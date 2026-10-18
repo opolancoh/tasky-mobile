@@ -7,6 +7,8 @@ export { TagsRow } from './tags/TagsRow';
 export { sortByRecent, type TagItem } from './tags/tagItems';
 export { useRecentTags, RECENT_TAGS_MAX } from './tags/recentTagsStore';
 export { TaskRow, type TaskRowProps } from './TaskRow';
+export { CheckCircle, type CheckCircleProps } from './CheckCircle';
+export { easeNextLayout, useTaskCheck, useTaskSaving } from './useTaskCheck';
 export { UpdateRow } from './UpdateRow';
 export { Avatar } from './Faces';
 export { TaskOrigin } from './TaskOrigin';

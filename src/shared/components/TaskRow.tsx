@@ -1,5 +1,4 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -12,6 +11,8 @@ import { Pill, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
 import { TaskOrigin } from './TaskOrigin';
+import { CheckCircle } from './CheckCircle';
+import { easeNextLayout, useTaskCheck } from './useTaskCheck';
 
 export interface TaskRowProps {
   task: TaskSummary;
@@ -36,7 +37,7 @@ export interface TaskRowProps {
  * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
  * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except
  * yours in the Inbox (M44; someone given a task from it shows, D88). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
- * circle at once; the list refetches after the API answers.
+ * row into Completed at once, its circle spinning until the answer, and back if the API says no (M75).
  */
 export function TaskRow({ task, today, showDue = false, showList = true, showAssignment = false, outside = false, hideFace = false, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
@@ -44,33 +45,22 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
   const labels = useDateLabels(today);
   const confirm = useConfirmTask();
   const awaiting = task.awaitsConfirmation;
-  const [tickedNow, setTicked] = useState(false);
-  const ticked = tickedNow || awaiting;
+  const check = useTaskCheck(task, onComplete);
+  const ticked = awaiting;
   const overdue = !awaiting && !!task.dueDate && !!today && task.dueDate < today;
   const meId = useSessionStore((s) => s.userId);
   // Whoever has it, you included (M44); not you in the Inbox, which is only ever yours (someone given a task from it, D88).
   const who = task.assignee && !hideFace && !(task.taskList?.isInbox && task.assignee.id === meId) ? task.assignee : null;
 
   const complete = () => {
-    if (ticked) return;
-    setTicked(true);
-    onComplete(task);
+    if (!awaiting) check.tap();
   };
 
   return (
-    <Pressable onPress={onPress ? () => onPress(task) : undefined} disabled={!onPress} accessibilityRole={onPress ? 'button' : undefined}>
+    <Pressable onPress={onPress ? () => onPress(task) : undefined} disabled={!onPress || check.saving} accessibilityRole={onPress ? 'button' : undefined} accessibilityState={{ busy: check.saving }}>
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          <Pressable
-            onPress={complete}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: ticked }}
-            accessibilityLabel={t('taskRow.complete', { title: task.title })}
-            hitSlop={11}
-            style={[styles.check, { borderColor: ticked ? colors.accent : colors.ink3, backgroundColor: ticked ? colors.accent : 'transparent' }]}
-          >
-            {ticked && <Feather name="check" size={14} color={colors.onAccent} />}
-          </Pressable>
+          <CheckCircle checked={ticked} saving={check.saving} onPress={complete} label={t('taskRow.complete', { title: task.title })} />
           <View style={styles.main}>
             <Text variant="bodyMedium" numberOfLines={2} style={ticked ? { color: colors.ink3 } : undefined}>
               {task.title}
@@ -100,7 +90,7 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
           </View>
           {awaiting && (
             <View style={styles.face}>
-              <Pill label={t('taskRow.confirm')} onPress={() => confirm.mutate(task)} disabled={confirm.isPending} />
+              <Pill label={t('taskRow.confirm')} onPress={() => { easeNextLayout(); confirm.mutate(task); }} disabled={confirm.isPending || check.saving} />
             </View>
           )}
           {task.invitedEmail && !who && (
@@ -121,7 +111,6 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
-  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   face: { alignSelf: 'center' },

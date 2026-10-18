@@ -27,6 +27,10 @@ export const taskKeys = {
   homeSection: (section: string) => ['tasks', 'views', 'home', section] as const,
   /** Invitations waiting for the caller (also inside Today). */
   invitations: ['tasks', 'views', 'invitations'] as const,
+  /** Toggles on a task (mutation keys, M75): rows read which tasks are still saving. */
+  completing: ['tasks', 'complete'] as const,
+  reopening: ['tasks', 'reopen'] as const,
+  confirming: ['tasks', 'confirm'] as const,
   /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
   detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
 };

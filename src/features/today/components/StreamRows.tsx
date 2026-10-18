@@ -1,13 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useState, type ComponentProps, type ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import type { LocalDate } from '@/core/types';
+import type { Id, LocalDate } from '@/core/types';
 import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { Avatar, TaskOrigin } from '@/shared/components';
+import { Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 
@@ -16,10 +16,11 @@ import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
  * Home's rows (M32, M65), shared by Home and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
  * task), the title on one line, one line saying when or why, and one action. Tapping the row opens what it is about.
  */
-function StreamRow({ lead, title, sub, action, onPress, label }: { lead: ReactNode; title: string; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string }) {
+function StreamRow({ lead, title, sub, action, onPress, label, taskId }: { lead: ReactNode; title: string; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
   const { colors, space } = useTheme();
+  const saving = useTaskSaving(taskId);
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+    <Pressable onPress={onPress} disabled={saving} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ busy: saving }}>
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.sm + 2, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
           {lead}
@@ -33,7 +34,7 @@ function StreamRow({ lead, title, sub, action, onPress, label }: { lead: ReactNo
               </Text>
             ) : null}
           </View>
-          {action}
+          {action && <View pointerEvents={saving ? 'none' : 'auto'}>{action}</View>}
         </View>
       )}
     </Pressable>
@@ -51,28 +52,12 @@ function Badge({ icon, tone }: { icon: ComponentProps<typeof Feather>['name']; t
   );
 }
 
-/** The complete circle: fills at once; the lists refetch after the API answers. */
+/** The complete circle (M75): the row leaves Home at once, and comes back if the API says no. */
 function Check({ task }: { task: TaskSummary }) {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   const complete = useCompleteTask();
-  const [ticked, setTicked] = useState(false);
-  return (
-    <Pressable
-      onPress={() => {
-        if (ticked) return;
-        setTicked(true);
-        complete.mutate(task);
-      }}
-      hitSlop={11}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: ticked }}
-      accessibilityLabel={t('taskRow.complete', { title: task.title })}
-      style={[styles.check, { borderColor: ticked ? colors.accent : colors.ink3, backgroundColor: ticked ? colors.accent : 'transparent' }]}
-    >
-      {ticked && <Feather name="check" size={14} color={colors.onAccent} />}
-    </Pressable>
-  );
+  const { saving, tap } = useTaskCheck(task, (x) => complete.mutate(x));
+  return <CheckCircle checked={false} saving={saving} onPress={tap} label={t('taskRow.complete', { title: task.title })} />;
 }
 
 const Flag = () => {
@@ -163,7 +148,7 @@ export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDat
   const update = useUpdateTask();
   return (
     <StreamRow
-      lead={<Check task={task} />}
+      lead={<Check task={task} />} taskId={task.id}
       title={task.title}
       sub={<Text variant="footnote" color="danger">{labels.day(task.dueDate!)}</Text>}
       onPress={() => open(task)}
@@ -186,7 +171,7 @@ export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today:
     : when === 'day' ? labels.day(task.dueDate!)
     : when === 'due' && task.dueDate ? <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>{labels.day(task.dueDate)}</Text>
     : undefined;
-  return <StreamRow lead={<Check task={task} />} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
+  return <StreamRow lead={<Check task={task} />} taskId={task.id} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
 }
 
 /** A task with no date (From your lists, M66): where it lives, and Today, which gives it today's date. */
@@ -196,7 +181,7 @@ export function UndatedRow({ task, today }: { task: TaskSummary; today: LocalDat
   const update = useUpdateTask();
   return (
     <StreamRow
-      lead={<Check task={task} />}
+      lead={<Check task={task} />} taskId={task.id}
       title={task.title}
       sub={<TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />}
       onPress={() => open(task)}
@@ -212,13 +197,12 @@ export function AssignedRow({ task, today }: { task: TaskSummary; today: LocalDa
   const open = useOpenTask();
   const from = task.assignedBy?.displayName ? t('home.from', { name: task.assignedBy.displayName.split(' ')[0] }) : t('today.assigned');
   const sub = task.dueDate ? `${from} · ${labels.day(task.dueDate)}` : from;
-  return <StreamRow lead={<Check task={task} />} title={task.title} sub={task.isImportant ? <>{sub}  <Flag /></> : sub} onPress={() => open(task)} />;
+  return <StreamRow lead={<Check task={task} />} taskId={task.id} title={task.title} sub={task.isImportant ? <>{sub}  <Flag /></> : sub} onPress={() => open(task)} />;
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
   main: { flex: 1, minWidth: 0, gap: 2 },
   badge: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4 },
   actions: { flexDirection: 'row', gap: 6 },
 });

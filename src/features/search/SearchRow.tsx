@@ -1,11 +1,10 @@
 import { Feather } from '@expo/vector-icons';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
-import { TaskOrigin } from '@/shared/components';
+import { CheckCircle, TaskOrigin, useTaskCheck } from '@/shared/components';
 import { Text, useTheme } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
@@ -23,29 +22,16 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
   const { colors, space } = useTheme();
   const complete = useCompleteTask();
   const reopen = useReopenTask();
+  // The circle follows the task: the toggle changes it in the search results at once (M75), and back if the API says no.
   const done = task.status === 'completed';
-  const [checked, setChecked] = useState(done);
-  const toggle = () => {
-    setChecked(!checked);
-    if (done) reopen.mutate(task);
-    else complete.mutate(task);
-  };
+  const { saving, tap: toggle } = useTaskCheck(task, (x) => (x.status === 'completed' ? reopen.mutate(x) : complete.mutate(x)));
   // The title in pieces: a word that starts with a searched word is bold.
   const parts = task.title.split(/([\p{L}\p{N}]+)/u);
   return (
-    <Pressable onPress={onPress} accessibilityRole="button">
+    <Pressable onPress={onPress} disabled={saving} accessibilityRole="button" accessibilityState={{ busy: saving }}>
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          <Pressable
-            onPress={toggle}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked }}
-            accessibilityLabel={t(done ? 'search.reopen' : 'taskRow.complete', { title: task.title })}
-            hitSlop={11}
-            style={[styles.check, { borderColor: checked ? colors.accent : colors.ink3, backgroundColor: checked ? colors.accent : 'transparent' }]}
-          >
-            {checked && <Feather name="check" size={14} color={colors.onAccent} />}
-          </Pressable>
+          <CheckCircle checked={done} saving={saving} onPress={toggle} label={t(done ? 'search.reopen' : 'taskRow.complete', { title: task.title })} />
           <View style={styles.main}>
             <Text variant="body" numberOfLines={2} color={done ? 'ink3' : 'ink'}>
               {parts.map((p, i) =>
@@ -66,7 +52,6 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
-  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', alignItems: 'center' },
   shrink: { flexShrink: 1 },

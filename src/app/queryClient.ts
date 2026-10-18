@@ -1,7 +1,8 @@
-import { focusManager, QueryClient } from '@tanstack/react-query';
+import { focusManager, MutationCache, QueryClient } from '@tanstack/react-query';
 import { AppState, Platform } from 'react-native';
 
 import { isApiError } from '@/core/http/problem';
+import { toastError } from '@/shared/i18n/errors';
 
 /** Refetch what's on screen when the app comes back to the foreground. */
 AppState.addEventListener('change', (state) => {
@@ -9,6 +10,8 @@ AppState.addEventListener('change', (state) => {
 });
 
 export const queryClient = new QueryClient({
+  // A mutation with `meta.toastError` (quick toggles, M56) shows its error as a toast: the data layer has no UI of its own.
+  mutationCache: new MutationCache({ onError: (error, _vars, _ctx, mutation) => { if (mutation.meta?.toastError) toastError(error); } }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,
