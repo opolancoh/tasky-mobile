@@ -1,9 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 
-import { useTheme } from '@/shared/ui';
+import { Spinner, useTheme } from '@/shared/ui';
 
 export interface CheckCircleProps {
   checked: boolean;
@@ -15,7 +15,7 @@ export interface CheckCircleProps {
 }
 
 /**
- * A task's round checkbox (M75, option A): filled with a check when done; while its toggle saves, a small spinner takes
+ * A task's round checkbox (M75, option A): filled with a check when done; while its toggle saves, a spinning ring takes
  * its place and it takes no taps; when the answer is in, the circle pops back (on the UI thread).
  */
 export function CheckCircle({ checked, saving, onPress, label }: CheckCircleProps) {
@@ -29,7 +29,7 @@ export function CheckCircle({ checked, saving, onPress, label }: CheckCircleProp
   const pop = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   if (saving) {
-    return <ActivityIndicator size="small" color={colors.accent} style={styles.box} accessibilityLabel={label} accessibilityState={{ busy: true }} />;
+    return <Spinner accessibilityLabel={label} style={styles.spin} />;
   }
   return (
     <Animated.View style={pop}>
@@ -49,5 +49,6 @@ export function CheckCircle({ checked, saving, onPress, label }: CheckCircleProp
 
 const styles = StyleSheet.create({
   box: { width: 22, height: 22, marginTop: 1 },
+  spin: { marginTop: 1 },
   circle: { borderRadius: 11, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center' },
 });

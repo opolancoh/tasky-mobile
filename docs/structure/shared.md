@@ -61,6 +61,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `TextButton` | A text-only action in a header or beside a field or row (Save, Invite, Revoke): `accent` or `quiet`, 44 pt target, `busy` while saving (M56) |
 | `useDelayedFlag` | Busy controls (M56): disabled and busy for screen readers at once, the spinner only after 300 ms (`BUSY_DELAY_MS`), so a fast answer shows none. Screens pass `busy={mutation.isPending}`, nothing more |
 | `Skeleton`, `SkeletonRow` | A grey placeholder with a soft shimmer (UI thread; still with Reduce Motion; hidden from screen readers), and a task-row-shaped one: circle and two lines ([M27](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `Spinner` | A ring that spins (faint accent track, one accent arc; Reanimated), the same on iOS and Android; the saving state of a task's circle (M75) |
 | `Toast` | `useToast.getState().show({ message, action })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
