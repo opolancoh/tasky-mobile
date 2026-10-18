@@ -391,7 +391,8 @@
     "empty": "Encuentra tareas por las palabras de sus títulos, notas y pasos, abiertas y completadas, en todo lo que puedes ver. Los acentos no importan.",
     "noResults": "Ninguna tarea coincide con “{{query}}”.",
     "completed": "Completada",
-    "reopen": "Reabrir {{title}}"
+    "reopen": "Reabrir {{title}}",
+    "searching": "Buscando"
   },
   "quickAdd": {
     "add": "Añadir una tarea",
@@ -767,6 +768,7 @@
     "company": "Tu compañía",
     "noneFound": "No encontramos a nadie. Escribe su correo para invitarlo.",
     "inviteByEmail": "Invitar por correo",
-    "giveByEmail": "Dársela por correo"
+    "giveByEmail": "Dársela por correo",
+    "searching": "Buscando"
   }
 }

@@ -68,7 +68,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM") |
 | `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); All tasks' order (M70) |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
-| `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props |
+| `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |
 | `TimeWheel` | Hour, minute (15-minute steps by default), AM/PM when the locale uses it; value always 24-hour `"09:00"` |
 
@@ -87,7 +87,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `PeoplePicker` | Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most (`GET /people`, `usePeople`, kept 5 minutes); typing searches after 250 ms, colleagues under Your company; a typed email ends with Invite by email / Give it by email. Used by `AssigneePicker`'s Only this task and People's Invite |
 | `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it |
-| `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows and search |
+| `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |
 | `TaskListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |

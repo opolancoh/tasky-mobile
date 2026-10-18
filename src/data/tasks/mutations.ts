@@ -99,6 +99,8 @@ export interface TaskChange {
    * (an assignee from outside the list declined it or gave it back, D70).
    */
   run(task: Task): Promise<Task | undefined>;
+  /** Complete or reopen (M75): the circle shows the spinner and takes no taps until the answer. */
+  toggle?: boolean;
   /** The task as it should look right away; rolled back if the command fails (06-mobile.md, Data). */
   optimistic?(task: Task): Task;
 }

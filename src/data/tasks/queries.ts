@@ -10,10 +10,13 @@ import { taskKeys } from './keys';
 /** Every task list the caller can see, Inbox first. */
 export const useTaskLists = () => useQuery({ queryKey: taskKeys.taskLists, queryFn: tasksApi.taskLists });
 
-/** Whom the caller can pick without an email (D89): kept a few minutes, and the last answer stays while the next loads. */
+/**
+ * Whom the caller can pick without an email (D89): kept a few minutes, and the last answer stays while the next loads. A
+ * query the user has typed past is cancelled (the request's `signal`).
+ */
 export const PEOPLE_LIMIT = 8;
 export const usePeople = (q: string) =>
-  useQuery({ queryKey: taskKeys.people(q), queryFn: () => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
+  useQuery({ queryKey: taskKeys.people(q), queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, signal), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
 
 /** The caller's tags (D60). */
 export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });
@@ -78,12 +81,13 @@ export const useTaskPages = (filter: TaskFilter, enabled = true) =>
 /** Recently Deleted (D54): the first 50, newest first. */
 export const useRecentlyDeleted = () => useQuery({ queryKey: taskKeys.deleted, queryFn: () => tasksApi.recentlyDeleted(50) });
 
-/** Search (M40): a page of 20 at a time, best match first; `enabled` once there is a word to look for. */
+/** Search (M40): a page of 20 at a time, best match first; `enabled` once there is a word to look for. The last results stay while the next query loads; one typed past is cancelled. */
 export const useSearch = (q: string) =>
   useInfiniteQuery({
     queryKey: taskKeys.search(q),
-    queryFn: ({ pageParam }) => tasksApi.search(q, 20, pageParam),
+    queryFn: ({ pageParam, signal }) => tasksApi.search(q, 20, pageParam, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
     enabled: /[\p{L}\p{N}]/u.test(q),
   });

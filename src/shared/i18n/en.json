@@ -391,7 +391,8 @@
     "empty": "Finds tasks by the words in their titles, notes and steps, open and completed, in everything you can see. Accents don’t matter.",
     "noResults": "No tasks match “{{query}}”.",
     "completed": "Completed",
-    "reopen": "Reopen {{title}}"
+    "reopen": "Reopen {{title}}",
+    "searching": "Searching"
   },
   "quickAdd": {
     "add": "Add a task",
@@ -767,6 +768,7 @@
     "company": "Your company",
     "noneFound": "No one found. Type their email to invite them.",
     "inviteByEmail": "Invite by email",
-    "giveByEmail": "Give it by email"
+    "giveByEmail": "Give it by email",
+    "searching": "Searching"
   }
 }

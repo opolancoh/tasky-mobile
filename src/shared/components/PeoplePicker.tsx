@@ -7,7 +7,7 @@ import type { Id } from '@/core/types';
 import { isEmail } from '@/core/validation/rules';
 import { usePeople } from '@/data/tasks/queries';
 import type { Person } from '@/data/tasks/types';
-import { ListRow, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { ListRow, SectionLabel, SkeletonRow, Spinner, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
 
@@ -28,7 +28,8 @@ export interface PeoplePickerProps {
 /**
  * Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most
  * (GET /people); typing searches names, colleagues in a company under Your company. A typed email, or nothing found,
- * ends with the email row. The typed text lives here (docs/performance.md); a pick clears it.
+ * ends with the email row; a small ring spins in the field while a search is on its way (M73). The typed text lives here
+ * (docs/performance.md); a pick clears it.
  */
 export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, busy = false }: PeoplePickerProps) {
   const { t } = useTranslation();
@@ -40,6 +41,8 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
     return () => clearTimeout(timer);
   }, [text]);
   const people = usePeople(isEmail(query) ? '' : query);
+  // Searching: from a keystroke until its results are in (the wait before asking, then the request); the last results stay meanwhile.
+  const searching = (text.trim() !== query && !isEmail(text.trim())) || (people.isFetching && !people.isPending);
   const email = text.trim().toLowerCase();
   const typedEmail = isEmail(email);
   const found = (people.data ?? []).filter((p) => !exclude.includes(p.id));
@@ -81,6 +84,7 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
           accessibilityLabel={t('people.search')}
           style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
         />
+        {searching && <Spinner size={16} accessibilityLabel={t('people.searching')} />}
       </View>
       {people.isPending ? (
         [60, 45].map((w) => <SkeletonRow key={w} width={w} />)

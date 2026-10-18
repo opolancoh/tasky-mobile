@@ -66,7 +66,7 @@ export const tasksApi = {
   /** POST …/invitations { userId } (201): someone from GET /people, or with a task given from the list (D88, D89). */
   inviteUser: (of: MembersOf, userId: Id) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId } }),
   /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names. */
-  people: (q: string, limit: number) => http().get<Person[]>('/people', { query: { q: q || undefined, limit } }),
+  people: (q: string, limit: number, signal?: AbortSignal) => http().get<Person[]>('/people', { query: { q: q || undefined, limit }, signal }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),
@@ -123,7 +123,7 @@ export const tasksApi = {
   restore: (item: Versioned) => http().post<Task>(`/tasks/${item.id}:restore`, { ifMatch: item.version }),
 
   /** GET /search?q= (D32, D61): tasks, open and completed, in everything the caller can see; best match first, keyset-paged. */
-  search: (q: string, limit: number, cursor?: string) => http().get<{ items: TaskSummary[]; nextCursor: string | null }>('/search', { query: { q, limit, cursor } }),
+  search: (q: string, limit: number, cursor?: string, signal?: AbortSignal) => http().get<{ items: TaskSummary[]; nextCursor: string | null }>('/search', { query: { q, limit, cursor }, signal }),
 
   /** GET /recently-deleted: everything the caller could see, newest first (D54). */
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),

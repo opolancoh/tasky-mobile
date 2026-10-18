@@ -15,7 +15,7 @@ import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, TaskListIcon, TagsRow } from '@/shared/components';
+import { Avatar, CheckCircle, TaskListIcon, TagsRow } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
@@ -153,12 +153,14 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
     if (toast) useToast.getState().show({ message: toast });
   };
   const next = task.repeat?.nextDueDate;
+  // Complete or reopen on its way (M75): the circle spins and takes no taps, Reopen waits.
+  const toggling = command.isPending && !!command.variables?.toggle;
   const toggleComplete = () =>
     completed
-      ? run({ run: (x) => tasksApi.reopen(x), optimistic: (x) => ({ ...x, status: 'open', completedAt: null, completedBy: null }) })
+      ? run({ toggle: true, run: (x) => tasksApi.reopen(x), optimistic: (x) => ({ ...x, status: 'open', completedAt: null, completedBy: null }) })
       : run(
           // A repeating task stays open on its next date, so it isn't shown completed.
-          { run: (x) => tasksApi.complete(x), optimistic: (x) => (x.repeat ? x : { ...x, status: 'completed' }) },
+          { toggle: true, run: (x) => tasksApi.complete(x), optimistic: (x) => (x.repeat ? x : { ...x, status: 'completed' }) },
           next ? t('taskDetail.nextOn', { date: labels.day(next) }) : undefined,
         );
   const skip = () => run({ run: (x) => tasksApi.skip(x), optimistic: (x) => ({ ...x, dueDate: next ?? x.dueDate }) }, next ? t('taskDetail.skipped', { date: labels.day(next) }) : undefined);
@@ -228,16 +230,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
 
       <View {...locked}>
       <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, fields.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
-        <Pressable
-          onPress={toggleComplete}
-          hitSlop={8}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: completed }}
-          accessibilityLabel={t(completed ? 'taskDetail.reopen' : 'taskDetail.complete')}
-          style={[styles.check, { borderColor: completed ? colors.accent : colors.ink3, backgroundColor: completed ? colors.accent : 'transparent' }]}
-        >
-          {completed && <Feather name="check" size={16} color={colors.onAccent} />}
-        </Pressable>
+        <CheckCircle checked={completed} saving={toggling} onPress={toggleComplete} size={28} style={styles.checkSpot} label={t(completed ? 'taskDetail.reopen' : 'taskDetail.complete')} />
         <TitleField completed={completed} editable={!outside} />
         <Pressable
           onPress={() => edit({ isImportant: !fields.isImportant })}
@@ -267,7 +260,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <Text variant="footnote" color="ink2" style={styles.fill}>
             {task.completedAt ? by(t('taskDetail.completed', { when: when(task.completedAt) }), task.completedBy) : ''}
           </Text>
-          <Button variant="link" title={t('taskDetail.reopen')} onPress={toggleComplete} />
+          <Button variant="link" title={t('taskDetail.reopen')} onPress={toggleComplete} disabled={toggling} />
         </View>
       )}
 
@@ -479,7 +472,7 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-start' },
   /** The M24 red edge, left of the circle. */
   edge: { borderLeftWidth: 3, marginLeft: -13, paddingLeft: 10 },
-  check: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  checkSpot: { marginTop: 4 },
   /** No lineHeight on a TextInput (it clips descenders on iOS). */
   title: { flex: 1, padding: 0, paddingTop: 2 },
   struck: { textDecorationLine: 'line-through' },

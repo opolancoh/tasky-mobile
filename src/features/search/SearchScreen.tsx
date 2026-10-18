@@ -78,7 +78,7 @@ export function SearchScreen() {
         return (
           <View style={{ paddingTop: space.xl + space.lg, paddingBottom: space.xs, gap: space.md }}>
             <Text variant="largeTitle" accessibilityRole="header">{t('search.title')}</Text>
-            <SearchBox key={preset.n} initial={preset.text} onQuery={setQuery} />
+            <SearchBox key={preset.n} initial={preset.text} query={query} onQuery={setQuery} fetching={results.isFetching && !results.isFetchingNextPage} />
             {results.error && searching && <Notice>{errorMessage(results.error)}</Notice>}
           </View>
         );
@@ -149,14 +149,16 @@ export function SearchScreen() {
 }
 
 /** The search field: the typed text lives here (docs/performance.md); the screen gets it after a short pause. */
-function SearchBox({ initial, onQuery }: { initial: string; onQuery(q: string): void }) {
+function SearchBox({ initial, query, onQuery, fetching }: { initial: string; query: string; onQuery(q: string): void; fetching: boolean }) {
   const { t } = useTranslation();
   const [text, setText] = useState(initial);
+  // Searching: from a keystroke until its results are in (the pause, then the request); the last results stay meanwhile.
+  const busy = !!text.trim() && (text.trim() !== query || fetching);
   useEffect(() => {
     const timer = setTimeout(() => onQuery(text.trim()), text.trim() ? PAUSE : 0);
     return () => clearTimeout(timer);
   }, [text, onQuery]);
-  return <SearchField value={text} onChangeText={setText} placeholder={t('search.placeholder')} clearLabel={t('search.clearField')} maxLength={200} />;
+  return <SearchField value={text} onChangeText={setText} placeholder={t('search.placeholder')} clearLabel={t('search.clearField')} maxLength={200} busy={busy} busyLabel={t('search.searching')} />;
 }
 
 const styles = StyleSheet.create({
