@@ -58,7 +58,6 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
       key={p.id}
       label={p.displayName}
       icon={<Avatar name={p.displayName} seed={p.id} size={24} />}
-      value={p.via ?? undefined}
       onPress={() => pick(p)}
       chevron={false}
       busy={busy}
