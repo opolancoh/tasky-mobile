@@ -23,7 +23,7 @@ async function open(title: string, items: (Item | false)[], cancelLabel: string)
 /**
  * The menus Browse opens from a long press on a row, or from ••• on a list or team (M38, M64): only what the user's
  * role allows (roles doc). Sort opens its own menu, the current one checked. Deletes and leaving ask first (`confirm`). `onGone` runs after the thing left the user's Browse
- * (e.g. go back from its screen).
+ * (e.g. go back from its screen). `onSelect`: the list's screen offers **Select tasks** first (M81).
  */
 export function useBrowseMenus() {
   const { t } = useTranslation();
@@ -46,12 +46,14 @@ export function useBrowseMenus() {
       run: () => s !== c.sortMode && update.mutate({ taskList: c, body: { sortMode: s } }, { onError: toastError }),
     })), cancel);
 
-  const listMenu = (c: TaskList, onGone?: () => void) => {
+  const listMenu = (c: TaskList, onGone?: () => void, onSelect?: () => void) => {
     const sort: Item = { label: t('browse.menu.sort'), icon: { community: 'swap-vertical' }, value: t(`browse.sort.${c.sortMode}`), more: true, run: () => chooseSort(c) };
-    if (c.isInbox) return open(t('browse.inbox'), [sort], cancel);
+    const select: Item | false = !!onSelect && { label: t('select.selectTasks'), icon: 'check-circle', run: onSelect };
+    if (c.isInbox) return open(t('browse.inbox'), [select, sort], cancel);
     const team = c.team ? teams.find((x) => x.id === c.team!.id) : undefined;
     const leave = canLeave(c, team, me?.id);
     return open(c.name, [
+      select,
       { label: t('browse.menu.editList'), icon: 'edit-2', run: () => showSheet({ kind: 'list', id: c.id }) },
       sort,
       { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
@@ -115,8 +117,9 @@ export function useBrowseMenus() {
     ], cancel);
   };
 
-  const tagMenu = (tag: Tag, onGone?: () => void) =>
+  const tagMenu = (tag: Tag, onGone?: () => void, onSelect?: () => void) =>
     open(`#${tag.name}`, [
+      !!onSelect && { label: t('select.selectTasks'), icon: 'check-circle', run: onSelect },
       { label: t('browse.menu.editTag'), icon: 'edit-2', run: () => showSheet({ kind: 'tag', name: tag.name }) },
       {
         label: t('browse.menu.deleteTag'),
@@ -129,5 +132,8 @@ export function useBrowseMenus() {
       },
     ], cancel);
 
-  return { listMenu, teamMenu, tagMenu };
+  /** ••• on a task list that isn't a list (All tasks, Important, Assigned…, M81): Select tasks. */
+  const selectMenu = (title: string, onSelect: () => void) => open(title, [{ label: t('select.selectTasks'), icon: 'check-circle', run: onSelect }], cancel);
+
+  return { listMenu, teamMenu, tagMenu, selectMenu };
 }

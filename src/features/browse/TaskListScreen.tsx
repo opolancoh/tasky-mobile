@@ -13,6 +13,8 @@ import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
+import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
+import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
@@ -42,6 +44,8 @@ type Item =
  * Luis", "Family · 3 people", or on a private list "Only you · Ana and Luis have tasks" once tasks went to people outside
  * it (D70, M45); a tap opens People. Tasks on hold (D91, M80) wait in their own section between the open tasks and
  * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
+ * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
+ * selection bar takes the add field's place, and Completed folds away meanwhile.
  */
 export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>) {
   const { taskListId } = route.params;
@@ -74,13 +78,23 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const teams = useTeams().data;
   const team = taskList?.team ? teams?.find((x) => x.id === taskList.team!.id) : undefined;
   const list = useRef<FlashListRef<Item>>(null);
+  const { selecting, start } = useSelectionScope();
   // Manual puts a new task on top (D85): after adding, the list scrolls up to show it (M60).
   const added = () => {
     if (taskList?.sortMode === 'manual') list.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
+  const pickable = [...(tasks.data?.items ?? []), ...(held.data?.items ?? [])].filter(selectable);
   useLayoutEffect(() => {
+    if (selecting) {
+      navigation.setOptions({ headerBackVisible: false, gestureEnabled: false, headerLeft: () => <SelectionCancel />, headerTitle: () => <SelectionTitle />, headerRight: () => <SelectionAll tasks={pickable} /> });
+      return;
+    }
     navigation.setOptions({
+      headerBackVisible: true,
+      gestureEnabled: true,
+      headerLeft: undefined,
+      headerTitle: undefined,
       headerRight: taskList
         ? () => (
             <View style={styles.headerRight}>
@@ -89,7 +103,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
                   <Feather name="user-plus" size={21} color={colors.accent} />
                 </Pressable>
               )}
-              <Pressable onPress={() => listMenu(taskList, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+              <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), () => start())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>
@@ -108,7 +122,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
     items.push({ type: 'heldHead', key: 'heldHead' });
     if (!heldFolded) (held.data?.items ?? []).forEach((task) => items.push({ type: 'held', key: `h-${task.id}`, task }));
   }
-  if (!tasks.isPending && doneCount > 0) {
+  if (!tasks.isPending && doneCount > 0 && !selecting) {
     items.push({ type: 'doneHead', key: 'doneHead' });
     if (showDone && done.isPending) [62, 48].forEach((width) => items.push({ type: 'skeleton', key: `dk${width}`, width }));
     else if (showDone) (done.data?.pages.flatMap((p) => p.items) ?? []).forEach((task) => items.push({ type: 'done', key: `d-${task.id}`, task }));
@@ -158,7 +172,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </View>
         );
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue showList={false} outside={shared && !!members.data && outsideOf(item.task)} onComplete={completeTask} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue showList={false} outside={shared && !!members.data && outsideOf(item.task)} selectable onComplete={completeTask} onPress={open} />;
       case 'empty':
         return (
           <View style={[styles.empty, { gap: space.xs, paddingVertical: space.huge }]}>
@@ -176,7 +190,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
           </Pressable>
         );
       case 'held':
-        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={completeTask} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue showList={false} selectable onComplete={completeTask} onPress={open} />;
       case 'doneHead':
         return (
           <Pressable
@@ -212,7 +226,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
         keyboardDismissMode="interactive"   // dragging the list closes the keyboard; the typed title stays
         contentContainerStyle={{ paddingBottom: space.lg }}
       />
-      <AddTaskField taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />
+      {selecting ? <SelectionBar /> : <AddTaskField taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />}
     </Screen>
   );
 }

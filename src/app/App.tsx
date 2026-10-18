@@ -19,6 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
+import { BulkSheet } from '@/shared/selection/BulkSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { ReminderSync } from '@/shared/notifications/useReminders';
@@ -89,6 +90,7 @@ function Root() {
           <QuickAddSheet />
           <TaskFieldSheet />
           <BrowseSheet />
+          <BulkSheet />
           <ActionSheetHost />
           <ReminderSync />
           <NetworkLogAccess />

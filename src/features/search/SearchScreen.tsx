@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,6 +9,8 @@ import { useSearch, useTags } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
+import { SelectionBar, SelectionTopBar } from '@/shared/selection/SelectionBar';
+import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { faint, Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useRecentSearches } from './recentSearchesStore';
@@ -31,6 +33,8 @@ type Item =
  * Search, the last tab (M39, M40, M74): tasks by the words in their titles, notes and steps, open and completed, in
  * everything the user can see (GET /search), best match first, 20 at a time. Before typing: the last searches and the
  * user's tags. A row shows the title with the words found in bold and its list; opening one remembers the search.
+ * A long press on a result starts selecting (M81): Cancel · "3 selected" · All on top, the selection bar where the tab
+ * bar was; completed results leave while selecting.
  */
 export function SearchScreen() {
   const { t } = useTranslation();
@@ -47,7 +51,13 @@ export function SearchScreen() {
   const clear = useRecentSearches((s) => s.clear);
 
   const words = searchWords(query);
-  const tasks = results.data?.pages.flatMap((p) => p.items) ?? [];
+  const { selecting } = useSelectionScope();
+  const found = results.data?.pages.flatMap((p) => p.items) ?? [];
+  const tasks = selecting ? found.filter(selectable) : found;
+  // The selection bar takes the tab bar's place (M81): nothing else changes tab meanwhile.
+  useLayoutEffect(() => {
+    navigation.setOptions({ tabBarStyle: { borderTopWidth: 0, elevation: 0, display: selecting ? 'none' : 'flex' } });   // as tabScreenOptions
+  }, [navigation, selecting]);
   const searching = words.length > 0;
   const runRecent = (q: string) => {
     setPreset((p) => ({ text: q, n: p.n + 1 }));
@@ -133,6 +143,7 @@ export function SearchScreen() {
 
   return (
     <Screen edges={['top']} contentStyle={styles.fill}>
+      {selecting && <SelectionTopBar tasks={tasks} paged={results.hasNextPage} />}
       <FlashList
         data={items}
         renderItem={renderItem}
@@ -144,6 +155,7 @@ export function SearchScreen() {
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
       />
+      {selecting && <SelectionBar insetBottom />}
     </Screen>
   );
 }

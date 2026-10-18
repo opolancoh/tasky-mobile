@@ -7,6 +7,8 @@ import { useConfirmTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
+import { SelectCheck } from '@/shared/selection/SelectCheck';
+import { selectable as canSelect, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { Pill, Text, useTheme } from '@/shared/ui';
 
@@ -29,6 +31,8 @@ export interface TaskRowProps {
   outside?: boolean;
   /** Hide the initials at the right (a list grouped by person). */
   hideFace?: boolean;
+  /** A list that selects (M81): a long press starts selecting; while selecting, a tap picks the task. */
+  selectable?: boolean;
   onComplete(task: TaskSummary): void;
   onPress?(task: TaskSummary): void;
 }
@@ -40,9 +44,11 @@ export interface TaskRowProps {
  * yours in the Inbox (M44; someone given a task from it shows, D88). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
  * row into Completed at once, its circle spinning until the answer, and back if the API says no (M75). On hold (D91, M80): a
  * pause icon instead of the circle (Resume, Complete, Edit the reason), an "On hold · reason" chip, until when and who can
- * resume it, never overdue; a long press on an open task in a shared or team list puts it on hold.
+ * resume it, never overdue. Bulk actions (M81, `selectable`): a long press starts selecting (Put on hold moved to the
+ * selection bar); while selecting, the circle is a round check, a tap picks or drops the task and the picked row tints;
+ * completed tasks can't be picked.
  */
-export function TaskRow({ task, today, showDue = false, showList = true, showAssignment = false, outside = false, hideFace = false, onComplete, onPress }: TaskRowProps) {
+export function TaskRow({ task, today, showDue = false, showList = true, showAssignment = false, outside = false, hideFace = false, selectable = false, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const labels = useDateLabels(today);
@@ -52,7 +58,11 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
   const ticked = awaiting;
   const held = task.status === 'onHold';
   const holds = useHoldActions();
-  const holdable = holds.canHold(task);
+  const selection = useRowSelection(task.id);
+  const selecting = selectable && selection.selecting;
+  const pickable = selectable && canSelect(task);
+  const pick = () => useSelection.getState().toggle(task);
+  const startSelecting = () => useSelection.getState().start(selection.key, task);
   const overdue = !awaiting && !held && !!task.dueDate && !!today && task.dueDate < today;
   const meId = useSessionStore((s) => s.userId);
   // Whoever has it, you included (M44); not you in the Inbox, which is only ever yours (someone given a task from it, D88).
@@ -64,17 +74,19 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
 
   return (
     <Pressable
-      onPress={onPress ? () => onPress(task) : undefined}
-      onLongPress={holdable ? () => holds.putOnHold(task) : undefined}
-      disabled={(!onPress && !holdable) || check.saving}
-      accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityState={{ busy: check.saving }}
-      accessibilityActions={holdable ? [{ name: 'longpress', label: t('hold.put') }] : undefined}
-      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && holds.putOnHold(task)}
+      onPress={selecting ? (pickable ? pick : undefined) : onPress ? () => onPress(task) : undefined}
+      onLongPress={!selecting && pickable ? startSelecting : undefined}
+      disabled={selecting ? !pickable : (!onPress && !pickable) || check.saving}
+      accessibilityRole={selecting ? 'checkbox' : onPress ? 'button' : undefined}
+      accessibilityState={selecting ? { checked: selection.picked, disabled: !pickable } : { busy: check.saving }}
+      accessibilityActions={!selecting && pickable ? [{ name: 'longpress', label: t('select.selectTasks') }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && startSelecting()}
     >
       {({ pressed }) => (
-        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          {held ? (
+        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: selection.picked && selecting ? colors.accentSoft : pressed ? colors.surface2 : 'transparent', opacity: selecting && !pickable ? 0.4 : 1 }]}>
+          {selecting && pickable ? (
+            <SelectCheck picked={selection.picked} />
+          ) : held ? (
             <Pressable onPress={() => holds.heldMenu(task)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.pause}>
               <Feather name="pause-circle" size={22} color={colors.warn} />
             </Pressable>
@@ -117,7 +129,7 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
           </View>
           {awaiting && (
             <View style={styles.face}>
-              <Pill label={t('taskRow.confirm')} onPress={() => { easeNextLayout(); confirm.mutate(task); }} disabled={confirm.isPending || check.saving} />
+              <Pill label={t('taskRow.confirm')} onPress={() => { easeNextLayout(); confirm.mutate(task); }} disabled={confirm.isPending || check.saving || selecting} />
             </View>
           )}
           {task.invitedEmail && !who && (

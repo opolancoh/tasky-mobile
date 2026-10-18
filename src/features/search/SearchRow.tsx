@@ -6,6 +6,8 @@ import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
 import { CheckCircle, TaskOrigin, useTaskCheck } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
+import { SelectCheck } from '@/shared/selection/SelectCheck';
+import { selectable, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
 import { Text, useTheme } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
@@ -17,7 +19,7 @@ export const searchWords = (q: string) => fold(q).split(/[^\p{L}\p{N}]+/u).filte
 /**
  * A search result (M40): the circle (completes an open task; a completed one shows its check and reopens), the title with
  * the words found in bold, its list, and "Completed" for a completed one. On hold (D91, M80): the pause icon (Resume,
- * Complete, Edit the reason) and "· On hold".
+ * Complete, Edit the reason) and "· On hold". A long press starts selecting (M81); while selecting, a tap picks it.
  */
 export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: string[]; onPress(): void }) {
   const { t } = useTranslation();
@@ -31,11 +33,25 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
   const { saving, tap: toggle } = useTaskCheck(task, (x) => (x.status === 'completed' ? reopen.mutate(x) : complete.mutate(x)));
   // The title in pieces: a word that starts with a searched word is bold.
   const parts = task.title.split(/([\p{L}\p{N}]+)/u);
+  const selection = useRowSelection(task.id);
+  const pickable = selectable(task);
+  const selecting = selection.selecting;
+  const startSelecting = () => useSelection.getState().start(selection.key, task);
   return (
-    <Pressable onPress={onPress} disabled={saving} accessibilityRole="button" accessibilityState={{ busy: saving }}>
+    <Pressable
+      onPress={selecting ? () => useSelection.getState().toggle(task) : onPress}
+      onLongPress={!selecting && pickable ? startSelecting : undefined}
+      disabled={selecting ? !pickable : saving}
+      accessibilityRole={selecting ? 'checkbox' : 'button'}
+      accessibilityState={selecting ? { checked: selection.picked } : { busy: saving }}
+      accessibilityActions={!selecting && pickable ? [{ name: 'longpress', label: t('select.selectTasks') }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && startSelecting()}
+    >
       {({ pressed }) => (
-        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          {held ? (
+        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: selecting && selection.picked ? colors.accentSoft : pressed ? colors.surface2 : 'transparent' }]}>
+          {selecting ? (
+            <SelectCheck picked={selection.picked} />
+          ) : held ? (
             <Pressable onPress={() => holds.heldMenu(task)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.pause}>
               <Feather name="pause-circle" size={22} color={colors.warn} />
             </Pressable>

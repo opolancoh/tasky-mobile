@@ -14,6 +14,8 @@ import type { TaskFilter, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
+import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
+import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { chooseAction, ColorDot, Notice, Screen, Segmented, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
@@ -61,6 +63,8 @@ type Item =
  * on Date, a team on Person, each kept on the device) and one filter (Mine, Unassigned, Overdue, This week), sent to the
  * API (Person: everyone else, then the user, then Not assigned). Date pages as it scrolls, its headings added as rows arrive; List and Person load every page, 200 at a time. A task
  * with nobody on it in a list only the user sees counts as theirs. Headings fold.
+ * Selecting (M81, all but Completed): a long press on a task or ••• › Select tasks; Cancel · "3 selected" · All on top
+ * ("All 20" while more pages are to come: All selects what's loaded), the selection bar at the bottom.
  */
 export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string }>) {
   // `person`: one person's tasks in a team (M79, from People), by date, no filter row; `personName` absent for the user.
@@ -72,7 +76,9 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const today = me ? todayIn(me.timeZone) : undefined;
   const tag = useTags().data?.find((x) => x.name === id);
   const team = useTeams().data?.find((x) => x.id === id);
-  const { tagMenu } = useBrowseMenus();
+  const { tagMenu, selectMenu } = useBrowseMenus();
+  const { selecting, start } = useSelectionScope();
+  const selects = kind !== 'completed';
   const complete = useCompleteTask();
   const ordered = kind === 'important';
   const scoped = kind === 'all' || kind === 'team';
@@ -130,11 +136,21 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     if (whole && pages.hasNextPage && !pages.isFetchingNextPage) pages.fetchNextPage();
   }, [whole, pages]);
 
+  const title = person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
   useLayoutEffect(() => {
+    if (selecting) {
+      navigation.setOptions({ headerBackVisible: false, gestureEnabled: false, headerLeft: () => <SelectionCancel />, headerTitle: () => <SelectionTitle />, headerRight: () => <SelectionAll tasks={tasks.filter(selectable)} paged={pages.hasNextPage} /> });
+      return;
+    }
+    const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), () => start()) : undefined) : selects ? () => selectMenu(title, () => start()) : undefined;
     navigation.setOptions({
-      headerRight: kind === 'tag' && tag
+      headerBackVisible: true,
+      gestureEnabled: true,
+      headerLeft: undefined,
+      headerTitle: undefined,
+      headerRight: menu
         ? () => (
-            <Pressable onPress={() => tagMenu(tag, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+            <Pressable onPress={menu} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
               <Feather name="more-horizontal" size={22} color={colors.accent} />
             </Pressable>
           )
@@ -152,7 +168,6 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const fold = (key: string) => setFolded((f) => ({ ...f, [key]: !f[key] }));
   const push = (key: string, ts: TaskSummary[]) => !folded[key] && ts.forEach((task) => items.push({ type: 'task', key: task.id, task }));
 
-  const title = person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
   const sub = t(`browse.listSub.${kind}`);
   const items: Item[] = [{ type: 'header', key: 'header' }];
   if (byDate) {
@@ -266,7 +281,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       case 'task':
         return kind === 'completed'
           ? <CompletedRow task={item.task} onPress={() => open(item.task)} />
-          : <TaskRow task={item.task} today={today} showDue showList={!listed} showAssignment={given} hideFace={(given && group === 'person') || byPerson || !!person} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+          : <TaskRow task={item.task} today={today} showDue showList={!listed} showAssignment={given} hideFace={(given && group === 'person') || byPerson || !!person} selectable={selects} onComplete={(task) => complete.mutate(task)} onPress={open} />;
       case 'footer':
         return pages.isPending || (whole && pages.hasNextPage) ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
@@ -291,6 +306,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
       />
+      {selecting && <SelectionBar />}
     </Screen>
   );
 }

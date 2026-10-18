@@ -19,6 +19,12 @@ src/shared/
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
 │   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
+├── selection/             Bulk actions (M81)
+│   ├── selectionStore.ts  Which tasks are picked, in which screen (route key); useSelectionScope (start, ends on blur and Android's back), useRowSelection, selectable()
+│   ├── useBulkActions.ts  Complete, Date, Assign, Move, Flag, Put on hold, Delete: one request per task with its newest cached version, 4 at a time, optimistic rows (editRows), failed ones stay picked, one toast with one Undo
+│   ├── SelectionBar.tsx   The bar of six labelled actions (progress over 10 tasks); SelectionCancel, SelectionTitle, SelectionAll for the header; SelectionTopBar where there's no header (Search)
+│   ├── SelectCheck.tsx    A picked row's round check
+│   └── BulkSheet.tsx      Date, Move and Assign (people in every selected list) for the selection; mounted in App
 ├── browseSheet/
 │   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen, e.g. Home's Make a list (M67)
 ├── quickAdd/
@@ -86,7 +92,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); on Personal and the user's private lists, Only this task with `PeoplePicker` (D70, D88, M45, M73) |
 | `PeoplePicker` | Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most (`GET /people`, `usePeople`, kept 5 minutes); typing searches after 250 ms, colleagues under Your company; a typed email ends with Invite by email / Give it by email. Used by `AssigneePicker`'s Only this task and People's Invite |
 | `MeButton` | The user's avatar at the top right of Home; opens Me (M39) |
-| `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it |
+| `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it; `selectable` (M81): a long press starts selecting, then a tap picks it (a round check, the row tinted) |
 | `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |
 | `TaskListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |

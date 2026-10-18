@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 import { todayIn } from '@/core/dates/localDate';
@@ -14,8 +14,16 @@ import { chooseAction, useToast } from '@/shared/ui';
 /** The quick reasons (D91, Proposed Features #3): one tap puts a task on hold with one of them. */
 export const HOLD_REASONS = ['waiting', 'decision', 'notNow'] as const;
 
+/** Whether a task can be put on hold: open, in a shared or team list (read from the lists already loaded, no request). */
+export function holdable(queryClient: QueryClient, task: Pick<TaskSummary, 'taskList' | 'status'>) {
+  if (task.status !== 'open' || !task.taskList) return false;
+  const list = queryClient.getQueryData<TaskList[]>(taskKeys.taskLists)?.find((c) => c.id === task.taskList!.id);
+  return !!list && !list.isInbox && list.sharing !== 'private';
+}
+
 /**
- * On hold from a row (D91, M80): **Put on hold** from a long press (only on shared and team lists), with the quick reasons
+ * On hold (D91, M80): **Put on hold** from Task detail (only on shared and team lists; many at once from the selection
+ * bar's More, M81), with the quick reasons
  * first, then Other reason… and Until or who resumes it… (the Hold screen); a held task's pause icon opens **Resume**,
  * **Complete**, **Edit the reason**. Resume asks first when its due date passed while it waited: keep it, or pick a new one.
  */
@@ -32,12 +40,7 @@ export function useHoldActions() {
   const cancelLabel = t('common.cancel');
   const toast = (message: string) => useToast.getState().show({ message });
 
-  /** Whether a task can be put on hold: in a shared or team list (read from the lists already loaded, no request). */
-  const canHold = (task: Pick<TaskSummary, 'taskList' | 'status'>) => {
-    if (task.status !== 'open' || !task.taskList) return false;
-    const list = queryClient.getQueryData<TaskList[]>(taskKeys.taskLists)?.find((c) => c.id === task.taskList!.id);
-    return !!list && !list.isInbox && list.sharing !== 'private';
-  };
+  const canHold = (task: Pick<TaskSummary, 'taskList' | 'status'>) => holdable(queryClient, task);
 
   const putOnHold = async (task: TaskSummary) => {
     const reasons = HOLD_REASONS.map((r) => t(`hold.reason.${r}`));

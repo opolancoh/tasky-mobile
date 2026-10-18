@@ -125,3 +125,74 @@ export async function moveTask(queryClient: QueryClient, task: TaskSummary, to: 
 
   return () => before.forEach(([key, data]) => queryClient.setQueryData(key, data));
 }
+
+/** Where a cached list sits, for `editRows`: its GET /tasks filter, or Search, or Home and its sections. */
+export interface RowsWhere {
+  filter?: TaskFilter;
+  search: boolean;
+  home: boolean;
+}
+
+/** Every row of Home's sections through `edit`. */
+const editHomeSections = (home: Home, edit: (p: Home['today']) => Home['today']): Home => ({
+  ...home, toAnswer: edit(home.toAnswer), followUp: edit(home.followUp), overdue: edit(home.overdue), today: edit(home.today), comingUp: edit(home.comingUp), assigned: edit(home.assigned),
+});
+
+/** Every cached list a task row can be in, with where it sits (not Recently Deleted or the invitations). */
+function eachList(queryClient: QueryClient, visit: (key: QueryKey, data: unknown, where: RowsWhere) => void) {
+  for (const [key, data] of queryClient.getQueriesData({ queryKey: taskKeys.views })) {
+    if (!data || key[2] === 'deleted' || key[2] === 'invitations') continue;
+    const home = key[2] === 'home';
+    const filter = typeof key[2] === 'object' ? (key[2] as TaskFilter) : undefined;
+    visit(key, data, { filter, search: key[2] === 'search', home });
+  }
+}
+
+/** One cached list (a page, pages, or Home) with each page through `edit`. */
+function editData(data: unknown, edit: (p: Page) => Page): unknown {
+  if (isPage(data)) return edit(data);
+  if (isPages(data)) return { ...data, pages: data.pages.map(edit) };
+  if (data && typeof data === 'object' && 'today' in data) return editHomeSections(data as Home, (p) => edit(p) as Home['today']);
+  return data;
+}
+
+/** The task's row as last cached, the newest version wherever it shows: what the next command sends as If-Match. */
+export function cachedTask(queryClient: QueryClient, id: Id): TaskSummary | undefined {
+  let found: TaskSummary | undefined;
+  eachList(queryClient, (_key, data) => editData(data, (p) => {
+    const x = p.items.find((i) => i.id === id);
+    if (x && (!found || x.version > found.version)) found = x;
+    return p;
+  }));
+  return found;
+}
+
+/**
+ * Bulk actions (M81): one task changes at once in every cached list: `patch` on its row in place, or out of the lists
+ * where `leaves` says. Synchronous: the caller cancels the refetches once for the whole batch. Returns `undo`, which puts
+ * back only this task's row where it still is (one failed task rolls back, the others keep theirs); a row taken out comes
+ * back with the refetch that follows every batch.
+ */
+export function editRows(queryClient: QueryClient, id: Id, patch: Partial<TaskSummary>, leaves: (where: RowsWhere) => boolean): () => void {
+  let original: TaskSummary | undefined;
+  const changed: QueryKey[] = [];
+  eachList(queryClient, (key, data, where) => {
+    const out = leaves(where);
+    let hit = false;
+    const next = editData(data, (p) => {
+      const x = p.items.find((i) => i.id === id);
+      if (!x) return p;
+      hit = true;
+      original ??= x;
+      return out ? editPage(p, id, 'remove', x) : { ...p, items: p.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) };
+    });
+    if (!hit) return;
+    changed.push(key);
+    queryClient.setQueryData(key, next);
+  });
+  return () => {
+    if (!original) return;
+    const back = original;
+    changed.forEach((key) => queryClient.setQueryData(key, (data: unknown) => editData(data, (p) => (p.items.some((i) => i.id === id) ? { ...p, items: p.items.map((i) => (i.id === id ? back : i)) } : p))));
+  };
+}
