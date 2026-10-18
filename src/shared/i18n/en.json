@@ -390,7 +390,31 @@
       "removeTitle": "Remove {{name}} from {{team}}?",
       "removeBody": "They stop seeing its lists; their tasks there are unassigned.",
       "removed": "Removed {{name}}"
-    }
+    },
+    "groupBy": {
+      "title": "Group by",
+      "date": "Date",
+      "list": "List",
+      "person": "Person"
+    },
+    "show": {
+      "mine": "Mine",
+      "unassigned": "Unassigned",
+      "overdue": "Overdue",
+      "week": "This week"
+    },
+    "dateGroup": {
+      "overdue": "Overdue",
+      "today": "Today",
+      "week": "This week",
+      "later": "Later",
+      "none": "No date"
+    },
+    "notAssigned": "Not assigned",
+    "personYou": "You",
+    "late_one": "{{count}} late",
+    "late_other": "{{count}} late",
+    "showEmpty": "Nothing here. Try another filter."
   },
   "search": {
     "title": "Search",

@@ -390,7 +390,31 @@
       "removeTitle": "¿Quitar a {{name}} de {{team}}?",
       "removeBody": "Deja de ver sus listas; sus tareas allí quedan sin asignar.",
       "removed": "Quitaste a {{name}}"
-    }
+    },
+    "groupBy": {
+      "title": "Agrupar por",
+      "date": "Fecha",
+      "list": "Lista",
+      "person": "Persona"
+    },
+    "show": {
+      "mine": "Mías",
+      "unassigned": "Sin asignar",
+      "overdue": "Vencidas",
+      "week": "Esta semana"
+    },
+    "dateGroup": {
+      "overdue": "Vencidas",
+      "today": "Hoy",
+      "week": "Esta semana",
+      "later": "Más adelante",
+      "none": "Sin fecha"
+    },
+    "notAssigned": "Sin asignar",
+    "personYou": "Tú",
+    "late_one": "{{count}} vencida",
+    "late_other": "{{count}} vencidas",
+    "showEmpty": "Nada por aquí. Prueba otro filtro."
   },
   "search": {
     "title": "Buscar",
