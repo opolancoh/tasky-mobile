@@ -14,12 +14,18 @@
         "UIDesignRequiresCompatibility": true,
         "ITSAppUsesNonExemptEncryption": false
       },
-      "bundleIdentifier": "com.ikobit.azignia"
+      "bundleIdentifier": "com.ikobit.azignia",
+      "icon": {
+        "light": "src/assets/images/icon.png",
+        "dark": "src/assets/images/icon-dark.png",
+        "tinted": "src/assets/images/icon-tinted.png"
+      }
     },
     "android": {
       "package": "com.ikobit.azignia",
       "adaptiveIcon": {
-        "foregroundImage": "src/assets/images/adaptive-icon.png"
+        "foregroundImage": "src/assets/images/adaptive-icon.png",
+        "monochromeImage": "src/assets/images/adaptive-icon-monochrome.png"
       }
     },
     "web": {
@@ -30,7 +36,11 @@
       [
         "expo-splash-screen",
         {
-          "image": "src/assets/images/splash-icon.png"
+          "image": "src/assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "dark": {
+            "image": "src/assets/images/splash-icon-dark.png"
+          }
         }
       ],
       "expo-font",
@@ -38,7 +48,13 @@
       "expo-status-bar",
       "expo-secure-store",
       "expo-localization",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "src/assets/images/notification-icon.png",
+          "color": "#0B6BCB"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

@@ -35,7 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   const plugins: ExpoConfig['plugins'] = (config.plugins ?? []).map((plugin) =>
     Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
-      ? (['expo-splash-screen', { ...plugin[1], backgroundColor: light.bg, dark: { backgroundColor: dark.bg } }] as [string, unknown])
+      ? (['expo-splash-screen', { ...plugin[1], backgroundColor: light.bg, dark: { ...plugin[1]?.dark, backgroundColor: dark.bg } }] as [string, unknown])
       : plugin,
   );
   plugins.push(['expo-build-properties', { android: { usesCleartextTraffic: cleartext } }]);
@@ -57,7 +57,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       ...config.android,
-      adaptiveIcon: { ...config.android?.adaptiveIcon, backgroundColor: light.accentGradient[1] },
+      adaptiveIcon: { ...config.android?.adaptiveIcon, backgroundColor: light.surface },   // the white tile behind the mark (A10)
       versionCode: major * 10000 + minor * 100 + patch,
     },
     plugins,
