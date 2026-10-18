@@ -33,7 +33,8 @@ export interface AssigneePickerProps {
 
 /**
  * Who a task is assigned to (M43, M44; Task detail and Quick add, on every list): the people who can see its list, you
- * first as "Me" (the only one on a private list or the Inbox), the current one checked with its status, and Unassign at
+ * first as "Me" (the only one on a private list or the Inbox), each with their open and late tasks (M79), the current one
+ * checked with its status, and Unassign at
  * the end. On Personal and the user's private lists there is also **Only this task**: someone picked by email sees that
  * task only, not the list (D70, D88, M45, M71), found by name among the people they work with or typed as an email (M73). A tap picks and goes back.
  */
@@ -50,12 +51,15 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
     <ScrollView keyboardShouldPersistTaps="handled">
       {people.map((m, i) => {
         const on = selected?.id === m.userId;
+        // Their workload under the name (M79): "6 open · 2 late", with the selected one's status first.
+        const load = m.openTasks ? [t('people.openCount', { count: m.openTasks }), m.overdueTasks ? t('people.lateCount', { count: m.overdueTasks }) : ''] : [];
+        const detail = [on && status ? t(`assign.status.${status}`) : '', ...load].filter(Boolean).join(' · ');
         return (
           <ListRow
             key={m.userId}
             label={m.userId === meId ? t('assign.me', { name: m.displayName }) : m.displayName}
             icon={<Avatar name={m.displayName} seed={m.userId} size={24} />}
-            value={on && status ? t(`assign.status.${status}`) : undefined}
+            detail={detail || undefined}
             selected={on}
             onPress={() => onPick({ id: m.userId, displayName: m.displayName })}
             divider={i < people.length - 1 || !!selected || canGiveOutside}

@@ -327,6 +327,9 @@ export interface Member {
   isGuest: boolean;
   isOutsider: boolean;
   joinedAt: string;
+  /** Workload (D90, M79): open tasks assigned to them in the team's lists (or the list without a team), and those overdue. */
+  openTasks: number;
+  overdueTasks: number;
 }
 
 /** An open invitation, as the people who invite see it (GET …/invitations). UTC ISO-8601. */

@@ -232,8 +232,9 @@
       "guest": "Guest"
     },
     "peopleCanInvite": "You can invite and remove people.",
-    "peopleTeamOwner": "You can invite people. Tap someone to change their role, make them the owner or remove them.",
-    "peopleTeamOnly": "The team’s owner and admins invite people.",
+    "peopleTeamOwner": "You can invite people. Tap someone to see their tasks; long press to change their role, make them the owner or remove them.",
+    "peopleTeamAdmin": "You can invite people. Tap someone to see their tasks; long press a member to remove them.",
+    "peopleTeamOnly": "Tap someone to see their tasks. The team’s owner and admins invite people.",
     "peopleOwnerOnly": "Only the owner invites people.",
     "inviteTeamHint": "They get an email and see every list in the team once they join. Invitations last 14 days.",
     "inviteListHint": "They get an email and see this list once they join. Invitations last 14 days.",
@@ -389,7 +390,8 @@
       "remove": "Remove from team",
       "removeTitle": "Remove {{name}} from {{team}}?",
       "removeBody": "They stop seeing its lists; their tasks there are unassigned.",
-      "removed": "Removed {{name}}"
+      "removed": "Removed {{name}}",
+      "manage": "Role and removal"
     },
     "groupBy": {
       "title": "Group by",
@@ -414,7 +416,9 @@
     "personYou": "You",
     "late_one": "{{count}} late",
     "late_other": "{{count}} late",
-    "showEmpty": "Nothing here. Try another filter."
+    "showEmpty": "Nothing here. Try another filter.",
+    "personTasks": "{{name}}’s tasks",
+    "yourTasks": "Your tasks"
   },
   "search": {
     "title": "Search",
@@ -843,6 +847,10 @@
     "noneFound": "No one found. Type their email to invite them.",
     "inviteByEmail": "Invite by email",
     "giveByEmail": "Give it by email",
-    "searching": "Searching"
+    "searching": "Searching",
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open",
+    "lateCount_one": "{{count}} late",
+    "lateCount_other": "{{count}} late"
   }
 }

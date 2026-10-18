@@ -62,8 +62,9 @@ type Item =
  * API (Person: everyone else, then the user, then Not assigned). Date pages as it scrolls, its headings added as rows arrive; List and Person load every page, 200 at a time. A task
  * with nobody on it in a list only the user sees counts as theirs. Headings fold.
  */
-export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string }>) {
-  const { kind, id } = route.params;
+export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string }>) {
+  // `person`: one person's tasks in a team (M79, from People), by date, no filter row; `personName` absent for the user.
+  const { kind, id, person, personName } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
@@ -82,7 +83,8 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const group = useAssignedByGroup((s) => s.byUser[userId] ?? 'person');
   const setGroup = useAssignedByGroup((s) => s.set);
   const given = kind === 'assignedBy';
-  const groupBy = useAllTasksGroup((s) => s.byUser[userId]?.[scope]) ?? defaultGroup(scope);
+  const chosen = useAllTasksGroup((s) => s.byUser[userId]?.[scope]) ?? defaultGroup(scope);
+  const groupBy: AllTasksGroup = person ? 'date' : chosen;
   const setGroupBy = useAllTasksGroup((s) => s.set);
   const [show, setShow] = useState<Show | null>(null);
   const [folded, setFolded] = useState<Record<string, boolean>>({});
@@ -107,7 +109,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     assignedBy: { assignedBy: 'me' as const },
     completed: { status: 'completed' as const },
     tag: { tag: id },
-    team: { teamId: id as Id, sort: 'due' as const, ...shown },
+    team: { teamId: id as Id, sort: 'due' as const, ...shown, ...(person ? { assignee: person } : {}) },
   }[kind];
   const pages = useTaskPages({ ...filter, limit: whole ? WHOLE_PAGE : PAGE });
   const lists = new Map((taskLists.data ?? []).map((c) => [c.id, c]));
@@ -149,7 +151,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const fold = (key: string) => setFolded((f) => ({ ...f, [key]: !f[key] }));
   const push = (key: string, ts: TaskSummary[]) => !folded[key] && ts.forEach((task) => items.push({ type: 'task', key: task.id, task }));
 
-  const title = kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
+  const title = person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
   const sub = t(`browse.listSub.${kind}`);
   const items: Item[] = [{ type: 'header', key: 'header' }];
   if (byDate) {
@@ -219,7 +221,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
                 <Segmented<Order> options={ORDERS.map((o) => ({ value: o, label: t(`browse.order.${o}`) }))} value={order} onChange={setOrder} accessibilityLabel={t('browse.order.label')} />
               </View>
             )}
-            {scoped && (!!loaded.length || !!show) && (
+            {scoped && !person && (!!loaded.length || !!show) && (
               <View style={{ marginTop: space.md }}>
                 <FilterStrip<Show>
                   groupLabel={t(`browse.groupBy.${groupBy}`)}
@@ -263,7 +265,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       case 'task':
         return kind === 'completed'
           ? <CompletedRow task={item.task} onPress={() => open(item.task)} />
-          : <TaskRow task={item.task} today={today} showDue showList={!listed} showAssignment={given} hideFace={(given && group === 'person') || byPerson} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+          : <TaskRow task={item.task} today={today} showDue showList={!listed} showAssignment={given} hideFace={(given && group === 'person') || byPerson || !!person} onComplete={(task) => complete.mutate(task)} onPress={open} />;
       case 'footer':
         return pages.isPending || (whole && pages.hasNextPage) ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>

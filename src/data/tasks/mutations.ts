@@ -30,16 +30,21 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: taskKeys.views });
       queryClient.invalidateQueries({ queryKey: taskKeys.taskLists });
       queryClient.invalidateQueries({ queryKey: taskKeys.tags });
+      queryClient.invalidateQueries({ queryKey: MEMBERS });
     },
   });
 }
 
-/** After any change to a task: every list and the task lists' counts are refetched. */
+/** Every team's and list's people, whose workload counts (M79) change with any task. */
+const MEMBERS = ['tasks', 'members'] as const;
+
+/** After any change to a task: every list, the task lists' counts and people's workload (M79) are refetched. */
 function useRefetchTasks() {
   const queryClient = useQueryClient();
   return () => {
     queryClient.invalidateQueries({ queryKey: taskKeys.views });
     queryClient.invalidateQueries({ queryKey: taskKeys.taskLists });
+    queryClient.invalidateQueries({ queryKey: MEMBERS });
   };
 }
 
@@ -57,10 +62,13 @@ function useTaskToggle(key: readonly string[], send: (task: TaskSummary) => Prom
     onMutate: (task: TaskSummary) => moveTask(queryClient, task, to),
     onSuccess: (saved) => settleTask(queryClient, saved),
     onError: (_error, _task, restore) => restore?.(),
-    onSettled: () => Promise.all([
-      queryClient.invalidateQueries({ queryKey: taskKeys.views }),
-      queryClient.invalidateQueries({ queryKey: taskKeys.taskLists }),
-    ]),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: MEMBERS });   // not awaited: the row waits only for its own lists
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskKeys.views }),
+        queryClient.invalidateQueries({ queryKey: taskKeys.taskLists }),
+      ]);
+    },
     meta: { toastError: true },
   });
 }

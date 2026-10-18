@@ -27,7 +27,8 @@ type Item =
 /**
  * A team's or a list's people (M38): everyone and their role (Guest for someone only in one of a team's lists). Those
  * who invite (a list's owner; a team's owner and admins) get Invite by email and the open invitations with Revoke.
- * Leave at the end for whoever may (asks first). In a team (M76), a manager taps someone for a sheet with what their role
+ * Leave at the end for whoever may (asks first). In a team, each person shows their open and late tasks there, and a tap
+ * opens those tasks (M79); a manager long-presses someone for a sheet with what their role
  * allows (roles doc): the owner makes them Admin or Member, makes them the owner (asks first; the owner becomes Admin) or
  * removes them; an admin removes members.
  */
@@ -105,6 +106,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
       removeIt,
     ];
   };
+  /** Their open tasks in this team (M79): All tasks filtered to them, by date. */
+  const openTasks = (m: Member) => navigation.navigate('BrowseList', { kind: 'team', id: of.id, person: m.userId, personName: m.userId === me?.id ? undefined : m.displayName });
   const openPerson = async (m: Member) => {
     const actions = personActions(m);
     const i = await chooseAction({ title: `${m.displayName} · ${roleOf(m)}`, actions, cancelLabel: cancel });
@@ -118,7 +121,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
           <View style={{ paddingBottom: space.sm, gap: space.xxs }}>
             {name ? <Text variant="label" color="ink3">{name}</Text> : null}
             <Text variant="title" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
-            <Text variant="subhead" color="ink2">{t(invites ? (team?.role === 'owner' && of.kind === 'team' ? 'browse.peopleTeamOwner' : 'browse.peopleCanInvite') : of.kind === 'team' ? 'browse.peopleTeamOnly' : 'browse.peopleOwnerOnly')}</Text>
+            <Text variant="subhead" color="ink2">{t(of.kind === 'team' ? (team?.role === 'owner' ? 'browse.peopleTeamOwner' : invites ? 'browse.peopleTeamAdmin' : 'browse.peopleTeamOnly') : invites ? 'browse.peopleCanInvite' : 'browse.peopleOwnerOnly')}</Text>
             {invites && <InviteField of={of} outsiders={outsiders} exclude={(members.data ?? []).map((m) => m.userId)} />}
             {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
             {(members.error || remove.error) && (
@@ -133,12 +136,34 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
       case 'member': {
         const m = item.member;
         const acts = personActions(m).length > 0;
+        const team = of.kind === 'team';
         return (
-          <Pressable onPress={() => openPerson(m)} disabled={!acts} accessibilityRole={acts ? 'button' : undefined} style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
+          <Pressable
+            onPress={team ? () => openTasks(m) : () => openPerson(m)}
+            onLongPress={team && acts ? () => openPerson(m) : undefined}
+            disabled={!team && !acts}
+            accessibilityRole={team || acts ? 'button' : undefined}
+            accessibilityActions={team && acts ? [{ name: 'longpress', label: t('browse.person.manage') }] : undefined}
+            onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && openPerson(m)}
+            style={({ pressed }) => [styles.row, { gap: space.md, borderBottomColor: colors.line, backgroundColor: pressed && (team || acts) ? colors.surface2 : 'transparent' }]}
+          >
             <Avatar name={m.displayName} seed={m.userId} />
-            <Text variant="body" numberOfLines={1} style={styles.fill}>{m.userId === me?.id ? t('browse.you', { name: m.displayName }) : m.displayName}</Text>
-            <Text variant="subhead" color="ink3">{roleOf(m)}</Text>
-            {acts && <Feather name="chevron-right" size={16} color={colors.ink3} />}
+            <View style={styles.fill}>
+              <Text variant="body" numberOfLines={1}>{m.userId === me?.id ? t('browse.you', { name: m.displayName }) : m.displayName}</Text>
+              {team && <Text variant="footnote" color="ink3">{roleOf(m)}</Text>}
+            </View>
+            {team ? (
+              // Workload (M79): open tasks in the team, late ones in red under; nothing when none.
+              m.openTasks > 0 && (
+                <View style={styles.load}>
+                  <Text variant="bodyMedium">{m.openTasks}</Text>
+                  {m.overdueTasks > 0 && <Text variant="caption" color="danger">{t('people.lateCount', { count: m.overdueTasks })}</Text>}
+                </View>
+              )
+            ) : (
+              <Text variant="subhead" color="ink3">{roleOf(m)}</Text>
+            )}
+            {(team || acts) && <Feather name="chevron-right" size={16} color={colors.ink3} />}
           </Pressable>
         );
       }
@@ -255,6 +280,7 @@ function InviteField({ of, outsiders, exclude }: { of: MembersOf; outsiders: Use
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  load: { alignItems: 'flex-end' },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   mail: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   leave: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },

@@ -232,8 +232,9 @@
       "guest": "Invitado"
     },
     "peopleCanInvite": "Puedes invitar y quitar personas.",
-    "peopleTeamOwner": "Puedes invitar personas. Toca a alguien para cambiar su rol, hacerlo propietario o quitarlo.",
-    "peopleTeamOnly": "El propietario y los administradores del equipo invitan.",
+    "peopleTeamOwner": "Puedes invitar personas. Toca a alguien para ver sus tareas; mantén pulsado para cambiar su rol, hacerlo propietario o quitarlo.",
+    "peopleTeamAdmin": "Puedes invitar personas. Toca a alguien para ver sus tareas; mantén pulsado a un miembro para quitarlo.",
+    "peopleTeamOnly": "Toca a alguien para ver sus tareas. El propietario y los administradores del equipo invitan personas.",
     "peopleOwnerOnly": "Solo el propietario invita.",
     "inviteTeamHint": "Reciben un correo y ven todas las listas del equipo al unirse. Las invitaciones duran 14 días.",
     "inviteListHint": "Reciben un correo y ven esta lista al unirse. Las invitaciones duran 14 días.",
@@ -389,7 +390,8 @@
       "remove": "Quitar del equipo",
       "removeTitle": "¿Quitar a {{name}} de {{team}}?",
       "removeBody": "Deja de ver sus listas; sus tareas allí quedan sin asignar.",
-      "removed": "Quitaste a {{name}}"
+      "removed": "Quitaste a {{name}}",
+      "manage": "Rol y eliminación"
     },
     "groupBy": {
       "title": "Agrupar por",
@@ -414,7 +416,9 @@
     "personYou": "Tú",
     "late_one": "{{count}} vencida",
     "late_other": "{{count}} vencidas",
-    "showEmpty": "Nada por aquí. Prueba otro filtro."
+    "showEmpty": "Nada por aquí. Prueba otro filtro.",
+    "personTasks": "Tareas de {{name}}",
+    "yourTasks": "Tus tareas"
   },
   "search": {
     "title": "Buscar",
@@ -843,6 +847,10 @@
     "noneFound": "No encontramos a nadie. Escribe su correo para invitarlo.",
     "inviteByEmail": "Invitar por correo",
     "giveByEmail": "Dársela por correo",
-    "searching": "Buscando"
+    "searching": "Buscando",
+    "openCount_one": "{{count}} abierta",
+    "openCount_other": "{{count}} abiertas",
+    "lateCount_one": "{{count}} vencida",
+    "lateCount_other": "{{count}} vencidas"
   }
 }
