@@ -57,7 +57,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
                   <Feather name="user-plus" size={21} color={colors.accent} />
                 </Pressable>
               )}
-              <Pressable onPress={() => teamMenu(team, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+              <Pressable onPress={() => teamMenu(team, () => navigation.goBack(), true)} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>
