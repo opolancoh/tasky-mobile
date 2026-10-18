@@ -32,6 +32,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     console.log(['Config OK', `  EXPO_PUBLIC_API_URL   ${apiUrl}`, `  EXPO_PUBLIC_HTTP_LOG  ${process.env.EXPO_PUBLIC_HTTP_LOG ?? 'all (default)'}`].join('\n'));
   }
   const cleartext = !!apiUrl?.startsWith('http://');
+  // ios.icon's light/dark/tinted object is for builds; the dev server (npx expo start) resolves ios.icon as one path for
+  // Expo Go's manifest and fails on the object, so Expo Go would show a blank icon. There the top-level icon is used.
+  const devServer = process.argv.includes('start');
+  const { icon: iosIcons, ...ios } = config.ios ?? {};
 
   const plugins: ExpoConfig['plugins'] = (config.plugins ?? []).map((plugin) =>
     Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
@@ -52,7 +56,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: config.name ?? 'Azignia',
     slug: config.slug ?? 'azignia',
     ios: {
-      ...config.ios,
+      ...ios,
+      ...(devServer ? {} : { icon: iosIcons }),
       infoPlist: { ...config.ios?.infoPlist, ...(cleartext ? { NSAppTransportSecurity: { NSAllowsArbitraryLoads: true } } : {}) },
     },
     android: {
