@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team,
+  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
   UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
@@ -54,6 +54,12 @@ export const tasksApi = {
 
   /** GET /teams/{id}/members or /task lists/{id}/members. */
   members: (of: MembersOf) => getAll<Member>(`${peopleOf(of)}/members`),
+
+  /** PATCH /teams/{id}/members/{userId}: make someone Admin or Member (owner; 204). */
+  changeTeamRole: (teamId: Id, userId: Id, role: Exclude<TeamRole, 'owner'>) => http().patch<void>(`/teams/${teamId}/members/${userId}`, { body: { role } }),
+
+  /** POST /teams/{id}:transfer-ownership with If-Match: another member becomes the owner, the caller Admin (owner). */
+  transferTeam: (team: Versioned, userId: Id) => http().post<Team>(`/teams/${team.id}:transfer-ownership`, { body: { userId }, ifMatch: team.version }),
 
   /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
   removeMember: (of: MembersOf, userId: Id) => http().delete(`${peopleOf(of)}/members/${userId}`),

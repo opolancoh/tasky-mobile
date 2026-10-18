@@ -223,12 +223,6 @@
     "reopen": "Reopen {{title}}",
     "allTasks": "All tasks",
     "teamGone": "You’re no longer in this team.",
-    "teamNoLists": "No lists yet. Tap + to add one.",
-    "youAre": {
-      "owner": "Your team",
-      "admin": "You’re an admin",
-      "member": "You’re a member"
-    },
     "peopleTitle": "People",
     "you": "{{name}} (you)",
     "role": {
@@ -237,10 +231,8 @@
       "member": "Member",
       "guest": "Guest"
     },
-    "allPeople": "All {{count}} people",
-    "allPeopleShort": "All people",
-    "inviteManage": "Invite and manage",
     "peopleCanInvite": "You can invite and remove people.",
+    "peopleTeamOwner": "You can invite people. Tap someone to change their role, make them the owner or remove them.",
     "peopleTeamOnly": "The team’s owner and admins invite people.",
     "peopleOwnerOnly": "Only the owner invites people.",
     "inviteTeamHint": "They get an email and see every list in the team once they join. Invitations last 14 days.",
@@ -378,7 +370,27 @@
       "keep_one": "Keep it as it is: only their task",
       "keep_other": "Keep them as they are: only their task"
     },
-    "loading": "Loading your lists"
+    "loading": "Loading your lists",
+    "noListsYet": "No lists yet",
+    "onlyYouHere": "Only you",
+    "invitePeople": "Invite people",
+    "teamEmptyBody": "Lists made here are shared with everyone in {{name}}.",
+    "teamEmptyAlone": "Lists made here are shared with everyone in {{name}}. Invite people to do them together.",
+    "person": {
+      "make": {
+        "admin": "Make admin",
+        "member": "Make member"
+      },
+      "makeOwner": "Make owner…",
+      "makeOwnerTitle": "Make {{name}} the owner?",
+      "makeOwnerBody": "You become an admin of {{team}}. Only the owner renames or deletes the team and changes roles.",
+      "makeOwnerConfirm": "Make owner",
+      "ownerNow": "{{name}} is the owner now",
+      "remove": "Remove from team",
+      "removeTitle": "Remove {{name}} from {{team}}?",
+      "removeBody": "They stop seeing its lists; their tasks there are unassigned.",
+      "removed": "Removed {{name}}"
+    }
   },
   "search": {
     "title": "Search",

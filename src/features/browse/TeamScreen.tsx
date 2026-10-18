@@ -1,96 +1,164 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
-import { useTaskLists, useMembers, useTeams } from '@/data/tasks/queries';
-import { useMe } from '@/data/tenancy/queries';
-import { Avatar } from '@/shared/components';
+import { useTaskLists, useTeams } from '@/data/tasks/queries';
+import type { TaskList } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, faint, ListRow, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { ColorDot, faint, Notice, Pill, Screen, Skeleton, SkeletonRow, Text, TextButton, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow } from './components/BrowseRow';
 
-/** People shown on the team page before All people. */
-const PEOPLE_PREVIEW = 3;
+type Item =
+  | { type: 'header'; key: string }
+  | { type: 'all'; key: string }
+  | { type: 'listsHead'; key: string }
+  | { type: 'list'; key: string; list: TaskList }
+  | { type: 'empty'; key: string }
+  | { type: 'skeleton'; key: string; width: number };
 
 /**
- * A team (M38, option A): All tasks (its count opens them), its lists in the user's order with + New list, and its
- * people (the first 3, then All people). ••• in the header has the team's menu by role.
+ * A team (M76, the hub's *Team screen*, option B; follows a list's top, M64): the title and one line, "3 lists · 4 people"
+ * (the people part opens People), then All tasks and the team's lists in the user's order with + New list. Nothing but
+ * GET /teams and GET /task-lists, both cached from Spaces: names load only in People. Add people beside ••• for the
+ * team's owner and admins; ••• opens the team's menu by role.
  */
 export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   const { teamId } = route.params;
   const { t } = useTranslation();
   const { colors, space, scheme } = useTheme();
   const navigation = useNavigation();
-  const me = useMe().data;
   const teams = useTeams();
   const team = teams.data?.find((x) => x.id === teamId);
-  const lists = (useTaskLists().data ?? []).filter((c) => c.team?.id === teamId);
-  const members = useMembers({ kind: 'team', id: teamId });
+  const taskLists = useTaskLists();
+  const lists = (taskLists.data ?? []).filter((c) => c.team?.id === teamId);
   const showSheet = useShowBrowseSheet();
   const { teamMenu, listMenu } = useBrowseMenus();
+  const manages = !!team && team.role !== 'member';
   const open = lists.reduce((n, c) => n + (c.openTasks ?? 0), 0);
+  const people = () => navigation.navigate('People', { kind: 'team', id: teamId });
+  const newList = () => showSheet({ kind: 'list', teamId });
+  const error = teams.error ?? taskLists.error;
+  const retry = () => { teams.refetch(); taskLists.refetch(); };
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: team
         ? () => (
-            <Pressable onPress={() => teamMenu(team, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
-              <Feather name="more-horizontal" size={22} color={colors.accent} />
-            </Pressable>
+            <View style={styles.headerRight}>
+              {manages && (
+                <Pressable onPress={people} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
+                  <Feather name="user-plus" size={21} color={colors.accent} />
+                </Pressable>
+              )}
+              <Pressable onPress={() => teamMenu(team, () => navigation.goBack())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+                <Feather name="more-horizontal" size={22} color={colors.accent} />
+              </Pressable>
+            </View>
           )
         : undefined,
     });
   });
 
-  if (!team) {
+  if (!team && !teams.isPending && !error) {
     return (
       <Screen edges={['bottom']}>
-        {teams.error ? <Notice>{errorMessage(teams.error)}</Notice> : teams.data ? <Text variant="subhead" color="ink2">{t('browse.teamGone')}</Text> : <SkeletonRow width={60} />}
+        <Text variant="subhead" color="ink2">{t('browse.teamGone')}</Text>
       </Screen>
     );
   }
 
-  const people = members.data ?? [];
-  const manages = team.role !== 'member';
+  const items: Item[] = [{ type: 'header', key: 'header' }];
+  if (!team || taskLists.isPending) {
+    if (!error) [62, 0, 58, 44, 66].forEach((width, i) => items.push(width ? { type: 'skeleton', key: `k${i}`, width } : { type: 'listsHead', key: 'listsHead' }));
+  } else if (lists.length) {
+    items.push({ type: 'all', key: 'all' }, { type: 'listsHead', key: 'listsHead' });
+    lists.forEach((list) => items.push({ type: 'list', key: list.id, list }));
+  } else items.push({ type: 'empty', key: 'empty' });
+
+  const renderItem = ({ item }: { item: Item }) => {
+    switch (item.type) {
+      case 'header':
+        return (
+          <View style={{ paddingBottom: space.md, gap: space.xxs }}>
+            {team ? (
+              <>
+                <Text variant="title" accessibilityRole="header" numberOfLines={2}>{team.name}</Text>
+                {!taskLists.isPending && (
+                  <View style={[styles.line, { gap: space.xs }]}>
+                    <Text variant="subhead" color="ink3">{lists.length ? t('browse.listCount', { count: lists.length }) : t('browse.noListsYet')}</Text>
+                    <Pressable onPress={people} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
+                      <Text variant="subhead" color="ink3">·</Text>
+                      <Feather name="users" size={14} color={colors.ink2} />
+                      <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{team.members > 1 ? t('browse.people', { count: team.members }) : t('browse.onlyYouHere')}</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </>
+            ) : !error && (
+              <View style={{ gap: space.sm, paddingTop: space.xs }}>
+                <Skeleton width={150} height={26} />
+                <Skeleton width={120} height={14} />
+              </View>
+            )}
+            {error && (
+              <View style={{ marginTop: space.md, gap: space.xs, alignItems: 'flex-start' }}>
+                <Notice>{errorMessage(error)}</Notice>
+                <TextButton label={t('common.retry')} onPress={retry} />
+              </View>
+            )}
+          </View>
+        );
+      case 'all':
+        return <BrowseRow label={t('browse.allTasks')} icon={<Feather name="list" size={17} color={colors.accent} />} count={open} onPress={() => navigation.navigate('BrowseList', { kind: 'team', id: teamId })} />;
+      case 'listsHead':
+        return (
+          <View style={[styles.section, { marginTop: space.xl }]}>
+            <Text variant="label" color="ink2" accessibilityRole="header" style={styles.fill}>{t('browse.lists')}</Text>
+            {team && (
+              <Pressable onPress={newList} accessibilityRole="button" accessibilityLabel={t('browse.menu.newListIn', { name: team.name })} style={styles.add}>
+                <Feather name="plus" size={20} color={colors.accent} />
+              </Pressable>
+            )}
+          </View>
+        );
+      case 'list': {
+        const c = item.list;
+        return <BrowseRow label={c.name} icon={<ColorDot color={c.color} size={10} />} tint={faint(c.color, scheme)} count={c.openTasks ?? 0}
+          onPress={() => navigation.navigate('TaskList', { taskListId: c.id })} onLongPress={() => listMenu(c)} />;
+      }
+      case 'empty':
+        return (
+          <View style={[styles.empty, { gap: space.xs, paddingVertical: space.huge }]}>
+            <Feather name="list" size={28} color={colors.accent} />
+            <Text variant="bodyMedium">{t('browse.noListsYet')}</Text>
+            <Text variant="footnote" color="ink3" style={styles.center}>{t(team!.members > 1 ? 'browse.teamEmptyBody' : 'browse.teamEmptyAlone', { name: team!.name })}</Text>
+            <View style={[styles.actions, { gap: space.sm, marginTop: space.md }]}>
+              <Pill label={t('browse.newList')} icon={<Feather name="plus" size={15} color={colors.accent} />} onPress={newList} />
+              {manages && team!.members === 1 && <Pill label={t('browse.invitePeople')} tone="quiet" icon={<Feather name="user-plus" size={15} color={colors.ink2} />} onPress={people} />}
+            </View>
+          </View>
+        );
+      case 'skeleton':
+        return <SkeletonRow width={item.width} />;
+    }
+  };
+
   return (
-    <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
-      <View style={{ paddingBottom: space.md, gap: space.xxs }}>
-        <Text variant="label" color="ink3">{t(`browse.youAre.${team.role}`)}</Text>
-        <Text variant="title" accessibilityRole="header">{team.name}</Text>
-        <Text variant="subhead" color="ink2">{`${t('browse.people', { count: team.members })} · ${t('browse.listCount', { count: lists.length })}`}</Text>
-      </View>
-
-      <BrowseRow label={t('browse.allTasks')} icon={<Feather name="list" size={17} color={colors.accent} />} count={open} onPress={() => navigation.navigate('BrowseList', { kind: 'team', id: teamId })} />
-
-      <View style={[styles.section, { marginTop: space.xl }]}>
-        <Text variant="label" color="ink2" accessibilityRole="header" style={styles.fill}>{t('browse.lists')}</Text>
-        <Pressable onPress={() => showSheet({ kind: 'list', teamId })} accessibilityRole="button" accessibilityLabel={t('browse.menu.newListIn', { name: team.name })} style={styles.add}>
-          <Feather name="plus" size={20} color={colors.accent} />
-        </Pressable>
-      </View>
-      {lists.length ? lists.map((c) => (
-        <BrowseRow key={c.id} label={c.name} icon={<ColorDot color={c.color} size={10} />} tint={faint(c.color, scheme)} count={c.openTasks ?? 0}
-          onPress={() => navigation.navigate('TaskList', { taskListId: c.id })} onLongPress={() => listMenu(c)} />
-      )) : <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{t('browse.teamNoLists')}</Text>}
-
-      <Text variant="label" color="ink2" accessibilityRole="header" style={{ marginTop: space.xl, marginBottom: space.xs }}>{t('browse.peopleTitle')}</Text>
-      {members.isPending ? <SkeletonRow width={50} /> : people.slice(0, PEOPLE_PREVIEW).map((m) => (
-        <View key={m.userId} style={[styles.person, { gap: space.md, borderBottomColor: colors.line }]}>
-          <Avatar name={m.displayName} seed={m.userId} />
-          <Text variant="body" numberOfLines={1} style={styles.fill}>{m.userId === me?.id ? t('browse.you', { name: m.displayName }) : m.displayName}</Text>
-          <Text variant="subhead" color="ink3">{t(`browse.role.${m.role}`)}</Text>
-        </View>
-      ))}
-      <ListRow
-        label={t(people.length > PEOPLE_PREVIEW ? 'browse.allPeople' : manages ? 'browse.inviteManage' : 'browse.allPeopleShort', { count: people.length })}
-        onPress={() => navigation.navigate('People', { kind: 'team', id: teamId })}
-        divider={false}
+    <Screen edges={['bottom']} contentStyle={styles.fill}>
+      <FlashList
+        data={items}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
+        getItemType={(item) => item.type}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: space.huge }}
       />
     </Screen>
   );
@@ -98,8 +166,14 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
+  line: { flexDirection: 'row', alignItems: 'center' },
+  who: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minHeight: 44 },
+  shrink: { flexShrink: 1 },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10, marginVertical: -6 },
-  person: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
+  empty: { alignItems: 'center' },
+  center: { textAlign: 'center', maxWidth: 280 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
 });

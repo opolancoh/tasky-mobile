@@ -223,12 +223,6 @@
     "reopen": "Reabrir {{title}}",
     "allTasks": "Todas las tareas",
     "teamGone": "Ya no estás en este equipo.",
-    "teamNoLists": "Aún no hay listas. Toca + para añadir una.",
-    "youAre": {
-      "owner": "Tu equipo",
-      "admin": "Eres administrador",
-      "member": "Eres miembro"
-    },
     "peopleTitle": "Personas",
     "you": "{{name}} (tú)",
     "role": {
@@ -237,10 +231,8 @@
       "member": "Miembro",
       "guest": "Invitado"
     },
-    "allPeople": "Las {{count}} personas",
-    "allPeopleShort": "Todas las personas",
-    "inviteManage": "Invitar y gestionar",
     "peopleCanInvite": "Puedes invitar y quitar personas.",
+    "peopleTeamOwner": "Puedes invitar personas. Toca a alguien para cambiar su rol, hacerlo propietario o quitarlo.",
     "peopleTeamOnly": "El propietario y los administradores del equipo invitan.",
     "peopleOwnerOnly": "Solo el propietario invita.",
     "inviteTeamHint": "Reciben un correo y ven todas las listas del equipo al unirse. Las invitaciones duran 14 días.",
@@ -378,7 +370,27 @@
       "keep_one": "Dejarla así: solo su tarea",
       "keep_other": "Dejarlos así: solo su tarea"
     },
-    "loading": "Cargando tus listas"
+    "loading": "Cargando tus listas",
+    "noListsYet": "Aún no hay listas",
+    "onlyYouHere": "Solo tú",
+    "invitePeople": "Invitar personas",
+    "teamEmptyBody": "Las listas que crees aquí se comparten con todos en {{name}}.",
+    "teamEmptyAlone": "Las listas que crees aquí se comparten con todos en {{name}}. Invita a personas para hacerlas juntos.",
+    "person": {
+      "make": {
+        "admin": "Hacer administrador",
+        "member": "Hacer miembro"
+      },
+      "makeOwner": "Hacer propietario…",
+      "makeOwnerTitle": "¿Hacer a {{name}} propietario?",
+      "makeOwnerBody": "Pasas a ser administrador de {{team}}. Solo el propietario cambia el nombre del equipo, lo elimina y cambia los roles.",
+      "makeOwnerConfirm": "Hacer propietario",
+      "ownerNow": "{{name}} es ahora el propietario",
+      "remove": "Quitar del equipo",
+      "removeTitle": "¿Quitar a {{name}} de {{team}}?",
+      "removeBody": "Deja de ver sus listas; sus tareas allí quedan sin asignar.",
+      "removed": "Quitaste a {{name}}"
+    }
   },
   "search": {
     "title": "Buscar",

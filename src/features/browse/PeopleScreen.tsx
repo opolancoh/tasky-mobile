@@ -6,12 +6,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
-import { useInvite, useInvitePeople, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
+import { useChangeTeamRole, useInvite, useInvitePeople, useRemoveMember, useRevokeInvitation, useTransferTeam } from '@/data/tasks/mutations';
 import { useTaskLists, useMembers, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation, Person, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
-import { errorMessage } from '@/shared/i18n/errors';
+import { errorMessage, toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
@@ -27,7 +27,9 @@ type Item =
 /**
  * A team's or a list's people (M38): everyone and their role (Guest for someone only in one of a team's lists). Those
  * who invite (a list's owner; a team's owner and admins) get Invite by email and the open invitations with Revoke.
- * Leave at the end for whoever may (asks first).
+ * Leave at the end for whoever may (asks first). In a team (M76), a manager taps someone for a sheet with what their role
+ * allows (roles doc): the owner makes them Admin or Member, makes them the owner (asks first; the owner becomes Admin) or
+ * removes them; an admin removes members.
  */
 export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
@@ -45,6 +47,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const open = useOpenInvitations(of, invites);
   const revoke = useRevokeInvitation(of);
   const remove = useRemoveMember();
+  const changeRole = useChangeTeamRole(of.id);
+  const transfer = useTransferTeam();
   const name = of.kind === 'team' ? team?.name : taskList?.name;
   // Sharing a private list that has tasks given outside it (D88, M71): the first invitation asks about those people.
   const privateList = !!taskList && taskList.sharing === 'private' && invites;
@@ -72,6 +76,40 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   if (leaves) items.push({ type: 'leave', key: 'leave' });
 
   const roleOf = (m: Member) => (m.isGuest ? t('browse.role.guest') : t(`browse.role.${m.role}`));
+  const cancel = t('common.cancel');
+
+  /** What the caller may do to someone in the team (roles doc); nothing on their own row or the owner's. */
+  const personActions = (m: Member) => {
+    if (!team || of.kind !== 'team' || m.userId === me?.id || m.role === 'owner' || team.role === 'member') return [];
+    const removeIt = {
+      label: t('browse.person.remove'),
+      icon: 'user-minus' as const,
+      destructive: true,
+      run: async () => {
+        const ok = await confirm({ title: t('browse.person.removeTitle', { name: m.displayName, team: team.name }), message: t('browse.person.removeBody'), confirmLabel: t('browse.person.remove'), cancelLabel: cancel });
+        if (ok) remove.mutate({ of, userId: m.userId }, { onSuccess: () => useToast.getState().show({ message: t('browse.person.removed', { name: m.displayName }) }), onError: toastError });
+      },
+    };
+    if (team.role === 'admin') return m.role === 'member' ? [removeIt] : [];
+    const role = m.role === 'admin' ? 'member' : 'admin';
+    return [
+      { label: t(`browse.person.make.${role}`), icon: 'user' as const, run: () => changeRole.mutate({ userId: m.userId, role }, { onError: toastError }) },
+      {
+        label: t('browse.person.makeOwner'),
+        icon: 'award' as const,
+        run: async () => {
+          const ok = await confirm({ title: t('browse.person.makeOwnerTitle', { name: m.displayName }), message: t('browse.person.makeOwnerBody', { team: team.name }), confirmLabel: t('browse.person.makeOwnerConfirm'), cancelLabel: cancel });
+          if (ok) transfer.mutate({ team, userId: m.userId }, { onSuccess: () => useToast.getState().show({ message: t('browse.person.ownerNow', { name: m.displayName }) }), onError: toastError });
+        },
+      },
+      removeIt,
+    ];
+  };
+  const openPerson = async (m: Member) => {
+    const actions = personActions(m);
+    const i = await chooseAction({ title: `${m.displayName} · ${roleOf(m)}`, actions, cancelLabel: cancel });
+    if (i !== null) actions[i].run();
+  };
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -80,7 +118,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
           <View style={{ paddingBottom: space.sm, gap: space.xxs }}>
             {name ? <Text variant="label" color="ink3">{name}</Text> : null}
             <Text variant="title" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
-            <Text variant="subhead" color="ink2">{t(invites ? 'browse.peopleCanInvite' : of.kind === 'team' ? 'browse.peopleTeamOnly' : 'browse.peopleOwnerOnly')}</Text>
+            <Text variant="subhead" color="ink2">{t(invites ? (team?.role === 'owner' && of.kind === 'team' ? 'browse.peopleTeamOwner' : 'browse.peopleCanInvite') : of.kind === 'team' ? 'browse.peopleTeamOnly' : 'browse.peopleOwnerOnly')}</Text>
             {invites && <InviteField of={of} outsiders={outsiders} exclude={(members.data ?? []).map((m) => m.userId)} />}
             {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
             {(members.error || remove.error) && (
@@ -94,12 +132,14 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
         return <Text variant="label" color="ink2" accessibilityRole="header" style={{ marginTop: space.xl, marginBottom: space.xs }}>{item.title}</Text>;
       case 'member': {
         const m = item.member;
+        const acts = personActions(m).length > 0;
         return (
-          <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
+          <Pressable onPress={() => openPerson(m)} disabled={!acts} accessibilityRole={acts ? 'button' : undefined} style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
             <Avatar name={m.displayName} seed={m.userId} />
             <Text variant="body" numberOfLines={1} style={styles.fill}>{m.userId === me?.id ? t('browse.you', { name: m.displayName }) : m.displayName}</Text>
             <Text variant="subhead" color="ink3">{roleOf(m)}</Text>
-          </View>
+            {acts && <Feather name="chevron-right" size={16} color={colors.ink3} />}
+          </Pressable>
         );
       }
       case 'invitation': {

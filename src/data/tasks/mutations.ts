@@ -7,7 +7,7 @@ import { tasksApi } from './api';
 import { taskKeys } from './keys';
 import { moveTask, settleTask, type Move } from './optimistic';
 import { assignTarget } from './types';
-import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, UpdateTaskListRequest, UpdateTaskRequest } from './types';
+import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
 /**
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
@@ -255,6 +255,28 @@ export function useRemoveMember() {
     mutationFn: ({ of, userId }: { of: MembersOf; userId: Id }) => tasksApi.removeMember(of, userId),
     onSettled: (_r, _e, { of }) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.members(of.kind, of.id) });
+      refetch();
+    },
+  });
+}
+
+/** Make someone in a team Admin or Member (the owner): its people refetch. */
+export function useChangeTeamRole(teamId: Id) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, role }: { userId: Id; role: Exclude<TeamRole, 'owner'> }) => tasksApi.changeTeamRole(teamId, userId, role),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.members('team', teamId) }),
+  });
+}
+
+/** Hand a team to another member (the owner becomes Admin): its people and the user's teams refetch (the role changed). */
+export function useTransferTeam() {
+  const queryClient = useQueryClient();
+  const refetch = useRefetchBrowse();
+  return useMutation({
+    mutationFn: ({ team, userId }: { team: Team; userId: Id }) => tasksApi.transferTeam(team, userId),
+    onSettled: (_r, _e, { team }) => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.members('team', team.id) });
       refetch();
     },
   });

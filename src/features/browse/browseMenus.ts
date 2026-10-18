@@ -89,7 +89,7 @@ export function useBrowseMenus() {
 
   const teamMenu = (team: Team, onGone?: () => void) => {
     const owner = team.role === 'owner';
-    return open(team.name, [
+    return open(`${team.name} · ${t(`browse.role.${team.role}`)}`, [
       { label: t(owner || team.role === 'admin' ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: 'users', run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
       { label: t('browse.menu.newListIn', { name: team.name }), icon: 'plus', run: () => showSheet({ kind: 'list', teamId: team.id }) },
       owner && { label: t('browse.menu.renameTeam'), icon: 'edit-2', run: () => showSheet({ kind: 'team', id: team.id }) },
