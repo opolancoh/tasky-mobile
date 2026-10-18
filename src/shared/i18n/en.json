@@ -377,7 +377,8 @@
       "invite_other": "Invite them too",
       "keep_one": "Keep it as it is: only their task",
       "keep_other": "Keep them as they are: only their task"
-    }
+    },
+    "loading": "Loading your lists"
   },
   "search": {
     "title": "Search",

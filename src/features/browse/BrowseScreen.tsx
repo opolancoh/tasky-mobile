@@ -11,12 +11,12 @@ import { useTaskLists, useTags, useTasks, useTeams } from '@/data/tasks/queries'
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, faint, Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
-import { BrowseRow, OwnerMark, SharedMark } from './components/BrowseRow';
+import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from './components/BrowseRow';
 import { useFoldedSections, type SpacesSection } from './foldedSectionsStore';
 
 type Group = 'mine' | 'shared' | 'tags';
@@ -29,6 +29,7 @@ type Item =
   | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'danger' | 'success' | 'quiet'; count?: number; onPress(): void }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
+  | { type: 'skeletonSection'; key: string }
   | { type: 'skeleton'; key: string; width: number };
 
 /** Over this many lists, teams and tags, a filter field shows under the title (M38). */
@@ -84,9 +85,12 @@ export function BrowseScreen() {
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
   const loading = taskLists.isPending || teams.isPending;
+  // The fixed rows wait together, as skeleton rows, until Personal and every count are in: no row without its number.
+  const fixedLoading = taskLists.isPending || [important, assigned, assignedBy, allTasks].some((q) => q.isPending);
+  const pushFixedSkeleton = () => [64, 52, 70, 66, 46].forEach((width) => items.push({ type: 'skeleton', key: `kf-${width}`, width }));
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
-  // After Personal: Important, Assigned to me, All tasks; their counts arrive on their own.
+  // After Personal: Important, Assigned to me, Assigned by me, All tasks, with their counts.
   const pushRows = () => {
     items.push(
       { type: 'nav', key: 'important', label: t('browse.important'), icon: 'flag', tone: 'danger', count: important.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
@@ -103,10 +107,14 @@ export function BrowseScreen() {
     items.push({ type: 'nav', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') });
   };
 
-  // Loading: the fixed rows and More at once; the sections wait as skeleton rows.
+  // Loading (M27, M70): every row waits as a skeleton shaped like it (tile, name, count): the five fixed rows, then two
+  // sections, each a heading and rows; More shows at once (no counts).
   if (loading) {
-    pushRows();
-    [70, 55, 62, 48].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
+    pushFixedSkeleton();
+    [[58, 72, 46, 64, 52, 68], [55, 40, 62]].forEach((widths, s) => {
+      items.push({ type: 'skeletonSection', key: `ks${s}` });
+      widths.forEach((width) => items.push({ type: 'skeleton', key: `k${s}-${width}`, width }));
+    });
     pushMore();
   } else if (query) {
     // Filtering: flat results, by kind.
@@ -119,7 +127,8 @@ export function BrowseScreen() {
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
     // Personal, Important, Assigned to me, Assigned by me, All tasks (M70, M71): always there, in this order.
-    if (!editing) {
+    if (!editing && fixedLoading) pushFixedSkeleton();
+    else if (!editing) {
       if (groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
       pushRows();
     }
@@ -281,8 +290,14 @@ export function BrowseScreen() {
         );
       case 'hint':
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
+      case 'skeletonSection':
+        return (
+          <View accessible={item.key === 'ks0'} accessibilityLabel={t('browse.loading')} style={{ marginTop: space.xl + 2, marginBottom: space.xs + 2 }}>
+            <Skeleton width={92} height={12} />
+          </View>
+        );
       case 'skeleton':
-        return <SkeletonRow width={item.width} />;
+        return <BrowseRowSkeleton width={item.width} />;
     }
   };
 

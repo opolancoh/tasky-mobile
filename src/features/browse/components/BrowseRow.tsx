@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { radius, Text, useTheme } from '@/shared/ui';
+import { radius, Skeleton, Text, useTheme } from '@/shared/ui';
 
 export interface BrowseRowProps {
   label: string;
@@ -55,6 +55,20 @@ export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPres
         </View>
       )}
     </Pressable>
+  );
+}
+
+/** A Spaces row being loaded (M27, M70): the tile, the name (`width`, in percent) and a short count, as tall as a row. */
+export function BrowseRowSkeleton({ width }: { width: number }) {
+  const { space } = useTheme();
+  return (
+    <View style={[styles.row, { gap: space.md }]}>
+      <Skeleton width={30} height={30} radius={radius.sm + 1} />
+      <View style={styles.label}>
+        <Skeleton width={`${width}%`} height={14} />
+      </View>
+      <Skeleton width={18} height={12} />
+    </View>
   );
 }
 

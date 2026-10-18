@@ -377,7 +377,8 @@
       "invite_other": "Invitarlos también",
       "keep_one": "Dejarla así: solo su tarea",
       "keep_other": "Dejarlos así: solo su tarea"
-    }
+    },
+    "loading": "Cargando tus listas"
   },
   "search": {
     "title": "Buscar",
