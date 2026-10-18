@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -26,6 +26,8 @@ type Item =
   | { type: 'header'; key: string }
   | { type: 'task'; key: string; task: TaskSummary }
   | { type: 'empty'; key: string }
+  | { type: 'heldHead'; key: string }
+  | { type: 'held'; key: string; task: TaskSummary }
   | { type: 'doneHead'; key: string }
   | { type: 'done'; key: string; task: TaskSummary }
   | { type: 'skeleton'; key: string; width: number };
@@ -38,7 +40,8 @@ type Item =
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
  * list on the device, its tasks fetched only while open, newest first, paged (D54). Who is in it (M44): "Shared with
  * Luis", "Family · 3 people", or on a private list "Only you · Ana and Luis have tasks" once tasks went to people outside
- * it (D70, M45); a tap opens People.
+ * it (D70, M45); a tap opens People. Tasks on hold (D91, M80) wait in their own section between the open tasks and
+ * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
  */
 export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>) {
   const { taskListId } = route.params;
@@ -53,6 +56,9 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const folded = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
   const doneCount = taskList?.completedTasks ?? 0;
   const showDone = doneCount > 0 && !folded;
+  const heldCount = taskList?.onHoldTasks ?? 0;
+  const [heldFolded, setHeldFolded] = useState(false);
+  const held = useTasks({ taskListId, status: 'onHold' }, heldCount > 0);
   const done = useTaskPages({ taskListId, status: 'completed', limit: 20 }, showDone);   // nothing fetched while folded
   const shared = !!taskList && taskList.sharing !== 'private';
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
@@ -98,6 +104,10 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   if (tasks.isPending) [70, 55, 62].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));
   else if (rows.length) rows.forEach((task) => items.push({ type: 'task', key: task.id, task }));
   else items.push({ type: 'empty', key: 'empty' });
+  if (!tasks.isPending && heldCount > 0) {
+    items.push({ type: 'heldHead', key: 'heldHead' });
+    if (!heldFolded) (held.data?.items ?? []).forEach((task) => items.push({ type: 'held', key: `h-${task.id}`, task }));
+  }
   if (!tasks.isPending && doneCount > 0) {
     items.push({ type: 'doneHead', key: 'doneHead' });
     if (showDone && done.isPending) [62, 48].forEach((width) => items.push({ type: 'skeleton', key: `dk${width}`, width }));
@@ -157,6 +167,16 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
             <Text variant="footnote" color="ink3">{t('browse.listEmptyBody')}</Text>
           </View>
         );
+      case 'heldHead':
+        return (
+          <Pressable onPress={() => setHeldFolded((f) => !f)} accessibilityRole="button" accessibilityState={{ expanded: !heldFolded }} style={[styles.doneHead, { gap: space.xs, marginTop: space.lg }]}>
+            <Feather name="chevron-right" size={16} color={colors.ink2} style={!heldFolded && styles.turned} />
+            <Text variant="label" color="ink2">{t('hold.section')}</Text>
+            <Text variant="label" color="ink3">{held.data?.total ?? heldCount}</Text>
+          </Pressable>
+        );
+      case 'held':
+        return <TaskRow task={item.task} today={today} showDue showList={false} onComplete={completeTask} onPress={open} />;
       case 'doneHead':
         return (
           <Pressable

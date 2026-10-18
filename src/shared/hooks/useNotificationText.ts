@@ -13,7 +13,7 @@ const ICONS: Record<Notification['kind'], Icon> = {
   assigned: 'user', reassigned: 'user', unassigned: 'user', assignmentAccepted: 'user-check', assignmentRejected: 'user-x', assignmentDropped: 'user-x',
   taskCompleted: 'check-circle', taskMoved: 'corner-up-right', taskRescheduled: 'calendar',
   invited: 'users', invitationAccepted: 'users', removed: 'users', roleChanged: 'users', ownershipReceived: 'key',
-  assignmentCompleted: 'check-circle', taskDeleted: 'trash-2',
+  assignmentCompleted: 'check-circle', taskDeleted: 'trash-2', taskHeld: 'pause-circle', taskResumed: 'play-circle',
 };
 
 /**
@@ -34,6 +34,7 @@ export function useNotificationText() {
     const line =
       n.kind === 'assignmentRejected' && n.details ? t('notifications.assignmentRejectedReason', { actor, task, reason: n.details })
       : n.kind === 'taskRescheduled' ? (n.details ? t('notifications.taskRescheduled', { actor, task, date: labels.day(n.details) }) : t('notifications.dueRemoved', { actor, task }))
+      : n.kind === 'taskHeld' && n.details ? t('notifications.taskHeldReason', { actor, task, reason: n.details })
       : n.kind === 'roleChanged' ? t('notifications.roleChanged', { actor, subject, role: t(n.details === 'admin' ? 'notifications.admin' : 'notifications.member') })
       : t(`notifications.${n.kind}`, { actor, task, subject, other });
 

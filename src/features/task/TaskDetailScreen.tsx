@@ -16,9 +16,10 @@ import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, CheckCircle, TaskListIcon, TagsRow } from '@/shared/components';
+import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { askReason, Button, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { askReason, Button, chooseAction, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { StepList } from './components/StepList';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
@@ -42,6 +43,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const holds = useHoldActions();
   const queryClient = useQueryClient();
   const me = useMe().data;
   const query = useTask(taskId);
@@ -136,7 +138,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const outside = !task.taskList;
   const fixed = outside ? ({ pointerEvents: 'none', accessibilityState: { disabled: true } } as const) : {};
   const completed = task.status === 'completed';
-  const overdue = !!fields.dueDate && fields.dueDate < today && !completed;
+  const held = task.status === 'onHold';
+  const overdue = !!fields.dueDate && fields.dueDate < today && !completed && !held;
 
   const when = (iso: string) =>
     t('taskDetail.at', {
@@ -163,6 +166,23 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           { toggle: true, run: (x) => tasksApi.complete(x), optimistic: (x) => (x.repeat ? x : { ...x, status: 'completed' }) },
           next ? t('taskDetail.nextOn', { date: labels.day(next) }) : undefined,
         );
+  // On hold (D91, M80): the banner's Resume, the pause icon's menu, Put on hold at the end; pending edits are saved first.
+  const resumeHeld = async () => {
+    if (await saveDraft()) holds.resumeTask(task);
+  };
+  const holdTask = async () => {
+    if (await saveDraft()) navigation.navigate('Hold', { taskId: task.id, mode: 'hold' });
+  };
+  const heldMenu = async () => {
+    const i = await chooseAction({
+      title: `${task.title} · ${t('hold.onHold')}`,
+      actions: [{ label: t('hold.resume'), icon: 'play' }, { label: t('hold.complete'), icon: 'check-circle' }, { label: t('hold.edit'), icon: 'edit-2' }],
+      cancelLabel: t('common.cancel'),
+    });
+    if (i === 0) resumeHeld();
+    if (i === 1) toggleComplete();
+    if (i === 2) holdTask();
+  };
   const skip = () => run({ run: (x) => tasksApi.skip(x), optimistic: (x) => ({ ...x, dueDate: next ?? x.dueDate }) }, next ? t('taskDetail.skipped', { date: labels.day(next) }) : undefined);
 
   // Asks first; deleted once the API agrees (unsaved edits go with it); then back with Undo (Recently Deleted keeps it 30 days).
@@ -230,7 +250,13 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
 
       <View {...locked}>
       <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, fields.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
-        <CheckCircle checked={completed} saving={toggling} onPress={toggleComplete} size={28} style={styles.checkSpot} label={t(completed ? 'taskDetail.reopen' : 'taskDetail.complete')} />
+        {held ? (
+          <Pressable onPress={heldMenu} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.checkSpot}>
+            <Feather name="pause-circle" size={28} color={colors.warn} />
+          </Pressable>
+        ) : (
+          <CheckCircle checked={completed} saving={toggling} onPress={toggleComplete} size={28} style={styles.checkSpot} label={t(completed ? 'taskDetail.reopen' : 'taskDetail.complete')} />
+        )}
         <TitleField completed={completed} editable={!outside} />
         <Pressable
           onPress={() => edit({ isImportant: !fields.isImportant })}
@@ -243,6 +269,24 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           <Feather name="flag" size={22} color={fields.isImportant ? colors.danger : colors.ink3} />
         </Pressable>
       </View>
+
+      {held && (
+        // The banner (M80): why it waits, until when, who paused it and who can resume it, and Resume.
+        <View style={[styles.assignment, styles.banner, { gap: space.md, padding: space.md, marginTop: space.md, backgroundColor: colors.warnSoft }]} accessibilityRole="summary">
+          <Feather name="pause-circle" size={20} color={colors.warn} />
+          <View style={styles.fill}>
+            <Text variant="bodyMedium">{task.holdReason ? t('hold.chip', { reason: task.holdReason }) : t('hold.onHold')}</Text>
+            <Text variant="caption" color="ink2">
+              {[
+                task.holdUntil ? t('hold.untilShort', { date: labels.day(task.holdUntil) }) : '',
+                task.heldBy ? t('hold.pausedBy', { name: task.heldBy.id === me.id ? t('hold.you') : task.heldBy.displayName }) : '',
+                task.resumer ? (task.resumer.id === me.id ? t('hold.youResume') : t('hold.canResume', { name: task.resumer.displayName })) : '',
+              ].filter(Boolean).join(' · ')}
+            </Text>
+          </View>
+          <Pill label={t('hold.resume')} onPress={resumeHeld} disabled={holds.busy || command.isPending} />
+        </View>
+      )}
 
       {task.awaitsConfirmation && (
         <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, marginTop: space.md, borderBottomColor: colors.line }]} accessibilityRole="summary">
@@ -391,6 +435,16 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         )}
       </View>
 
+      {!waiting && holds.canHold(task) && (
+        <Pressable onPress={holdTask} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
+          {({ pressed }) => (
+            <>
+              <Feather name="pause-circle" size={17} color={colors.ink2} />
+              <Text variant="bodyMedium" color="ink2" style={{ opacity: pressed ? 0.6 : 1 }}>{t('hold.put')}</Text>
+            </>
+          )}
+        </Pressable>
+      )}
       {!waiting && (
       <Pressable onPress={outside ? giveBack : deleteTask} disabled={remove.isPending || command.isPending} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
         {({ pressed }) => (
@@ -470,6 +524,7 @@ function NotesField() {
 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-start' },
+  banner: { borderRadius: 12, borderBottomWidth: 0 },
   /** The M24 red edge, left of the circle. */
   edge: { borderLeftWidth: 3, marginLeft: -13, paddingLeft: 10 },
   checkSpot: { marginTop: 4 },

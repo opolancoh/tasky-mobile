@@ -11,7 +11,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { AskRow, AssignedRow, FollowUpRow, InvitationRow, OverdueRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
+import { AskRow, AssignedRow, FollowUpRow, HoldRow, InvitationRow, OverdueRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
 
 type Item =
@@ -20,6 +20,7 @@ type Item =
   | { type: 'invitation'; key: string; invitation: MyInvitation }
   | { type: 'ask'; key: string; task: TaskSummary }
   | { type: 'follow'; key: string; task: TaskSummary }
+  | { type: 'hold'; key: string; task: TaskSummary }
   | { type: 'overdue'; key: string; task: TaskSummary }
   | { type: 'task'; key: string; task: TaskSummary; due?: boolean }
   | { type: 'assigned'; key: string; task: TaskSummary }
@@ -51,6 +52,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   const tasks = isUndated ? undatedTasks : homeTasks;
   const toAnswerDone = requests && tasks.isSuccess && !tasks.hasNextPage;
   const followUp = useHomeSection('follow-up', toAnswerDone);
+  const holds = useHomeSection('holds', requests && followUp.isSuccess && !followUp.hasNextPage);   // D91: after the follow-ups
   // Coming up's See all ends with Later: due after the next 7 days (M39), once the 7 days are all loaded.
   const coming = section === 'coming-up';
   const later = useTaskPages({ due: ['upcoming'], dueFrom: today ? addDays(today, 8) : undefined, sort: 'due', limit: HOME_PAGE }, coming && !!today && tasks.isSuccess && !tasks.hasNextPage);
@@ -59,13 +61,14 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
 
   const taskItems = tasks.data?.pages.flatMap((p) => p.items) ?? [];
   const followItems = requests ? (followUp.data?.pages.flatMap((p) => p.items) ?? []) : [];
+  const holdItems = requests ? (holds.data?.pages.flatMap((p) => p.items) ?? []) : [];
   const invitationItems = requests ? (invitations.data ?? []) : [];
 
-  const total = requests ? invitationItems.length + (tasks.data?.pages[0]?.total ?? 0) + (followUp.data?.pages[0]?.total ?? 0)
+  const total = requests ? invitationItems.length + (tasks.data?.pages[0]?.total ?? 0) + (followUp.data?.pages[0]?.total ?? 0) + (holds.data?.pages[0]?.total ?? 0)
     : coming && tasks.data?.pages[0]?.total != null ? tasks.data.pages[0].total + (later.data?.pages[0]?.total ?? 0)
     : tasks.data?.pages[0]?.total ?? undefined;
-  const shown = invitationItems.length + taskItems.length + followItems.length + laterItems.length;
-  const hasMore = requests ? !!tasks.hasNextPage || !followUp.isSuccess || !!followUp.hasNextPage : !!tasks.hasNextPage || (coming && (!later.isSuccess || !!later.hasNextPage));
+  const shown = invitationItems.length + taskItems.length + followItems.length + holdItems.length + laterItems.length;
+  const hasMore = requests ? !!tasks.hasNextPage || !followUp.isSuccess || !!followUp.hasNextPage || !holds.isSuccess || !!holds.hasNextPage : !!tasks.hasNextPage || (coming && (!later.isSuccess || !!later.hasNextPage));
   const loading = tasks.isPending;
   const error = tasks.error ?? followUp.error ?? invitations.error;
 
@@ -73,6 +76,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
     if (tasks.hasNextPage) {
       if (!tasks.isFetchingNextPage) tasks.fetchNextPage();
     } else if (requests && followUp.hasNextPage && !followUp.isFetchingNextPage) followUp.fetchNextPage();
+    else if (requests && holds.hasNextPage && !holds.isFetchingNextPage) holds.fetchNextPage();
     else if (coming && later.hasNextPage && !later.isFetchingNextPage) later.fetchNextPage();
   };
 
@@ -81,6 +85,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
     invitationItems.forEach((invitation) => items.push({ type: 'invitation', key: `v-${invitation.id}`, invitation }));
     taskItems.forEach((task) => items.push({ type: 'ask', key: `a-${task.id}`, task }));
     followItems.forEach((task) => items.push({ type: 'follow', key: `f-${task.id}`, task }));
+    holdItems.forEach((task) => items.push({ type: 'hold', key: `h-${task.id}`, task }));
   } else if (section === 'overdue') taskItems.forEach((task) => items.push({ type: 'overdue', key: `o-${task.id}`, task }));
   else if (section === 'assigned') taskItems.forEach((task) => items.push({ type: 'assigned', key: `g-${task.id}`, task }));
   else if (isUndated) taskItems.forEach((task) => items.push({ type: 'undated', key: `n-${task.id}`, task }));
@@ -131,6 +136,8 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
         return <AskRow task={item.task} today={today!} />;
       case 'follow':
         return <FollowUpRow task={item.task} />;
+      case 'hold':
+        return <HoldRow task={item.task} />;
       case 'overdue':
         return <OverdueRow task={item.task} today={today!} />;
       case 'task':

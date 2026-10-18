@@ -29,16 +29,16 @@ export type BrowseListKind = 'all' | 'important' | 'assigned' | 'assignedBy' | '
 type Order = 'due' | 'list' | 'created';
 /** All tasks, in Spaces and in a team (M78): grouped by Date, List or Person, and one filter at a time. */
 const ALL_GROUPS: AllTasksGroup[] = ['date', 'list', 'person'];
-type Show = 'mine' | 'unassigned' | 'overdue' | 'week';
-const SHOWS: Show[] = ['mine', 'unassigned', 'overdue', 'week'];
+type Show = 'mine' | 'unassigned' | 'overdue' | 'week' | 'onHold';
+const SHOWS: Show[] = ['mine', 'unassigned', 'overdue', 'week', 'onHold'];
 type DateGroup = 'overdue' | 'today' | 'week' | 'later' | 'none';
 const ORDERS: Order[] = ['due', 'list', 'created'];
 const GROUPS: AssignedByGroup[] = ['person', 'status'];
 
 /** Assigned by me's status groups (M71): what needs the user first. */
-type StatusGroup = 'needsYou' | 'pending' | 'accepted';
+type StatusGroup = 'needsYou' | 'onHold' | 'pending' | 'accepted';
 const statusGroup = (task: TaskSummary): StatusGroup =>
-  task.awaitsConfirmation || task.assignmentStatus === 'declined' ? 'needsYou' : task.assignmentStatus === 'pending' ? 'pending' : 'accepted';
+  task.awaitsConfirmation || task.assignmentStatus === 'declined' ? 'needsYou' : task.status === 'onHold' ? 'onHold' : task.assignmentStatus === 'pending' ? 'pending' : 'accepted';
 const needsYou = (task: TaskSummary) => statusGroup(task) === 'needsYou';
 
 const PAGE = 20;
@@ -101,6 +101,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     unassigned: { assignee: 'none' },
     overdue: { due: ['overdue' as const] },
     week: weekEnd ? { dueTo: weekEnd } : {},
+    onHold: { status: 'onHold' as const },   // D91: the whole set, not paged
   }[show];
   const filter: TaskFilter = {
     all: { sort: 'due' as const, ...shown },
@@ -142,7 +143,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   });
 
   const dateGroup = (task: TaskSummary): DateGroup =>
-    !task.dueDate || !today ? 'none' : task.dueDate < today ? 'overdue' : task.dueDate === today ? 'today' : weekEnd && task.dueDate <= weekEnd ? 'week' : 'later';
+    !task.dueDate || !today ? 'none' : task.dueDate < today ? (task.status === 'onHold' ? 'later' : 'overdue') : task.dueDate === today ? 'today' : weekEnd && task.dueDate <= weekEnd ? 'week' : 'later';
   const meId = me?.id;
   const chooseGroup = async () => {
     const i = await chooseAction({ title: t('browse.groupBy.title'), actions: ALL_GROUPS.map((g) => ({ label: t(`browse.groupBy.${g}`), selected: g === groupBy })), cancelLabel: t('common.cancel') });
@@ -197,7 +198,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         first(ts).forEach((task) => items.push({ type: 'task', key: task.id, task }));
       });
     } else {
-      (['needsYou', 'pending', 'accepted'] as const).forEach((g) => {
+      (['needsYou', 'onHold', 'pending', 'accepted'] as const).forEach((g) => {
         const ts = tasks.filter((task) => statusGroup(task) === g);
         if (!ts.length) return;
         items.push({ type: 'group', key: `s-${g}`, name: t(`browse.assignedByGroup.${g}`), color: '', count: ts.length });

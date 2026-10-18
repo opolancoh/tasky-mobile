@@ -27,6 +27,8 @@ export interface TaskList {
   openTasks?: number;
   /** Completed tasks in it (GET /task-lists): a list offers Show completed only when there are some. */
   completedTasks?: number;
+  /** Tasks on hold in it (D91): its On hold section shows only when there are some. */
+  onHoldTasks?: number;
 }
 
 /**
@@ -118,7 +120,8 @@ export interface Reminder {
   time: string;
 }
 
-export type TaskStatus = 'open' | 'completed';
+/** `onHold` (D91): can't go on for now, with a reason; only on shared and team lists. */
+export type TaskStatus = 'open' | 'completed' | 'onHold';
 /** Declined stays on the task, with the reason, until whoever assigned it decides (D71). */
 export type AssignmentStatus = 'pending' | 'accepted' | 'declined';
 
@@ -155,6 +158,12 @@ export interface Task {
   updatedAt?: string | null;
   updatedBy?: UserRef | null;
   version: Version;
+  /** On hold (D91): why, until when, who paused it and when, who is told to resume it. */
+  holdReason?: string | null;
+  holdUntil?: LocalDate | null;
+  heldBy?: UserRef | null;
+  heldAt?: string | null;
+  resumer?: UserRef | null;
 }
 
 /** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `declineReason`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
@@ -180,6 +189,10 @@ export interface TaskSummary {
   version: Version;
   /** The caller's own reminder (D67): the Today tab shows its time. */
   reminder?: Reminder | null;
+  /** On hold (D91): why it waits, until when, who can resume it. */
+  holdReason?: string | null;
+  holdUntil?: LocalDate | null;
+  resumer?: UserRef | null;
 }
 
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
@@ -274,7 +287,7 @@ export interface MyInvitation {
 }
 
 /** Home's task sections (GET /home/{section}, D67, D86). */
-export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'assigned' | 'important' | 'inbox';
+export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'assigned' | 'important' | 'inbox' | 'holds';
 
 /** GET /home (D67, D69, D86): Home's invitations, each section's first page, and the totals behind its cards. */
 export interface Home {
@@ -293,6 +306,8 @@ export interface Home {
   inboxTotal: number;
   /** Every open task the caller can see; 0 with nothing to answer is a new user's first day (M51). */
   openTotal: number;
+  /** Tasks on hold whose Until has come, for the caller to resume (D91): with Requests. */
+  holds: TaskPage;
 }
 
 export type TeamRole = 'owner' | 'admin' | 'member';

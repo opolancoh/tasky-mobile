@@ -33,6 +33,7 @@ import { TimeZoneScreen } from '@/features/me/TimeZoneScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
+import { HoldScreen } from '@/features/task/HoldScreen';
 import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
 import i18n from '@/shared/i18n/i18n';
 import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/session/SessionProvider';
@@ -96,6 +97,8 @@ const RootStack = createNativeStackNavigator({
         // Titled after the open tab, so a pushed screen's back button reads "‹ Today".
         Tabs: { screen: Tabs, options: ({ route }) => ({ title: i18n.t(`tabs.${tabKey(getFocusedRouteNameFromRoute(route) ?? 'Today')}`) }) },
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
+        // On hold, the long way (M80): a reason, Until, who can resume it; or Resume with a new date.
+        Hold: { screen: HoldScreen, options: { headerShown: true } },
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },

@@ -361,7 +361,8 @@
       "status": "Estado",
       "needsYou": "Te necesitan",
       "pending": "Pendientes",
-      "accepted": "Aceptadas"
+      "accepted": "Aceptadas",
+      "onHold": "En espera"
     },
     "shareOutside": {
       "title_one": "{{names}} tiene una tarea en esta lista",
@@ -403,7 +404,8 @@
       "mine": "Mías",
       "unassigned": "Sin asignar",
       "overdue": "Vencidas",
-      "week": "Esta semana"
+      "week": "Esta semana",
+      "onHold": "En espera"
     },
     "dateGroup": {
       "overdue": "Vencidas",
@@ -654,7 +656,10 @@
     "roleChanged": "{{actor}} te hizo {{role}} de {{subject}}",
     "ownershipReceived": "Ahora eres dueño de {{subject}}",
     "assignmentCompleted": "{{actor}} completó {{task}}",
-    "taskDeleted": "{{actor}} eliminó {{task}}"
+    "taskDeleted": "{{actor}} eliminó {{task}}",
+    "taskHeld": "{{actor}} puso {{task}} en espera",
+    "taskHeldReason": "{{actor}} puso {{task}} en espera: {{reason}}",
+    "taskResumed": "{{actor}} reanudó {{task}}"
   },
   "invitation": {
     "invitedYou": "{{name}} te invitó",
@@ -852,5 +857,44 @@
     "openCount_other": "{{count}} abiertas",
     "lateCount_one": "{{count}} vencida",
     "lateCount_other": "{{count}} vencidas"
+  },
+  "hold": {
+    "onHold": "En espera",
+    "section": "En espera",
+    "put": "Poner en espera",
+    "edit": "Editar el motivo",
+    "title": "Poner “{{title}}” en espera",
+    "reason": {
+      "waiting": "Esperando a alguien",
+      "decision": "Falta una decisión",
+      "notNow": "Ahora no"
+    },
+    "other": "Otro motivo…",
+    "more": "Hasta cuándo o quién la reanuda…",
+    "held": "En espera: {{title}}",
+    "saved": "Guardado",
+    "resumed": "Reanudada: {{title}}",
+    "resume": "Reanudar",
+    "complete": "Completar",
+    "menuLabel": "{{title}}, en espera",
+    "chip": "En espera · {{reason}}",
+    "untilShort": "Hasta el {{date}}",
+    "canResume": "{{name}} puede reanudarla",
+    "youResume": "Puedes reanudarla",
+    "pausedBy": "pausada por {{name}}",
+    "you": "ti",
+    "duePassed": "La fecha {{date}} ya pasó",
+    "keepDate": "Mantener {{date}}",
+    "newDate": "Elegir otra fecha",
+    "why": "¿Por qué?",
+    "whyHint": "Qué la detiene",
+    "options": "Opcional",
+    "until": "Hasta",
+    "none": "Ninguna",
+    "resumer": "Puede reanudarla",
+    "anyone": "Cualquiera en la lista",
+    "optionsHint": "No se reanuda sola: ese día, quien puede reanudarla la ve en Solicitudes de Inicio. A quien elijas se le avisa.",
+    "untilToday": "En espera hasta hoy",
+    "untilTodayWhy": "En espera hasta hoy · {{reason}}"
   }
 }

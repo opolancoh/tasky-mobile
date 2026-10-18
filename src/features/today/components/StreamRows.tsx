@@ -8,6 +8,7 @@ import type { Id, LocalDate } from '@/core/types';
 import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
 
@@ -136,6 +137,23 @@ export function FollowUpRow({ task }: { task: TaskSummary }) {
       sub={<Text variant="footnote" color={declined ? 'danger' : 'success'}>{t(declined ? 'today.declinedBy' : 'today.completedBy', { name: who.split(' ')[0] })}</Text>}
       onPress={() => open(task)}
       action={declined ? undefined : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />}
+    />
+  );
+}
+
+/** A task on hold whose Until has come, for the caller to resume (D91, M80): why it waits, and Resume. */
+export function HoldRow({ task }: { task: TaskSummary }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const open = useOpenTask();
+  const holds = useHoldActions();
+  return (
+    <StreamRow
+      lead={<Feather name="pause-circle" size={24} color={colors.warn} />}
+      title={task.title}
+      sub={<Text variant="footnote" style={{ color: colors.warn }} numberOfLines={1}>{task.holdReason ? t('hold.untilTodayWhy', { reason: task.holdReason }) : t('hold.untilToday')}</Text>}
+      onPress={() => open(task)}
+      action={<Pill label={t('hold.resume')} onPress={() => holds.resumeTask(task)} disabled={holds.busy} />}
     />
   );
 }

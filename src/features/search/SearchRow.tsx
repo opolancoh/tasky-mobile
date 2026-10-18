@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
 import { CheckCircle, TaskOrigin, useTaskCheck } from '@/shared/components';
+import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { Text, useTheme } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
@@ -15,7 +16,8 @@ export const searchWords = (q: string) => fold(q).split(/[^\p{L}\p{N}]+/u).filte
 
 /**
  * A search result (M40): the circle (completes an open task; a completed one shows its check and reopens), the title with
- * the words found in bold, its list, and "Completed" for a completed one.
+ * the words found in bold, its list, and "Completed" for a completed one. On hold (D91, M80): the pause icon (Resume,
+ * Complete, Edit the reason) and "· On hold".
  */
 export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: string[]; onPress(): void }) {
   const { t } = useTranslation();
@@ -24,6 +26,8 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
   const reopen = useReopenTask();
   // The circle follows the task: the toggle changes it in the search results at once (M75), and back if the API says no.
   const done = task.status === 'completed';
+  const held = task.status === 'onHold';
+  const holds = useHoldActions();
   const { saving, tap: toggle } = useTaskCheck(task, (x) => (x.status === 'completed' ? reopen.mutate(x) : complete.mutate(x)));
   // The title in pieces: a word that starts with a searched word is bold.
   const parts = task.title.split(/([\p{L}\p{N}]+)/u);
@@ -31,7 +35,13 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
     <Pressable onPress={onPress} disabled={saving} accessibilityRole="button" accessibilityState={{ busy: saving }}>
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          <CheckCircle checked={done} saving={saving} onPress={toggle} label={t(done ? 'search.reopen' : 'taskRow.complete', { title: task.title })} />
+          {held ? (
+            <Pressable onPress={() => holds.heldMenu(task)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.pause}>
+              <Feather name="pause-circle" size={22} color={colors.warn} />
+            </Pressable>
+          ) : (
+            <CheckCircle checked={done} saving={saving} onPress={toggle} label={t(done ? 'search.reopen' : 'taskRow.complete', { title: task.title })} />
+          )}
           <View style={styles.main}>
             <Text variant="body" numberOfLines={2} color={done ? 'ink3' : 'ink'}>
               {parts.map((p, i) =>
@@ -41,6 +51,7 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
             <View style={[styles.meta, { gap: space.xs }]}>
               <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
               {done && <Text variant="footnote" color="ink3">· {t('search.completed')}</Text>}
+              {held && <Text variant="footnote" style={{ color: colors.warn }}>· {t('hold.onHold')}</Text>}
               {task.isImportant && !done && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
             </View>
           </View>
@@ -55,5 +66,6 @@ const styles = StyleSheet.create({
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', alignItems: 'center' },
   shrink: { flexShrink: 1 },
-  flag: { marginLeft: 6 },   // important: the last item of the meta line (M44)
+  flag: { marginLeft: 6 },
+  pause: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },   // important: the last item of the meta line (M44)
 });

@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 
 import { Text, useTheme } from '@/shared/ui';
 
-/** Save in the header of a settings page (M26's place for the screen's one action): enabled when `enabled`, a spinner while saving. */
+/** Save in the header of a page with one action (settings, Put on hold) (M26's place for the screen's one action): enabled when `enabled`, a spinner while saving. */
 export function useHeaderSave(onSave: () => void, enabled: boolean, busy: boolean) {
   const { t } = useTranslation();
   const { colors } = useTheme();

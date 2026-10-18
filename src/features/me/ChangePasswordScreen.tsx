@@ -11,7 +11,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { Notice, RuleCheck, Screen, Text, TextField, useTheme, useToast } from '@/shared/ui';
 
-import { useHeaderSave } from './useHeaderSave';
+import { useHeaderSave } from '@/shared/hooks/useHeaderSave';
 
 /**
  * Settings › Change password (M41): the current one, then the new one with its rule checked as you type. Save in the

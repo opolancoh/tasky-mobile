@@ -17,7 +17,9 @@ export type NotificationKind =
   | 'roleChanged'
   | 'ownershipReceived'
   | 'assignmentCompleted'
-  | 'taskDeleted';
+  | 'taskDeleted'
+  | 'taskHeld'
+  | 'taskResumed';
 
 /**
  * One notification (GET /notifications). Names are read when listed, so a renamed task shows its current title;

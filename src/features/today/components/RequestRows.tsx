@@ -8,10 +8,10 @@ import type { Home } from '@/data/tasks/types';
 import { Text, useTheme, useToast } from '@/shared/ui';
 
 import { useHomeDismissed } from '../homeDismissedStore';
-import { AskRow, FollowUpRow, InvitationRow } from './StreamRows';
+import { AskRow, FollowUpRow, HoldRow, InvitationRow } from './StreamRows';
 
-/** A request on Home (M65): an invitation (`v-`), an assignment to answer (`a-`) or a follow-up (`f-`, D71). */
-export type Request = { key: string } & ({ kind: 'invitation'; invitation: Home['invitations'][number] } | { kind: 'ask' | 'follow'; task: Home['toAnswer']['items'][number] });
+/** A request on Home (M65): an invitation (`v-`), an assignment to answer (`a-`), a follow-up (`f-`, D71) or a hold whose Until came (`h-`, D91). */
+export type Request = { key: string } & ({ kind: 'invitation'; invitation: Home['invitations'][number] } | { kind: 'ask' | 'follow' | 'hold'; task: Home['toAnswer']['items'][number] });
 
 /** Home's requests in order (invitations, answers, follow-ups), less the ones dismissed, and how many are left in all. */
 export function homeRequests(data: Home, dismissed: string[]) {
@@ -19,8 +19,9 @@ export function homeRequests(data: Home, dismissed: string[]) {
     ...data.invitations.map((invitation) => ({ key: `v-${invitation.id}`, kind: 'invitation' as const, invitation })),
     ...data.toAnswer.items.map((task) => ({ key: `a-${task.id}`, kind: 'ask' as const, task })),
     ...data.followUp.items.map((task) => ({ key: `f-${task.id}`, kind: 'follow' as const, task })),
+    ...(data.holds?.items ?? []).map((task) => ({ key: `h-${task.id}`, kind: 'hold' as const, task })),
   ];
-  const total = data.invitations.length + (data.toAnswer.total ?? 0) + (data.followUp.total ?? 0);
+  const total = data.invitations.length + (data.toAnswer.total ?? 0) + (data.followUp.total ?? 0) + (data.holds?.total ?? 0);
   const shown = all.filter((r) => !dismissed.includes(r.key));
   return { total, shown, left: total - (all.length - shown.length) };
 }
@@ -69,6 +70,7 @@ export function RequestRow({ userId, request, today }: { userId: string; request
       <View style={{ backgroundColor: colors.bg }}>
         {request.kind === 'invitation' ? <InvitationRow invitation={request.invitation} />
           : request.kind === 'ask' ? <AskRow task={request.task} today={today} />
+          : request.kind === 'hold' ? <HoldRow task={request.task} />
           : <FollowUpRow task={request.task} />}
       </View>
     </Swipe>

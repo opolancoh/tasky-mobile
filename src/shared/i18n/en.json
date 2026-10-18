@@ -361,7 +361,8 @@
       "status": "Status",
       "needsYou": "Needs you",
       "pending": "Pending",
-      "accepted": "Accepted"
+      "accepted": "Accepted",
+      "onHold": "On hold"
     },
     "shareOutside": {
       "title_one": "{{names}} has a task in this list",
@@ -403,7 +404,8 @@
       "mine": "Mine",
       "unassigned": "Unassigned",
       "overdue": "Overdue",
-      "week": "This week"
+      "week": "This week",
+      "onHold": "On hold"
     },
     "dateGroup": {
       "overdue": "Overdue",
@@ -654,7 +656,10 @@
     "roleChanged": "{{actor}} made you {{role}} of {{subject}}",
     "ownershipReceived": "You're now the owner of {{subject}}",
     "assignmentCompleted": "{{actor}} completed {{task}}",
-    "taskDeleted": "{{actor}} deleted {{task}}"
+    "taskDeleted": "{{actor}} deleted {{task}}",
+    "taskHeld": "{{actor}} put {{task}} on hold",
+    "taskHeldReason": "{{actor}} put {{task}} on hold: {{reason}}",
+    "taskResumed": "{{actor}} resumed {{task}}"
   },
   "invitation": {
     "invitedYou": "{{name}} invited you",
@@ -852,5 +857,44 @@
     "openCount_other": "{{count}} open",
     "lateCount_one": "{{count}} late",
     "lateCount_other": "{{count}} late"
+  },
+  "hold": {
+    "onHold": "On hold",
+    "section": "On hold",
+    "put": "Put on hold",
+    "edit": "Edit the reason",
+    "title": "Put “{{title}}” on hold",
+    "reason": {
+      "waiting": "Waiting on someone",
+      "decision": "Needs a decision",
+      "notNow": "Not now"
+    },
+    "other": "Other reason…",
+    "more": "Until or who resumes it…",
+    "held": "On hold: {{title}}",
+    "saved": "Saved",
+    "resumed": "Resumed: {{title}}",
+    "resume": "Resume",
+    "complete": "Complete",
+    "menuLabel": "{{title}}, on hold",
+    "chip": "On hold · {{reason}}",
+    "untilShort": "Until {{date}}",
+    "canResume": "{{name}} can resume it",
+    "youResume": "You can resume it",
+    "pausedBy": "paused by {{name}}",
+    "you": "you",
+    "duePassed": "Due {{date}} has passed",
+    "keepDate": "Keep {{date}}",
+    "newDate": "Pick a new date",
+    "why": "Why?",
+    "whyHint": "What’s stopping it",
+    "options": "Optional",
+    "until": "Until",
+    "none": "None",
+    "resumer": "Can resume it",
+    "anyone": "Anyone in the list",
+    "optionsHint": "It doesn’t resume by itself: on that day, whoever can resume it sees it in Home’s Requests. Whoever you pick is told.",
+    "untilToday": "On hold until today",
+    "untilTodayWhy": "On hold until today · {{reason}}"
   }
 }

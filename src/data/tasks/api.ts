@@ -113,6 +113,13 @@ export const tasksApi = {
   /** POST /tasks/{id}:complete with If-Match. A repeating task stays open on its next due date. */
   complete: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:complete`, { ifMatch: task.version }),
 
+  /** POST /tasks/{id}:hold with If-Match (D91): put on hold, or change why, until when and who resumes it. */
+  hold: (task: Versioned, body: { reason: string; until?: LocalDate | null; resumerId?: Id | null }) =>
+    http().post<Task>(`/tasks/${task.id}:hold`, { body, ifMatch: task.version }),
+
+  /** POST /tasks/{id}:resume with If-Match (D91): back to Open, optionally with a new due date. */
+  resume: (task: Versioned, dueDate?: LocalDate) => http().post<Task>(`/tasks/${task.id}:resume`, { body: dueDate ? { dueDate } : {}, ifMatch: task.version }),
+
   /** POST /tasks/{id}:reopen with If-Match. */
   reopen: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:reopen`, { ifMatch: task.version }),
 

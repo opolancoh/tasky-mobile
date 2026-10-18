@@ -85,6 +85,32 @@ export function useUpdateTask() {
   return useMutation({ mutationFn: ({ task, body }: { task: TaskSummary; body: UpdateTaskRequest }) => tasksApi.update(task, body), onSettled: refetch });
 }
 
+/**
+ * On hold (D91): put a task on hold (or change why, until when, who resumes it), or resume it, optionally with a new due
+ * date. Not optimistic: the row moves between the open tasks and the On hold section when the lists refetch; Task detail
+ * gets the answer at once.
+ */
+export function useHoldTask() {
+  const queryClient = useQueryClient();
+  const refetch = useRefetchTasks();
+  return useMutation({
+    mutationFn: ({ task, reason, until, resumerId }: { task: Pick<Task, 'id' | 'version'>; reason: string; until?: string | null; resumerId?: Id | null }) =>
+      tasksApi.hold(task, { reason, until: until ?? null, resumerId: resumerId ?? null }),
+    onSuccess: (task) => queryClient.setQueryData(taskKeys.detail(task.id), task),
+    onSettled: refetch,
+  });
+}
+
+export function useResumeTask() {
+  const queryClient = useQueryClient();
+  const refetch = useRefetchTasks();
+  return useMutation({
+    mutationFn: ({ task, dueDate }: { task: Pick<Task, 'id' | 'version'>; dueDate?: string }) => tasksApi.resume(task, dueDate),
+    onSuccess: (task) => queryClient.setQueryData(taskKeys.detail(task.id), task),
+    onSettled: refetch,
+  });
+}
+
 /** Accept or reject a task assigned to the caller (while Pending). */
 export function useAnswerAssignment() {
   const refetch = useRefetchTasks();

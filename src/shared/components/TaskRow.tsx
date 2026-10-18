@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { LocalDate } from '@/core/types';
 import { useConfirmTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
+import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { Pill, Text, useTheme } from '@/shared/ui';
@@ -37,7 +38,9 @@ export interface TaskRowProps {
  * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
  * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except
  * yours in the Inbox (M44; someone given a task from it shows, D88). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
- * row into Completed at once, its circle spinning until the answer, and back if the API says no (M75).
+ * row into Completed at once, its circle spinning until the answer, and back if the API says no (M75). On hold (D91, M80): a
+ * pause icon instead of the circle (Resume, Complete, Edit the reason), an "On hold · reason" chip, until when and who can
+ * resume it, never overdue; a long press on an open task in a shared or team list puts it on hold.
  */
 export function TaskRow({ task, today, showDue = false, showList = true, showAssignment = false, outside = false, hideFace = false, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
@@ -47,7 +50,10 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
   const awaiting = task.awaitsConfirmation;
   const check = useTaskCheck(task, onComplete);
   const ticked = awaiting;
-  const overdue = !awaiting && !!task.dueDate && !!today && task.dueDate < today;
+  const held = task.status === 'onHold';
+  const holds = useHoldActions();
+  const holdable = holds.canHold(task);
+  const overdue = !awaiting && !held && !!task.dueDate && !!today && task.dueDate < today;
   const meId = useSessionStore((s) => s.userId);
   // Whoever has it, you included (M44); not you in the Inbox, which is only ever yours (someone given a task from it, D88).
   const who = task.assignee && !hideFace && !(task.taskList?.isInbox && task.assignee.id === meId) ? task.assignee : null;
@@ -57,15 +63,36 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
   };
 
   return (
-    <Pressable onPress={onPress ? () => onPress(task) : undefined} disabled={!onPress || check.saving} accessibilityRole={onPress ? 'button' : undefined} accessibilityState={{ busy: check.saving }}>
+    <Pressable
+      onPress={onPress ? () => onPress(task) : undefined}
+      onLongPress={holdable ? () => holds.putOnHold(task) : undefined}
+      disabled={(!onPress && !holdable) || check.saving}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={{ busy: check.saving }}
+      accessibilityActions={holdable ? [{ name: 'longpress', label: t('hold.put') }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && holds.putOnHold(task)}
+    >
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-          <CheckCircle checked={ticked} saving={check.saving} onPress={complete} label={t('taskRow.complete', { title: task.title })} />
+          {held ? (
+            <Pressable onPress={() => holds.heldMenu(task)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.pause}>
+              <Feather name="pause-circle" size={22} color={colors.warn} />
+            </Pressable>
+          ) : (
+            <CheckCircle checked={ticked} saving={check.saving} onPress={complete} label={t('taskRow.complete', { title: task.title })} />
+          )}
           <View style={styles.main}>
             <Text variant="bodyMedium" numberOfLines={2} style={ticked ? { color: colors.ink3 } : undefined}>
               {task.title}
             </Text>
             <View style={[styles.meta, { gap: space.sm }]}>
+              {held && (
+                <View style={[styles.chip, { backgroundColor: colors.warnSoft }]}>
+                  <Text variant="caption" style={{ color: colors.warn }} numberOfLines={1}>{task.holdReason ? t('hold.chip', { reason: task.holdReason }) : t('hold.onHold')}</Text>
+                </View>
+              )}
+              {held && task.holdUntil && <Text variant="footnote" color="ink3">{t('hold.untilShort', { date: labels.day(task.holdUntil) })}</Text>}
+              {held && task.resumer && <Text variant="footnote" color="ink3" numberOfLines={1}>{task.resumer.id === meId ? t('hold.youResume') : t('hold.canResume', { name: task.resumer.displayName.split(' ')[0] })}</Text>}
               {showList && <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />}
               {task.dueDate && (showDue || overdue) && (
                 <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>
@@ -115,4 +142,6 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   face: { alignSelf: 'center' },
   mail: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  pause: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
+  chip: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, maxWidth: '100%' },
 });

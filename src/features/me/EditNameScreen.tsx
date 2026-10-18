@@ -9,7 +9,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, Text, TextField, useTheme, useToast } from '@/shared/ui';
 
-import { useHeaderSave } from './useHeaderSave';
+import { useHeaderSave } from '@/shared/hooks/useHeaderSave';
 
 /** Settings › Name (M41): the name others see on shared lists, assignments and notifications. Save in the header. */
 export function EditNameScreen() {
