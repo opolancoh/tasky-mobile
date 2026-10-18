@@ -14,6 +14,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
+import { ActivityBell } from './components/ActivityBell';
 import { NothingOpen } from './components/NothingOpen';
 import { HomeCards, HomeCardsSkeleton } from './components/HomeCards';
 import { homeRequests, RequestRow, type Request } from './components/RequestRows';
@@ -45,7 +46,7 @@ type Item =
  * Home, the first tab (06-mobile.md, M65): the date and what's next; four cards (Today, Overdue, Important, Inbox);
  * then Requests (swipe one left to dismiss it from Home), Today, Assigned to me and Coming up, each with its count, its
  * first rows and See all (TodayList, M33). Everything the user can see (M37), from GET /home (D67, D86). Me behind the
- * avatar (M39); notifications are in Activity. With nothing to show but tasks somewhere, From your lists: undated tasks
+ * avatar (M39); notifications behind the bell beside it (Activity, M74). With nothing to show but tasks somewhere, From your lists: undated tasks
  * to plan (M66). With no open task and nothing to answer, an empty state and five ways to start under the cards (M67).
  */
 export function TodayScreen() {
@@ -151,8 +152,9 @@ export function TodayScreen() {
       case 'header':
         return (
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
-            {/* Me (profile, settings, sign out) behind the avatar (M39). */}
-            <View style={styles.bar}>
+            {/* Activity behind the bell (M74); Me (profile, settings, sign out) behind the avatar (M39). */}
+            <View style={[styles.bar, { gap: space.sm }]}>
+              <ActivityBell />
               <MeButton />
             </View>
             <Text variant="title" numberOfLines={1} accessibilityRole="header">
@@ -255,7 +257,7 @@ export function TodayScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
+  bar: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', minHeight: 44 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   push: { marginLeft: 'auto' },
   calm: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.lg },

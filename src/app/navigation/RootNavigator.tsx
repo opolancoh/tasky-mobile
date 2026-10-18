@@ -10,6 +10,7 @@ import { SignUpScreen } from '@/features/auth/SignUpScreen';
 import { UnreachableScreen } from '@/features/auth/UnreachableScreen';
 import { VerifyCodeScreen } from '@/features/auth/VerifyCodeScreen';
 import { ActivityScreen } from '@/features/activity/ActivityScreen';
+import { CalendarScreen } from '@/features/calendar/CalendarScreen';
 import { ArchivedScreen } from '@/features/browse/ArchivedScreen';
 import { BrowseListScreen } from '@/features/browse/BrowseListScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
@@ -36,7 +37,7 @@ import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
 import i18n from '@/shared/i18n/i18n';
 import { useIsSignedIn, useIsSignedOut, useIsUnreachable } from '@/shared/session/SessionProvider';
 
-import { activityTab, AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
+import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 
 /** A tab route's key in tabs.*: the routes keep their names; Today is shown as Home (M65), Browse as Spaces (M70). */
 const tabKey = (route: string) => (route === 'Today' ? 'home' : route === 'Browse' ? 'spaces' : route.toLowerCase());
@@ -59,9 +60,9 @@ const Tabs = createBottomTabNavigator({
         },
       },
     },
-    // Search and Activity (M39); Upcoming lives in Today's Coming up, Me behind the avatar.
+    // Calendar (M72, M74): every task by due date. Search last (M39); Activity is Home's bell, Me behind the avatar.
+    Calendar: { screen: CalendarScreen, options: tab('calendar', 'tabs.calendar') },
     Search: { screen: SearchScreen, options: tab('search', 'tabs.search') },
-    Activity: { screen: ActivityScreen, options: activityTab },
   },
 });
 
@@ -98,6 +99,8 @@ const RootStack = createNativeStackNavigator({
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
+        // Home's bell (M74).
+        Activity: { screen: ActivityScreen, options: { headerShown: true } },
         // Browse (M38): a list, a team, a list's or team's people, the other task lists, Archived, Recently Deleted.
         TaskList: { screen: TaskListScreen, options: { headerShown: true } },
         Team: { screen: TeamScreen, options: { headerShown: true } },

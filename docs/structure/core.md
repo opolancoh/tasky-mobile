@@ -15,6 +15,7 @@ src/core/
 │   └── tokens.ts         Access and refresh tokens, one refresh at a time
 ├── dates/
 │   ├── localDate.ts      Today in a time zone; formatting a date or time (cached formatters)
+│   ├── calendar.ts       Weeks from Monday, months: a month's weeks, its first and last day (Calendar, M72)
 │   └── reminders.ts      A reminder (date + time), the quick presets
 ├── text/
 │   └── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)

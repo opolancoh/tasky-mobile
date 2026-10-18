@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from '
 import { useMarkRead } from '@/data/collaboration/mutations';
 import { useNotifications } from '@/data/collaboration/queries';
 import type { Notification } from '@/data/collaboration/types';
-import { MeButton, UpdateRow } from '@/shared/components';
+import { UpdateRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -19,8 +19,8 @@ type Item =
   | { type: 'footer'; key: string };
 
 /**
- * Activity, the fifth tab (M39): every notification, newest first: New (unread), then Earlier. Opening one marks it read
- * and opens what it is about; Mark all read at the top. The unread count is the tab's badge. Me from the avatar.
+ * Activity (M39), pushed from Home's bell (M74): every notification, newest first: New (unread), then Earlier. Opening one
+ * marks it read and opens what it is about; Mark all read at the top. The unread count is the bell's badge.
  */
 export function ActivityScreen() {
   const { t } = useTranslation();
@@ -53,14 +53,13 @@ export function ActivityScreen() {
       case 'header':
         return (
           <View style={{ paddingBottom: space.sm }}>
-            <View style={[styles.bar, { gap: space.md }]}>
-              {fresh.length > 0 && (
+            {fresh.length > 0 && (
+              <View style={styles.bar}>
                 <Pressable onPress={() => markRead.mutate('all')} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
                   <Text variant="button" color="accent">{t('activity.markAllRead')}</Text>
                 </Pressable>
-              )}
-              <MeButton />
-            </View>
+              </View>
+            )}
             <Text variant="largeTitle" accessibilityRole="header">{t('activity.title')}</Text>
             <Text variant="subhead" color="ink2" style={{ marginTop: space.xxs }}>{t('activity.sub')}</Text>
             {list.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(list.error)}</Notice></View>}
@@ -88,7 +87,7 @@ export function ActivityScreen() {
   };
 
   return (
-    <Screen edges={['top']} contentStyle={styles.fill}>
+    <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
         data={items}
         renderItem={renderItem}

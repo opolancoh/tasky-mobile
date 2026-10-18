@@ -22,7 +22,7 @@ src/shared/
 ├── browseSheet/
 │   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen, e.g. Home's Make a list (M67)
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show(title?, page?) from the tab bar +, or on its due date or reminder picker from Home (M67)
+│   └── quickAddStore.ts   Quick add open or closed; show(title?, page?, dueDate?) from the tab bar +, on its due date or reminder picker from Home (M67), or due on a day from Calendar (M72)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
@@ -85,7 +85,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `Avatar` | Initials in a circle, colors by a hash of the user id (pickers, Me, a task row's assignee) |
 | `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); on Personal and the user's private lists, Only this task with `PeoplePicker` (D70, D88, M45, M73) |
 | `PeoplePicker` | Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most (`GET /people`, `usePeople`, kept 5 minutes); typing searches after 250 ms, colleagues under Your company; a typed email ends with Invite by email / Give it by email. Used by `AssigneePicker`'s Only this task and People's Invite |
-| `MeButton` | The user's avatar at the top right of Today and Activity; opens Me (M39) |
+| `MeButton` | The user's avatar at the top right of Home; opens Me (M39) |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it |
 | `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |

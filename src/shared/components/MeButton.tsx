@@ -6,7 +6,7 @@ import { useMe } from '@/data/tenancy/queries';
 
 import { Avatar } from './Faces';
 
-/** The user's avatar at the top right of Today and Activity (M39): opens Me (profile, settings, sign out). */
+/** The user's avatar at the top right of Home (M39): opens Me (profile, settings, sign out). */
 export function MeButton() {
   const { t } = useTranslation();
   const navigation = useNavigation();

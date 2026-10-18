@@ -1,0 +1,210 @@
+import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+
+import { addMonths, monthEnd, monthOf, monthStart, monthWeeks, weekStart } from '@/core/dates/calendar';
+import { addDays } from '@/core/dates/localDate';
+import type { LocalDate } from '@/core/types';
+import { useCompleteTask } from '@/data/tasks/mutations';
+import { useTaskPages } from '@/data/tasks/queries';
+import type { TaskSummary } from '@/data/tasks/types';
+import { TaskRow } from '@/shared/components';
+import { errorMessage } from '@/shared/i18n/errors';
+import { chooseAction, Notice, SkeletonRow, Text, useTheme } from '@/shared/ui';
+
+import { useCalendarView } from './calendarViewStore';
+import { AddTaskRow } from './components/AddTaskRow';
+import { CalendarHeader } from './components/CalendarHeader';
+import { MonthGrid } from './components/MonthGrid';
+import { OffChips } from './components/OffChips';
+import { useCalendarLabels } from './useCalendarLabels';
+import { useOffCalendar, type OffDay } from './useOffCalendar';
+
+/** The most GET /tasks returns at once: a month's tasks usually come in one page. */
+const RANGE_PAGE = 200;
+
+type Item =
+  | { type: 'header'; key: string }
+  | { type: 'nav'; key: string }
+  | { type: 'grid'; key: string }
+  | { type: 'chips'; key: string }
+  | { type: 'dayHead'; key: string }
+  | { type: 'task'; key: string; task: TaskSummary }
+  | { type: 'empty'; key: string }
+  | { type: 'skeleton'; key: string; width: number }
+  | { type: 'add'; key: string }
+  | { type: 'more'; key: string };
+
+const isOff = (day: LocalDate | OffDay): day is OffDay => day === 'overdue' || day === 'none';
+
+/**
+ * Calendar, the Calendar tab's calendar view (M72): a month (or the picked day's week, from the title's menu) with dots in
+ * the tasks' list colors, then the picked day's tasks as the usual rows and Add a task (Quick add due that day). ‹ › move a
+ * month or a week; Today shows once another day is picked or today is off screen. Overdue and No date as chips over the
+ * day. Every open task the user can see in the range on screen, every page (GET /tasks?dueFrom=&dueTo=).
+ */
+export function MonthView({ today }: { today: LocalDate }) {
+  const { t } = useTranslation();
+  const { colors, space } = useTheme();
+  const navigation = useNavigation();
+  const labels = useCalendarLabels(today);
+  const complete = useCompleteTask();
+  const off = useOffCalendar();
+  const [day, setDay] = useState<LocalDate | OffDay>(today);
+  const [anchor, setAnchor] = useState<LocalDate>(today);
+  // Month or Week, kept on the device (calendarViewStore); the day and the month or week on screen start at today.
+  const week = useCalendarView((s) => s.mode) === 'week';
+  const setMode = useCalendarView((s) => s.setMode);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const from = week ? weekStart(anchor) : monthStart(anchor);
+  const to = week ? addDays(from, 6) : monthEnd(anchor);
+  const pages = useTaskPages({ dueFrom: from, dueTo: to, sort: 'due', limit: RANGE_PAGE });
+  // The dots need the whole range: load the rest of the pages (rare past 200 tasks).
+  useEffect(() => {
+    if (pages.hasNextPage && !pages.isFetchingNextPage) pages.fetchNextPage();
+  }, [pages]);
+
+  const byDay = new Map<LocalDate, TaskSummary[]>();
+  pages.data?.pages.forEach((p) => p.items.forEach((task) => {
+    if (task.dueDate) byDay.set(task.dueDate, [...(byDay.get(task.dueDate) ?? []), task]);
+  }));
+  const holdsToday = from <= today && today <= to;
+  const showToday = day !== today || !holdsToday;
+  // The picked day when the range moves: today if it's on screen, else the range's first day.
+  const landOn = (start: LocalDate, end: LocalDate) => (start <= today && today <= end ? today : start);
+
+  const move = (n: number) => {
+    const next = week ? addDays(anchor, 7 * n) : addMonths(anchor, n);
+    setAnchor(next);
+    if (isOff(day)) return;
+    const start = week ? weekStart(next) : monthStart(next);
+    setDay(landOn(start, week ? addDays(start, 6) : monthEnd(next)));
+  };
+  const pick = (date: LocalDate) => {
+    setDay(date);
+    setAnchor(date);
+  };
+  const pickOff = (kind: OffDay) => (day === kind ? setDay(landOn(from, to)) : setDay(kind));
+  const goToday = () => pick(today);
+  const chooseMode = async () => {
+    const i = await chooseAction({
+      title: t('calendar.mode.title'),
+      actions: [
+        { label: t('calendar.mode.month'), icon: 'calendar', selected: !week },
+        { label: t('calendar.mode.week'), icon: 'columns', selected: week },
+      ],
+      cancelLabel: t('common.cancel'),
+    });
+    if (i === null) return;
+    setMode(i === 1 ? 'week' : 'month');
+    setAnchor(isOff(day) ? today : day);
+  };
+
+  const offQuery = isOff(day) ? off.query(day) : undefined;
+  const dayTasks = isOff(day) ? off.tasks(day) : (byDay.get(day) ?? []);
+  const loading = isOff(day) ? !!offQuery?.isPending : pages.isPending;
+  const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'nav', key: 'nav' }, { type: 'grid', key: 'grid' }, { type: 'chips', key: 'chips' }, { type: 'dayHead', key: 'day-head' }];
+  if (loading) [70, 55, 62].forEach((width, i) => items.push({ type: 'skeleton', key: `k-${i}`, width }));
+  else if (!dayTasks.length) items.push({ type: 'empty', key: 'empty' });
+  dayTasks.forEach((task) => items.push({ type: 'task', key: task.id, task }));
+  if (offQuery?.hasNextPage) items.push({ type: 'more', key: 'more' });
+  if (day !== 'overdue') items.push({ type: 'add', key: 'add' });
+
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([pages.refetch(), off.refetch()]);
+    setRefreshing(false);
+  };
+  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
+  const title = week ? labels.week(from) : labels.month(anchor);
+
+  const renderItem = ({ item }: { item: Item }) => {
+    switch (item.type) {
+      case 'header':
+        return <CalendarHeader overdue={off.count('overdue')} />;
+      case 'nav':
+        return (
+          <View style={[styles.nav, { gap: space.xs, marginTop: space.md, marginBottom: space.sm }]}>
+            <Pressable onPress={chooseMode} accessibilityRole="button" accessibilityLabel={t('calendar.mode.open', { title })} hitSlop={6} style={[styles.title, { gap: space.xxs }]}>
+              <Text variant="headline" numberOfLines={1}>{title}</Text>
+              <Feather name="chevron-down" size={16} color={colors.accent} />
+            </Pressable>
+            <View style={styles.fill} />
+            {showToday && (
+              <Pressable onPress={goToday} accessibilityRole="button" style={({ pressed }) => [styles.today, { backgroundColor: colors.accentSoft, paddingHorizontal: space.md, marginRight: space.xs, opacity: pressed ? 0.7 : 1 }]}>
+                <Text variant="label" color="accent">{t('dates.today')}</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={() => move(-1)} accessibilityRole="button" accessibilityLabel={t(week ? 'calendar.previousWeek' : 'calendar.previousMonth')} style={styles.arrow}>
+              <Feather name="chevron-left" size={20} color={colors.accent} />
+            </Pressable>
+            <Pressable onPress={() => move(1)} accessibilityRole="button" accessibilityLabel={t(week ? 'calendar.nextWeek' : 'calendar.nextMonth')} style={styles.arrow}>
+              <Feather name="chevron-right" size={20} color={colors.accent} />
+            </Pressable>
+          </View>
+        );
+      case 'grid':
+        return (
+          <View>
+            <MonthGrid weeks={week ? [from] : monthWeeks(anchor)} month={week ? undefined : monthOf(anchor)} today={today} picked={isOff(day) ? null : day} byDay={byDay} onPick={pick} />
+            {pages.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(pages.error)}</Notice></View>}
+          </View>
+        );
+      case 'chips':
+        return <OffChips count={off.count} open={isOff(day) ? day : null} onPress={pickOff} />;
+      case 'dayHead':
+        return (
+          <View style={[styles.dayHead, { gap: space.sm, marginTop: space.md }]}>
+            <Text variant="label" color={day === 'overdue' ? 'danger' : 'ink2'} accessibilityRole="header" style={styles.shrink} numberOfLines={1}>
+              {day === 'overdue' ? t('calendar.overdue') : day === 'none' ? t('calendar.noDate') : labels.day(day)}
+            </Text>
+            {!loading && dayTasks.length > 0 && (
+              <Text variant="label" color="ink3">{isOff(day) ? off.count(day) : dayTasks.length}</Text>
+            )}
+          </View>
+        );
+      case 'task':
+        return <TaskRow task={item.task} today={today} showDue={day === 'overdue'} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+      case 'empty':
+        return (
+          <Text variant="subhead" color="ink3" style={{ paddingVertical: space.sm }}>
+            {t(!isOff(day) && day < today ? 'calendar.wasFree' : 'calendar.free')}
+          </Text>
+        );
+      case 'skeleton':
+        return <SkeletonRow width={item.width} />;
+      case 'more':
+        return <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>;
+      case 'add':
+        return <AddTaskRow dueDate={isOff(day) ? undefined : day} />;
+    }
+  };
+
+  return (
+    <FlashList
+      data={items}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.key}
+      getItemType={(item) => item.type}
+      onEndReached={() => offQuery?.hasNextPage && !offQuery.isFetchingNextPage && offQuery.fetchNextPage()}
+      onEndReachedThreshold={0.5}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ink3} />}
+    />
+  );
+}
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  shrink: { flexShrink: 1 },
+  nav: { flexDirection: 'row', alignItems: 'center' },
+  title: { flexDirection: 'row', alignItems: 'center', minHeight: 44, flexShrink: 1 },
+  today: { height: 30, borderRadius: 15, justifyContent: 'center' },
+  arrow: { width: 36, height: 44, alignItems: 'center', justifyContent: 'center' },
+  dayHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 56 },
+});

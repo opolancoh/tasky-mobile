@@ -28,7 +28,7 @@ type Item =
   | { type: 'footer'; key: string };
 
 /**
- * Search, the fourth tab (M39, M40): tasks by the words in their titles, notes and steps, open and completed, in
+ * Search, the last tab (M39, M40, M74): tasks by the words in their titles, notes and steps, open and completed, in
  * everything the user can see (GET /search), best match first, 20 at a time. Before typing: the last searches and the
  * user's tags. A row shows the title with the words found in bold and its list; opening one remembers the search.
  */

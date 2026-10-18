@@ -79,8 +79,8 @@
   "tabs": {
     "home": "Inicio",
     "spaces": "Espacios",
-    "search": "Buscar",
-    "activity": "Actividad"
+    "calendar": "Calendario",
+    "search": "Buscar"
   },
   "home": {
     "next": "Siguiente:",
@@ -641,7 +641,45 @@
     "empty": "Nada todavía",
     "emptyBody": "Cuando compartan listas y equipos contigo, lo que hagan por ti aparece aquí.",
     "respond": "Responder",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "openUnread_one": "Actividad, {{count}} nueva",
+    "openUnread_other": "Actividad, {{count}} nuevas"
+  },
+  "calendar": {
+    "title": "Calendario",
+    "eyebrow": "Todas las listas que ves",
+    "overdueCount_one": "{{count}} vencida",
+    "overdueCount_other": "{{count}} vencidas",
+    "view": {
+      "label": "Vista",
+      "list": "Lista",
+      "calendar": "Calendario"
+    },
+    "mode": {
+      "title": "Mostrar",
+      "open": "{{title}}, cambiar a mes o semana",
+      "month": "Mes",
+      "week": "Semana"
+    },
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "overdue": "Vencidas",
+    "noDate": "Sin fecha",
+    "dayToday": "Hoy · {{date}}",
+    "dayTomorrow": "Mañana · {{date}}",
+    "dayTasks_one": "{{date}}, {{count}} tarea",
+    "dayTasks_other": "{{date}}, {{count}} tareas",
+    "free": "Nada para este día. Un día libre.",
+    "wasFree": "No había nada para este día.",
+    "nothingToday": "Nada para hoy.",
+    "addTask": "Añadir una tarea",
+    "showMore": "Mostrar más",
+    "week": {
+      "same": "{{start}} – {{end}} {{month}}",
+      "across": "{{start}} – {{end}}"
+    }
   },
   "me": {
     "open": "Yo: perfil y ajustes",
