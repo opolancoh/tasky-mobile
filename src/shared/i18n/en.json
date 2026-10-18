@@ -666,7 +666,6 @@
     "previousWeek": "Previous week",
     "nextWeek": "Next week",
     "overdue": "Overdue",
-    "noDate": "No date",
     "dayToday": "Today · {{date}}",
     "dayTomorrow": "Tomorrow · {{date}}",
     "dayTasks_one": "{{date}}, {{count}} task",

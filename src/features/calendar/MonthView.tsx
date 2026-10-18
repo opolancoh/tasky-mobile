@@ -19,9 +19,9 @@ import { useCalendarView } from './calendarViewStore';
 import { AddTaskRow } from './components/AddTaskRow';
 import { CalendarHeader } from './components/CalendarHeader';
 import { MonthGrid } from './components/MonthGrid';
-import { OffChips } from './components/OffChips';
+import { OverdueChip } from './components/OverdueChip';
 import { useCalendarLabels } from './useCalendarLabels';
-import { useOffCalendar, type OffDay } from './useOffCalendar';
+import { useOverdue } from './useOverdue';
 
 /** The most GET /tasks returns at once: a month's tasks usually come in one page. */
 const RANGE_PAGE = 200;
@@ -38,13 +38,14 @@ type Item =
   | { type: 'add'; key: string }
   | { type: 'more'; key: string };
 
-const isOff = (day: LocalDate | OffDay): day is OffDay => day === 'overdue' || day === 'none';
+/** The picked day, or Overdue's tasks in its place. */
+type Picked = LocalDate | 'overdue';
 
 /**
  * Calendar, the Calendar tab's calendar view (M72): a month (or the picked day's week, from the title's menu) with dots in
  * the tasks' list colors, then the picked day's tasks as the usual rows and Add a task (Quick add due that day). ‹ › move a
- * month or a week; Today shows once another day is picked or today is off screen. Overdue and No date as chips over the
- * day. Every open task the user can see in the range on screen, every page (GET /tasks?dueFrom=&dueTo=).
+ * month or a week; Today shows once another day is picked or today is off screen. Overdue as a chip over the day; only
+ * dated tasks (no No date: undated tasks live in Spaces and Home). Every open task the user can see in the range on screen, every page (GET /tasks?dueFrom=&dueTo=).
  */
 export function MonthView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
@@ -52,8 +53,8 @@ export function MonthView({ today }: { today: LocalDate }) {
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
-  const off = useOffCalendar();
-  const [day, setDay] = useState<LocalDate | OffDay>(today);
+  const overdue = useOverdue();
+  const [day, setDay] = useState<Picked>(today);
   const [anchor, setAnchor] = useState<LocalDate>(today);
   // Month or Week, kept on the device (calendarViewStore); the day and the month or week on screen start at today.
   const week = useCalendarView((s) => s.mode) === 'week';
@@ -80,7 +81,7 @@ export function MonthView({ today }: { today: LocalDate }) {
   const move = (n: number) => {
     const next = week ? addDays(anchor, 7 * n) : addMonths(anchor, n);
     setAnchor(next);
-    if (isOff(day)) return;
+    if (day === 'overdue') return;
     const start = week ? weekStart(next) : monthStart(next);
     setDay(landOn(start, week ? addDays(start, 6) : monthEnd(next)));
   };
@@ -88,7 +89,7 @@ export function MonthView({ today }: { today: LocalDate }) {
     setDay(date);
     setAnchor(date);
   };
-  const pickOff = (kind: OffDay) => (day === kind ? setDay(landOn(from, to)) : setDay(kind));
+  const toggleOverdue = () => setDay(day === 'overdue' ? landOn(from, to) : 'overdue');
   const goToday = () => pick(today);
   const chooseMode = async () => {
     const i = await chooseAction({
@@ -101,12 +102,12 @@ export function MonthView({ today }: { today: LocalDate }) {
     });
     if (i === null) return;
     setMode(i === 1 ? 'week' : 'month');
-    setAnchor(isOff(day) ? today : day);
+    setAnchor(day === 'overdue' ? today : day);
   };
 
-  const offQuery = isOff(day) ? off.query(day) : undefined;
-  const dayTasks = isOff(day) ? off.tasks(day) : (byDay.get(day) ?? []);
-  const loading = isOff(day) ? !!offQuery?.isPending : pages.isPending;
+  const offQuery = day === 'overdue' ? overdue.pages : undefined;
+  const dayTasks = day === 'overdue' ? overdue.tasks : (byDay.get(day) ?? []);
+  const loading = (offQuery ?? pages).isPending;
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'nav', key: 'nav' }, { type: 'grid', key: 'grid' }, { type: 'chips', key: 'chips' }, { type: 'dayHead', key: 'day-head' }];
   if (loading) [70, 55, 62].forEach((width, i) => items.push({ type: 'skeleton', key: `k-${i}`, width }));
   else if (!dayTasks.length) items.push({ type: 'empty', key: 'empty' });
@@ -116,7 +117,7 @@ export function MonthView({ today }: { today: LocalDate }) {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([pages.refetch(), off.refetch()]);
+    await Promise.all([pages.refetch(), overdue.pages.refetch()]);
     setRefreshing(false);
   };
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
@@ -125,7 +126,7 @@ export function MonthView({ today }: { today: LocalDate }) {
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
       case 'header':
-        return <CalendarHeader overdue={off.count('overdue')} />;
+        return <CalendarHeader overdue={overdue.count} />;
       case 'nav':
         return (
           <View style={[styles.nav, { gap: space.xs, marginTop: space.md, marginBottom: space.sm }]}>
@@ -150,20 +151,20 @@ export function MonthView({ today }: { today: LocalDate }) {
       case 'grid':
         return (
           <View>
-            <MonthGrid weeks={week ? [from] : monthWeeks(anchor)} month={week ? undefined : monthOf(anchor)} today={today} picked={isOff(day) ? null : day} byDay={byDay} onPick={pick} />
+            <MonthGrid weeks={week ? [from] : monthWeeks(anchor)} month={week ? undefined : monthOf(anchor)} today={today} picked={day === 'overdue' ? null : day} byDay={byDay} onPick={pick} />
             {pages.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(pages.error)}</Notice></View>}
           </View>
         );
       case 'chips':
-        return <OffChips count={off.count} open={isOff(day) ? day : null} onPress={pickOff} />;
+        return <OverdueChip count={overdue.count} open={day === 'overdue'} onPress={toggleOverdue} />;
       case 'dayHead':
         return (
           <View style={[styles.dayHead, { gap: space.sm, marginTop: space.md }]}>
             <Text variant="label" color={day === 'overdue' ? 'danger' : 'ink2'} accessibilityRole="header" style={styles.shrink} numberOfLines={1}>
-              {day === 'overdue' ? t('calendar.overdue') : day === 'none' ? t('calendar.noDate') : labels.day(day)}
+              {day === 'overdue' ? t('calendar.overdue') : labels.day(day)}
             </Text>
             {!loading && dayTasks.length > 0 && (
-              <Text variant="label" color="ink3">{isOff(day) ? off.count(day) : dayTasks.length}</Text>
+              <Text variant="label" color="ink3">{day === 'overdue' ? overdue.count : dayTasks.length}</Text>
             )}
           </View>
         );
@@ -172,7 +173,7 @@ export function MonthView({ today }: { today: LocalDate }) {
       case 'empty':
         return (
           <Text variant="subhead" color="ink3" style={{ paddingVertical: space.sm }}>
-            {t(!isOff(day) && day < today ? 'calendar.wasFree' : 'calendar.free')}
+            {t(day !== 'overdue' && day < today ? 'calendar.wasFree' : 'calendar.free')}
           </Text>
         );
       case 'skeleton':
@@ -180,7 +181,7 @@ export function MonthView({ today }: { today: LocalDate }) {
       case 'more':
         return <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>;
       case 'add':
-        return <AddTaskRow dueDate={isOff(day) ? undefined : day} />;
+        return day === 'overdue' ? null : <AddTaskRow dueDate={day} />;
     }
   };
 

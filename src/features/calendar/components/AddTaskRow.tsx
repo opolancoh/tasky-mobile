@@ -6,8 +6,8 @@ import type { LocalDate } from '@/core/types';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { Text, useTheme } from '@/shared/ui';
 
-/** Add a task under a day's tasks (M72): Quick add due that day, or with no date. */
-export function AddTaskRow({ dueDate }: { dueDate?: LocalDate }) {
+/** Add a task under a day's tasks (M72): Quick add due that day. */
+export function AddTaskRow({ dueDate }: { dueDate: LocalDate }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const show = useQuickAdd((s) => s.show);

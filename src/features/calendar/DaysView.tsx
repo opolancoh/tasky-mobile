@@ -13,21 +13,19 @@ import { TaskRow } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Button, Notice, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
-import { AddTaskRow } from './components/AddTaskRow';
 import { CalendarHeader } from './components/CalendarHeader';
 import { DayHeading } from './components/DayHeading';
-import { OffChips } from './components/OffChips';
+import { OverdueChip } from './components/OverdueChip';
 import { useCalendarLabels } from './useCalendarLabels';
-import { useOffCalendar, type OffDay } from './useOffCalendar';
+import { useOverdue } from './useOverdue';
 
 const PAGE = 50;
 
 type Item =
   | { type: 'header'; key: string }
   | { type: 'chips'; key: string }
-  | { type: 'offHead'; key: string; kind: OffDay }
-  | { type: 'offMore'; key: string; kind: OffDay }
-  | { type: 'offAdd'; key: string }
+  | { type: 'overdueHead'; key: string }
+  | { type: 'overdueMore'; key: string }
   | { type: 'month'; key: string; title: string }
   | { type: 'week'; key: string; title: string }
   | { type: 'day'; key: string; date: LocalDate }
@@ -39,8 +37,8 @@ type Item =
 /**
  * List, the Calendar tab's list view (M72): one scroll from today, like Things' Upcoming. Each day with tasks, and today,
  * under a large day number, then its tasks as the usual rows full width; month headings and a thin week line ("Oct 5 – 11")
- * at each new week; free days skipped. A page at a time from today (GET /tasks?dueFrom=<today>&sort=due). Overdue and No
- * date as chips on top; tapping one lists its tasks over the scroll, tapping again closes it.
+ * at each new week; free days skipped. A page at a time from today (GET /tasks?dueFrom=<today>&sort=due). Overdue as a
+ * chip on top; tapping it lists its tasks over the scroll, tapping again closes it. Only dated tasks.
  */
 export function DaysView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
@@ -48,18 +46,17 @@ export function DaysView({ today }: { today: LocalDate }) {
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
-  const off = useOffCalendar();
-  const [openOff, setOpenOff] = useState<OffDay | null>(null);
+  const overdue = useOverdue();
+  const [overdueOpen, setOverdueOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const pages = useTaskPages({ dueFrom: today, sort: 'due', limit: PAGE });
   const tasks = pages.data?.pages.flatMap((p) => p.items) ?? [];
 
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'chips', key: 'chips' }];
-  if (openOff) {
-    items.push({ type: 'offHead', key: `oh-${openOff}`, kind: openOff });
-    off.tasks(openOff).forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task }));
-    if (off.query(openOff).hasNextPage) items.push({ type: 'offMore', key: 'off-more', kind: openOff });
-    if (openOff === 'none') items.push({ type: 'offAdd', key: 'off-add' });
+  if (overdueOpen) {
+    items.push({ type: 'overdueHead', key: 'overdue-head' });
+    overdue.tasks.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task }));
+    if (overdue.pages.hasNextPage) items.push({ type: 'overdueMore', key: 'overdue-more' });
   }
 
   if (pages.isPending) {
@@ -88,7 +85,7 @@ export function DaysView({ today }: { today: LocalDate }) {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([pages.refetch(), off.refetch()]);
+    await Promise.all([pages.refetch(), overdue.pages.refetch()]);
     setRefreshing(false);
   };
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
@@ -98,29 +95,27 @@ export function DaysView({ today }: { today: LocalDate }) {
       case 'header':
         return (
           <View>
-            <CalendarHeader overdue={off.count('overdue')} />
+            <CalendarHeader overdue={overdue.count} />
             {pages.error && <View style={{ marginTop: space.sm }}><Notice>{errorMessage(pages.error)}</Notice></View>}
           </View>
         );
       case 'chips':
-        return <OffChips count={off.count} open={openOff} onPress={(kind) => setOpenOff(openOff === kind ? null : kind)} />;
-      case 'offHead':
+        return <OverdueChip count={overdue.count} open={overdueOpen} onPress={() => setOverdueOpen(!overdueOpen)} />;
+      case 'overdueHead':
         return (
           <View style={[styles.row, { gap: space.sm, marginTop: space.md }]}>
-            <Text variant="label" color={item.kind === 'overdue' ? 'danger' : 'ink2'} accessibilityRole="header">{t(item.kind === 'overdue' ? 'calendar.overdue' : 'calendar.noDate')}</Text>
-            <Text variant="label" color="ink3">{off.count(item.kind)}</Text>
+            <Text variant="label" color="danger" accessibilityRole="header">{t('calendar.overdue')}</Text>
+            <Text variant="label" color="ink3">{overdue.count}</Text>
           </View>
         );
-      case 'offMore':
+      case 'overdueMore':
         return (
           <View style={styles.footer}>
-            {off.query(item.kind).isFetchingNextPage
+            {overdue.pages.isFetchingNextPage
               ? <ActivityIndicator color={colors.ink3} />
-              : <Button variant="link" title={t('calendar.showMore')} onPress={() => off.query(item.kind).fetchNextPage()} />}
+              : <Button variant="link" title={t('calendar.showMore')} onPress={() => overdue.pages.fetchNextPage()} />}
           </View>
         );
-      case 'offAdd':
-        return <AddTaskRow />;
       case 'month':
         return <Text variant="title" accessibilityRole="header" style={{ fontSize: 20, lineHeight: 26, marginTop: space.xl }}>{item.title}</Text>;
       case 'week':
@@ -128,7 +123,7 @@ export function DaysView({ today }: { today: LocalDate }) {
       case 'day':
         return <DayHeading date={item.date} weekday={labels.weekday(item.date)} under={labels.under(item.date)} isToday={item.date === today} />;
       case 'task':
-        return <TaskRow task={item.task} today={today} showDue={openOff === 'overdue' && item.key.startsWith('o-')} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+        return <TaskRow task={item.task} today={today} showDue={item.key.startsWith('o-')} onComplete={(task) => complete.mutate(task)} onPress={open} />;
       case 'free':
         return <Text variant="subhead" color="ink3" style={{ paddingVertical: space.sm }}>{t('calendar.nothingToday')}</Text>;
       case 'skeleton':
