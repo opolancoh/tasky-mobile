@@ -18,7 +18,7 @@ How the code is organized: what each folder holds, what may import what, and whe
 azignia-mobile/
 ├── index.tsx              Registers src/app/App with Expo
 ├── app.json               Name, scheme "azignia", icons, splash, iOS and Android settings
-├── app.config.ts          app.json + the active palette's colors (splash, Android icon), Android's versionCode
+├── app.config.ts          app.json + the active palette's colors (Android icon; splash only if app.json has none), Android's versionCode
 ├── plugins/               withReleaseSigning.js (Android release signing from keystore.properties, M61)
 ├── keystore.properties    The Android upload key's path and passwords; gitignored, per Mac (docs/releases.md)
 ├── eslint.config.js       Lint, the import rules and the no-hard-coded-colors rule

@@ -3,7 +3,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 import active from './src/shared/ui/palettes/active.json';
 
 /**
- * app.json plus the colors that come from the active palette (splash and Android icon background),
+ * app.json plus the colors that come from the active palette (Android icon background; the splash's only if app.json has none),
  * so changing src/shared/ui/palettes/active.json changes them too. Native colors need a rebuild to show.
  * The API address is required everywhere, so it's always known which API the app calls: `.env.local` in
  * development, eas.json's build.production.env for a tester's build (EAS for iOS, scripts/android-build.sh for Android,
@@ -39,7 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   const plugins: ExpoConfig['plugins'] = (config.plugins ?? []).map((plugin) =>
     Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
-      ? (['expo-splash-screen', { ...plugin[1], backgroundColor: light.bg, dark: { ...plugin[1]?.dark, backgroundColor: dark.bg } }] as [string, unknown])
+      ? (['expo-splash-screen', { backgroundColor: light.bg, ...plugin[1], dark: { backgroundColor: dark.bg, ...plugin[1]?.dark } }] as [string, unknown])   // app.json's colors win (M87)
       : plugin,
   );
   plugins.push(['expo-build-properties', { android: { usesCleartextTraffic: cleartext } }]);
