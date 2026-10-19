@@ -127,6 +127,10 @@ testers update. Moving the API to another server needs no build: point `api.azig
 Native folders: a build runs `expo prebuild`, which writes `ios/` and `android/` from `app.json` and `app.config.ts`.
 They're generated and kept out of git; native settings go in `app.json` / `app.config.ts`, never in those folders.
 
+Gradle's memory is per Mac, in `~/.gradle/gradle.properties` (it overrides `android/gradle.properties`, which prebuild
+rewrites): `org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m`. With Expo's default (512m Metaspace) a build
+can stop with `> Metaspace` (e.g. in `:react-native-screens:configureCMake…`).
+
 ## Signing
 
 Every build is signed, never with a key in this repo (`.gitignore` covers `keystore.properties`, `credentials.json`,
