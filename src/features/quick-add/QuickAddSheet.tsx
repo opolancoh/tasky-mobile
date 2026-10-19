@@ -12,7 +12,7 @@ import { useTaskLists, useTags } from '@/data/tasks/queries';
 import { taskLimits, type UserRef } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { AssigneePicker, Avatar, givesOutside, TaskListIcon, TaskListPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, givesOutside, TaskListIcon, TaskListPicker, DueDatePicker, ReminderIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -163,7 +163,7 @@ function QuickAddForm() {
   const barItems: BarItem[] = [
     { key: 'important', icon: 'flag', label: t('quickAdd.fields.important'), value: draft.isImportant ? t('quickAdd.on') : undefined, danger: true, onPress: () => update({ isImportant: !draft.isImportant }) },
     { key: 'due', icon: 'calendar', label: t('quickAdd.fields.dueDate'), value: draft.dueDate && dayText(draft.dueDate), onPress: () => openPage('due') },
-    { key: 'reminder', icon: 'bell', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
+    { key: 'reminder', icon: 'reminder', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
     ...(canAssign ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
     { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => openPage('tags') },
     { key: 'notes', icon: 'file-text', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
@@ -256,7 +256,7 @@ function QuickAddForm() {
             {reminder && (
               <ListRow
                 label={t('quickAdd.fields.reminder')}
-                icon={<Feather name="bell" size={20} color={colors.accent} />}
+                icon={<ReminderIcon color={colors.accent} />}
                 value={
                   <View style={styles.end}>
                     <Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>

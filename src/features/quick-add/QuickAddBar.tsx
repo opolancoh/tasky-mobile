@@ -2,11 +2,12 @@ import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
 
+import { ReminderIcon } from '@/shared/components';
 import { useTheme } from '@/shared/ui';
 
 export interface BarItem {
   key: string;
-  icon: 'flag' | 'calendar' | 'bell' | 'user' | 'tag' | 'file-text';
+  icon: 'flag' | 'calendar' | 'reminder' | 'user' | 'tag' | 'file-text';
   label: string;
   /** What the field holds, read after the label; undefined when unset. */
   value?: string;
@@ -39,7 +40,7 @@ export function QuickAddBar({ items }: { items: BarItem[] }) {
             accessibilityState={{ selected: set }}
             style={styles.item}
           >
-            <Feather name={it.icon} size={22} color={tint} />
+            {it.icon === 'reminder' ? <ReminderIcon size={22} color={tint} /> : <Feather name={it.icon} size={22} color={tint} />}
             <View style={[styles.dot, { backgroundColor: set ? tint : 'transparent' }]} />
           </Pressable>
         );

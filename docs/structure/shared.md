@@ -35,7 +35,7 @@ src/shared/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   TaskRow.tsx   TaskOrigin.tsx
+│   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
@@ -89,6 +89,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | Piece | Purpose |
 |---|---|
 | `TaskListIcon` | The Inbox tray or the list's color dot |
+| `ReminderIcon` | A reminder's mark everywhere: the hub's alarm clock (Ionicons `alarm-outline`; Feather has none). Never the bell, which is Activity |
 | `UpdateRow` | A notification: unread dot, icon, one line and when (Today's Updates, Activity). Needs you (Respond, Confirm), something to see, or nowhere to go, from `useActivityState` (M58) |
 | `Avatar` | Initials in a circle, colors by a hash of the user id (pickers, Me, a task row's assignee) |
 | `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); on Personal and the user's private lists, Only this task with `PeoplePicker` (D70, D88, M45, M73) |

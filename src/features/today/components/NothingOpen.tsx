@@ -6,12 +6,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
+import { ReminderIcon } from '@/shared/components';
 import { radius, Text, useTheme } from '@/shared/ui';
 
 type Action = 'task' | 'reminder' | 'date' | 'list' | 'share';
-const ACTIONS: { key: Action; icon: ComponentProps<typeof Feather>['name'] }[] = [
+const ACTIONS: { key: Action; icon: ComponentProps<typeof Feather>['name'] | 'reminder' }[] = [
   { key: 'task', icon: 'plus' },
-  { key: 'reminder', icon: 'bell' },
+  { key: 'reminder', icon: 'reminder' },
   { key: 'date', icon: 'calendar' },
   { key: 'list', icon: 'list' },
   { key: 'share', icon: 'users' },
@@ -48,7 +49,7 @@ export function NothingOpen({ done }: { done: boolean | undefined }) {
           {({ pressed }) => (
             <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
               <View style={[styles.icon, { backgroundColor: colors.accentSoft }]}>
-                <Feather name={icon} size={17} color={colors.accent} />
+                {icon === 'reminder' ? <ReminderIcon size={17} color={colors.accent} /> : <Feather name={icon} size={17} color={colors.accent} />}
               </View>
               <View style={styles.fill}>
                 <Text variant="bodyMedium">{t(`home.start.${key}`)}</Text>

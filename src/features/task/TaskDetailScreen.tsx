@@ -15,7 +15,7 @@ import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, CheckCircle, TaskListIcon, TagsRow } from '@/shared/components';
+import { Avatar, CheckCircle, ReminderIcon, TaskListIcon, TagsRow } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -395,7 +395,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         {fields.reminder ? (
           <ListRow
             label={t('taskDetail.fields.reminder')}
-            icon={<Feather name="bell" size={20} color={colors.accent} />}
+            icon={<ReminderIcon color={colors.accent} />}
             value={
               <View style={styles.end}>
                 <Text variant="bodyMedium" color="accent">
@@ -409,7 +409,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
             clearLabel={t('reminders.remove')}
           />
         ) : (
-          <ListRow label={t('taskDetail.fields.reminder')} value={t('common.none')} icon={<Feather name="bell" size={20} color={colors.ink3} />} onPress={() => open('reminder')} />
+          <ListRow label={t('taskDetail.fields.reminder')} value={t('common.none')} icon={<ReminderIcon color={colors.ink3} />} onPress={() => open('reminder')} />
         )}
         <View {...fixed}>
         {fields.repeat ? (

@@ -2,6 +2,7 @@ export { TaskListIcon } from './TaskListIcon';
 export { TaskListPicker } from './TaskListPicker';
 export { DueDatePicker } from './DueDatePicker';
 export { ReminderPicker } from './ReminderPicker';
+export { ReminderIcon } from './ReminderIcon';
 export { TagPicker } from './tags/TagPicker';
 export { TagsRow } from './tags/TagsRow';
 export { sortByRecent, type TagItem } from './tags/tagItems';
