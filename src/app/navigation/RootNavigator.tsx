@@ -33,6 +33,8 @@ import { TimeZoneScreen } from '@/features/me/TimeZoneScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
+import { CommentsScreen } from '@/features/task/CommentsScreen';
+import { HistoryScreen } from '@/features/task/HistoryScreen';
 import { HoldScreen } from '@/features/task/HoldScreen';
 import { TaskDetailScreen } from '@/features/task/TaskDetailScreen';
 import i18n from '@/shared/i18n/i18n';
@@ -99,6 +101,9 @@ const RootStack = createNativeStackNavigator({
         TaskDetail: { screen: TaskDetailScreen, options: { headerShown: true }, linking: 'task/:taskId' },
         // On hold, the long way (M80): a reason, Until, who can resume it; or Resume with a new date.
         Hold: { screen: HoldScreen, options: { headerShown: true } },
+        // Past 60 in Task detail (M83): every comment, or the whole history, on its own screen.
+        Comments: { screen: CommentsScreen, options: { headerShown: true } },
+        TaskHistory: { screen: HistoryScreen, options: { headerShown: true } },
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },

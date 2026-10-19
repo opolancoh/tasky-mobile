@@ -35,4 +35,6 @@ export const taskKeys = {
   detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
   /** A task's comments (D92), newest first in pages. */
   comments: (taskId: Id) => ['tasks', 'task', taskId, 'comments'] as const,
+  /** A task's history (D94), loaded only when asked for. */
+  history: (taskId: Id) => ['tasks', 'task', taskId, 'history'] as const,
 };

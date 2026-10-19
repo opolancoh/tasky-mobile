@@ -23,6 +23,7 @@ import { askReason, Button, chooseAction, confirm, ListRow, Notice, Pill, Screen
 
 import { CommentField } from './components/CommentField';
 import { CommentThread } from './components/CommentThread';
+import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
@@ -461,6 +462,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           </Text>
         )}
       </View>
+      {/* History (D94, M83): on a task someone else sees, loaded only when asked for. */}
+      {comments && <HistorySection taskId={taskId} />}
 
       {!waiting && holds.canHold(task) && (
         <Pressable onPress={holdTask} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>

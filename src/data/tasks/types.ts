@@ -408,6 +408,36 @@ export interface Comment {
   canDelete: boolean;
 }
 
+/** What changed on a task (D94). */
+export type HistoryKind =
+  | 'created' | 'renamed' | 'dueChanged' | 'importance' | 'moved' | 'assigned' | 'accepted' | 'declined' | 'completed' | 'reopened'
+  | 'skipped' | 'confirmed' | 'held' | 'resumed' | 'deleted' | 'restored' | 'notesEdited' | 'stepsEdited' | 'tagsEdited'
+  | 'assigneeLeft' | 'assigneeDeactivated';
+
+/**
+ * One change to a task (GET /tasks/{id}/history, D94). `actor` null: nobody did it by hand. `from`/`to` as stored (titles,
+ * yyyy-MM-dd, "true"/"false", ids); `fromLabel`/`toLabel` a list's name then (null: the Inbox); `fromUser`/`toUser` the
+ * people of an assignment. The app words it.
+ */
+export interface HistoryEntry {
+  id: Id;
+  actor?: UserRef | null;
+  kind: HistoryKind;
+  from?: string | null;
+  to?: string | null;
+  fromLabel?: string | null;
+  toLabel?: string | null;
+  fromUser?: UserRef | null;
+  toUser?: UserRef | null;
+  details?: string | null;
+  at: string;
+}
+
+export interface HistoryPage {
+  items: HistoryEntry[];
+  nextCursor: string | null;
+}
+
 /** GET /tasks/{id}/comments: newest first, keyset-paged. */
 export interface CommentsPage {
   items: Comment[];

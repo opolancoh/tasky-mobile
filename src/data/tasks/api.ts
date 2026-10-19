@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  Comment, CommentsPage, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
+  Comment, CommentsPage, HistoryPage, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
   UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
@@ -182,6 +182,9 @@ export const tasksApi = {
 
   /** GET /tasks/{id}/comments (D92): newest first; `cursor` for older ones. */
   comments: (taskId: Id, limit: number, cursor?: string) => http().get<CommentsPage>(`/tasks/${taskId}/comments`, { query: { limit, cursor } }),
+
+  /** GET /tasks/{id}/history (D94): newest first; `cursor` for older changes. */
+  history: (taskId: Id, limit: number, cursor?: string) => http().get<HistoryPage>(`/tasks/${taskId}/history`, { query: { limit, cursor } }),
 
   /** POST /tasks/{id}/comments: `@{userId}` in the body mentions someone who sees the task. */
   addComment: (taskId: Id, body: string) => http().post<Comment>(`/tasks/${taskId}/comments`, { body: { body } }),

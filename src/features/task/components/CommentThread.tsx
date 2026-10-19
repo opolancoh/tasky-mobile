@@ -1,33 +1,34 @@
+import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { addDays, formatInstant, todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCommentActions } from '@/data/tasks/mutations';
-import { useComments } from '@/data/tasks/queries';
+import { INLINE_MAX, useComments } from '@/data/tasks/queries';
 import type { Comment } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar } from '@/shared/components';
-import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
 import { Button, chooseAction, confirm, Notice, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { mentionParts, plainText } from './mentions';
+import { useWhen } from './useWhen';
 
 /**
- * A task's comments (D92, M82, the hub's A's): at the end of Task detail, newest last, the latest 20 and **Show earlier**.
- * A comment is a row with a face, "Name · time" (· edited) and the text, mentions in the accent. A tap opens its menu:
- * your own **Edit**, **Copy text**, **Delete**; someone else's **Copy text**, and **Delete** for whoever manages the list.
- * Deleting asks first. `highlight`: the comment a notification opened (tinted), `onHighlight` once it's on screen.
+ * A task's comments (D92, M82, the hub's A's): at the end of Task detail, newest last, the latest 20 and **Show earlier**;
+ * past 60, **See all comments** on its own screen (M83, a FlashList). A tap on a comment opens its menu
+ * (`useCommentMenu`). `highlight`: the comment a notification opened (tinted), `onHighlight` once it's on screen.
  */
 export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }: { taskId: Id; count: number; highlight?: Id; onHighlight(): void; onEdit(comment: Comment): void }) {
   const { t } = useTranslation();
   const { space } = useTheme();
+  const navigation = useNavigation();
   const comments = useComments(taskId);
-  const { remove } = useCommentActions(taskId);
-  const items = [...(comments.data?.pages.flatMap((p) => p.items) ?? [])].reverse();   // the API sends newest first
+  const menu = useCommentMenu(taskId, onEdit);
+  const loaded = comments.data?.pages.flatMap((p) => p.items) ?? [];
+  const items = [...loaded].reverse();   // the API sends newest first
   const shown = useRef(false);
   const found = !!highlight && items.some((c) => c.id === highlight);
   useEffect(() => {
@@ -36,25 +37,6 @@ export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }:
       onHighlight();
     }
   }, [found, onHighlight]);
-
-  const menu = async (c: Comment) => {
-    const actions = [
-      ...(c.canEdit ? [{ key: 'edit', label: t('comments.edit'), icon: 'edit-2' as const }] : []),
-      { key: 'copy', label: t('comments.copy'), icon: 'copy' as const },
-      ...(c.canDelete ? [{ key: 'delete', label: t('comments.delete'), icon: 'trash-2' as const, destructive: true }] : []),
-    ];
-    const i = await chooseAction({ title: c.canEdit ? t('comments.yours') : t('comments.theirs', { name: c.author.displayName }), actions, cancelLabel: t('common.cancel') });
-    const action = i === null ? null : actions[i].key;
-    if (action === 'edit') onEdit(c);
-    if (action === 'copy') {
-      await Clipboard.setStringAsync(plainText(c));
-      useToast.getState().show({ message: t('comments.copied') });
-    }
-    if (action === 'delete') {
-      const ok = await confirm({ title: t('comments.deleteTitle'), message: t('comments.deleteBody'), confirmLabel: t('comments.delete'), cancelLabel: t('common.cancel') });
-      if (ok) remove.mutate(c.id, { onSuccess: () => useToast.getState().show({ message: t('comments.deleted') }), onError: toastError });
-    }
-  };
 
   return (
     <View style={{ marginTop: space.xxl, gap: space.xs }}>
@@ -70,11 +52,13 @@ export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }:
         <>
           {comments.hasNextPage && (
             <View style={styles.start}>
-              <Button variant="link" title={t('comments.earlier')} onPress={() => comments.fetchNextPage()} disabled={comments.isFetchingNextPage} />
+              {loaded.length >= INLINE_MAX
+                ? <Button variant="link" title={t('comments.seeAll', { count })} onPress={() => navigation.navigate('Comments', { taskId })} />
+                : <Button variant="link" title={t('comments.earlier')} onPress={() => comments.fetchNextPage()} disabled={comments.isFetchingNextPage} />}
             </View>
           )}
           {!items.length && <Text variant="footnote" color="ink3">{t('comments.none')}</Text>}
-          {/* At most 20 more per tap, inside Task detail's scroll: not a FlashList. */}
+          {/* At most 60 here, inside Task detail's scroll; more on their own screen. */}
           {items.map((c) => <CommentRow key={c.id} comment={c} lit={c.id === highlight} onPress={() => menu(c)} />)}
         </>
       )}
@@ -82,22 +66,42 @@ export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }:
   );
 }
 
-function CommentRow({ comment: c, lit, onPress }: { comment: Comment; lit: boolean; onPress(): void }) {
-  const { t, i18n } = useTranslation();
+/**
+ * A comment's menu: your own **Edit** (where the field is, `onEdit`), **Copy text**, **Delete**; someone else's **Copy
+ * text**, and **Delete** for whoever manages the list. Deleting asks first.
+ */
+export function useCommentMenu(taskId: Id, onEdit?: (comment: Comment) => void) {
+  const { t } = useTranslation();
+  const { remove } = useCommentActions(taskId);
+  return async (c: Comment) => {
+    const actions = [
+      ...(c.canEdit && onEdit ? [{ key: 'edit', label: t('comments.edit'), icon: 'edit-2' as const }] : []),
+      { key: 'copy', label: t('comments.copy'), icon: 'copy' as const },
+      ...(c.canDelete ? [{ key: 'delete', label: t('comments.delete'), icon: 'trash-2' as const, destructive: true }] : []),
+    ];
+    const i = await chooseAction({ title: c.canEdit ? t('comments.yours') : t('comments.theirs', { name: c.author.displayName }), actions, cancelLabel: t('common.cancel') });
+    const action = i === null ? null : actions[i].key;
+    if (action === 'edit') onEdit?.(c);
+    if (action === 'copy') {
+      await Clipboard.setStringAsync(plainText(c));
+      useToast.getState().show({ message: t('comments.copied') });
+    }
+    if (action === 'delete') {
+      const ok = await confirm({ title: t('comments.deleteTitle'), message: t('comments.deleteBody'), confirmLabel: t('comments.delete'), cancelLabel: t('common.cancel') });
+      if (ok) remove.mutate(c.id, { onSuccess: () => useToast.getState().show({ message: t('comments.deleted') }), onError: toastError });
+    }
+  };
+}
+
+/** A comment: its author's face, "Name · time" (· edited) and the text, mentions as @Name in the accent. */
+export function CommentRow({ comment: c, lit = false, onPress }: { comment: Comment; lit?: boolean; onPress(): void }) {
+  const { t } = useTranslation();
   const { colors, space } = useTheme();
   const me = useMe().data;
-  const today = me ? todayIn(me.timeZone) : undefined;
-  const labels = useDateLabels(today);
+  const when = useWhen();
   const mine = c.author.id === me?.id;
   const name = mine ? t('comments.you') : c.author.displayName || t('notifications.someone');
-
-  let when = '';
-  if (me) {
-    const day = formatInstant(c.createdAt, 'en-CA', me.timeZone, { year: 'numeric', month: '2-digit', day: '2-digit' });   // YYYY-MM-DD in the profile's zone
-    const time = formatInstant(c.createdAt, i18n.language, me.timeZone, { hour: 'numeric', minute: '2-digit' });
-    when = day === today ? time : today && day === addDays(today, -1) ? `${t('dates.yesterday')}, ${time}` : `${labels.day(day)}, ${time}`;
-  }
-  const meta = [when, c.editedAt ? t('comments.edited') : ''].filter(Boolean).join(' · ');
+  const meta = [when(c.createdAt), c.editedAt ? t('comments.edited') : ''].filter(Boolean).join(' · ');
 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${name}, ${meta}: ${plainText(c)}`}>
