@@ -50,7 +50,8 @@ export function MeScreen() {
       <SectionLabel>{t('settings.thisDevice')}</SectionLabel>
       <ListRow label={t('settings.appearance')} value={t(`settings.appearances.${appearance}`)} onPress={() => navigation.navigate('Appearance')} divider={false} />
 
-      <SectionLabel>{t('settings.notifications')}</SectionLabel>
+      {/* A group of one row has no header: the row says what it is (no "NOTIFICATIONS › Notifications"). */}
+      <View style={{ marginTop: space.xl }} />
       <ListRow
         label={t('settings.notifications')}
         value={permission === 'unknown' ? undefined : t(permission === 'granted' ? 'settings.remindersOn' : 'settings.remindersOff')}
@@ -63,8 +64,8 @@ export function MeScreen() {
       <ListRow label={t('settings.changePassword')} onPress={() => navigation.navigate('ChangePassword')} />
       <ListRow label={t('settings.devices')} onPress={() => navigation.navigate('Sessions')} divider={false} />
 
-      <SectionLabel>{t('about.title')}</SectionLabel>
-      <ListRow label={t('about.version')} value={appInfo.version} onPress={() => navigation.navigate('About')} divider={false} />
+      <View style={{ marginTop: space.xl }} />
+      <ListRow label={t('about.title')} value={appInfo.version} onPress={() => navigation.navigate('About')} divider={false} />
 
       <Pressable onPress={leave} accessibilityRole="button" style={[styles.signOut, { gap: space.sm, marginTop: space.xxl }]}>
         {({ pressed }) => (
