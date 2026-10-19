@@ -2,6 +2,22 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.5.0 — 2026-10-18
+
+- Add push notifications config
+- Links into the app: invite link in People, Join screen, join with a link (M84)
+- Task history on demand; long comment and history lists on their own screen (M83)
+- Comments and @mentions: thread in Task detail, docked field, @ faces, counts on rows (M82)
+- Bulk actions: long press selects, a bar of six actions, one Undo (M81)
+- On hold: pause icon, reason chip, quick reasons, banner (M80)
+- Workload in People: open and late counts per person (M79)
+- All tasks: Date, List or Person and one filter, in Spaces and a team (M78)
+- Expo Go gets the top-level icon: ios.icon's object only for builds
+- App icon A10: blue disk with a white check on a white tile (M77)
+- Team menu: New list first, no People row on the Team screen (M76)
+- People picker: name only, without where you know them from (M73)
+- Team: title and one line, people one tap away; roles in People (M76)
+
 ## 0.4.0 — 2026-10-17
 
 - Spaces loads as row-shaped skeletons, the fixed rows included (M27, M70)
