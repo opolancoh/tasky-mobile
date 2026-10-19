@@ -2,6 +2,10 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.6.1 — 2026-10-19
+
+- Releases: Gradle's memory per Mac (~/.gradle/gradle.properties) for the Metaspace failure
+
 ## 0.6.0 — 2026-10-19
 
 - Launch screen: the mark with the name on white, black in dark (M87)
