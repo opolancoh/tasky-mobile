@@ -2,6 +2,13 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.6.0 — 2026-10-19
+
+- Launch screen: the mark with the name on white, black in dark (M87)
+- Reminders: the hub's alarm clock instead of the bell, everywhere (ReminderIcon)
+- Me: no header over one-row groups, About row shows the version (M86)
+- Push notifications: Me › Notifications, the ask sheet, token registration, taps and badge (M85, D97)
+
 ## 0.5.0 — 2026-10-18
 
 - Add push notifications config
