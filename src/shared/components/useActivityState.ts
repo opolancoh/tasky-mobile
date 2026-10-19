@@ -5,7 +5,7 @@ import type { MembersOf } from '@/data/tasks/types';
 
 export type ActivityGo =
   | { to: 'invitation'; id: Id }
-  | { to: 'task'; id: Id }
+  | { to: 'task'; id: Id; commentId?: Id }
   | { to: 'taskList'; id: Id }
   | { to: 'team'; id: Id }
   | { to: 'people'; of: MembersOf };
@@ -57,7 +57,7 @@ export function useActivityState(n: Notification): ActivityState {
     default: {
       if (!n.taskId) return subject ? { go: subject } : null;
       const waiting = taskNeeds && home?.[taskNeeds.section].items.some((t) => t.id === n.taskId);
-      return { needs: waiting ? taskNeeds.needs : undefined, go: { to: 'task', id: n.taskId } };
+      return { needs: waiting ? taskNeeds.needs : undefined, go: { to: 'task', id: n.taskId, ...(n.commentId ? { commentId: n.commentId } : {}) } };
     }
   }
 }

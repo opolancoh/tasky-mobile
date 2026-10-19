@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
@@ -13,7 +13,7 @@ import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
-import { taskLimits, type Task, type UserRef } from '@/data/tasks/types';
+import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, CheckCircle, TaskListIcon, TagsRow } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
@@ -21,6 +21,8 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
 import { askReason, Button, chooseAction, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
+import { CommentField } from './components/CommentField';
+import { CommentThread } from './components/CommentThread';
 import { StepList } from './components/StepList';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
@@ -36,10 +38,11 @@ import { useRepeatText } from './useRepeatText';
  * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
  * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
  * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
- * shows Confirm (D71).
+ * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
+ * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  */
-export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
-  const { taskId } = route.params;
+export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id }>) {
+  const { taskId, commentId } = route.params;
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -61,6 +64,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const labels = useDateLabels(today);
   const scroller = useRef<ScrollView>(null);
   const leaving = useRef(false);   // set when the screen closes on purpose (after Save or Delete): no discard prompt
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
     useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, taskList: s.draft.taskList, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
@@ -240,8 +244,21 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
 
   const error = save.error ?? command.error ?? remove.error;
 
+  // Comments (D92, M82): when someone else sees the task, or it already has some (the history stays).
+  const givenTo = !!task.assignee && task.assignee.id !== me.id && !isEmailAssignee(task.assignee.id);
+  const commentCount = task.commentCount ?? 0;
+  const comments = sharedList || givenTo || outside || commentCount > 0;
+  // Who can be mentioned: who sees the task (its list's people, its assignee; for an outside assignee, who gave it).
+  const mentionable = [...new Map([
+    ...(people ?? []).map((m) => [m.userId, { id: m.userId, displayName: m.displayName }] as const),
+    ...[task.assignee, task.assignedBy].filter((u): u is UserRef => !!u && !isEmailAssignee(u.id)).map((u) => [u.id, u] as const),
+  ]).values()].filter((u) => u.id !== me.id && !!u.displayName);
+  const commentField = comments && !waiting
+    ? <CommentField key={editingComment?.id ?? 'new'} taskId={taskId} people={mentionable} editing={editingComment} onDone={() => setEditingComment(null)} />
+    : undefined;
+
   return (
-    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
+    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={commentField}>
       {error && (
         <View style={{ marginBottom: space.md }}>
           <Notice>{errorMessage(error)}</Notice>
@@ -423,6 +440,16 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
       <StepList canAdd={!completed} />
       <NotesField />
       </View>
+
+      {comments && (
+        <CommentThread
+          taskId={taskId}
+          count={commentCount}
+          highlight={commentId}
+          onHighlight={() => setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 300)}
+          onEdit={setEditingComment}
+        />
+      )}
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
         <Text variant="footnote" color="ink3">

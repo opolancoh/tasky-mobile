@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 
 import { isApiError } from '@/core/http/problem';
 import type { Id } from '@/core/types';
@@ -7,7 +7,7 @@ import { tasksApi } from './api';
 import { taskKeys } from './keys';
 import { moveTask, settleTask, type Move } from './optimistic';
 import { assignTarget } from './types';
-import type { TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
+import type { Comment, CommentsPage, TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
 /**
  * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
@@ -374,3 +374,38 @@ export const useRestoreItem = () =>
 
 /** POST /tasks/{id}:reopen from a list (Completed rows, search). */
 export const useReopenTask = () => useTaskToggle(taskKeys.reopening, tasksApi.reopen, 'open');
+
+/**
+ * Comments (D92): not optimistic; a sent comment joins the thread when the API answers (the field keeps the text until
+ * then), and the rows' counts refetch. Edit and delete change the thread in place.
+ */
+export function useCommentActions(taskId: Id) {
+  const queryClient = useQueryClient();
+  const key = taskKeys.comments(taskId);
+  const edit = (change: (items: Comment[]) => Comment[]) =>
+    queryClient.setQueryData<InfiniteData<CommentsPage>>(key, (data) => data && { ...data, pages: data.pages.map((p) => ({ ...p, items: change(p.items) })) });
+  const counts = () => {
+    queryClient.invalidateQueries({ queryKey: taskKeys.views });
+    queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId), exact: true });
+  };
+  const add = useMutation({
+    mutationFn: (body: string) => tasksApi.addComment(taskId, body),
+    onSuccess: (comment) => {
+      queryClient.setQueryData<InfiniteData<CommentsPage>>(key, (data) =>
+        data ? { ...data, pages: data.pages.map((p, i) => (i === 0 ? { ...p, items: [comment, ...p.items] } : p)) } : data);
+      counts();
+    },
+  });
+  const update = useMutation({
+    mutationFn: ({ id, body }: { id: Id; body: string }) => tasksApi.editComment(id, body),
+    onSuccess: (comment) => edit((items) => items.map((x) => (x.id === comment.id ? comment : x))),
+  });
+  const remove = useMutation({
+    mutationFn: (id: Id) => tasksApi.removeComment(id).then(() => id),
+    onSuccess: (id) => {
+      edit((items) => items.filter((x) => x.id !== id));
+      counts();
+    },
+  });
+  return { add, update, remove };
+}

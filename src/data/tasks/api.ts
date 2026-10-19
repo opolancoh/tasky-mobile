@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
+  Comment, CommentsPage, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
   UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
@@ -179,6 +179,18 @@ export const tasksApi = {
    */
   answerAssignment: (task: Versioned, accept: boolean, reason?: string) =>
     http().post<Task | undefined>(`/tasks/${task.id}:${accept ? 'accept' : 'reject'}-assignment`, { ifMatch: task.version, body: accept ? undefined : { reason: reason || undefined } }),
+
+  /** GET /tasks/{id}/comments (D92): newest first; `cursor` for older ones. */
+  comments: (taskId: Id, limit: number, cursor?: string) => http().get<CommentsPage>(`/tasks/${taskId}/comments`, { query: { limit, cursor } }),
+
+  /** POST /tasks/{id}/comments: `@{userId}` in the body mentions someone who sees the task. */
+  addComment: (taskId: Id, body: string) => http().post<Comment>(`/tasks/${taskId}/comments`, { body: { body } }),
+
+  /** PATCH /comments/{id}: its author's new text (marked edited). */
+  editComment: (id: Id, body: string) => http().patch<Comment>(`/comments/${id}`, { body: { body } }),
+
+  /** DELETE /comments/{id}: for good (its author, or whoever manages the list). */
+  removeComment: (id: Id) => http().delete(`/comments/${id}`),
 
   /** POST /tasks/{id}:confirm: whoever assigned it saw that its assignee completed it (D71). */
   confirm: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:confirm`, { ifMatch: task.version }),

@@ -33,4 +33,6 @@ export const taskKeys = {
   confirming: ['tasks', 'confirm'] as const,
   /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
   detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
+  /** A task's comments (D92), newest first in pages. */
+  comments: (taskId: Id) => ['tasks', 'task', taskId, 'comments'] as const,
 };

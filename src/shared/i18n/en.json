@@ -166,7 +166,9 @@
     "invited": "Invited",
     "pending": "Pending",
     "declinedReason": "Declined · {{reason}}",
-    "outsideList": "Outside the list"
+    "outsideList": "Outside the list",
+    "comments_one": "{{count}} comment",
+    "comments_other": "{{count}} comments"
   },
   "browse": {
     "title": "Spaces",
@@ -659,7 +661,9 @@
     "taskDeleted": "{{actor}} deleted {{task}}",
     "taskHeld": "{{actor}} put {{task}} on hold",
     "taskHeldReason": "{{actor}} put {{task}} on hold: {{reason}}",
-    "taskResumed": "{{actor}} resumed {{task}}"
+    "taskResumed": "{{actor}} resumed {{task}}",
+    "commented": "{{actor}} commented on {{task}}: “{{text}}”",
+    "mentioned": "{{actor}} mentioned you in {{task}}: “{{text}}”"
   },
   "invitation": {
     "invitedYou": "{{name}} invited you",
@@ -978,5 +982,27 @@
       "delete_one": "Deleted {{count}} task: in Recently Deleted",
       "delete_other": "Deleted {{count}} tasks: in Recently Deleted"
     }
+  },
+  "comments": {
+    "title": "Comments",
+    "none": "No comments yet. Say what’s going on.",
+    "earlier": "Show earlier",
+    "add": "Add a comment",
+    "send": "Send",
+    "save": "Save the comment",
+    "editing": "Editing your comment",
+    "edit": "Edit",
+    "copy": "Copy text",
+    "copied": "Copied",
+    "delete": "Delete",
+    "deleted": "Comment deleted",
+    "deleteTitle": "Delete this comment?",
+    "deleteBody": "It can’t be brought back.",
+    "yours": "Your comment",
+    "theirs": "{{name}}’s comment",
+    "you": "You",
+    "edited": "edited",
+    "mention": "Mention someone",
+    "mentionName": "Mention {{name}}"
   }
 }

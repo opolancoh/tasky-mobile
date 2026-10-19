@@ -39,7 +39,7 @@ export interface TaskRowProps {
 
 /**
  * A task in a list (task lists, tags, Upcoming): round checkbox, the title (2 lines at most, then …), a meta line
- * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, repeat, Declined or
+ * (its list unless `showList` is off, M57, or "From Olga" for a task the user sees only as its assignee, D70; due date, steps, comments (M82), repeat, Declined or
  * Invited, then a red flag when important, M44) and the initials of whoever has it at the right, you included, except
  * yours in the Inbox (M44; someone given a task from it shows, D88). A task its assignee completed for the user waits here, ticked, with Confirm (D71). Ticking fills the
  * row into Completed at once, its circle spinning until the answer, and back if the API says no (M75). On hold (D91, M80): a
@@ -116,6 +116,12 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
                   {t('taskRow.steps', { done: task.stepsDone, total: task.stepsTotal })}
                 </Text>
               )}
+              {!!task.commentCount && (
+                <View style={[styles.count, { gap: 3 }]} accessible accessibilityLabel={t('taskRow.comments', { count: task.commentCount })}>
+                  <Feather name="message-circle" size={12} color={colors.ink3} />
+                  <Text variant="footnote" color="ink3">{task.commentCount}</Text>
+                </View>
+              )}
               {task.repeats && <Feather name="repeat" size={12} color={colors.ink3} />}
               {showAssignment && task.assignmentStatus === 'pending' && <Text variant="footnote" style={{ color: colors.warn }}>{t('taskRow.pending')}</Text>}
               {task.assignmentStatus === 'declined' && (
@@ -155,5 +161,6 @@ const styles = StyleSheet.create({
   face: { alignSelf: 'center' },
   mail: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   pause: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
+  count: { flexDirection: 'row', alignItems: 'center' },
   chip: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, maxWidth: '100%' },
 });

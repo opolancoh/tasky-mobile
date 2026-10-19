@@ -164,6 +164,8 @@ export interface Task {
   heldBy?: UserRef | null;
   heldAt?: string | null;
   resumer?: UserRef | null;
+  /** Its comments (D92): the thread shows on a shared task or one that has some. */
+  commentCount?: number;
 }
 
 /** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `declineReason`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
@@ -193,6 +195,8 @@ export interface TaskSummary {
   holdReason?: string | null;
   holdUntil?: LocalDate | null;
   resumer?: UserRef | null;
+  /** Its comments (D92), shown on the row. */
+  commentCount?: number;
 }
 
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
@@ -386,8 +390,29 @@ export interface MyReminder {
 }
 
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, taskListNameMax: 100 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, taskListNameMax: 100, commentMax: 2_000 } as const;
 
+
+/**
+ * A comment on a task (D92). `body` keeps mentions as `@{userId}` tokens, named in `mentions`; `canEdit`: the user wrote
+ * it; `canDelete`: wrote it, or manages the list. Times are UTC.
+ */
+export interface Comment {
+  id: Id;
+  author: UserRef;
+  body: string;
+  mentions: UserRef[];
+  createdAt: string;
+  editedAt?: string | null;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+/** GET /tasks/{id}/comments: newest first, keyset-paged. */
+export interface CommentsPage {
+  items: Comment[];
+  nextCursor: string | null;
+}
 
 /**
  * Someone picked by email (D70), before Save: a UserRef whose id is `email:` and the address, so drafts and pickers treat

@@ -16,10 +16,12 @@ export interface ScreenProps {
   contentStyle?: ViewStyle;
   /** The scroll view, with `scroll` (e.g. to bring an error at the top into view). */
   scrollRef?: Ref<ScrollView>;
+  /** With `scroll`: docked under the scrolling content, full width, above the keyboard (Task detail's comment field, M82). */
+  footer?: ReactNode;
 }
 
 /** Every screen's root: background, safe areas, side padding, optional scrolling. */
-export function Screen({ children, scroll = false, followKeyboard = false, edges = ['top', 'bottom'], contentStyle, scrollRef }: ScreenProps) {
+export function Screen({ children, scroll = false, followKeyboard = false, edges = ['top', 'bottom'], contentStyle, scrollRef, footer }: ScreenProps) {
   const { colors, space } = useTheme();
   const padding = { paddingHorizontal: space.xxl, flexGrow: 1 };
 
@@ -30,6 +32,7 @@ export function Screen({ children, scroll = false, followKeyboard = false, edges
           <ScrollView ref={scrollRef} contentContainerStyle={[padding, contentStyle]} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
+          {footer}
         </KeyboardAvoidingView>
       ) : followKeyboard ? (
         <KeyboardRoom bottomPadded={edges.includes('bottom')} style={[padding, contentStyle]}>{children}</KeyboardRoom>

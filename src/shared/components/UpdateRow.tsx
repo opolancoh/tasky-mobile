@@ -26,7 +26,7 @@ export function UpdateRow({ notification }: { notification: Notification }) {
 
   const go = (to: ActivityGo) => {
     if (to.to === 'invitation') navigation.navigate('Invitation', { invitationId: to.id });
-    else if (to.to === 'task') navigation.navigate('TaskDetail', { taskId: to.id });
+    else if (to.to === 'task') navigation.navigate('TaskDetail', { taskId: to.id, commentId: to.commentId });
     else if (to.to === 'taskList') navigation.navigate('TaskList', { taskListId: to.id });
     else if (to.to === 'team') navigation.navigate('Team', { teamId: to.id });
     else navigation.navigate('People', to.of);

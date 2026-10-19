@@ -32,7 +32,7 @@ src/data/
 | `api.ts` | One function per endpoint; calls `http()`, no caching | `identityApi.login(body)` |
 | `keys.ts` | Query key factories | `tenancyKeys.me` |
 | `queries.ts` | Query definitions and hooks | `meQuery`, `useMe()` |
-| `mutations.ts` | Writes with optimistic update, rollback and invalidation | `useSaveTask`, `useChangeTask` |
+| `mutations.ts` | Writes with optimistic update, rollback and invalidation | `useSaveTask`, `useChangeTask`, `useCommentActions` (D92) |
 
 ## Rules
 

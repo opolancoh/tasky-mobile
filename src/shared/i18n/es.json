@@ -166,7 +166,9 @@
     "invited": "Invitada",
     "pending": "Pendiente",
     "declinedReason": "Rechazada · {{reason}}",
-    "outsideList": "Fuera de la lista"
+    "outsideList": "Fuera de la lista",
+    "comments_one": "{{count}} comentario",
+    "comments_other": "{{count}} comentarios"
   },
   "browse": {
     "title": "Espacios",
@@ -659,7 +661,9 @@
     "taskDeleted": "{{actor}} eliminó {{task}}",
     "taskHeld": "{{actor}} puso {{task}} en espera",
     "taskHeldReason": "{{actor}} puso {{task}} en espera: {{reason}}",
-    "taskResumed": "{{actor}} reanudó {{task}}"
+    "taskResumed": "{{actor}} reanudó {{task}}",
+    "commented": "{{actor}} comentó en {{task}}: “{{text}}”",
+    "mentioned": "{{actor}} te mencionó en {{task}}: “{{text}}”"
   },
   "invitation": {
     "invitedYou": "{{name}} te invitó",
@@ -978,5 +982,27 @@
       "delete_one": "{{count}} tarea eliminada: en Eliminado recientemente",
       "delete_other": "{{count}} tareas eliminadas: en Eliminado recientemente"
     }
+  },
+  "comments": {
+    "title": "Comentarios",
+    "none": "Aún no hay comentarios. Cuenta qué está pasando.",
+    "earlier": "Ver anteriores",
+    "add": "Añadir un comentario",
+    "send": "Enviar",
+    "save": "Guardar el comentario",
+    "editing": "Editando tu comentario",
+    "edit": "Editar",
+    "copy": "Copiar texto",
+    "copied": "Copiado",
+    "delete": "Eliminar",
+    "deleted": "Comentario eliminado",
+    "deleteTitle": "¿Eliminar este comentario?",
+    "deleteBody": "No se puede recuperar.",
+    "yours": "Tu comentario",
+    "theirs": "Comentario de {{name}}",
+    "you": "Tú",
+    "edited": "editado",
+    "mention": "Mencionar a alguien",
+    "mentionName": "Mencionar a {{name}}"
   }
 }

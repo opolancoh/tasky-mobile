@@ -19,11 +19,13 @@ export type NotificationKind =
   | 'assignmentCompleted'
   | 'taskDeleted'
   | 'taskHeld'
-  | 'taskResumed';
+  | 'taskResumed'
+  | 'commented'
+  | 'mentioned';
 
 /**
  * One notification (GET /notifications). Names are read when listed, so a renamed task shows its current title;
- * `subject` is the team's or task list's name as it was. `details`: a reject reason, a new due date or a role.
+ * `subject` is the team's or task list's name as it was. `details`: a reject reason, a new due date, a role or a comment's start.
  */
 export interface Notification {
   id: Id;
@@ -38,6 +40,8 @@ export interface Notification {
   otherUserId?: Id | null;
   otherUserName?: string | null;
   details?: string | null;
+  /** Commented, Mentioned (D92): the comment, where the task opens. */
+  commentId?: Id | null;
   createdAt: IsoDateTime;
   readAt?: IsoDateTime | null;
 }

@@ -78,6 +78,16 @@ export const useTaskPages = (filter: TaskFilter, enabled = true) =>
     enabled,
   });
 
+/** A task's comments (D92): the latest 20, then older ones on Show earlier (`fetchNextPage`); newest first in each page. */
+export const useComments = (taskId: Id, enabled = true) =>
+  useInfiniteQuery({
+    queryKey: taskKeys.comments(taskId),
+    queryFn: ({ pageParam }) => tasksApi.comments(taskId, 20, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled,
+  });
+
 /** Recently Deleted (D54): the first 50, newest first. */
 export const useRecentlyDeleted = () => useQuery({ queryKey: taskKeys.deleted, queryFn: () => tasksApi.recentlyDeleted(50) });
 
