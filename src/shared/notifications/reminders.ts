@@ -1,36 +1,39 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { create } from 'zustand';
 
 import { instantIn } from '@/core/dates/localDate';
 import { tasksApi } from '@/data/tasks/api';
 import i18n from '@/shared/i18n/i18n';
+
+import { askForNotifications, readNotificationPermission } from './permission';
 
 /** iOS keeps 64 pending notifications; the nearest 50 leave room (04-notifications.md). */
 const MAX = 50;
 const PREFIX = 'reminder-';
 const CHANNEL = 'reminders';
 
-/** Whether reminders can alert: Me shows "Off" with a way to iOS Settings when not (M42). */
-export const useReminderPermission = create<{ status: 'unknown' | 'granted' | 'denied'; set(status: 'granted' | 'denied'): void }>()((set) => ({
-  status: 'unknown',
-  set: (status) => set({ status }),
-}));
-
-/** Reminders show while the app is open too, as a banner with sound. */
+/**
+ * Reminders show while the app is open too, as a banner with sound. A push (D97) doesn't: with the app open the bell and
+ * the screens refresh instead (usePush).
+ */
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+  handleNotification: async (n) => {
+    const shown = !isPush(n.request.content.data);
+    return { shouldShowBanner: shown, shouldShowList: shown, shouldPlaySound: shown, shouldSetBadge: false };
+  },
 });
 
+/** A push from the API carries its notification's id; a reminder doesn't. */
+export const isPush = (data: Record<string, unknown> | undefined | null) => typeof data?.notificationId === 'string';
+
 /**
- * Asks once, when it matters (the user has a reminder, 04-notifications.md), never at launch. Returns whether reminders
- * may alert.
+ * Whether reminders may alert. With a reminder and the phone never asked, our sheet asks first (D97), never at launch;
+ * once allowed, the next sync schedules them.
  */
 async function allowed(hasReminders: boolean): Promise<boolean> {
-  let permission = await Notifications.getPermissionsAsync();
-  if (!permission.granted && permission.canAskAgain && hasReminders) permission = await Notifications.requestPermissionsAsync();
-  useReminderPermission.getState().set(permission.granted ? 'granted' : 'denied');
-  return permission.granted;
+  const status = await readNotificationPermission();
+  if (status === 'undetermined' && hasReminders) void askForNotifications();
+  return status === 'granted';
 }
 
 /**

@@ -751,7 +751,10 @@
     "server": "Dirección",
     "expoGo": "Expo Go",
     "unreachable": "No responde",
-    "support": "Soporte"
+    "support": "Soporte",
+    "pushToken": "Token push",
+    "copy": "Copiar",
+    "pushTokenCopied": "Token push copiado"
   },
   "settings": {
     "saved": "Guardado",
@@ -1117,5 +1120,38 @@
     "pasteFromClipboard": "Pegar del portapapeles",
     "fromSpaces": "Unirme con un enlace",
     "fromSpacesBody": "Pega un enlace de invitación que te enviaron"
+  },
+  "push": {
+    "channel": "Novedades",
+    "askTitle": "Entérate cuando alguien te asigne una tarea o te responda",
+    "askBody": "Los recordatorios también lo usan. Puedes elegir qué recibir en tu perfil › Notificaciones.",
+    "turnOn": "Activar",
+    "notNow": "Ahora no",
+    "title": "Push",
+    "groups": {
+      "assignedToYou": "Asignadas a ti",
+      "answers": "Respuestas a lo que asignaste",
+      "invitations": "Invitaciones",
+      "onHold": "En espera",
+      "comments": "Comentarios",
+      "mentions": "Menciones"
+    },
+    "groupHints": {
+      "assignedToYou": "Alguien te asigna una tarea",
+      "answers": "Rechazada, dejada o completada: confírmala",
+      "invitations": "A un equipo o una lista",
+      "onHold": "Una tarea tuya se pausa, o puedes reanudarla",
+      "comments": "En tareas que tienes, creaste o comentaste",
+      "mentions": "Alguien te @menciona"
+    },
+    "everyPhone": "A cada teléfono donde tengas la sesión abierta. Todo aparece también en Actividad.",
+    "notInExpoGo": "Las notificaciones push no funcionan en Expo Go: instala Azignia desde TestFlight o Play para recibirlas. Actividad muestra todo igual.",
+    "quietHours": "Horas de silencio",
+    "quietFrom": "Desde",
+    "quietTo": "Hasta",
+    "quietHint": "En la zona horaria de tu perfil. Las notificaciones push en ese horario se omiten; igual aparecen en Actividad. Los recordatorios siguen sonando.",
+    "offInPhone": "Las notificaciones están desactivadas para Azignia. Actívalas en Ajustes del teléfono para recibir recordatorios y notificaciones push.",
+    "turnOnInSettings": "Activar en Ajustes",
+    "remindersHint": "A la hora que elegiste, en este teléfono"
   }
 }

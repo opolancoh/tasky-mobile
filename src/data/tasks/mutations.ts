@@ -18,6 +18,7 @@ import type { Comment, CommentsPage, TaskList, CreateTaskRequest, DeletedItem, M
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
+    meta: { asksNotifications: givesTask },
     mutationFn: async ({ body, withoutReminder, assignee }: { body: CreateTaskRequest; withoutReminder?: boolean; assignee?: Id }) => {
       let task = await tasksApi.createTask(body);
       // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
@@ -34,6 +35,13 @@ export function useCreateTask() {
     },
   });
 }
+
+/**
+ * `meta.asksNotifications` (app/PushWatcher): after these succeed, the app asks to allow notifications if it never has
+ * (D97): giving a task to someone else, creating a team, inviting, joining.
+ */
+const always = () => true;
+const givesTask = (v: { assignee?: Id | null }, me: Id | null) => !!v.assignee && v.assignee !== me;
 
 /** Every team's and list's people, whose workload counts (M79) change with any task. */
 const MEMBERS = ['tasks', 'members'] as const;
@@ -123,7 +131,11 @@ export function useAnswerAssignment() {
  */
 export function useAnswerInvitation() {
   const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: ({ id, join }: { id: Id; join: boolean }) => tasksApi.answerInvitation(id, join), onSettled: refetch });
+  return useMutation({
+    mutationFn: ({ id, join }: { id: Id; join: boolean }) => tasksApi.answerInvitation(id, join),
+    meta: { asksNotifications: (v: { join: boolean }) => v.join },
+    onSettled: refetch,
+  });
 }
 
 /** A command on one task (complete, reopen, skip), for `useChangeTask`. */
@@ -186,6 +198,7 @@ export function useSaveTask(taskId: Id) {
   const key = taskKeys.detail(taskId);
   return useMutation({
     scope: { id: `task-${taskId}` },
+    meta: { asksNotifications: givesTask },
     // The PATCH, then the assignee when it changed (assigning isn't a PATCH field, M43), each on the version the last returned.
     mutationFn: async ({ version, body, assignee }: { version: number; body: UpdateTaskRequest; assignee?: Id | null }) => {
       let task = Object.keys(body).length ? await tasksApi.update({ id: taskId, version }, body) : undefined;
@@ -275,7 +288,7 @@ export function useReorderTags() {
 
 const order = <T,>(list: T[], x: T) => { const i = list.indexOf(x); return i < 0 ? list.length : i; };
 
-export const useCreateTeam = () => useMutation({ mutationFn: (name: string) => tasksApi.createTeam(name), onSettled: useRefetchBrowse() });
+export const useCreateTeam = () => useMutation({ mutationFn: (name: string) => tasksApi.createTeam(name), meta: { asksNotifications: always }, onSettled: useRefetchBrowse() });
 
 export const useRenameTeam = () => useMutation({ mutationFn: ({ team, name }: { team: Team; name: string }) => tasksApi.renameTeam(team, name), onSettled: useRefetchBrowse() });
 
@@ -326,6 +339,7 @@ export function useInvite(of: MembersOf) {
   const key = taskKeys.openInvitations(of.kind, of.id);
   const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
   return useMutation({
+    meta: { asksNotifications: always },
     mutationFn: async (email: string) => {
       const again = !!queryClient.getQueryData<OpenInvitation[]>(key)?.some((x) => same(x.email, email));
       return { invitation: await tasksApi.invite(of, email), again };
@@ -344,6 +358,7 @@ export function useInvitePeople(of: MembersOf) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(of, userId))),
+    meta: { asksNotifications: always },
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
   });
 }
@@ -425,6 +440,7 @@ export function useJoinByLink() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ kind, code }: { kind: 'team' | 'invitation'; code: string }) => tasksApi.joinByLink(kind, code),
+    meta: { asksNotifications: always },
     onSettled: () => {
       refetch();
       queryClient.invalidateQueries({ queryKey: taskKeys.invitations });

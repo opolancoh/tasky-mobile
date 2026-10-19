@@ -8,6 +8,7 @@ import { identityApi } from '@/data/identity/api';
 import type { ChangePasswordRequest, LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
+import { unregisterPush } from '@/shared/notifications/push';
 import { clearReminders } from '@/shared/notifications/reminders';
 
 import { useSessionStore, type SessionStatus } from './sessionStore';
@@ -85,6 +86,7 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
   );
 
   const signOut = useCallback(async () => {
+    await unregisterPush();   // while still signed in: no more pushes for this user here (D97)
     const refreshToken = await tokens.refreshToken();
     if (refreshToken) await identityApi.logout(refreshToken).catch(() => undefined);   // signed out locally either way
     await tokens.clear();

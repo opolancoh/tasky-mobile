@@ -8,7 +8,7 @@ import type { Notification } from '@/data/collaboration/types';
 import { useNotificationText } from '@/shared/hooks/useNotificationText';
 import { Text, useTheme } from '@/shared/ui';
 
-import { useActivityState, type ActivityGo } from './useActivityState';
+import { openActivityGo, useActivityState } from './useActivityState';
 
 /**
  * A notification (Today's Updates, Activity, M39): a dot while unread, its icon, one line and when. Three kinds (M58):
@@ -24,16 +24,9 @@ export function UpdateRow({ notification }: { notification: Notification }) {
   const state = useActivityState(notification);
   const { line, when, icon } = text(notification);
 
-  const go = (to: ActivityGo) => {
-    if (to.to === 'invitation') navigation.navigate('Invitation', { invitationId: to.id });
-    else if (to.to === 'task') navigation.navigate('TaskDetail', { taskId: to.id, commentId: to.commentId });
-    else if (to.to === 'taskList') navigation.navigate('TaskList', { taskListId: to.id });
-    else if (to.to === 'team') navigation.navigate('Team', { teamId: to.id });
-    else navigation.navigate('People', to.of);
-  };
   const press = () => {
     if (!notification.readAt) markRead.mutate([notification.id]);
-    if (state) go(state.go);
+    if (state) openActivityGo(navigation.navigate as (screen: string, params?: object) => void, state.go);
   };
   const label = state?.needs ? t(`activity.${state.needs}`) : null;
 

@@ -22,6 +22,7 @@ import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { BulkSheet } from '@/shared/selection/BulkSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
+import { NotificationAskSheet } from '@/shared/notifications/NotificationAskSheet';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
@@ -30,6 +31,7 @@ import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useAppearanceHydrated
 import { parseJoinLink } from '@/core/links';
 
 import { LinkWatcher, navigationRef } from './LinkWatcher';
+import { PushWatcher } from './PushWatcher';
 import { Navigation } from './navigation/RootNavigator';
 import { queryClient } from './queryClient';
 import { tokenManager } from './services';
@@ -98,6 +100,8 @@ function Root() {
           <BulkSheet />
           <ActionSheetHost />
           <ReminderSync />
+          <PushWatcher />
+          <NotificationAskSheet />
           <NetworkLogAccess />
         </>
       )}

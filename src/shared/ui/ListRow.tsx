@@ -15,6 +15,8 @@ export interface ListRowProps {
   value?: ReactNode;
   /** Shown under the label (up to two lines), e.g. a notes preview; replaces `value`. */
   detail?: string;
+  /** A control at the right edge, centered on the row, shown with or without `detail` (e.g. a switch). */
+  accessory?: ReactNode;
   /** Tappable rows get a chevron; without it the row only shows information. */
   onPress?(): void;
   /** A check mark instead of the chevron, for the chosen option in a picker. */
@@ -34,7 +36,7 @@ export interface ListRowProps {
 }
 
 /** A settings-style row: icon, label, value or detail, chevron. At least 44 pt tall; grows with the text size. */
-export function ListRow({ label, icon, value, detail, onPress, selected, onClear, clearLabel, strong, chevron = true, divider = true, busy = false, accessibilityLabel }: ListRowProps) {
+export function ListRow({ label, icon, value, detail, accessory, onPress, selected, onClear, clearLabel, strong, chevron = true, divider = true, busy = false, accessibilityLabel }: ListRowProps) {
   const { colors, space } = useTheme();
   const spinner = useDelayedFlag(busy);
   const valueNode = typeof value === 'string' ? <Text variant="body" color="ink2" numberOfLines={1}>{value}</Text> : value;
@@ -45,7 +47,7 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
         styles.row,
         { gap: space.md, paddingVertical: detail ? space.sm + 2 : space.sm, backgroundColor: pressed ? colors.surface2 : 'transparent' },
         divider && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },
-        detail ? styles.top : null,
+        detail && !accessory ? styles.top : null,
       ]}
     >
       {icon !== undefined && <View style={styles.icon}>{icon}</View>}
@@ -59,6 +61,7 @@ export function ListRow({ label, icon, value, detail, onPress, selected, onClear
           valueNode && <View style={styles.value}>{valueNode}</View>
         )}
       </View>
+      {accessory}
       {spinner ? (
         <ActivityIndicator size="small" color={colors.ink3} style={styles.trailing} />
       ) : onClear ? (

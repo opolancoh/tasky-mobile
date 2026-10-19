@@ -5,3 +5,8 @@ export const collaborationKeys = {
   unreadCount: ['notifications', 'unread-count'] as const,
   list: ['notifications', 'list'] as const,
 };
+
+/** Push settings (D97): apart from the notification list, so marking read doesn't refetch them. */
+export const pushKeys = {
+  settings: ['push', 'settings'] as const,
+};

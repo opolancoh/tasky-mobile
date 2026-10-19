@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import * as Clipboard from 'expo-clipboard';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -7,7 +8,8 @@ import { useApiVersion } from '@/data/system/queries';
 import { useMe } from '@/data/tenancy/queries';
 import { appInfo } from '@/shared/appInfo';
 import { useNetworkLog } from '@/shared/network/networkLog';
-import { ListRow, Screen, SectionLabel, Text, useTheme } from '@/shared/ui';
+import { usePushToken } from '@/shared/notifications/push';
+import { ListRow, Screen, SectionLabel, Text, useTheme, useToast } from '@/shared/ui';
 
 /**
  * Me › About (M48): this app's version and build ("0.2.0 (14)", or Expo Go), and the API's version and server, so a
@@ -21,6 +23,11 @@ export function AboutScreen() {
   const staff = !!useMe().data?.platformRole;
   const recording = useNetworkLog((s) => s.recording);
   const build = appInfo.expoGo ? t('about.expoGo') : appInfo.build;
+  const pushToken = usePushToken((s) => s.token);
+  const copyToken = async () => {
+    await Clipboard.setStringAsync(pushToken!);
+    useToast.getState().show({ message: t('about.pushTokenCopied') });
+  };
 
   return (
     <Screen scroll edges={['bottom']}>
@@ -28,7 +35,9 @@ export function AboutScreen() {
         <Text variant="title" accessibilityRole="header">{t('about.title')}</Text>
       </View>
       <SectionLabel>{t('about.app')}</SectionLabel>
-      <ListRow label={t('about.version')} value={build ? `${appInfo.version} (${build})` : appInfo.version} divider={false} />
+      <ListRow label={t('about.version')} value={build ? `${appInfo.version} (${build})` : appInfo.version} divider={!!pushToken} />
+      {/* Test builds: for Expo's push tool (docs/push-setup.md, Checking it works). */}
+      {pushToken && <ListRow label={t('about.pushToken')} value={t('about.copy')} onPress={copyToken} chevron={false} divider={false} />}
 
       <SectionLabel>{t('about.api')}</SectionLabel>
       <ListRow label={t('about.version')} value={api.data?.version ?? (api.isError ? t('about.unreachable') : '…')} />

@@ -1,7 +1,7 @@
 import type { Id } from '@/core/types';
 import type { Notification } from '@/data/collaboration/types';
 import { useHome, useInvitations, useTaskLists, useTeams } from '@/data/tasks/queries';
-import type { MembersOf } from '@/data/tasks/types';
+import type { Home, MembersOf, MyInvitation, TaskList, Team } from '@/data/tasks/types';
 
 export type ActivityGo =
   | { to: 'invitation'; id: Id }
@@ -20,19 +20,26 @@ const TASK_NEEDS: Partial<Record<Notification['kind'], { section: 'toAnswer' | '
   assignmentCompleted: { section: 'followUp', needs: 'confirm' },
 };
 
+/** What a notification's state is read from: the queries Today already has (GET /home, the lists, the invitations). */
+export interface ActivitySources {
+  invitations?: MyInvitation[];
+  taskLists?: TaskList[];
+  teams?: Team[];
+  home?: Home;
+}
+
+/** The fields a notification's state needs: a pushed one carries only these (D97). */
+export type ActivityNotification = Pick<Notification, 'kind' | 'teamId' | 'taskListId' | 'taskId' | 'commentId'>;
+
 /**
  * A notification's state from what the app already reads (M58): needs the user (an open invitation; a task still in
  * Today's to answer or follow-up sections), something to see (its task, list, team or people), or nowhere to go
  * (removed, deleted, an invitation no longer open, a list or team the user left). Same queries as Today (GET /home and
- * the lists), so no extra requests; a task past a section's first 5 shows as something to see.
+ * the lists), so no extra requests; a task past a section's first 5 shows as something to see. A tapped push asks it
+ * too (shared/notifications/push.ts), so it opens what its Activity row opens.
  */
-export function useActivityState(n: Notification): ActivityState {
-  const invitations = useInvitations().data;
-  const taskLists = useTaskLists().data;
-  const teams = useTeams().data;
+export function activityState(n: ActivityNotification, { invitations, taskLists, teams, home }: ActivitySources): ActivityState {
   const taskNeeds = TASK_NEEDS[n.kind];
-  const home = useHome().data;
-
   const inList = !!n.taskListId && !!taskLists?.some((l) => l.id === n.taskListId);
   const inTeam = !!n.teamId && !!teams?.some((x) => x.id === n.teamId);
   const subject: ActivityGo | null = n.taskListId ? (inList ? { to: 'taskList', id: n.taskListId } : null) : n.teamId && inTeam ? { to: 'team', id: n.teamId } : null;
@@ -61,4 +68,24 @@ export function useActivityState(n: Notification): ActivityState {
       return { needs: waiting ? taskNeeds.needs : undefined, go: { to: 'task', id: n.taskId, ...(n.commentId ? { commentId: n.commentId } : {}) } };
     }
   }
+}
+
+/** The same for a row on screen, from the cached queries. */
+export function useActivityState(n: Notification): ActivityState {
+  const invitations = useInvitations().data;
+  const taskLists = useTaskLists().data;
+  const teams = useTeams().data;
+  const home = useHome().data;
+  return activityState(n, { invitations, taskLists, teams, home });
+}
+
+type Navigate = (screen: string, params?: object) => void;
+
+/** Opens where a notification leads: its Activity row and a tapped push (D97). */
+export function openActivityGo(navigate: Navigate, to: ActivityGo) {
+  if (to.to === 'invitation') navigate('Invitation', { invitationId: to.id });
+  else if (to.to === 'task') navigate('TaskDetail', { taskId: to.id, commentId: to.commentId });
+  else if (to.to === 'taskList') navigate('TaskList', { taskListId: to.id });
+  else if (to.to === 'team') navigate('Team', { teamId: to.id });
+  else navigate('People', to.of);
 }

@@ -26,6 +26,7 @@ import { NetworkLogScreen } from '@/features/network-log/NetworkLogScreen';
 import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';
 import { EditNameScreen } from '@/features/me/EditNameScreen';
 import { AppearanceScreen } from '@/features/me/AppearanceScreen';
+import { NotificationsScreen } from '@/features/me/NotificationsScreen';
 import { LanguageScreen } from '@/features/me/LanguageScreen';
 import { MeScreen } from '@/features/me/MeScreen';
 import { SessionsScreen } from '@/features/me/SessionsScreen';
@@ -127,6 +128,7 @@ const RootStack = createNativeStackNavigator({
         TimeZone: { screen: TimeZoneScreen, options: { headerShown: true } },
         Language: { screen: LanguageScreen, options: { headerShown: true } },
         Appearance: { screen: AppearanceScreen, options: { headerShown: true } },
+        Notifications: { screen: NotificationsScreen, options: { headerShown: true } },
         ChangePassword: { screen: ChangePasswordScreen, options: { headerShown: true } },
         Sessions: { screen: SessionsScreen, options: { headerShown: true } },
         About: { screen: AboutScreen, options: { headerShown: true } },

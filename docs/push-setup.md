@@ -92,14 +92,15 @@ every app in the Apple team; Apple allows two at a time.
 
 ## The app
 
-What the code needs (done when push is built):
+Built (M85): `docs/structure/shared.md › notifications`, `src/app/PushWatcher.tsx`.
 
-- `app.json`: `android.googleServicesFile: "./google-services.json"` (to add); `expo-notifications` in `plugins` and
-  the EAS project id in `extra.eas.projectId` (both there already; `getExpoPushTokenAsync({ projectId })` needs it).
-- Ask for permission at a useful moment, get the Expo push token, send it to the API (`PUT /me/devices/{installId}`);
-  remove it on sign-out.
+- `app.json`: `android.googleServicesFile: "./google-services.json"`; `expo-notifications` in `plugins`; the EAS project
+  id in `extra.eas.projectId` (`getExpoPushTokenAsync({ projectId })` needs it).
+- Asks for permission at a useful moment (our sheet first), registers the Expo push token with the API
+  (`PUT /me/devices/{installId}`), removes it on sign-out (`DELETE`).
 - **Expo Go** can't receive push on Android (SDK 53+): the app skips registering there. Test on a TestFlight build and
-  an Android release build ([Releases](releases.md#building-for-testers)).
+  an Android release build ([Releases](releases.md#building-for-testers)); a change to `app.json` or the native config
+  needs a new build.
 
 ## Where each secret lives
 

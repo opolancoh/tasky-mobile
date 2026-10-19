@@ -14,7 +14,7 @@ src/shared/
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
 │   └── palettes/          One JSON file per palette; active.json names the one in use
-├── notifications/     reminders.ts (sync the phone's reminders with GET /me/reminders, permission state), useReminders.ts (ReminderSync, mounted in App)
+├── notifications/     permission.ts (the one permission, our ask sheet's state), push.ts (register the push token), NotificationAskSheet.tsx, reminders.ts (sync the phone's reminders with GET /me/reminders), useReminders.ts (ReminderSync, mounted in App)
 ├── appInfo.ts             This app's version, build number (store builds), Expo Go or not, where to update (M46, M48)
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
@@ -112,7 +112,9 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 
 ## notifications/
 
-Reminders as local notifications ([M42](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), D11). `syncReminders(timeZone)` keeps the nearest 50 scheduled at their date and time in the profile's zone (one run at a time); `ReminderSync` runs it at launch, on foreground, on a time zone change and after saved changes, and opens a tapped reminder's task. Permission is asked when the first reminder exists; `useReminderPermission` tells Me. Sign-out clears them (`clearReminders`).
+Reminders as local notifications ([M42](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), D11). `syncReminders(timeZone)` keeps the nearest 50 scheduled at their date and time in the profile's zone (one run at a time); `ReminderSync` runs it at launch, on foreground, on a time zone change, once allowed and after saved changes. Sign-out clears them (`clearReminders`).
+
+Push (M85, D97). **One permission** for both (`permission.ts`, `useNotificationPermission`): never asked by the phone first; `askForNotifications()` shows `NotificationAskSheet` (one line, Turn on or Not now) when it matters: a reminder set, or a mutation whose `meta.asksNotifications` says so (giving a task to someone, a team created, an invite, joining). `push.ts`: `registerPush()` sends the Expo push token to `PUT /me/devices/{installId}` (an install id kept in SecureStore), skipped in Expo Go; `unregisterPush()` before sign-out; `usePushToken` for Me › About. The notification handler (`reminders.ts`) shows reminders as banners and no banner for a push with the app open. `app/PushWatcher.tsx` does the rest (taps, badge, refresh).
 
 ## session/
 

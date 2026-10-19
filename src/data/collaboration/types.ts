@@ -1,4 +1,4 @@
-import type { Id, IsoDateTime } from '@/core/types';
+import type { Id, IsoDateTime, LocalTime } from '@/core/types';
 
 /** What happened; the app words it in the reader's language (product: Notifications). */
 export type NotificationKind =
@@ -51,3 +51,20 @@ export interface NotificationsPage {
   items: Notification[];
   nextCursor: string | null;
 }
+
+/** Me › Notifications (D97): a push switch per group and quiet hours ("HH:mm" in the profile's time zone), the same on every device. */
+export interface NotificationSettings {
+  assignedToYou: boolean;
+  answers: boolean;
+  invitations: boolean;
+  onHold: boolean;
+  comments: boolean;
+  mentions: boolean;
+  quietHours: boolean;
+  quietFrom: LocalTime;
+  quietTo: LocalTime;
+}
+
+/** The push switches, in Me's order. */
+export const PUSH_GROUPS = ['assignedToYou', 'answers', 'invitations', 'onHold', 'comments', 'mentions'] as const;
+export type PushGroup = (typeof PUSH_GROUPS)[number];

@@ -11,6 +11,7 @@ src/app/
 ├── services.ts          The single HTTP client and token manager, wired to Expo
 ├── queryClient.ts       TanStack Query defaults
 ├── LinkWatcher.tsx      Join links (azignia://join, azignia://i, D95, M84): kept through sign-in, then opened as Join; navigationRef
+├── PushWatcher.tsx      Push (D97, M85): registers the token, refreshes on a push, the icon's badge, opens a tapped push (as its Activity row) or reminder, asks after mutations that make it worth it
 └── navigation/
     ├── RootNavigator.tsx  Every route, grouped by session status
     └── tabs.tsx           The bottom tab bar and its + button

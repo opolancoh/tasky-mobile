@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { collaborationApi } from './api';
-import { collaborationKeys } from './keys';
+import { collaborationKeys, pushKeys } from './keys';
 
 /** Today's Updates (M32): the newest unread notifications. */
 export const useUnreadNotifications = (limit: number) =>
@@ -19,3 +19,6 @@ export const useNotifications = (pageSize: number, enabled = true) =>
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     enabled,
   });
+
+/** Me › Notifications (D97). */
+export const useNotificationSettings = () => useQuery({ queryKey: pushKeys.settings, queryFn: collaborationApi.notificationSettings });

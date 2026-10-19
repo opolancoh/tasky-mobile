@@ -751,7 +751,10 @@
     "server": "Address",
     "expoGo": "Expo Go",
     "unreachable": "Can't reach it",
-    "support": "Support"
+    "support": "Support",
+    "pushToken": "Push token",
+    "copy": "Copy",
+    "pushTokenCopied": "Push token copied"
   },
   "settings": {
     "saved": "Saved",
@@ -1090,5 +1093,38 @@
     "pasteFromClipboard": "Paste from the clipboard",
     "fromSpaces": "Join with a link",
     "fromSpacesBody": "Paste an invite link someone sent you"
+  },
+  "push": {
+    "channel": "Updates",
+    "askTitle": "Get told when someone gives you a task or replies",
+    "askBody": "Reminders use this too. You can change what you get in Me › Notifications.",
+    "turnOn": "Turn on",
+    "notNow": "Not now",
+    "title": "Push",
+    "groups": {
+      "assignedToYou": "Assigned to you",
+      "answers": "Answers to what you gave",
+      "invitations": "Invitations",
+      "onHold": "On hold",
+      "comments": "Comments",
+      "mentions": "Mentions"
+    },
+    "groupHints": {
+      "assignedToYou": "Someone gives you a task",
+      "answers": "Declined, dropped, or done: confirm it",
+      "invitations": "To a team or a list",
+      "onHold": "A task of yours is paused, or you can resume it",
+      "comments": "On tasks you have, made or commented on",
+      "mentions": "Someone @mentions you"
+    },
+    "everyPhone": "To every phone you’re signed in on. All of it also shows in Activity.",
+    "notInExpoGo": "Push doesn’t work in Expo Go: install Azignia from TestFlight or Play to get it. Activity shows everything either way.",
+    "quietHours": "Quiet hours",
+    "quietFrom": "From",
+    "quietTo": "To",
+    "quietHint": "In your profile’s time zone. Pushes in this time are skipped; they still show in Activity. Reminders still ring.",
+    "offInPhone": "Notifications are off for Azignia. Turn them on in the phone’s Settings to get reminders and pushes.",
+    "turnOnInSettings": "Turn on in Settings",
+    "remindersHint": "At the time you set, on this phone"
   }
 }

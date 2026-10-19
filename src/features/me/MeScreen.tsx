@@ -1,19 +1,19 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { zoneCity } from '@/core/dates/timeZones';
 import { useMe } from '@/data/tenancy/queries';
 import { appInfo } from '@/shared/appInfo';
 import { Avatar } from '@/shared/components';
-import { useReminderPermission } from '@/shared/notifications/reminders';
+import { useNotificationPermission } from '@/shared/notifications/permission';
 import { useSession } from '@/shared/session/SessionProvider';
 import { confirm, ListRow, Screen, SectionLabel, SkeletonRow, Text, useAppearance, useTheme } from '@/shared/ui';
 
 /**
  * Me (M39, M41), pushed from the avatar on Today and Activity: who the user is; Settings: name, time zone and language
- * (each a page that saves), email, change password, signed-in devices; About (M48); Sign out (asks first).
+ * (each a page that saves), Notifications (D97), email, change password, signed-in devices; About (M48); Sign out (asks first).
  */
 export function MeScreen() {
   const { t } = useTranslation();
@@ -21,7 +21,7 @@ export function MeScreen() {
   const { signOut } = useSession();
   const navigation = useNavigation();
   const me = useMe().data;
-  const permission = useReminderPermission((s) => s.status);
+  const permission = useNotificationPermission((s) => s.status);
   const appearance = useAppearance((s) => s.appearance);
   const company = me?.tenant.type === 'organization' && !!me.tenant.name;
 
@@ -52,10 +52,9 @@ export function MeScreen() {
 
       <SectionLabel>{t('settings.notifications')}</SectionLabel>
       <ListRow
-        label={t('settings.reminders')}
-        value={permission === 'unknown' ? undefined : t(permission === 'denied' ? 'settings.remindersOff' : 'settings.remindersOn')}
-        detail={permission === 'denied' ? t('settings.remindersOffHint') : undefined}
-        onPress={permission === 'denied' ? () => Linking.openSettings() : undefined}
+        label={t('settings.notifications')}
+        value={permission === 'unknown' ? undefined : t(permission === 'granted' ? 'settings.remindersOn' : 'settings.remindersOff')}
+        onPress={() => navigation.navigate('Notifications')}
         divider={false}
       />
 
