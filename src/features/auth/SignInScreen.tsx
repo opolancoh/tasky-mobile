@@ -9,6 +9,8 @@ import { errorMessage, fieldErrors } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { Button, Logo, Notice, Screen, Text, TextField, useTheme } from '@/shared/ui';
 
+import { usePendingLink } from '@/shared/links/pendingLinkStore';
+
 import { useEmailField } from './useEmailField';
 import { validateSignIn, type SignInField } from './validation';
 
@@ -20,7 +22,7 @@ export function SignInScreen() {
   const navigation = useNavigation();
   const passwordRef = useRef<TextInput>(null);
 
-  const emailField = useEmailField();
+  const emailField = useEmailField(usePendingLink.getState().email ?? '');   // from an invitation email's link (D95)
   const email = emailField.value;
   const [password, setPassword] = useState('');
   const [localErrors, setLocalErrors] = useState<Partial<Record<SignInField, string>>>({});

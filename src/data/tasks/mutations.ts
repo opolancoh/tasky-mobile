@@ -409,3 +409,25 @@ export function useCommentActions(taskId: Id) {
   });
   return { add, update, remove };
 }
+
+/** A team's invite link (D95): New link (the old stops working) or Turn off; the team's link refetches. */
+export function useInviteLinkActions(teamId: Id) {
+  const queryClient = useQueryClient();
+  const key = taskKeys.inviteLink(teamId);
+  const renew = useMutation({ mutationFn: () => tasksApi.newInviteLink(teamId), onSuccess: (state) => queryClient.setQueryData(key, state) });
+  const turnOff = useMutation({ mutationFn: () => tasksApi.turnOffInviteLink(teamId), onSuccess: () => queryClient.setQueryData(key, { link: null }) });
+  return { renew, turnOff };
+}
+
+/** Join from a link (D95): afterwards Spaces, Home and the invitations refetch (a new team or list, a task to answer). */
+export function useJoinByLink() {
+  const refetch = useRefetchBrowse();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ kind, code }: { kind: 'team' | 'invitation'; code: string }) => tasksApi.joinByLink(kind, code),
+    onSettled: () => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: taskKeys.invitations });
+    },
+  });
+}

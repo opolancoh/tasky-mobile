@@ -155,6 +155,8 @@ export function BrowseScreen() {
       items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
       if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })); }
       else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
+      // Links into the app (D95, M84): an invite link someone sent, pasted.
+      if (!teamList.length || isOpen('teams')) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
     }
     // Tags appear with the first one: they're added from a task, not here.
     if (tagList.length) {

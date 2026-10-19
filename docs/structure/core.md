@@ -7,6 +7,7 @@ Plain TypeScript with no React, React Native or Expo imports (enforced by lint).
 ```
 src/core/
 ├── types.ts              Id, LocalDate, IsoDateTime, Version
+├── links.ts              parseJoinLink: a team's invite link or an invitation email's, as a link or a pasted code (D95)
 ├── http/
 │   ├── client.ts         fetch with the API's rules
 │   ├── httpLog.ts        HttpLogger (each request with its headers, response or error with headers and raw body), masking, the development terminal log

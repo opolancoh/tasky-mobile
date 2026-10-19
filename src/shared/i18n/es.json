@@ -663,7 +663,8 @@
     "taskHeldReason": "{{actor}} puso {{task}} en espera: {{reason}}",
     "taskResumed": "{{actor}} reanudó {{task}}",
     "commented": "{{actor}} comentó en {{task}}: “{{text}}”",
-    "mentioned": "{{actor}} te mencionó en {{task}}: “{{text}}”"
+    "mentioned": "{{actor}} te mencionó en {{task}}: “{{text}}”",
+    "joinedByLink": "{{other}} se unió a {{subject}} con el enlace de invitación"
   },
   "invitation": {
     "invitedYou": "{{name}} te invitó",
@@ -860,7 +861,21 @@
     "openCount_one": "{{count}} abierta",
     "openCount_other": "{{count}} abiertas",
     "lateCount_one": "{{count}} vencida",
-    "lateCount_other": "{{count}} vencidas"
+    "lateCount_other": "{{count}} vencidas",
+    "link": {
+      "row": "Enlace de invitación",
+      "on": "Vence el {{date}} · cualquiera con él puede unirse",
+      "offDetail": "Apagado · crea uno para compartir en un chat",
+      "title": "Enlace de invitación · vence el {{date}}",
+      "share": "Compartir",
+      "copy": "Copiar",
+      "copied": "Enlace copiado",
+      "renew": "Enlace nuevo",
+      "renewed": "Enlace nuevo: el anterior dejó de funcionar",
+      "turnOff": "Apagar",
+      "off": "Enlace de invitación apagado",
+      "shareMessage": "Únete a {{name}} en Azignia: {{url}}"
+    }
   },
   "hold": {
     "onHold": "En espera",
@@ -1072,5 +1087,35 @@
     "notesEdited_you": "editaste las notas",
     "stepsEdited_you": "editaste los pasos",
     "tagsEdited_you": "editaste las etiquetas"
+  },
+  "join": {
+    "title": "¿Unirte a {{name}}?",
+    "already": "Ya estás en {{name}}",
+    "taskTitle": "{{name}} te asignó «{{title}}»",
+    "taskBody": "Acéptala o recházala: solo verás esta tarea.",
+    "invitedBy": "{{name}} te invitó",
+    "teamSize": "{{people}} · {{lists}}",
+    "listSize": "{{people}} · {{tasks}}",
+    "lists_one": "{{count}} lista",
+    "lists_other": "{{count}} listas",
+    "openTasks_one": "{{count}} tarea abierta",
+    "openTasks_other": "{{count}} tareas abiertas",
+    "otherEmail": "Esta invitación se envió a {{sent}}. Iniciaste sesión como {{me}}.",
+    "join": "Unirme",
+    "joinAs": "Unirme como {{email}}",
+    "seeTask": "Ver la tarea",
+    "open": "Abrir",
+    "notNow": "Ahora no",
+    "joined": "Ya estás en {{name}}",
+    "gone": "Este enlace ya no funciona",
+    "goneBody": "Pide a quien te invitó un enlace nuevo.",
+    "next": "Siguiente",
+    "pasteTitle": "Unirme con un enlace",
+    "pasteBody": "Pega el enlace de invitación que te enviaron, o escribe su código.",
+    "linkLabel": "Enlace o código",
+    "notALink": "Ese no es un enlace de invitación de Azignia.",
+    "pasteFromClipboard": "Pegar del portapapeles",
+    "fromSpaces": "Unirme con un enlace",
+    "fromSpacesBody": "Pega un enlace de invitación que te enviaron"
   }
 }

@@ -88,6 +88,13 @@ export const useComments = (taskId: Id, enabled = true) =>
     enabled,
   });
 
+/** A team's invite link (D95), for its owner and admins (`enabled`). */
+export const useInviteLink = (teamId: Id, enabled: boolean) => useQuery({ queryKey: taskKeys.inviteLink(teamId), queryFn: () => tasksApi.inviteLink(teamId), enabled });
+
+/** What a link opens (D95), before joining. */
+export const useLinkPreview = (kind: 'team' | 'invitation', code: string) =>
+  useQuery({ queryKey: taskKeys.linkPreview(kind, code), queryFn: () => tasksApi.previewLink(kind, code), retry: false });
+
 /** How many a list inside Task detail shows before it moves to its own screen (M83): more would draw too much at once. */
 export const INLINE_MAX = 60;
 

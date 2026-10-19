@@ -25,6 +25,10 @@ export const taskKeys = {
   /** The Today tab (GET /home) and its sections (See all): views too, so any task change refetches them. */
   home: ['tasks', 'views', 'home'] as const,
   homeSection: (section: string) => ['tasks', 'views', 'home', section] as const,
+  /** A team's invite link (D95). */
+  inviteLink: (teamId: Id) => ['tasks', 'members', 'team', teamId, 'link'] as const,
+  /** What a link opens (D95): `kind` 'team' (an invite link's code) or 'invitation' (an email's token). */
+  linkPreview: (kind: string, code: string) => ['tasks', 'link', kind, code] as const,
   /** Invitations waiting for the caller (also inside Today). */
   invitations: ['tasks', 'views', 'invitations'] as const,
   /** Toggles on a task (mutation keys, M75): rows read which tasks are still saving. */

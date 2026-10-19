@@ -47,6 +47,7 @@ export function useActivityState(n: Notification): ActivityState {
       return subject ? { go: subject } : null;
     }
     case 'invitationAccepted':
+    case 'joinedByLink':
       return subject ? { go: { to: 'people', of: n.taskListId ? { kind: 'taskList', id: n.taskListId } : { kind: 'team', id: n.teamId! } } } : null;
     case 'roleChanged':
     case 'ownershipReceived':

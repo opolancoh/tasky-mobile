@@ -31,6 +31,8 @@ import { MeScreen } from '@/features/me/MeScreen';
 import { SessionsScreen } from '@/features/me/SessionsScreen';
 import { TimeZoneScreen } from '@/features/me/TimeZoneScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
+import { JoinPasteScreen } from '@/features/sharing/JoinPasteScreen';
+import { JoinScreen } from '@/features/sharing/JoinScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
 import { CommentsScreen } from '@/features/task/CommentsScreen';
@@ -107,6 +109,9 @@ const RootStack = createNativeStackNavigator({
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
+        // Links into the app (D95, M84): what a link opens (from LinkWatcher or a paste), and pasting one.
+        JoinLink: { screen: JoinScreen, options: { headerShown: true, presentation: 'modal' } },
+        JoinPaste: { screen: JoinPasteScreen, options: { headerShown: true } },
         // Home's bell (M74).
         Activity: { screen: ActivityScreen, options: { headerShown: true } },
         // Browse (M38): a list, a team, a list's or team's people, the other task lists, Archived, Recently Deleted.

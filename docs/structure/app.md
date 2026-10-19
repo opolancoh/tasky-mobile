@@ -10,6 +10,7 @@ src/app/
 ├── config.ts            EXPO_PUBLIC_* settings: the API address, the development HTTP log level
 ├── services.ts          The single HTTP client and token manager, wired to Expo
 ├── queryClient.ts       TanStack Query defaults
+├── LinkWatcher.tsx      Join links (azignia://join, azignia://i, D95, M84): kept through sign-in, then opened as Join; navigationRef
 └── navigation/
     ├── RootNavigator.tsx  Every route, grouped by session status
     └── tabs.tsx           The bottom tab bar and its + button

@@ -19,6 +19,8 @@ src/shared/
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
 │   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
+├── links/
+│   └── pendingLinkStore.ts  A join link kept until someone is signed in; an invitation's email for sign-up (D95)
 ├── selection/             Bulk actions (M81)
 │   ├── selectionStore.ts  Which tasks are picked, in which screen (route key); useSelectionScope (start, ends on blur and Android's back), useRowSelection, selectable()
 │   ├── useBulkActions.ts  Complete, Date, Assign, Move, Flag, Put on hold, Delete: one request per task with its newest cached version, 4 at a time, optimistic rows (editRows), failed ones stay picked, one toast with one Undo

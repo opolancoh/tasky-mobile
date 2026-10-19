@@ -2,7 +2,7 @@ import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http } from '../http';
 import type {
-  Comment, CommentsPage, HistoryPage, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
+  Comment, CommentsPage, HistoryPage, InviteLink, LinkPreview, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
   UpdateTaskListRequest, UpdateTaskRequest,
 } from './types';
 
@@ -182,6 +182,19 @@ export const tasksApi = {
 
   /** GET /tasks/{id}/comments (D92): newest first; `cursor` for older ones. */
   comments: (taskId: Id, limit: number, cursor?: string) => http().get<CommentsPage>(`/tasks/${taskId}/comments`, { query: { limit, cursor } }),
+
+  /** A team's invite link (D95): see it, make a new one (the old stops), turn it off. Owner and admins. */
+  inviteLink: (teamId: Id) => http().get<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
+  newInviteLink: (teamId: Id) => http().post<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
+  turnOffInviteLink: (teamId: Id) => http().delete(`/teams/${teamId}/invite-link`),
+
+  /** What a team's invite link or an invitation email's link opens (D95); anyone with the code, signed in or not. */
+  previewLink: (kind: 'team' | 'invitation', code: string) =>
+    http().get<LinkPreview>(kind === 'team' ? `/invite-links/${encodeURIComponent(code)}` : `/invitations/${encodeURIComponent(code)}`),
+
+  /** Join with a team's invite link, or accept an email's invitation by its code (from any account, D95). */
+  joinByLink: (kind: 'team' | 'invitation', code: string) =>
+    http().post(kind === 'team' ? `/invite-links/${encodeURIComponent(code)}:accept` : `/invitations/${encodeURIComponent(code)}:accept`),
 
   /** GET /tasks/{id}/history (D94): newest first; `cursor` for older changes. */
   history: (taskId: Id, limit: number, cursor?: string) => http().get<HistoryPage>(`/tasks/${taskId}/history`, { query: { limit, cursor } }),

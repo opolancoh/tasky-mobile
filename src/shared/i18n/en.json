@@ -663,7 +663,8 @@
     "taskHeldReason": "{{actor}} put {{task}} on hold: {{reason}}",
     "taskResumed": "{{actor}} resumed {{task}}",
     "commented": "{{actor}} commented on {{task}}: “{{text}}”",
-    "mentioned": "{{actor}} mentioned you in {{task}}: “{{text}}”"
+    "mentioned": "{{actor}} mentioned you in {{task}}: “{{text}}”",
+    "joinedByLink": "{{other}} joined {{subject}} with the invite link"
   },
   "invitation": {
     "invitedYou": "{{name}} invited you",
@@ -860,7 +861,21 @@
     "openCount_one": "{{count}} open",
     "openCount_other": "{{count}} open",
     "lateCount_one": "{{count}} late",
-    "lateCount_other": "{{count}} late"
+    "lateCount_other": "{{count}} late",
+    "link": {
+      "row": "Invite link",
+      "on": "Expires {{date}} · anyone with it can join",
+      "offDetail": "Off · make one to share in a chat",
+      "title": "Invite link · expires {{date}}",
+      "share": "Share",
+      "copy": "Copy",
+      "copied": "Link copied",
+      "renew": "New link",
+      "renewed": "New link: the old one stopped working",
+      "turnOff": "Turn off",
+      "off": "Invite link turned off",
+      "shareMessage": "Join {{name}} on Azignia: {{url}}"
+    }
   },
   "hold": {
     "onHold": "On hold",
@@ -1045,5 +1060,35 @@
     "assigneeLeft": "Unassigned when {{name}} left {{place}}",
     "assigneeLost": "Unassigned when {{name}} lost access",
     "assigneeDeactivated": "Unassigned when {{name}}’s account was deactivated"
+  },
+  "join": {
+    "title": "Join {{name}}?",
+    "already": "You’re in {{name}}",
+    "taskTitle": "{{name}} gave you “{{title}}”",
+    "taskBody": "Accept or decline it: you’ll see this task only.",
+    "invitedBy": "{{name}} invited you",
+    "teamSize": "{{people}} · {{lists}}",
+    "listSize": "{{people}} · {{tasks}}",
+    "lists_one": "{{count}} list",
+    "lists_other": "{{count}} lists",
+    "openTasks_one": "{{count}} open task",
+    "openTasks_other": "{{count}} open tasks",
+    "otherEmail": "This invitation was sent to {{sent}}. You’re signed in as {{me}}.",
+    "join": "Join",
+    "joinAs": "Join as {{email}}",
+    "seeTask": "See the task",
+    "open": "Open",
+    "notNow": "Not now",
+    "joined": "You’re in {{name}}",
+    "gone": "This link no longer works",
+    "goneBody": "Ask whoever invited you for a new one.",
+    "next": "Next",
+    "pasteTitle": "Join with a link",
+    "pasteBody": "Paste the invite link someone sent you, or type its code.",
+    "linkLabel": "Link or code",
+    "notALink": "That isn’t an Azignia invite link.",
+    "pasteFromClipboard": "Paste from the clipboard",
+    "fromSpaces": "Join with a link",
+    "fromSpacesBody": "Paste an invite link someone sent you"
   }
 }

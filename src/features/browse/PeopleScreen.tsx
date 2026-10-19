@@ -1,18 +1,20 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
+import * as Clipboard from 'expo-clipboard';
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
-import { useChangeTeamRole, useInvite, useInvitePeople, useRemoveMember, useRevokeInvitation, useTransferTeam } from '@/data/tasks/mutations';
-import { useTaskLists, useMembers, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
+import { useChangeTeamRole, useInvite, useInviteLinkActions, useInvitePeople, useRemoveMember, useRevokeInvitation, useTransferTeam } from '@/data/tasks/mutations';
+import { useInviteLink, useTaskLists, useMembers, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation, Person, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
+import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, confirm, ListRow, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
 import { canInvite, canLeave } from './browseSections';
 
@@ -124,6 +126,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
             <Text variant="subhead" color="ink2">{t(of.kind === 'team' ? (team?.role === 'owner' ? 'browse.peopleTeamOwner' : invites ? 'browse.peopleTeamAdmin' : 'browse.peopleTeamOnly') : invites ? 'browse.peopleCanInvite' : 'browse.peopleOwnerOnly')}</Text>
             {invites && <InviteField of={of} outsiders={outsiders} exclude={(members.data ?? []).map((m) => m.userId)} />}
             {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
+            {invites && of.kind === 'team' && team && <InviteLinkRow teamId={of.id} teamName={team.name} />}
             {(members.error || remove.error) && (
               <View style={{ marginTop: space.md }}>
                 <Notice>{errorMessage(members.error ?? remove.error)}</Notice>
@@ -286,3 +289,50 @@ const styles = StyleSheet.create({
   leave: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
   send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
 });
+
+/**
+ * A team's invite link (D95, M84, the hub's A), for its owner and admins, under Invite by email: "Invite link · Expires
+ * Oct 26" (or off); a tap opens Share, Copy, New link (the old one stops) and Turn off; off, Make a link.
+ */
+function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
+  const { t } = useTranslation();
+  const { colors, space } = useTheme();
+  const labels = useDateLabels(undefined);
+  const state = useInviteLink(teamId, true);
+  const { renew, turnOff } = useInviteLinkActions(teamId);
+  const link = state.data?.link ?? null;
+  const until = link ? labels.day(link.expiresAt.slice(0, 10)) : '';
+
+  const share = (url: string) => Share.share({ message: t('people.link.shareMessage', { name: teamName, url }) });
+  const make = () => renew.mutate(undefined, { onSuccess: (s) => s.link && share(s.link.url), onError: toastError });
+  const menu = async () => {
+    if (!link) return make();
+    const actions = [
+      { label: t('people.link.share'), icon: 'share' as const },
+      { label: t('people.link.copy'), icon: 'copy' as const },
+      { label: t('people.link.renew'), icon: 'refresh-cw' as const },
+      { label: t('people.link.turnOff'), icon: 'x-circle' as const, destructive: true },
+    ];
+    const i = await chooseAction({ title: t('people.link.title', { date: until }), actions, cancelLabel: t('common.cancel') });
+    if (i === 0) share(link.url);
+    if (i === 1) {
+      await Clipboard.setStringAsync(link.url);
+      useToast.getState().show({ message: t('people.link.copied') });
+    }
+    if (i === 2) renew.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.renewed') }), onError: toastError });
+    if (i === 3) turnOff.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.off') }), onError: toastError });
+  };
+
+  return (
+    <View style={{ marginTop: space.md }}>
+      <ListRow
+        label={t('people.link.row')}
+        icon={<Feather name="link-2" size={20} color={colors.accent} />}
+        detail={state.isPending ? undefined : link ? t('people.link.on', { date: until }) : t('people.link.offDetail')}
+        onPress={menu}
+        busy={renew.isPending || turnOff.isPending}
+        divider={false}
+      />
+    </View>
+  );
+}

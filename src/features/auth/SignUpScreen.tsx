@@ -12,6 +12,8 @@ import { errorMessage, fieldErrors } from '@/shared/i18n/errors';
 import { deviceLanguage, deviceTimeZone } from '@/shared/i18n/i18n';
 import { Button, Notice, RuleCheck, Screen, Text, TextField, useTheme } from '@/shared/ui';
 
+import { usePendingLink } from '@/shared/links/pendingLinkStore';
+
 import { signUpDraft } from './signUpDraft';
 import { useEmailField } from './useEmailField';
 
@@ -29,7 +31,7 @@ export function SignUpScreen() {
 
   const [displayName, setDisplayName] = useState('');
   const [nameLeft, setNameLeft] = useState(false);
-  const email = useEmailField();
+  const email = useEmailField(usePendingLink.getState().email ?? '');   // from an invitation email's link (D95)
   const [password, setPassword] = useState('');
   const timeZone = deviceTimeZone();
   const language = deviceLanguage();

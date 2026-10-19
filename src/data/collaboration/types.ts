@@ -21,7 +21,8 @@ export type NotificationKind =
   | 'taskHeld'
   | 'taskResumed'
   | 'commented'
-  | 'mentioned';
+  | 'mentioned'
+  | 'joinedByLink';
 
 /**
  * One notification (GET /notifications). Names are read when listed, so a renamed task shows its current title;

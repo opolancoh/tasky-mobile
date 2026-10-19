@@ -27,6 +27,9 @@ import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useAppearanceHydrated, useTheme } from '@/shared/ui';
 
+import { parseJoinLink } from '@/core/links';
+
+import { LinkWatcher, navigationRef } from './LinkWatcher';
 import { Navigation } from './navigation/RootNavigator';
 import { queryClient } from './queryClient';
 import { tokenManager } from './services';
@@ -84,7 +87,9 @@ function Root() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-      <Navigation theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['azignia://'] }} />
+      {/* Join links (D95) are LinkWatcher's: it keeps them through sign-in. */}
+      <Navigation ref={navigationRef} theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['azignia://'], filter: (url) => !parseJoinLink(url) }} />
+      <LinkWatcher />
       {status === 'signedIn' && (
         <>
           <QuickAddSheet />

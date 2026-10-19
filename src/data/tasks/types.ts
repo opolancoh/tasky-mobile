@@ -408,6 +408,32 @@ export interface Comment {
   canDelete: boolean;
 }
 
+/** A team's invite link (D95), for its owner and admins. */
+export interface InviteLink {
+  url: string;
+  code: string;
+  expiresAt: string;
+}
+
+/**
+ * What a link opens, before joining (D95): a team (its invite link or an email), a list or a task given by email. Never
+ * who the members are. `email`: the address an invitation went to; `member`: the user is already in it.
+ */
+export interface LinkPreview {
+  kind: 'team' | 'taskList' | 'task';
+  teamId?: Id | null;
+  taskListId?: Id | null;
+  taskId?: Id | null;
+  name: string;
+  invitedBy?: string | null;
+  people?: number | null;
+  lists?: number | null;
+  openTasks?: number | null;
+  expiresAt: string;
+  email?: string | null;
+  member: boolean;
+}
+
 /** What changed on a task (D94). */
 export type HistoryKind =
   | 'created' | 'renamed' | 'dueChanged' | 'importance' | 'moved' | 'assigned' | 'accepted' | 'declined' | 'completed' | 'reopened'
