@@ -80,15 +80,20 @@ M61).
 
 ## iOS: the APNs key
 
-No Firebase. EAS makes the key the first time an iOS build asks:
+No Firebase. `eas build` doesn't ask about push (`eas.json` sets `promptToConfigurePushNotifications: false`), so set
+the key up once by hand:
 
 ```bash
-eas build -p ios
+eas credentials
 ```
 
-Answer **yes** to "set up Push Notifications for your project?" and let it generate the key with your Apple account.
-To see or replace it later: `eas credentials` → iOS → production → Push Notifications. One APNs key (`.p8`) works for
-every app in the Apple team; Apple allows two at a time.
+**iOS → production → Push Notifications: Manage your Apple Push Notifications Key → Set up your project to use Push
+Notifications**, sign in with the Apple account and let it generate the key. It ends with the key assigned to
+`com.ikobit.azignia`. No new build is needed: the build already has the push entitlement (expo-notifications), and Expo
+uses the key on its side. One APNs key (`.p8`) works for every app in the Apple team; Apple allows two at a time.
+
+Without it, Expo refuses every iOS push with `InvalidCredentials` ("Could not find APNs credentials"); Android keeps
+working.
 
 ## The app
 
