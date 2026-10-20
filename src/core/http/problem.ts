@@ -26,6 +26,10 @@ export class ApiError extends Error {
 
 export const isApiError = (e: unknown): e is ApiError => e instanceof ApiError;
 
+/** Azignia couldn't be reached: no response (offline, timeout) or a 502, 503 or 504 from what's in front of it (M90). */
+export const isConnectionError = (e: unknown): e is ApiError =>
+  isApiError(e) && (e.code === 'network' || e.code === 'timeout' || e.status === 502 || e.status === 503 || e.status === 504);
+
 interface ProblemDocument {
   title?: string;
   code?: string;

@@ -9,10 +9,10 @@ import { formatLocalDate, nowIn } from '@/core/dates/localDate';
 import { HOME_PREVIEW, useHome, useTaskLists, useTasks } from '@/data/tasks/queries';
 import type { Home, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
+import { LoadError } from '@/shared/components/LoadError';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { errorMessage } from '@/shared/i18n/errors';
-import { Button, fonts, ListRow, Notice, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Button, fonts, ListRow, radius, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { ActivityBell } from './components/ActivityBell';
 import { NothingOpen } from './components/NothingOpen';
@@ -169,11 +169,7 @@ export function TodayScreen() {
                 <Skeleton width={170} height={12} />
               </View>
             )}
-            {home.error && (
-              <View style={{ marginTop: space.md }}>
-                <Notice>{errorMessage(home.error)}</Notice>
-              </View>
-            )}
+            {home.error && !data && <LoadError error={home.error} onRetry={() => void home.refetch()} />}
           </View>
         );
       case 'cards':

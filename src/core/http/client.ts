@@ -50,13 +50,18 @@ export interface HttpClient {
 
 const RETRYABLE = new Set([0, 502, 503, 504]);
 const MAX_RETRIES = 3;
+/**
+ * Writes fail fast, so the person hears at once (Can't connect, M90): no retry without a response (offline, timeout),
+ * one retry for a 502, 503 or 504 (a restart in front of the API). Reads keep their three retries.
+ */
+const retriesFor = (method: Method, status: number) => (method === 'GET' ? MAX_RETRIES : status === 0 ? 0 : 1);
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * fetch with the API's rules (02-api-integration.md): auth header, one refresh and retry on 401,
  * Idempotency-Key on every POST (reused by its retries), retries with backoff for network errors,
- * timeouts, 502, 503 and 504 (honoring Retry-After), and problem documents turned into ApiError.
+ * timeouts, 502, 503 and 504 (honoring Retry-After; writes fail fast, `retriesFor`), and problem documents turned into ApiError.
  */
 export function createHttpClient(options: HttpClientOptions): HttpClient {
   const timeoutMs = options.timeoutMs ?? 15_000;
@@ -121,8 +126,9 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         response = await send(method, path, opts, headers);
       } catch (e) {
         const error = e as ApiError;
-        const retry = error.code !== 'aborted' && attempt < MAX_RETRIES;
-        log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${MAX_RETRIES}` : undefined);
+        const max = retriesFor(method, 0);
+        const retry = error.code !== 'aborted' && attempt < max;
+        log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${max}` : undefined);
         if (retry) {
           await sleep(backoff(attempt));
           continue;
@@ -147,8 +153,9 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       }
 
       if (response.status === 426) options.onClientTooOld?.();
-      const retry = RETRYABLE.has(response.status) && attempt < MAX_RETRIES;
-      log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${MAX_RETRIES}` : undefined, exchange);
+      const max = retriesFor(method, response.status);
+      const retry = RETRYABLE.has(response.status) && attempt < max;
+      log?.error(id, method, target, error, Date.now() - started, retry ? `retry ${attempt + 1}/${max}` : undefined, exchange);
       if (retry) {
         await sleep(error.retryAfter ? error.retryAfter * 1000 : backoff(attempt));
         continue;

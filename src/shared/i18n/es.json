@@ -754,7 +754,8 @@
     "support": "Soporte",
     "pushToken": "Token push",
     "copy": "Copiar",
-    "pushTokenCopied": "Token push copiado"
+    "pushTokenCopied": "Token push copiado",
+    "problems": "Problemas"
   },
   "settings": {
     "saved": "Guardado",
@@ -1153,5 +1154,64 @@
     "offInPhone": "Las notificaciones están desactivadas para Azignia. Actívalas en Ajustes del teléfono para recibir recordatorios y notificaciones push.",
     "turnOnInSettings": "Activar en Ajustes",
     "remindersHint": "A la hora que elegiste, en este teléfono"
+  },
+  "errorReports": {
+    "title": "Informes de errores",
+    "hint": "Errores de esta app, guardados en este teléfono y enviados a Azignia una vez. Un informe que no se pudo enviar espera aquí.",
+    "empty": "Ningún error por ahora.",
+    "sendAll_one": "Enviar {{count}}",
+    "sendAll_other": "Enviar los {{count}}",
+    "pendingCount_one": "{{count}} por enviar",
+    "pendingCount_other": "{{count}} por enviar",
+    "status": {
+      "new": "Sin enviar",
+      "sending": "Enviando…",
+      "sent": "Enviado",
+      "pending": "Sin enviar"
+    },
+    "statusLabel": "Estado",
+    "when": "Cuándo",
+    "screen": "Pantalla",
+    "caughtBy": "Capturado en",
+    "source": {
+      "render": "Al dibujar una pantalla",
+      "global": "App",
+      "promise": "Promesa sin manejar"
+    },
+    "fatal": "Fatal",
+    "app": "App",
+    "device": "Dispositivo",
+    "traceId": "Trace id de la solicitud",
+    "send": "Enviar",
+    "share": "Compartir",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar este informe?",
+    "deleteBody": "Se quita de este teléfono. Una copia enviada queda en Azignia.",
+    "clear": "Borrar todo",
+    "clearTitle": "¿Borrar todos los informes?",
+    "clearBody": "Se quitan de este teléfono. Las copias enviadas quedan en Azignia.",
+    "stack": "Stack",
+    "componentStack": "Stack de componentes",
+    "before": "Antes del error",
+    "gone": "Este informe se eliminó.",
+    "test": {
+      "button": "Probar un error",
+      "title": "Crear un error de prueba",
+      "render": "Algo salió mal (error al dibujar)",
+      "promise": "En segundo plano (promesa sin manejar)"
+    }
+  },
+  "crash": {
+    "title": "Algo salió mal",
+    "body": "Azignia tuvo un problema. Se guardó un informe y se enviará para corregirlo.",
+    "restart": "Reiniciar",
+    "viewReport": "Ver informe",
+    "hideReport": "Ocultar informe"
+  },
+  "connection": {
+    "cantConnect": "No se puede conectar con Azignia",
+    "check": "Revisa tu conexión e inténtalo de nuevo."
   }
 }

@@ -20,6 +20,8 @@ import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { SearchScreen } from '@/features/search/SearchScreen';
+import { ErrorReportScreen } from '@/features/error-reports/ErrorReportScreen';
+import { ErrorReportsScreen } from '@/features/error-reports/ErrorReportsScreen';
 import { AboutScreen } from '@/features/me/AboutScreen';
 import { NetworkLogEntryScreen } from '@/features/network-log/NetworkLogEntryScreen';
 import { NetworkLogScreen } from '@/features/network-log/NetworkLogScreen';
@@ -135,6 +137,9 @@ const RootStack = createNativeStackNavigator({
         // Network log, from About (support and admin).
         NetworkLog: { screen: NetworkLogScreen, options: { headerShown: true } },
         NetworkLogEntry: { screen: NetworkLogEntryScreen, options: { headerShown: true } },
+        // Error reports, from About (everyone while testing, M89).
+        ErrorReports: { screen: ErrorReportsScreen, options: { headerShown: true } },
+        ErrorReport: { screen: ErrorReportScreen, options: { headerShown: true } },
       },
     },
   },

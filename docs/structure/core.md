@@ -33,7 +33,7 @@ src/core/
 | Rule | Detail |
 |---|---|
 | Auth | `Authorization: Bearer` from the token manager; on a `401`, one refresh and one retry ([tokens.md](../auth/tokens.md)) |
-| Retries | Network errors, timeouts, `502`, `503`, `504`: up to 3 retries with backoff, honoring `Retry-After` |
+| Retries | Network errors, timeouts, `502`, `503`, `504`: reads up to 3 retries with backoff, honoring `Retry-After`; writes fail fast (none without a response, one for 502/503/504; `retriesFor`, M90) |
 | Timeout | 15 seconds per attempt |
 | Idempotency | Every `POST` gets an `Idempotency-Key`, reused by its retries |
 | Concurrency | `ifMatch` sends the row version as `If-Match` |

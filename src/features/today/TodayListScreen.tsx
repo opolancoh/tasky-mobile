@@ -7,9 +7,9 @@ import { addDays, todayIn } from '@/core/dates/localDate';
 import { HOME_PAGE, useHomeSection, useInvitations, useTaskPages } from '@/data/tasks/queries';
 import type { HomeSection, MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
+import { LoadError } from '@/shared/components/LoadError';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { errorMessage } from '@/shared/i18n/errors';
-import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { AskRow, AssignedRow, FollowUpRow, HoldRow, InvitationRow, OverdueRow, TaskStreamRow, UndatedRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
@@ -70,7 +70,9 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   const shown = invitationItems.length + taskItems.length + followItems.length + holdItems.length + laterItems.length;
   const hasMore = requests ? !!tasks.hasNextPage || !followUp.isSuccess || !!followUp.hasNextPage || !holds.isSuccess || !!holds.hasNextPage : !!tasks.hasNextPage || (coming && (!later.isSuccess || !!later.hasNextPage));
   const loading = tasks.isPending;
-  const error = tasks.error ?? followUp.error ?? invitations.error;
+  // Only a load with nothing to show; a failed refresh keeps the list and shows Can't connect's capsule (M90).
+  const error = [tasks, followUp, invitations].find((q) => q.error && q.data === undefined)?.error;
+  const retry = () => { void tasks.refetch(); void followUp.refetch(); void invitations.refetch(); };
 
   const loadMore = () => {
     if (tasks.hasNextPage) {
@@ -117,11 +119,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
             <Text variant="subhead" color="ink2">
               {total !== undefined ? `${t('todayList.items', { count: total })} · ${subtitle}` : subtitle}
             </Text>
-            {error && (
-              <View style={{ marginTop: space.md }}>
-                <Notice>{errorMessage(error)}</Notice>
-              </View>
-            )}
+            {error && <LoadError error={error} onRetry={retry} />}
           </View>
         );
       case 'day':

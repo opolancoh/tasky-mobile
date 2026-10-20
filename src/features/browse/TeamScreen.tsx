@@ -8,8 +8,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Id } from '@/core/types';
 import { useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { TaskList } from '@/data/tasks/types';
-import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, faint, Notice, Pill, Screen, Skeleton, SkeletonRow, Text, TextButton, useTheme } from '@/shared/ui';
+import { LoadError } from '@/shared/components/LoadError';
+import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
@@ -44,7 +44,8 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   const open = lists.reduce((n, c) => n + (c.openTasks ?? 0), 0);
   const people = () => navigation.navigate('People', { kind: 'team', id: teamId });
   const newList = () => showSheet({ kind: 'list', teamId });
-  const error = teams.error ?? taskLists.error;
+  // Only a load with nothing to show; a failed refresh keeps the screen and shows Can't connect's capsule (M90).
+  const error = [teams, taskLists].find((q) => q.error && q.data === undefined)?.error;
   const retry = () => { teams.refetch(); taskLists.refetch(); };
 
   useLayoutEffect(() => {
@@ -107,12 +108,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
                 <Skeleton width={120} height={14} />
               </View>
             )}
-            {error && (
-              <View style={{ marginTop: space.md, gap: space.xs, alignItems: 'flex-start' }}>
-                <Notice>{errorMessage(error)}</Notice>
-                <TextButton label={t('common.retry')} onPress={retry} />
-              </View>
-            )}
+            {error && <LoadError error={error} onRetry={retry} />}
           </View>
         );
       case 'all':

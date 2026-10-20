@@ -19,6 +19,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
+import { installErrorCapture } from '@/shared/errors/captureErrors';
+import { addScreenCrumb } from '@/shared/errors/breadcrumbs';
+import { ErrorBoundary } from '@/shared/errors/ErrorBoundary';
 import { BulkSheet } from '@/shared/selection/BulkSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
@@ -37,6 +40,8 @@ import { queryClient } from './queryClient';
 import { tokenManager } from './services';
 
 SplashScreen.preventAutoHideAsync();
+// Errors anywhere are saved and sent (Error reports, M89); a fatal one shows Something went wrong.
+installErrorCapture();
 
 export function App() {
   return (
@@ -44,11 +49,13 @@ export function App() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <SessionProvider tokens={tokenManager}>
-              <Root />
-            </SessionProvider>
-          </QueryClientProvider>
+          <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+              <SessionProvider tokens={tokenManager}>
+                <Root />
+              </SessionProvider>
+            </QueryClientProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -90,7 +97,7 @@ function Root() {
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       {/* Join links (D95) are LinkWatcher's: it keeps them through sign-in. */}
-      <Navigation ref={navigationRef} theme={navigationTheme} linking={{ enabled: 'auto', prefixes: ['azignia://'], filter: (url) => !parseJoinLink(url) }} />
+      <Navigation ref={navigationRef} theme={navigationTheme} onReady={() => addScreenCrumb(navigationRef.getCurrentRoute()?.name)} onStateChange={() => addScreenCrumb(navigationRef.getCurrentRoute()?.name)} linking={{ enabled: 'auto', prefixes: ['azignia://'], filter: (url) => !parseJoinLink(url) }} />
       <LinkWatcher />
       {status === 'signedIn' && (
         <>

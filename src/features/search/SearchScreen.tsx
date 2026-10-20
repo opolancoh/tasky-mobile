@@ -8,10 +8,10 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useSearch, useTags } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { errorMessage } from '@/shared/i18n/errors';
+import { LoadError } from '@/shared/components/LoadError';
 import { SelectionBar, SelectionTopBar } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
-import { faint, Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { faint, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useRecentSearches } from './recentSearchesStore';
 import { SearchRow, searchWords } from './SearchRow';
@@ -89,7 +89,7 @@ export function SearchScreen() {
           <View style={{ paddingTop: space.xl + space.lg, paddingBottom: space.xs, gap: space.md }}>
             <Text variant="largeTitle" accessibilityRole="header">{t('search.title')}</Text>
             <SearchBox key={preset.n} initial={preset.text} query={query} onQuery={setQuery} fetching={results.isFetching && !results.isFetchingNextPage} />
-            {results.error && searching && <Notice>{errorMessage(results.error)}</Notice>}
+            {results.error && searching && !results.data && <LoadError error={results.error} onRetry={() => void results.refetch()} />}
           </View>
         );
       case 'label':
@@ -136,6 +136,7 @@ export function SearchScreen() {
       case 'footer':
         return results.isPending ? <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
           : results.hasNextPage ? <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>
+          : results.error && !results.data ? null
           : !tasks.length ? <Text variant="subhead" color="ink2" style={{ marginTop: space.lg }}>{t('search.noResults', { query: query.trim() })}</Text>
           : null;
     }

@@ -7,6 +7,7 @@ import { formatInstant } from '@/core/dates/localDate';
 import { useRevokeSession, useSessions } from '@/data/identity/queries';
 import type { SessionInfo } from '@/data/identity/types';
 import { useMe } from '@/data/tenancy/queries';
+import { LoadError } from '@/shared/components/LoadError';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
@@ -43,7 +44,8 @@ export function SessionsScreen() {
           <View style={{ gap: space.xxs, paddingBottom: space.md }}>
             <Text variant="title" accessibilityRole="header">{t('settings.devices')}</Text>
             <Text variant="subhead" color="ink2">{t('settings.devicesHint')}</Text>
-            {(sessions.error || revoke.error) && <View style={{ marginTop: space.md }}><Notice>{errorMessage(sessions.error ?? revoke.error)}</Notice></View>}
+            {sessions.error && !sessions.data && <LoadError error={sessions.error} onRetry={() => void sessions.refetch()} />}
+            {revoke.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(revoke.error)}</Notice></View>}
             {sessions.isPending && <SkeletonRow width={60} />}
           </View>
         }

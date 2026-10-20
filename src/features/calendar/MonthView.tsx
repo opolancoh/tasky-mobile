@@ -11,9 +11,9 @@ import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
+import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
-import { errorMessage } from '@/shared/i18n/errors';
-import { chooseAction, Notice, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { chooseAction, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useCalendarView } from './calendarViewStore';
 import { AddTaskRow } from './components/AddTaskRow';
@@ -110,7 +110,7 @@ export function MonthView({ today }: { today: LocalDate }) {
   const loading = (offQuery ?? pages).isPending;
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'nav', key: 'nav' }, { type: 'grid', key: 'grid' }, { type: 'chips', key: 'chips' }, { type: 'dayHead', key: 'day-head' }];
   if (loading) [70, 55, 62].forEach((width, i) => items.push({ type: 'skeleton', key: `k-${i}`, width }));
-  else if (!dayTasks.length) items.push({ type: 'empty', key: 'empty' });
+  else if (!dayTasks.length && !(pages.error && !pages.data)) items.push({ type: 'empty', key: 'empty' });
   dayTasks.forEach((task) => items.push({ type: 'task', key: task.id, task }));
   if (offQuery?.hasNextPage) items.push({ type: 'more', key: 'more' });
   if (day !== 'overdue') items.push({ type: 'add', key: 'add' });
@@ -152,7 +152,7 @@ export function MonthView({ today }: { today: LocalDate }) {
         return (
           <View>
             <MonthGrid weeks={week ? [from] : monthWeeks(anchor)} month={week ? undefined : monthOf(anchor)} today={today} picked={day === 'overdue' ? null : day} byDay={byDay} onPick={pick} />
-            {pages.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(pages.error)}</Notice></View>}
+            {pages.error && !pages.data && <LoadError error={pages.error} onRetry={() => void pages.refetch()} />}
           </View>
         );
       case 'chips':

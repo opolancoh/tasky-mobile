@@ -7,6 +7,7 @@ import { systemApi } from '@/data/system/api';
 import { useApiVersion } from '@/data/system/queries';
 import { useMe } from '@/data/tenancy/queries';
 import { appInfo } from '@/shared/appInfo';
+import { useErrorReports } from '@/shared/errors/errorReports';
 import { useNetworkLog } from '@/shared/network/networkLog';
 import { usePushToken } from '@/shared/notifications/push';
 import { ListRow, Screen, SectionLabel, Text, useTheme, useToast } from '@/shared/ui';
@@ -24,6 +25,7 @@ export function AboutScreen() {
   const recording = useNetworkLog((s) => s.recording);
   const build = appInfo.expoGo ? t('about.expoGo') : appInfo.build;
   const pushToken = usePushToken((s) => s.token);
+  const pending = useErrorReports((s) => s.reports.filter((r) => r.status === 'pending' || r.status === 'new').length);
   const copyToken = async () => {
     await Clipboard.setStringAsync(pushToken!);
     useToast.getState().show({ message: t('about.pushTokenCopied') });
@@ -42,6 +44,15 @@ export function AboutScreen() {
       <SectionLabel>{t('about.api')}</SectionLabel>
       <ListRow label={t('about.version')} value={api.data?.version ?? (api.isError ? t('about.unreachable') : '…')} />
       <ListRow label={t('about.server')} value={systemApi.host()} divider={false} />
+
+      {/* Everyone while testing (M89); support and admin only before the store release (pending-decisions.md). */}
+      <SectionLabel>{t('about.problems')}</SectionLabel>
+      <ListRow
+        label={t('errorReports.title')}
+        value={pending ? <Text variant="body" color="danger">{t('errorReports.pendingCount', { count: pending })}</Text> : undefined}
+        onPress={() => navigation.navigate('ErrorReports')}
+        divider={false}
+      />
 
       {/* For support and admin: the app's API calls, to see what a screen asked and what came back. */}
       {staff && (

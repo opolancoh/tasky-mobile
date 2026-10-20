@@ -10,6 +10,8 @@ import { isApiError } from '@/core/http/problem';
 import { configureHttp } from '@/data/http';
 import { identityApi } from '@/data/identity/api';
 import { appInfo } from '@/shared/appInfo';
+import { breadcrumbRecorder } from '@/shared/errors/breadcrumbs';
+import { configureErrorReports } from '@/shared/errors/errorReports';
 import { networkRecorder } from '@/shared/network/networkLog';
 import i18n from '@/shared/i18n/i18n';
 import { useSessionStore } from '@/shared/session/sessionStore';
@@ -39,8 +41,8 @@ export const httpClient = createHttpClient({
   newId: randomUUID,
   onClientTooOld: () => useSessionStore.getState().requireUpdate(),
   // Development only: every call in the Metro terminal; EXPO_PUBLIC_HTTP_LOG=off|errors|all (default all).
-  // and, while recording, the Network log (Me › About, support and admin).
-  log: combineLoggers(__DEV__ ? createConsoleHttpLogger(config.httpLog) : undefined, networkRecorder),
+  // and, while recording, the Network log (Me › About, support and admin); and always, Error reports' breadcrumbs (M89).
+  log: combineLoggers(__DEV__ ? createConsoleHttpLogger(config.httpLog) : undefined, networkRecorder, breadcrumbRecorder),
   headers: () => ({
     'X-Client': `${Platform.OS}/${appInfo.version}`,
     ...(Device.deviceName ? { 'X-Device-Name': Device.deviceName } : {}),
@@ -62,3 +64,6 @@ export const tokenManager = createTokenManager({
 });
 
 httpClient.setAuth(tokenManager);
+
+// Error reports go with a plain fetch and the current access token, never refreshed for it (M89).
+configureErrorReports({ url: `${config.apiUrl}/logging/client-errors`, token: () => tokenManager.peekAccessToken() });

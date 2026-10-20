@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { Feather } from '@expo/vector-icons';
+import { useEffect, type ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +12,8 @@ export interface ToastMessage {
   message: string;
   /** One action, e.g. Undo. A toast with an action stays longer. */
   action?: { label: string; onPress(): void };
+  /** Left of the message; the toast becomes a capsule (Can't connect, M90). */
+  icon?: ComponentProps<typeof Feather>['name'];
 }
 
 interface ToastState {
@@ -55,9 +58,14 @@ export function ToastHost() {
       <View
         accessibilityLiveRegion="polite"
         accessibilityRole="alert"
-        style={[styles.card, { backgroundColor: colors.toastBg, borderRadius: radius.md, paddingLeft: space.lg, gap: space.md }]}
+        style={[
+          styles.card,
+          { backgroundColor: colors.toastBg, borderRadius: radius.md, paddingLeft: space.lg, gap: space.md },
+          current.icon && [styles.capsule, { borderRadius: radius.pill, gap: space.sm }],
+        ]}
       >
-        <Text variant="callout" style={[styles.message, { color: colors.toastInk }]}>
+        {current.icon && <Feather name={current.icon} size={17} color={colors.toastInk} />}
+        <Text variant="callout" style={[current.icon ? styles.capsuleMessage : styles.message, { color: colors.toastInk }]}>
           {current.message}
         </Text>
         {current.action && (
@@ -83,5 +91,7 @@ const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0 },
   card: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
   message: { flex: 1, paddingVertical: 12 },
+  capsule: { alignSelf: 'center', minHeight: 44 },
+  capsuleMessage: { flexShrink: 1, paddingVertical: 10 },
   action: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' },
 });

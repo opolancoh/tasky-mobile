@@ -22,6 +22,8 @@ export interface TokenStore {
 export interface TokenManager {
   /** A valid access token: refreshed first when it expires within a minute. Null when signed out. */
   accessToken(): Promise<string | null>;
+  /** The stored access token while it's valid, never refreshing: null when signed out or expired (Error reports, M89). */
+  peekAccessToken(): Promise<string | null>;
   /**
    * Renews both tokens. One refresh at a time; concurrent callers share it. False when there is no
    * session or the server ended it; throws when the server can't be reached (the session is kept).
@@ -92,6 +94,10 @@ export function createTokenManager(deps: {
       if (!current) return null;
       if (Date.parse(current.accessTokenExpiresAt) - Date.now() > EARLY_MS) return current.accessToken;
       return (await refresh()) ? current!.accessToken : null;
+    },
+    async peekAccessToken() {
+      await load();
+      return current && Date.parse(current.accessTokenExpiresAt) > Date.now() ? current.accessToken : null;
     },
     refresh,
     set,

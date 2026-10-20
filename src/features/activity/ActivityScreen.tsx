@@ -6,9 +6,9 @@ import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from '
 import { useMarkRead } from '@/data/collaboration/mutations';
 import { useNotifications } from '@/data/collaboration/queries';
 import type { Notification } from '@/data/collaboration/types';
+import { LoadError } from '@/shared/components/LoadError';
 import { UpdateRow } from '@/shared/components';
-import { errorMessage } from '@/shared/i18n/errors';
-import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 const PAGE = 20;
 
@@ -62,7 +62,7 @@ export function ActivityScreen() {
             )}
             <Text variant="largeTitle" accessibilityRole="header">{t('activity.title')}</Text>
             <Text variant="subhead" color="ink2" style={{ marginTop: space.xxs }}>{t('activity.sub')}</Text>
-            {list.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(list.error)}</Notice></View>}
+            {list.error && !list.data && <LoadError error={list.error} onRetry={() => void list.refetch()} />}
           </View>
         );
       case 'section':
@@ -77,6 +77,7 @@ export function ActivityScreen() {
       case 'footer':
         return list.isPending ? <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
           : list.hasNextPage ? <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>
+          : list.error && !list.data ? null
           : !all.length ? (
             <View style={{ paddingVertical: space.xl, gap: space.xs }}>
               <Text variant="bodyMedium">{t('activity.empty')}</Text>

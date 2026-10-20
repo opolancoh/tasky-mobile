@@ -9,9 +9,9 @@ import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTaskPages } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
+import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
-import { errorMessage } from '@/shared/i18n/errors';
-import { Button, Notice, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Button, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { CalendarHeader } from './components/CalendarHeader';
 import { DayHeading } from './components/DayHeading';
@@ -96,7 +96,7 @@ export function DaysView({ today }: { today: LocalDate }) {
         return (
           <View>
             <CalendarHeader overdue={overdue.count} />
-            {pages.error && <View style={{ marginTop: space.sm }}><Notice>{errorMessage(pages.error)}</Notice></View>}
+            {pages.error && !pages.data && <LoadError error={pages.error} onRetry={() => void pages.refetch()} />}
           </View>
         );
       case 'chips':

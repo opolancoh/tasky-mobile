@@ -25,8 +25,11 @@ Providers, outermost first:
 |---|---|
 | `SafeAreaProvider` | Safe-area insets (notch, home indicator) |
 | `ThemeProvider` | The active palette in light or dark, following the OS |
+| `ErrorBoundary` | A render error (or a fatal one from the global handler) is saved as an error report and Something went wrong takes the app's place, with Restart and View report ([M89](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `QueryClientProvider` | The server-data cache |
 | `SessionProvider` | `useSession()`: sign in, sign out, retry; runs the [launch](../auth/launch.md) |
+
+Before rendering, `installErrorCapture()` sets the global error handler and the unhandled-rejection tracker (M89). Navigation's `onReady`/`onStateChange` add each screen to the error reports' breadcrumbs.
 
 `Root` loads the Figtree fonts, keeps the splash up until the fonts are loaded and the session is checked, builds React Navigation's theme from the palette, and renders `Navigation`. While signed in it also mounts the Quick add sheet once, above every screen.
 
@@ -44,7 +47,7 @@ Created once at startup:
 | `tokenStore` | Secure storage (`expo-secure-store`), key `azignia.tokens` |
 | `tokenManager` | The store, `POST /auth/refresh`, and what a refused session does: clear the query cache and set the status to `signedOut` |
 
-`configureHttp(httpClient)` hands the client to `src/data`; `httpClient.setAuth(tokenManager)` adds the token to signed-in requests.
+`configureHttp(httpClient)` hands the client to `src/data`; `httpClient.setAuth(tokenManager)` adds the token to signed-in requests. The client's log also feeds the error reports' breadcrumbs (`breadcrumbRecorder`), and `configureErrorReports` gives them the endpoint and `tokenManager.peekAccessToken()` (never a refresh, M89).
 
 ## queryClient.ts
 
@@ -52,6 +55,7 @@ Created once at startup:
 - A failed query retries once, but never for a `4xx` (the HTTP client already retries network errors and `5xx`).
 - Mutations don't retry.
 - Returning to the app refetches what's on screen.
+- **Can't connect (M90):** a mutation that couldn't reach Azignia (`isConnectionError`) becomes what the capsule's Try again repeats (`mutation.execute`); `toastError` and `meta.toastError` show the capsule, and so does a retried mutation failing again. A query refresh that fails with data on screen shows the capsule with a refetch; with nothing on screen the screen shows `LoadError`.
 
 ## navigation/
 

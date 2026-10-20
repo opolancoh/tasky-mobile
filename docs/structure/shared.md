@@ -16,8 +16,15 @@ src/shared/
 │   └── palettes/          One JSON file per palette; active.json names the one in use
 ├── notifications/     permission.ts (the one permission, our ask sheet's state), push.ts (register the push token), NotificationAskSheet.tsx, reminders.ts (sync the phone's reminders with GET /me/reminders), useReminders.ts (ReminderSync, mounted in App)
 ├── appInfo.ts             This app's version, build number (store builds), Expo Go or not, where to update (M46, M48)
+├── errors/                Error reports (M89)
+│   ├── errorReports.ts    The reports on this phone (Zustand persisted to AsyncStorage, the newest 50), recordError, sendReports (plain fetch, the token only for the signed-in person's own; Pending on failure), sendPending
+│   ├── captureErrors.ts   installErrorCapture: the global handler (a fatal error sets `crashed`) and Hermes' unhandled-rejection tracker (API errors skipped)
+│   ├── breadcrumbs.ts     The last 20 screens and API calls (breadcrumbRecorder, addScreenCrumb), the current screen, a failed call's traceId in the last minute
+│   ├── ErrorBoundary.tsx  At the root; CrashScreen.tsx: Something went wrong, Restart, View report
+│   └── reportText.ts      A report as text, for Share and Copy
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
+│   ├── cantConnect.ts     Can't connect's capsule (showCantConnect, once per failure) and what its Try again repeats (M90)
 │   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
 ├── links/
 │   └── pendingLinkStore.ts  A join link kept until someone is signed in; an invitation's email for sign-up (D95)
@@ -37,13 +44,14 @@ src/shared/
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx
+│   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
 └── i18n/
     ├── i18n.ts            i18next setup, device language and time zone
     ├── en.json  es.json   Every string
-    └── errors.ts          errorMessage(), fieldErrors(), toastError() (an error with no form to show it in, M56)
+    └── errors.ts          errorMessage(), fieldErrors(), toastError() (an error with no form to show it in, M56; Can't connect's capsule, M90)
 ```
 
 Before writing something new in a feature, look here and in `core/`. When a second feature needs a piece, move it here (strings to a neutral namespace such as `tags.*`, `reminders.*`, `dates.*`).
@@ -70,7 +78,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `useDelayedFlag` | Busy controls (M56): disabled and busy for screen readers at once, the spinner only after 300 ms (`BUSY_DELAY_MS`), so a fast answer shows none. Screens pass `busy={mutation.isPending}`, nothing more |
 | `Skeleton`, `SkeletonRow` | A grey placeholder with a soft shimmer (UI thread; still with Reduce Motion; hidden from screen readers), and a task-row-shaped one: circle and two lines ([M27](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `Spinner` | A ring that spins (faint accent track, one accent arc; Reanimated), the same on iOS and Android; the saving state of a task's circle (M75) |
-| `Toast` | `useToast.getState().show({ message, action })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo |
+| `Toast` | `useToast.getState().show({ message, action, icon })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo; with `icon` it is a capsule (Can't connect, M90) |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM") |

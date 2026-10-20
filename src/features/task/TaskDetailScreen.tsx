@@ -15,6 +15,7 @@ import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
+import { LoadError } from '@/shared/components/LoadError';
 import { Avatar, CheckCircle, ReminderIcon, TaskListIcon, TagsRow } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
@@ -134,7 +135,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
   if (!task || !me || !today || !fields) {
-    return <Screen edges={['bottom']}>{query.error && !missing ? <Notice>{errorMessage(query.error)}</Notice> : null}</Screen>;
+    return <Screen edges={['bottom']}>{query.error && !missing ? <LoadError error={query.error} onRetry={() => void query.refetch()} /> : null}</Screen>;
   }
 
   const locale = i18n.language;

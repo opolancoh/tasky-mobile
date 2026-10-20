@@ -754,7 +754,8 @@
     "support": "Support",
     "pushToken": "Push token",
     "copy": "Copy",
-    "pushTokenCopied": "Push token copied"
+    "pushTokenCopied": "Push token copied",
+    "problems": "Problems"
   },
   "settings": {
     "saved": "Saved",
@@ -1126,5 +1127,64 @@
     "offInPhone": "Notifications are off for Azignia. Turn them on in the phone’s Settings to get reminders and pushes.",
     "turnOnInSettings": "Turn on in Settings",
     "remindersHint": "At the time you set, on this phone"
+  },
+  "errorReports": {
+    "title": "Error reports",
+    "hint": "Errors in this app, kept on this phone and sent to Azignia once. A report that couldn’t be sent waits here.",
+    "empty": "No errors so far.",
+    "sendAll_one": "Send {{count}}",
+    "sendAll_other": "Send all {{count}}",
+    "pendingCount_one": "{{count}} to send",
+    "pendingCount_other": "{{count}} to send",
+    "status": {
+      "new": "Not sent",
+      "sending": "Sending…",
+      "sent": "Sent",
+      "pending": "Not sent"
+    },
+    "statusLabel": "Status",
+    "when": "When",
+    "screen": "Screen",
+    "caughtBy": "Caught by",
+    "source": {
+      "render": "Drawing a screen",
+      "global": "App",
+      "promise": "Unhandled promise"
+    },
+    "fatal": "Fatal",
+    "app": "App",
+    "device": "Device",
+    "traceId": "Request trace id",
+    "send": "Send",
+    "share": "Share",
+    "copy": "Copy",
+    "copied": "Copied",
+    "delete": "Delete",
+    "deleteTitle": "Delete this report?",
+    "deleteBody": "It’s removed from this phone. A sent copy stays with Azignia.",
+    "clear": "Clear all",
+    "clearTitle": "Clear all reports?",
+    "clearBody": "They’re removed from this phone. Sent copies stay with Azignia.",
+    "stack": "Stack",
+    "componentStack": "Component stack",
+    "before": "Before it",
+    "gone": "This report was deleted.",
+    "test": {
+      "button": "Test an error",
+      "title": "Make a test error",
+      "render": "Something went wrong (a drawing error)",
+      "promise": "In the background (an unhandled promise)"
+    }
+  },
+  "crash": {
+    "title": "Something went wrong",
+    "body": "Azignia ran into a problem. A report was saved and will be sent so it can be fixed.",
+    "restart": "Restart",
+    "viewReport": "View report",
+    "hideReport": "Hide report"
+  },
+  "connection": {
+    "cantConnect": "Can’t connect to Azignia",
+    "check": "Check your connection and try again."
   }
 }

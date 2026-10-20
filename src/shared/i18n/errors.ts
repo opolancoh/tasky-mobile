@@ -1,4 +1,5 @@
-import { isApiError } from '@/core/http/problem';
+import { isApiError, isConnectionError } from '@/core/http/problem';
+import { showCantConnect } from '@/shared/network/cantConnect';
 import { useToast } from '@/shared/ui';
 
 import i18n from './i18n';
@@ -23,5 +24,5 @@ export function fieldErrors(error: unknown): Record<string, string> {
   );
 }
 
-/** An error from an action with no form to show it in (a row's or a menu's), as a toast (M56). */
-export const toastError = (error: unknown) => useToast.getState().show({ message: errorMessage(error) });
+/** An error from an action with no form to show it in (a row's or a menu's), as a toast (M56); Can't connect as its capsule (M90). */
+export const toastError = (error: unknown) => (isConnectionError(error) ? showCantConnect() : useToast.getState().show({ message: errorMessage(error) }));

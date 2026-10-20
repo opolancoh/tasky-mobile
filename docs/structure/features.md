@@ -14,6 +14,7 @@ src/features/
 │   ├── signUpDraft.ts  resetDraft.ts
 │   ├── useEmailField.ts
 │   └── validation.ts
+├── error-reports/  ErrorReportsScreen.tsx  ErrorReportScreen.tsx  statusTone.ts (Me › About › Error reports, everyone while testing, with Test an error, M89)
 ├── network-log/    NetworkLogScreen.tsx  NetworkLogEntryScreen.tsx  shareText.ts (Share, curl)  useSessionInfo.ts (Me › About, support and admin, M53)
 ├── today/          TodayScreen.tsx (Home, the first tab)  TodayListScreen.tsx (See all)  todaySections.ts  homeDismissedStore.ts (Requests dismissed from Home, M65)  components/HomeCards.tsx  components/RequestRows.tsx  components/NothingOpen.tsx (no open tasks, M67)  components/ActivityBell.tsx (M74)
 │   └── components/       StreamRows (the rows Today and See all share)

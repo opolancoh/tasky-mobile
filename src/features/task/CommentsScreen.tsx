@@ -5,8 +5,8 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
 import { useComments } from '@/data/tasks/queries';
-import { errorMessage } from '@/shared/i18n/errors';
-import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { LoadError } from '@/shared/components/LoadError';
+import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { CommentRow, useCommentMenu } from './components/CommentThread';
 
@@ -32,7 +32,7 @@ export function CommentsScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
         ListHeaderComponent={<Text variant="title" accessibilityRole="header" style={{ paddingBottom: space.md }}>{t('comments.title')}</Text>}
         ListFooterComponent={
           comments.isPending ? <View>{[70, 50, 60].map((w) => <SkeletonRow key={w} width={w} />)}</View>
-          : comments.error ? <Notice>{errorMessage(comments.error)}</Notice>
+          : comments.error && !comments.data ? <LoadError error={comments.error} onRetry={() => void comments.refetch()} />
           : comments.hasNextPage ? <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>
           : null
         }
