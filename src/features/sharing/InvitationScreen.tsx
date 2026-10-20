@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
+import { StackActions, useNavigation, type StaticScreenProps } from '@react-navigation/native';
 import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -15,7 +15,7 @@ import { confirm, ListRow, Notice, Screen, space, Text, useTheme, useToast } fro
 /**
  * An invitation (06-mobile.md, M34), pushed from its Needs attention row: who invited, the people, the open tasks
  * (a task list) or lists (a team), when it expires, and what joining shows. **Join** in the header, where Save goes;
- * **Decline invitation** as red text at the end (D68). Either answer goes back.
+ * **Decline invitation** as red text at the end (D68; whoever invited is told, D100). Join opens the list or team (M92); Decline goes back.
  */
 export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id }>) {
   const { invitationId } = route.params;
@@ -37,7 +37,10 @@ export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id
       { id: invitation.id, join },
       {
         onSuccess: () => {
-          navigation.goBack();
+          if (!join) navigation.goBack();
+          else if (invitation.teamId) navigation.dispatch(StackActions.replace('Team', { teamId: invitation.teamId }));
+          else if (invitation.taskListId) navigation.dispatch(StackActions.replace('TaskList', { taskListId: invitation.taskListId }));
+          else navigation.goBack();
           useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') });
         },
       },

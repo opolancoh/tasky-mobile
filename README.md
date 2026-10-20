@@ -73,6 +73,7 @@ Why each: [06-mobile.md › Stack](../azignia-docs/design/clients/apps/06-mobile
 | [Auth](docs/auth/README.md) | [Launch](docs/auth/launch.md), [Sign in](docs/auth/sign-in.md), [Sign up](docs/auth/sign-up.md), [Password reset](docs/auth/password-reset.md), [Tokens and invalid tokens](docs/auth/tokens.md), [Sign out](docs/auth/sign-out.md) |
 | [Releases](docs/releases.md) | Versions, `scripts/release.sh`, builds for TestFlight and Play internal testing, signing |
 | [Publishing](docs/publishing.md) | First-time setup: accounts, tools, the app's identity, Expo, the first iOS and Android builds |
+| [Notifications](docs/notifications.md) | Activity, push, email and Home: who is told for each action, the rules for push, where each lives |
 | [Push setup](docs/push-setup.md) | One-time setup for push: Firebase (FCM V1) and the APNs key in EAS, where each secret lives, testing a push |
 | [Structure](docs/structure/README.md) | Folders, layers, import rules, naming: [app](docs/structure/app.md), [core](docs/structure/core.md), [data](docs/structure/data.md), [features](docs/structure/features.md), [shared](docs/structure/shared.md) |
 | [06-mobile.md](../azignia-docs/design/clients/apps/06-mobile.md) | The spec: stack, navigation, data, session, UI rules, decisions |

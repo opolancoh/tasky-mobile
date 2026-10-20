@@ -31,6 +31,8 @@ export interface RequestOptions {
   ifMatch?: Version;
   /** No Authorization header and no refresh on 401 (sign-in, refresh, sign-out). */
   anonymous?: boolean;
+  /** Sent as the Authorization header instead of the session's, with no refresh on 401 (a pending sign-out, M88). */
+  accessToken?: string;
   signal?: AbortSignal;
 }
 
@@ -83,7 +85,8 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
     if (opts.ifMatch !== undefined) headers['If-Match'] = `"${opts.ifMatch}"`;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    if (!opts.anonymous && auth) {
+    if (opts.accessToken) headers.Authorization = `Bearer ${opts.accessToken}`;
+    else if (!opts.anonymous && auth) {
       const token = await auth.accessToken();
       if (token) headers.Authorization = `Bearer ${token}`;
     }
@@ -146,7 +149,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       const text = await response.text().catch(() => '');
       const error = toApiError(response, text);
       const exchange = { headers: response.headers, text };
-      if (response.status === 401 && !opts.anonymous && auth && !refreshed) {
+      if (response.status === 401 && !opts.anonymous && !opts.accessToken && auth && !refreshed) {
         refreshed = true;
         log?.error(id, method, target, error, Date.now() - started, 'refreshing', exchange);
         if (await auth.refresh()) continue;

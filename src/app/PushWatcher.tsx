@@ -38,9 +38,13 @@ function whenReady(open: (navigate: Navigate) => void) {
   const timer = setInterval(() => go() && clearInterval(timer), 200);
 }
 
+/** Kinds whose tap always opens their task (M88), with no request first: a pending assignment locks Task detail anyway. */
+const OPENS_TASK = new Set<NotificationKind>(['commented', 'mentioned', 'taskHeld', 'assigned', 'assignmentAccepted']);
+
 /**
- * A tapped push opens what its Activity row opens (M58), from the same queries (fresh), and marks it read; when there's
- * nowhere to go, Activity. A tapped reminder opens its task.
+ * A tapped push opens what its Activity row opens (M58) and marks it read: a task kind at once (M88), the others from the
+ * same queries (fresh); when there's nowhere to go, Activity. A task gone by then opens Activity with a toast (Task detail,
+ * `fromPush`). A tapped reminder opens its task.
  */
 async function openTapped(data: Record<string, unknown>, queryClient: QueryClient) {
   if (!isPush(data)) {
@@ -49,6 +53,11 @@ async function openTapped(data: Record<string, unknown>, queryClient: QueryClien
   }
   const id = (key: string) => (typeof data[key] === 'string' ? (data[key] as Id) : null);
   void collaborationApi.markRead([id('notificationId')!]).then(() => queryClient.invalidateQueries({ queryKey: collaborationKeys.all })).catch(() => undefined);
+  const taskId = id('taskId');
+  if (taskId && OPENS_TASK.has(data.kind as NotificationKind)) {
+    whenReady((navigate) => openActivityGo(navigate, { to: 'task', id: taskId, ...(id('commentId') ? { commentId: id('commentId')! } : {}) }, true));
+    return;
+  }
   const fetch = <T,>(queryKey: readonly unknown[], queryFn: () => Promise<T>) => queryClient.fetchQuery({ queryKey, queryFn }).catch(() => undefined);
   const [invitations, taskLists, teams, home] = await Promise.all([
     fetch(taskKeys.invitations, tasksApi.invitations),
@@ -60,12 +69,12 @@ async function openTapped(data: Record<string, unknown>, queryClient: QueryClien
     { kind: data.kind as NotificationKind, taskId: id('taskId'), commentId: id('commentId'), taskListId: id('taskListId'), teamId: id('teamId') },
     { invitations, taskLists, teams, home },
   );
-  whenReady((navigate) => (state ? openActivityGo(navigate, state.go) : navigate('Activity')));
+  whenReady((navigate) => (state ? openActivityGo(navigate, state.go, true) : navigate('Activity')));
 }
 
 /**
  * Push on this phone (D97), mounted while signed in: registers the token (at launch, on coming back, once allowed, when
- * it changes); with the app open a push only refreshes the bell and the screens; keeps the icon's badge at the unread
+ * it changes); with the app open a push only refreshes the bell and the screens (its task's detail and comments too, M88); keeps the icon's badge at the unread
  * count; opens what a tapped push or reminder is about; and shows our sheet after a change that makes notifications worth it.
  */
 export function PushWatcher() {
@@ -94,9 +103,15 @@ export function PushWatcher() {
 
   useEffect(() => {
     const received = Notifications.addNotificationReceivedListener((n) => {
-      if (!isPush(n.request.content.data)) return;
+      const data = n.request.content.data ?? {};
+      if (!isPush(data)) return;
       void queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
       void queryClient.invalidateQueries({ queryKey: taskKeys.views });
+      if (typeof data.taskId === 'string') {
+        // An open thread shows the new comment; the detail its new state.
+        void queryClient.invalidateQueries({ queryKey: taskKeys.detail(data.taskId) });
+        void queryClient.invalidateQueries({ queryKey: taskKeys.comments(data.taskId) });
+      }
     });
     // Opened by tapping one while closed (or signed out: it waits for sign-in), then any tap while running.
     Notifications.getLastNotificationResponseAsync().then((response) => {

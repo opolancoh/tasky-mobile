@@ -14,6 +14,7 @@ const ICONS: Record<Notification['kind'], Icon> = {
   taskCompleted: 'check-circle', taskMoved: 'corner-up-right', taskRescheduled: 'calendar',
   invited: 'users', invitationAccepted: 'users', removed: 'users', roleChanged: 'users', ownershipReceived: 'key',
   assignmentCompleted: 'check-circle', taskDeleted: 'trash-2', taskHeld: 'pause-circle', taskResumed: 'play-circle', commented: 'message-circle', mentioned: 'at-sign', joinedByLink: 'link-2',
+  invitationDeclined: 'user-x',
 };
 
 /**

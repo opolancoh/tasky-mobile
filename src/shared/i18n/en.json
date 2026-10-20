@@ -152,6 +152,7 @@
     "accepted": "Accepted",
     "movedToday": "Moved to today",
     "declinedBy": "{{name}} declined",
+    "droppedBy": "{{name}} dropped it",
     "completedBy": "{{name}} completed it"
   },
   "taskRow": {
@@ -522,7 +523,7 @@
     "sharing.already_member": "This person can already see it.",
     "sharing.outsider_team": "People from outside the company can join its lists, not its teams.",
     "sharing.inbox_private": "Your Personal list can't be shared.",
-    "invitation.user_deactivated": "This person's account is deactivated."
+    "invitation.account_closed": "This person's account is closed."
   },
   "languages": {
     "en": "English",
@@ -664,7 +665,8 @@
     "taskResumed": "{{actor}} resumed {{task}}",
     "commented": "{{actor}} commented on {{task}}: “{{text}}”",
     "mentioned": "{{actor}} mentioned you in {{task}}: “{{text}}”",
-    "joinedByLink": "{{other}} joined {{subject}} with the invite link"
+    "joinedByLink": "{{other}} joined {{subject}} with the invite link",
+    "invitationDeclined": "{{other}} declined your invitation to {{subject}}"
   },
   "invitation": {
     "invitedYou": "{{name}} invited you",
@@ -680,7 +682,7 @@
     "join": "Join",
     "decline": "Decline invitation",
     "declineTitle": "Decline the invitation to {{name}}?",
-    "declineMessage": "Nobody is told. They can invite you again.",
+    "declineMessage": "Whoever invited you is told. They can invite you again.",
     "gone": "This invitation is no longer open."
   },
   "activity": {
@@ -1098,6 +1100,7 @@
   },
   "push": {
     "channel": "Updates",
+    "taskGone": "This task is no longer available",
     "askTitle": "Get told when someone gives you a task or replies",
     "askBody": "Reminders use this too. You can change what you get in Me › Notifications.",
     "turnOn": "Turn on",
@@ -1105,7 +1108,7 @@
     "title": "Push",
     "groups": {
       "assignedToYou": "Assigned to you",
-      "answers": "Answers to what you gave",
+      "answers": "Answers",
       "invitations": "Invitations",
       "onHold": "On hold",
       "comments": "Comments",
@@ -1113,7 +1116,7 @@
     },
     "groupHints": {
       "assignedToYou": "Someone gives you a task",
-      "answers": "Declined, dropped, or done: confirm it",
+      "answers": "When someone answers what you gave or sent them",
       "invitations": "To a team or a list",
       "onHold": "A task of yours is paused, or you can resume it",
       "comments": "On tasks you have, made or commented on",
@@ -1124,7 +1127,7 @@
     "quietHours": "Quiet hours",
     "quietFrom": "From",
     "quietTo": "To",
-    "quietHint": "In your profile’s time zone. Pushes in this time are skipped; they still show in Activity. Reminders still ring.",
+    "quietHint": "In your profile’s time zone. Pushes in this time come silently: only the app’s badge changes, and they show in Activity. Reminders still ring.",
     "offInPhone": "Notifications are off for Azignia. Turn them on in the phone’s Settings to get reminders and pushes.",
     "turnOnInSettings": "Turn on in Settings",
     "remindersHint": "At the time you set, on this phone"

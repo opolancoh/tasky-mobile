@@ -11,7 +11,7 @@ src/app/
 ├── services.ts          The single HTTP client and token manager, wired to Expo
 ├── queryClient.ts       TanStack Query defaults
 ├── LinkWatcher.tsx      Join links (azignia://join, azignia://i, D95, M84): kept through sign-in, then opened as Join; navigationRef
-├── PushWatcher.tsx      Push (D97, M85): registers the token, refreshes on a push, the icon's badge, opens a tapped push (as its Activity row) or reminder, asks after mutations that make it worth it
+├── PushWatcher.tsx      Push (D97, M85, M88): registers the token, refreshes on a push (its task's detail and comments too), the icon's badge, opens a tapped push (task kinds at once, the others as its Activity row) or reminder, asks after mutations that make it worth it
 └── navigation/
     ├── RootNavigator.tsx  Every route, grouped by session status
     └── tabs.tsx           The bottom tab bar and its + button
@@ -27,7 +27,7 @@ Providers, outermost first:
 | `ThemeProvider` | The active palette in light or dark, following the OS |
 | `ErrorBoundary` | A render error (or a fatal one from the global handler) is saved as an error report and Something went wrong takes the app's place, with Restart and View report ([M89](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `QueryClientProvider` | The server-data cache |
-| `SessionProvider` | `useSession()`: sign in, sign out, retry; runs the [launch](../auth/launch.md) |
+| `SessionProvider` | `useSession()`: sign in, sign out, retry; runs the [launch](../auth/launch.md) and retries a sign-out made offline (M88) |
 
 Before rendering, `installErrorCapture()` sets the global error handler and the unhandled-rejection tracker (M89). Navigation's `onReady`/`onStateChange` add each screen to the error reports' breadcrumbs.
 

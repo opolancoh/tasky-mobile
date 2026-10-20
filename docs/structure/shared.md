@@ -41,6 +41,7 @@ src/shared/
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
+│   ├── pendingSignOut.ts  A sign-out made offline, kept in SecureStore and sent at launch or on coming back (M88)
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx
@@ -123,7 +124,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 
 Reminders as local notifications ([M42](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), D11). `syncReminders(timeZone)` keeps the nearest 50 scheduled at their date and time in the profile's zone (one run at a time); `ReminderSync` runs it at launch, on foreground, on a time zone change, once allowed and after saved changes. Sign-out clears them (`clearReminders`).
 
-Push (M85, D97). **One permission** for both (`permission.ts`, `useNotificationPermission`): never asked by the phone first; `askForNotifications()` shows `NotificationAskSheet` (one line, Turn on or Not now) when it matters: a reminder set, or a mutation whose `meta.asksNotifications` says so (giving a task to someone, a team created, an invite, joining). `push.ts`: `registerPush()` sends the Expo push token to `PUT /me/devices/{installId}` (an install id kept in SecureStore), skipped in Expo Go; `unregisterPush()` before sign-out; `usePushToken` for Me › About. The notification handler (`reminders.ts`) shows reminders as banners and no banner for a push with the app open. `app/PushWatcher.tsx` does the rest (taps, badge, refresh).
+Push (M85, D97). **One permission** for both (`permission.ts`, `useNotificationPermission`): never asked by the phone first; `askForNotifications()` shows `NotificationAskSheet` (one line, Turn on or Not now) when it matters: a reminder set, or a mutation whose `meta.asksNotifications` says so (giving a task to someone, a team created, an invite, joining). `push.ts`: `registerPush()` sends the Expo push token to `PUT /me/devices/{installId}` (an install id kept in SecureStore), skipped in Expo Go; `unregisterPush()` before sign-out (false when offline: the sign-out stays pending, `session/pendingSignOut.ts`, M88); `usePushToken` for Me › About. The notification handler (`reminders.ts`) shows reminders as banners and no banner for a push with the app open. `app/PushWatcher.tsx` does the rest (taps, badge, refresh).
 
 ## session/
 
@@ -131,6 +132,7 @@ Push (M85, D97). **One permission** for both (`permission.ts`, `useNotificationP
 |---|---|
 | `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`), the current user and `updateRequired` (the API answered 426, M48). No current workspace (M31). Readable outside React ([M13](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `SessionProvider.tsx` | Launch, sign in, sign out, retry; `useIsSignedIn()` and friends pick the navigation group |
+| `pendingSignOut.ts` | A sign-out the API didn't hear (offline, M88): the refresh token and, if its push device wasn't removed, the install id, in SecureStore; `retryPendingSignOut()` at launch and on coming back removes the device and ends the session, then forgets it |
 
 How they're used: [Auth](../auth/README.md).
 

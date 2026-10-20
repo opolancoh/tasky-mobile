@@ -3,14 +3,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, type ReactN
 import { AppState } from 'react-native';
 
 import type { TokenManager } from '@/core/auth/tokens';
-import { isApiError } from '@/core/http/problem';
+import { isApiError, isConnectionError } from '@/core/http/problem';
 import { identityApi } from '@/data/identity/api';
 import type { ChangePasswordRequest, LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
-import { unregisterPush } from '@/shared/notifications/push';
+import { getInstallId, pushSupported, unregisterPush } from '@/shared/notifications/push';
 import { clearReminders } from '@/shared/notifications/reminders';
 
+import { keepPendingSignOut, retryPendingSignOut } from './pendingSignOut';
 import { useSessionStore, type SessionStatus } from './sessionStore';
 
 export type { SessionStatus } from './sessionStore';
@@ -63,15 +64,18 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
     }
   }, [tokens, loadAccount]);
 
-  // Launch.
+  // Launch; a sign-out made offline goes out too (M88).
   useEffect(() => {
     resume();
+    void retryPendingSignOut();
   }, [resume]);
 
   // Back in the foreground while unreachable: try again on its own.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && useSessionStore.getState().status === 'unreachable') resume();
+      if (state !== 'active') return;
+      void retryPendingSignOut();
+      if (useSessionStore.getState().status === 'unreachable') resume();
     });
     return () => sub.remove();
   }, [resume]);
@@ -86,9 +90,13 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
   );
 
   const signOut = useCallback(async () => {
-    await unregisterPush();   // while still signed in: no more pushes for this user here (D97)
+    const removed = await unregisterPush();   // while still signed in: no more pushes for this user here (D97)
     const refreshToken = await tokens.refreshToken();
-    if (refreshToken) await identityApi.logout(refreshToken).catch(() => undefined);   // signed out locally either way
+    // Signed out locally either way; offline, the server hears later (M88), so it ends the session and stops the pushes.
+    const ended = refreshToken ? await identityApi.logout(refreshToken).then(() => true, (e: unknown) => !isConnectionError(e)) : true;
+    if (refreshToken && !ended) {
+      await keepPendingSignOut({ refreshToken, installId: !removed && pushSupported ? await getInstallId() : null });
+    }
     await tokens.clear();
     await clearReminders().catch(() => undefined);   // this user's reminders leave the phone (M42)
     queryClient.clear();

@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { create } from 'zustand';
 
+import { isConnectionError } from '@/core/http/problem';
 import { collaborationApi } from '@/data/collaboration/api';
 import { appInfo } from '@/shared/appInfo';
 import i18n from '@/shared/i18n/i18n';
@@ -30,7 +31,7 @@ export const usePushToken = create<{ token: string | null; set(token: string | n
 let installId: string | null = null;
 
 /** Made once per install and kept: the API's device row (PUT /me/devices/{installId}). */
-async function getInstallId(): Promise<string> {
+export async function getInstallId(): Promise<string> {
   installId ??= await SecureStore.getItemAsync(INSTALL_KEY);
   if (!installId) {
     installId = randomUUID();
@@ -59,11 +60,14 @@ export async function registerPush(force = false): Promise<void> {
   usePushToken.getState().set(token);
 }
 
-/** Before signing out: no more pushes for this user here. Signed out locally either way (an ended session stops them too). */
-export async function unregisterPush(): Promise<void> {
+/**
+ * Before signing out: no more pushes for this user here. False when Azignia couldn't be reached: the sign-out keeps it
+ * pending and tries again (M88). Signed out locally either way (an ended session stops them too).
+ */
+export async function unregisterPush(): Promise<boolean> {
   registered = null;
   usePushToken.getState().set(null);
-  if (!pushSupported) return;
-  await collaborationApi.removeDevice(await getInstallId()).catch(() => undefined);
+  if (!pushSupported) return true;
   await Notifications.setBadgeCountAsync(0).catch(() => undefined);
+  return collaborationApi.removeDevice(await getInstallId()).then(() => true, (e: unknown) => !isConnectionError(e));
 }

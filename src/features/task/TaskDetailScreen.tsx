@@ -43,8 +43,8 @@ import { useRepeatText } from './useRepeatText';
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  */
-export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id }>) {
-  const { taskId, commentId } = route.params;
+export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean }>) {
+  const { taskId, commentId, fromPush } = route.params;
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -78,14 +78,19 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   }, [task, load]);
   useEffect(() => clear, [clear]);
 
-  // A task that is gone (deleted elsewhere, no longer shared) closes its screen (06-mobile.md, Errors).
+  // A task that is gone (deleted elsewhere, no longer shared) closes its screen (06-mobile.md, Errors); opened from a push,
+  // Activity instead, with a toast (M88).
   const missing = isApiError(query.error) && query.error.status === 404;
   useEffect(() => {
     if (missing) {
       leaving.current = true;
       navigation.goBack();
+      if (fromPush) {
+        navigation.navigate('Activity');
+        useToast.getState().show({ message: t('push.taskGone') });
+      }
     }
-  }, [missing, navigation]);
+  }, [missing, navigation, fromPush, t]);
 
   /** Sends the draft's changes. True when there was nothing to save or it saved; a 412 keeps the edits on the latest task. */
   const saveDraft = async (): Promise<boolean> => {

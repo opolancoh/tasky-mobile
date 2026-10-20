@@ -152,6 +152,7 @@
     "accepted": "Aceptada",
     "movedToday": "Movida a hoy",
     "declinedBy": "{{name}} la rechazó",
+    "droppedBy": "{{name}} la dejó",
     "completedBy": "{{name}} la completó"
   },
   "taskRow": {
@@ -522,7 +523,7 @@
     "sharing.already_member": "Esta persona ya puede verlo.",
     "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
     "sharing.inbox_private": "Tu lista Personal no se puede compartir.",
-    "invitation.user_deactivated": "La cuenta de esta persona está desactivada."
+    "invitation.account_closed": "La cuenta de esta persona está cerrada."
   },
   "languages": {
     "en": "Inglés",
@@ -664,7 +665,8 @@
     "taskResumed": "{{actor}} reanudó {{task}}",
     "commented": "{{actor}} comentó en {{task}}: “{{text}}”",
     "mentioned": "{{actor}} te mencionó en {{task}}: “{{text}}”",
-    "joinedByLink": "{{other}} se unió a {{subject}} con el enlace de invitación"
+    "joinedByLink": "{{other}} se unió a {{subject}} con el enlace de invitación",
+    "invitationDeclined": "{{other}} rechazó tu invitación a {{subject}}"
   },
   "invitation": {
     "invitedYou": "{{name}} te invitó",
@@ -680,7 +682,7 @@
     "join": "Unirme",
     "decline": "Rechazar invitación",
     "declineTitle": "¿Rechazar la invitación a {{name}}?",
-    "declineMessage": "Nadie recibe aviso. Pueden invitarte de nuevo.",
+    "declineMessage": "Quien te invitó recibe aviso. Pueden invitarte de nuevo.",
     "gone": "Esta invitación ya no está abierta."
   },
   "activity": {
@@ -1125,6 +1127,7 @@
   },
   "push": {
     "channel": "Novedades",
+    "taskGone": "Esta tarea ya no está disponible",
     "askTitle": "Entérate cuando alguien te asigne una tarea o te responda",
     "askBody": "Los recordatorios también lo usan. Puedes elegir qué recibir en tu perfil › Notificaciones.",
     "turnOn": "Activar",
@@ -1132,7 +1135,7 @@
     "title": "Push",
     "groups": {
       "assignedToYou": "Asignadas a ti",
-      "answers": "Respuestas a lo que asignaste",
+      "answers": "Respuestas",
       "invitations": "Invitaciones",
       "onHold": "En espera",
       "comments": "Comentarios",
@@ -1140,7 +1143,7 @@
     },
     "groupHints": {
       "assignedToYou": "Alguien te asigna una tarea",
-      "answers": "Rechazada, dejada o completada: confírmala",
+      "answers": "Cuando alguien responde a lo que le asignaste o le enviaste",
       "invitations": "A un equipo o una lista",
       "onHold": "Una tarea tuya se pausa, o puedes reanudarla",
       "comments": "En tareas que tienes, creaste o comentaste",
@@ -1151,7 +1154,7 @@
     "quietHours": "Horas de silencio",
     "quietFrom": "Desde",
     "quietTo": "Hasta",
-    "quietHint": "En la zona horaria de tu perfil. Las notificaciones push en ese horario se omiten; igual aparecen en Actividad. Los recordatorios siguen sonando.",
+    "quietHint": "En la zona horaria de tu perfil. Las notificaciones push en ese horario llegan en silencio: solo cambia el número en el ícono, y aparecen en Actividad. Los recordatorios siguen sonando.",
     "offInPhone": "Las notificaciones están desactivadas para Azignia. Actívalas en Ajustes del teléfono para recibir recordatorios y notificaciones push.",
     "turnOnInSettings": "Activar en Ajustes",
     "remindersHint": "A la hora que elegiste, en este teléfono"

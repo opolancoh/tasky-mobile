@@ -122,21 +122,24 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
 
 /**
  * A task the caller gave someone that needs them (D71, M45): declined (with the reason; the row opens the task to
- * reassign, unassign or delete it), or completed and waiting for Confirm, here.
+ * reassign, unassign or delete it), dropped (given back, D100: to assign again), or completed and waiting for Confirm, here.
  */
 export function FollowUpRow({ task }: { task: TaskSummary }) {
   const { t } = useTranslation();
   const open = useOpenTask();
   const confirmTask = useConfirmTask();
-  const who = task.assignee?.displayName || t('notifications.someone');
+  const person = task.droppedBy ?? task.assignee;
+  const who = person?.displayName || t('notifications.someone');
   const declined = task.assignmentStatus === 'declined';
+  const answered = declined || !!task.droppedBy;
+  const label = task.droppedBy ? 'today.droppedBy' : declined ? 'today.declinedBy' : 'today.completedBy';
   return (
     <StreamRow
-      lead={<Avatar name={who} seed={task.assignee?.id ?? who} size={30} />}
+      lead={<Avatar name={who} seed={person?.id ?? who} size={30} />}
       title={task.title}
-      sub={<Text variant="footnote" color={declined ? 'danger' : 'success'}>{t(declined ? 'today.declinedBy' : 'today.completedBy', { name: who.split(' ')[0] })}</Text>}
+      sub={<Text variant="footnote" color={answered ? 'danger' : 'success'}>{t(label, { name: who.split(' ')[0] })}</Text>}
       onPress={() => open(task)}
-      action={declined ? undefined : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />}
+      action={answered ? undefined : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />}
     />
   );
 }

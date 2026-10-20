@@ -18,7 +18,7 @@ export const collaborationApi = {
   registerDevice: (installId: string, platform: 'ios' | 'android', token: string) => http().put(`/me/devices/${installId}`, { body: { platform, token } }),
 
   /** DELETE /me/devices/{installId} (204): no more pushes here; before signing out. */
-  removeDevice: (installId: string) => http().delete(`/me/devices/${installId}`),
+  removeDevice: (installId: string, accessToken?: string) => http().delete(`/me/devices/${installId}`, accessToken ? { accessToken } : undefined),
 
   /** GET /me/notification-settings: the defaults (all on, no quiet hours) until changed. */
   notificationSettings: () => http().get<NotificationSettings>('/me/notification-settings'),

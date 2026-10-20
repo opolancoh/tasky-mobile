@@ -197,6 +197,8 @@ export interface TaskSummary {
   resumer?: UserRef | null;
   /** Its comments (D92), shown on the row. */
   commentCount?: number;
+  /** The assignee who gave it back, for whoever had given it: Home's follow-up (D100). */
+  droppedBy?: UserRef | null;
 }
 
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
@@ -297,7 +299,7 @@ export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'com
 export interface Home {
   invitations: MyInvitation[];
   toAnswer: TaskPage;
-  /** Tasks the caller assigned that were declined, or completed and wait for them to confirm (D71). */
+  /** Tasks the caller assigned that were declined or dropped (D100), or completed and wait for them to confirm (D71). */
   followUp: TaskPage;
   overdue: TaskPage;
   today: TaskPage;

@@ -54,6 +54,9 @@ export function activityState(n: ActivityNotification, { invitations, taskLists,
       return subject ? { go: subject } : null;
     }
     case 'invitationAccepted':
+    case 'invitationDeclined':
+      // An answer to an invitation opens what it was to (M92).
+      return subject ? { go: subject } : null;
     case 'joinedByLink':
       return subject ? { go: { to: 'people', of: n.taskListId ? { kind: 'taskList', id: n.taskListId } : { kind: 'team', id: n.teamId! } } } : null;
     case 'roleChanged':
@@ -81,10 +84,10 @@ export function useActivityState(n: Notification): ActivityState {
 
 type Navigate = (screen: string, params?: object) => void;
 
-/** Opens where a notification leads: its Activity row and a tapped push (D97). */
-export function openActivityGo(navigate: Navigate, to: ActivityGo) {
+/** Opens where a notification leads: its Activity row and a tapped push (D97; `fromPush`: a gone task opens Activity, M88). */
+export function openActivityGo(navigate: Navigate, to: ActivityGo, fromPush = false) {
   if (to.to === 'invitation') navigate('Invitation', { invitationId: to.id });
-  else if (to.to === 'task') navigate('TaskDetail', { taskId: to.id, commentId: to.commentId });
+  else if (to.to === 'task') navigate('TaskDetail', { taskId: to.id, commentId: to.commentId, ...(fromPush ? { fromPush } : {}) });
   else if (to.to === 'taskList') navigate('TaskList', { taskListId: to.id });
   else if (to.to === 'team') navigate('Team', { teamId: to.id });
   else navigate('People', to.of);
