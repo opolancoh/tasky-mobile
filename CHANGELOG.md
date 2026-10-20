@@ -2,6 +2,16 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.7.0 — 2026-10-20
+
+- Task detail: comments and history read-only while an assignment waits
+- Push follow-ups and answers (M88, M92)
+- Push setup: the APNs key is set with eas credentials (the build doesn't ask)
+- Share one section of an error report or a logged call (M91)
+- Error reports and Can't connect (M89, M90)
+- Screen scroll follows the keyboard on the UI thread
+- expo-dev-client for development builds (testing push on real phones)
+
 ## 0.6.1 — 2026-10-19
 
 - Releases: Gradle's memory per Mac (~/.gradle/gradle.properties) for the Metaspace failure
