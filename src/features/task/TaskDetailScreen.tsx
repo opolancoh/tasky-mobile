@@ -246,7 +246,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     });
   };
   const confirmDone = () => run({ run: (x) => tasksApi.confirm(x), optimistic: (x) => ({ ...x, awaitsConfirmation: false }) }, t('taskDetail.confirmed'));
-  // While waiting, the fields read only: dimmed, and taps don't reach them. While Save runs, taps don't reach them (M59).
+  // While waiting, everything reads only (fields, comments, history): dimmed, and taps don't reach them. While Save runs, taps don't reach them (M59).
   const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : save.isPending ? ({ pointerEvents: 'none' } as const) : {};
 
   const error = save.error ?? command.error ?? remove.error;
@@ -449,6 +449,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       </View>
 
       {comments && (
+        <View {...locked}>
         <CommentThread
           taskId={taskId}
           count={commentCount}
@@ -456,6 +457,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           onHighlight={() => setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 300)}
           onEdit={setEditingComment}
         />
+        </View>
       )}
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
@@ -469,7 +471,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         )}
       </View>
       {/* History (D94, M83): on a task someone else sees, loaded only when asked for. */}
-      {comments && <HistorySection taskId={taskId} />}
+      {comments && <View {...locked}><HistorySection taskId={taskId} /></View>}
 
       {!waiting && holds.canHold(task) && (
         <Pressable onPress={holdTask} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
