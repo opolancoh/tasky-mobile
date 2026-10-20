@@ -52,6 +52,10 @@ function entryLines(e: NetworkEntry): string[] {
 /** One call, everything about it, for Share. */
 export const entryText = (e: NetworkEntry, session: SessionInfo) => [...sessionLines(session), '', ...entryLines(e)].join('\n');
 
+/** One section of a call, for its Share (M91): a line to find the call, then the section. */
+export const sectionText = (e: NetworkEntry, section: string, text: string) =>
+  [`#${e.id} ${e.method} ${e.path} · ${statusLabel(e)}${e.traceId ? ` · traceId ${e.traceId}` : ''}`, `— ${section} —`, text].join('\n');
+
 /** The log for Share: one line per call, then everything about the failed ones. */
 export function logText(entries: NetworkEntry[], session: SessionInfo): string {
   const failed = entries.filter((e) => e.errorCode);

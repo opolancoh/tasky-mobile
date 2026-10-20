@@ -6,7 +6,7 @@ import { Platform, Share, StyleSheet, View } from 'react-native';
 import { formatInstant } from '@/core/dates/localDate';
 import { useMe } from '@/data/tenancy/queries';
 import { sendReports, useErrorReports } from '@/shared/errors/errorReports';
-import { crumbLine, reportText } from '@/shared/errors/reportText';
+import { crumbLine, reportSectionText, reportText } from '@/shared/errors/reportText';
 import { confirm, ListRow, Pill, radius, Screen, SectionLabel, Text, useTheme, useToast } from '@/shared/ui';
 
 import { statusColor } from './statusTone';
@@ -14,7 +14,7 @@ import { statusColor } from './statusTone';
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
 const WHEN: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' };
 
-/** One error report (M89): what happened, where, on which app and phone, its stacks and the steps before it. */
+/** One error report (M89): what happened, where, on which app and phone, its stacks and the steps before it; Share sends it all, each section's icon only that section (M91). */
 export function ErrorReportScreen({ route }: StaticScreenProps<{ id: string }>) {
   const { t, i18n } = useTranslation();
   const { colors, space } = useTheme();
@@ -35,10 +35,11 @@ export function ErrorReportScreen({ route }: StaticScreenProps<{ id: string }>) 
     navigation.goBack();
     remove(report.id);
   };
-  const block = (label: string, text?: string) =>
+  // `name`: the section in the shared text, in English like the rest of it (M91).
+  const block = (label: string, name: string, text?: string) =>
     text ? (
       <>
-        <SectionLabel>{label}</SectionLabel>
+        <SectionLabel action={{ icon: 'share', label: t('errorReports.shareSection', { name: label }), onPress: () => void Share.share({ message: reportSectionText(report, name, text) }) }}>{label}</SectionLabel>
         <View style={[styles.block, { backgroundColor: colors.surface2, padding: space.md }]}>
           <Text selectable variant="footnote" style={{ fontFamily: mono }}>{text}</Text>
         </View>
@@ -64,9 +65,9 @@ export function ErrorReportScreen({ route }: StaticScreenProps<{ id: string }>) 
         <Pill label={t('errorReports.delete')} tone="quiet" onPress={() => void askDelete()} />
       </View>
 
-      {block(t('errorReports.stack'), report.stack)}
-      {block(t('errorReports.componentStack'), report.componentStack)}
-      {block(t('errorReports.before'), report.breadcrumbs.map(crumbLine).join('\n'))}
+      {block(t('errorReports.stack'), 'Stack', report.stack)}
+      {block(t('errorReports.componentStack'), 'Component stack', report.componentStack)}
+      {block(t('errorReports.before'), 'Before it', report.breadcrumbs.map(crumbLine).join('\n'))}
     </Screen>
   );
 }

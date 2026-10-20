@@ -11,7 +11,7 @@ import { useNetworkLog } from '@/shared/network/networkLog';
 import { ListRow, Pill, radius, Screen, SectionLabel, Text, useTheme, useToast } from '@/shared/ui';
 
 import { useSessionInfo } from './useSessionInfo';
-import { curlOf, entryText, headersText } from './shareText';
+import { curlOf, entryText, headersText, sectionText } from './shareText';
 import { sizeLabel, statusLabel } from './statusTone';
 
 const mono = Platform.select({ ios: 'Menlo', default: 'monospace' });
@@ -19,7 +19,8 @@ const STARTED: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', ho
 
 /**
  * One call in the Network log (M53): status, time, duration, size, whether a token went, its trace id (tap to copy),
- * the URL, and the request and response headers and bodies (selectable). Share sends all of it with the session;
+ * the URL, and the request and response headers and bodies (selectable). Share sends all of it with the session,
+ * each section's icon only that section (M91);
  * Copy as curl, to repeat it in Postman.
  */
 export function NetworkLogEntryScreen({ route }: StaticScreenProps<{ id: number }>) {
@@ -60,10 +61,11 @@ export function NetworkLogEntryScreen({ route }: StaticScreenProps<{ id: number 
       <Text selectable variant="footnote" style={{ fontFamily: mono }}>{text}</Text>
     </View>
   );
-  const section = (label: string, text?: string) =>
+  // `name`: the section in the shared text, in English like the rest of it.
+  const section = (label: string, name: string, text?: string) =>
     text ? (
       <>
-        <SectionLabel>{label}</SectionLabel>
+        <SectionLabel action={{ icon: 'share', label: t('networkLog.shareSection', { name: label }), onPress: () => void Share.share({ message: sectionText(entry, name, text) }) }}>{label}</SectionLabel>
         {block(text)}
       </>
     ) : null;
@@ -89,11 +91,11 @@ export function NetworkLogEntryScreen({ route }: StaticScreenProps<{ id: number 
         <Pill label={t('networkLog.copyCurl')} tone="quiet" onPress={() => void copy(curlOf(entry))} />
       </View>
 
-      {section(t('networkLog.url'), entry.url)}
-      {section(t('networkLog.requestHeaders'), headersText(entry.requestHeaders))}
-      {section(t('networkLog.request'), entry.requestBody)}
-      {section(t('networkLog.responseHeaders'), headersText(entry.responseHeaders))}
-      {section(t('networkLog.response'), entry.responseBody)}
+      {section(t('networkLog.url'), 'URL', entry.url)}
+      {section(t('networkLog.requestHeaders'), 'Request headers', headersText(entry.requestHeaders))}
+      {section(t('networkLog.request'), 'Request body', entry.requestBody)}
+      {section(t('networkLog.responseHeaders'), 'Response headers', headersText(entry.responseHeaders))}
+      {section(t('networkLog.response'), 'Response body', entry.responseBody)}
     </Screen>
   );
 }

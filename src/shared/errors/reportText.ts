@@ -20,3 +20,7 @@ export function reportText(r: ErrorReport): string {
     r.breadcrumbs.length ? `\nBefore it:\n${r.breadcrumbs.map(crumbLine).join('\n')}` : '',
   ].filter(Boolean).join('\n');
 }
+
+/** One section of a report, for its Share (M91): a line to find the report, then the section. */
+export const reportSectionText = (r: ErrorReport, section: string, text: string) =>
+  [`Azignia error report ${r.id} · ${r.code ? `${r.code}: ` : ''}${r.message}`, `— ${section} —`, text].join('\n');
