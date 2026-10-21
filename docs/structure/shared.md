@@ -44,7 +44,7 @@ src/shared/
 │   ├── pendingSignOut.ts  A sign-out made offline, kept in SecureStore and sent at launch or on coming back (M88)
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
-│   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx
+│   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx   BarTitle.tsx
 │   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
@@ -83,7 +83,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM"); `action`: one icon at its right (a section's Share, M91) |
-| `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); All tasks' order (M70) |
+| `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); unused since M94 moved Important's order and Assigned by me's switch into ••• |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |
@@ -104,6 +104,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `AssigneePicker`, `givesOutside` | Who a task is assigned to: the list's people (`GET /task-lists/{id}/members`), you first as Me, the chosen one with its status, Unassign (Task detail, Quick add; M43); on Personal and the user's private lists, Only this task with `PeoplePicker` (D70, D88, M45, M73) |
 | `PeoplePicker` | Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most (`GET /people`, `usePeople`, kept 5 minutes); typing searches after 250 ms, colleagues under Your company; a typed email ends with Invite by email / Give it by email. Used by `AssigneePicker`'s Only this task and People's Invite |
 | `MeButton` | The user's avatar at the top right of Home; opens Me (M39) |
+| `BarTitle`, `useBarTitle` | A list screen's title in the bar once its own scrolled away, over "16 open · Soonest" (M94): pass `onScroll` to the FlashList, `BarTitle` as `headerTitle`. Fades on the UI thread; the bar's hairline turns on while scrolled |
 | `TaskRow` | A task in a list: round checkbox (completes), title at most 2 lines, meta (`TaskOrigin`, due, steps, repeat, Declined or Invited, a red flag last when important), the initials of whoever has it at the right, you included, except in the Inbox (M44); a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it; `selectable` (M81): a long press starts selecting, then a tap picks it (a round check, the row tinted) |
 | `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |

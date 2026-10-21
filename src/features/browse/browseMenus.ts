@@ -132,8 +132,8 @@ export function useBrowseMenus() {
       },
     ], cancel);
 
-  /** ••• on a task list that isn't a list (All tasks, Important, Assigned…, M81): Select tasks. */
-  const selectMenu = (title: string, onSelect: () => void) => open(title, [{ label: t('select.selectTasks'), icon: 'check-circle', run: onSelect }], cancel);
+  /** ••• on a task list that isn't a list (All tasks, Important, Assigned…, M81): Select tasks; `view`, how it's shown (Important's Sort, Assigned by me's Group by, M94). */
+  const selectMenu = (title: string, onSelect: () => void, view?: Item) => open(title, [{ label: t('select.selectTasks'), icon: 'check-circle', run: onSelect }, view ?? false], cancel);
 
   return { listMenu, teamMenu, tagMenu, selectMenu };
 }

@@ -77,7 +77,7 @@ Why each: [06-mobile.md › Stack](../azignia-docs/design/clients/apps/06-mobile
 | [Push setup](docs/push-setup.md) | One-time setup for push: Firebase (FCM V1) and the APNs key in EAS, where each secret lives, testing a push |
 | [Structure](docs/structure/README.md) | Folders, layers, import rules, naming: [app](docs/structure/app.md), [core](docs/structure/core.md), [data](docs/structure/data.md), [features](docs/structure/features.md), [shared](docs/structure/shared.md) |
 | [06-mobile.md](../azignia-docs/design/clients/apps/06-mobile.md) | The spec: stack, navigation, data, session, UI rules, decisions |
-| [Design hub](https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh) | Every screen's design, by area (source in `artifacts/tasky/`) |
+| [Design hub](https://claude.ai/artifact/MM37Pcm1VePn7oFGFeumhh) | Every screen's design, by area (source in `artifacts/azignia/`) |
 
 ## Status
 

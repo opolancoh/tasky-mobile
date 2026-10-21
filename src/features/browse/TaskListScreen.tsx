@@ -11,7 +11,7 @@ import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import { useTaskLists, useMembers, useTasks, useTaskPages, useTeams } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { TaskRow } from '@/shared/components';
+import { BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
@@ -45,7 +45,8 @@ type Item =
  * it (D70, M45); a tap opens People. Tasks on hold (D91, M80) wait in their own section between the open tasks and
  * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
  * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
- * selection bar takes the add field's place, and Completed folds away meanwhile.
+ * selection bar takes the add field's place, and Completed folds away meanwhile. Scrolled, the bar shows the name over
+ * "3 open" (M94).
  */
 export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean; backTitle?: string }>) {
   const { taskListId, foldCompleted, backTitle } = route.params;
@@ -90,6 +91,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
     if (taskList?.sortMode === 'manual') list.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
+  const bar = useBarTitle();
+  const name = taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : '';
   const pickable = [...(tasks.data?.items ?? []), ...(held.data?.items ?? [])].filter(selectable);
   useLayoutEffect(() => {
     if (selecting) {
@@ -101,7 +104,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
       headerBackTitle: backTitle,   // from a team: the team screen has no title of its own
       gestureEnabled: true,
       headerLeft: undefined,
-      headerTitle: undefined,
+      headerTitle: () => <BarTitle shown={bar.shown} title={name} line={tasks.data ? t('browse.openShort', { count: tasks.data.total ?? tasks.data.items.length }) : undefined} />,
       headerRight: taskList
         ? () => (
             <View style={styles.headerRight}>
@@ -226,6 +229,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
         getItemType={(item) => item.type}
+        onScroll={bar.onScroll}
+        scrollEventThrottle={16}
         onEndReached={() => showDone && done.hasNextPage && !done.isFetchingNextPage && done.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}

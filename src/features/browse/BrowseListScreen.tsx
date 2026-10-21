@@ -12,29 +12,28 @@ import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTags, useTaskLists, useTaskPages, useTeams } from '@/data/tasks/queries';
 import type { TaskFilter, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, TaskRow } from '@/shared/components';
+import { Avatar, BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
-import { chooseAction, ColorDot, Notice, Screen, Segmented, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { chooseAction, ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
 import { useAssignedByGroup, type AssignedByGroup } from './assignedByGroupStore';
 import { useBrowseMenus } from './browseMenus';
 import { CompletedRow } from './components/CompletedRow';
 import { FilterStrip } from './components/FilterStrip';
+import { useImportantOrder, type ImportantOrder } from './importantOrderStore';
 
 /** The task lists Spaces opens that aren't a task list (M38, M70). `id`: the tag's name or the team's id. */
 export type BrowseListKind = 'all' | 'important' | 'assigned' | 'assignedBy' | 'completed' | 'tag' | 'team';
 
-/** Important (M70): soonest first (sort=due), grouped by list on the device, or newest first (sort=created). */
-type Order = 'due' | 'list' | 'created';
 /** All tasks, in Spaces and in a team (M78): grouped by Date, List or Person, and one filter at a time. */
 const ALL_GROUPS: AllTasksGroup[] = ['date', 'list', 'person'];
 type Show = 'mine' | 'unassigned' | 'overdue' | 'week' | 'onHold';
 const SHOWS: Show[] = ['mine', 'unassigned', 'overdue', 'week', 'onHold'];
 type DateGroup = 'overdue' | 'today' | 'week' | 'later' | 'none';
-const ORDERS: Order[] = ['due', 'list', 'created'];
+const ORDERS: ImportantOrder[] = ['due', 'list', 'created'];
 const GROUPS: AssignedByGroup[] = ['person', 'status'];
 
 /** Assigned by me's status groups (M71): what needs the user first. */
@@ -65,6 +64,8 @@ type Item =
  * with nobody on it in a list only the user sees counts as theirs. Headings fold.
  * Selecting (M81, all but Completed): a long press on a task or ••• › Select tasks; Cancel · "3 selected" · All on top
  * ("All 20" while more pages are to come: All selects what's loaded), the selection bar at the bottom.
+ * Scrolling (M94): once the title is under the bar, the bar shows it over the count and how the list is shown ("16 open ·
+ * Soonest"); Important's Sort and Assigned by me's Group by are in •••, kept on the device; group headings stay on top.
  */
 export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string; backTitle?: string }>) {
   // `person`: one person's tasks in a team (M79, from People), by date, no filter row; `personName` absent for the user.
@@ -83,9 +84,10 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const ordered = kind === 'important';
   const scoped = kind === 'all' || kind === 'team';
   const scope = kind === 'team' ? (id ?? '') : 'all';
-  const [order, setOrder] = useState<Order>('due');
-  const byList = ordered && order === 'list';
   const userId = me?.id ?? '';
+  const order = useImportantOrder((s) => s.byUser[userId]) ?? 'due';
+  const setOrder = useImportantOrder((s) => s.set);
+  const byList = ordered && order === 'list';
   const group = useAssignedByGroup((s) => s.byUser[userId] ?? 'person');
   const setGroup = useAssignedByGroup((s) => s.set);
   const given = kind === 'assignedBy';
@@ -137,18 +139,37 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   }, [whole, pages]);
 
   const title = person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
+  // How the list is shown, after its count (M94): Important's order, Assigned by me's group, All tasks' group and filter.
+  const view = ordered ? t(`browse.order.${order}`)
+    : given ? t(`browse.assignedByGroup.${group}`)
+    : scoped && !person ? [t(`browse.groupBy.${groupBy}`), show && t(`browse.show.${show}`)].filter(Boolean).join(' · ')
+    : '';
+  const counted = count !== undefined && count !== null;
+  const barLine = counted ? [t(kind === 'completed' ? 'browse.taskCount' : 'browse.openShort', { count }), view].filter(Boolean).join(' · ') : view;
+  const bar = useBarTitle();
+  const chooseOrder = async () => {
+    const i = await chooseAction({ title: t('browse.menu.sort'), actions: ORDERS.map((o) => ({ label: t(`browse.order.${o}`), selected: o === order })), cancelLabel: t('common.cancel') });
+    if (i !== null && userId) setOrder(userId, ORDERS[i]);
+  };
+  const chooseGiven = async () => {
+    const i = await chooseAction({ title: t('browse.assignedByGroup.label'), actions: GROUPS.map((g) => ({ label: t(`browse.assignedByGroup.${g}`), selected: g === group })), cancelLabel: t('common.cancel') });
+    if (i !== null && userId) setGroup(userId, GROUPS[i]);
+  };
+  const viewRow = ordered ? { label: t('browse.menu.sort'), icon: { community: 'swap-vertical' as const }, value: t(`browse.order.${order}`), more: true, run: chooseOrder }
+    : given ? { label: t('browse.assignedByGroup.label'), icon: 'layers' as const, value: t(`browse.assignedByGroup.${group}`), more: true, run: chooseGiven }
+    : undefined;
   useLayoutEffect(() => {
     if (selecting) {
       navigation.setOptions({ headerBackVisible: false, gestureEnabled: false, headerLeft: () => <SelectionCancel />, headerTitle: () => <SelectionTitle />, headerRight: () => <SelectionAll tasks={tasks.filter(selectable)} paged={pages.hasNextPage} /> });
       return;
     }
-    const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), () => start()) : undefined) : selects ? () => selectMenu(title, () => start()) : undefined;
+    const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), () => start()) : undefined) : selects ? () => selectMenu(title, () => start(), viewRow) : undefined;
     navigation.setOptions({
       headerBackVisible: true,
       headerBackTitle: backTitle,   // from a team: the team screen has no title of its own
       gestureEnabled: true,
       headerLeft: undefined,
-      headerTitle: undefined,
+      headerTitle: () => <BarTitle shown={bar.shown} title={title} line={barLine} />,
       headerRight: menu
         ? () => (
             <Pressable onPress={menu} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
@@ -232,12 +253,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             {kind === 'team' && team ? <Text variant="label" color="ink3">{team.name}</Text> : null}
             <Text variant="title" accessibilityRole="header" style={kind === 'tag' && tag?.color ? { color: tag.color } : undefined}>{title}</Text>
-            <Text variant="subhead" color="ink2">{count !== undefined && count !== null ? `${t(kind === 'completed' ? 'browse.taskCount' : 'browse.openCount', { count })} · ${sub}` : sub}</Text>
-            {ordered && (
-              <View style={{ marginTop: space.md }}>
-                <Segmented<Order> options={ORDERS.map((o) => ({ value: o, label: t(`browse.order.${o}`) }))} value={order} onChange={setOrder} accessibilityLabel={t('browse.order.label')} />
-              </View>
-            )}
+            <Text variant="subhead" color="ink2">{counted ? `${t(kind === 'completed' ? 'browse.taskCount' : 'browse.openCount', { count })} · ${ordered || given ? view : sub}` : sub}</Text>
             {scoped && !person && (!!loaded.length || !!show) && (
               <View style={{ marginTop: space.md }}>
                 <FilterStrip<Show>
@@ -248,11 +264,6 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
                   value={show}
                   onChange={setShow}
                 />
-              </View>
-            )}
-            {given && !!tasks.length && (
-              <View style={{ marginTop: space.md }}>
-                <Segmented<AssignedByGroup> options={GROUPS.map((g) => ({ value: g, label: t(`browse.assignedByGroup.${g}`) }))} value={group} onChange={(g) => setGroup(userId, g)} accessibilityLabel={t('browse.assignedByGroup.label')} />
               </View>
             )}
             {pages.error && (
@@ -303,6 +314,9 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
         getItemType={(item) => (item.type === 'task' && kind === 'completed' ? 'done' : item.type)}
+        stickyHeaderIndices={items.flatMap((item, i) => (item.type === 'group' || item.type === 'person' ? [i] : []))}
+        onScroll={bar.onScroll}
+        scrollEventThrottle={16}
         onEndReached={() => pages.hasNextPage && !pages.isFetchingNextPage && pages.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
@@ -312,12 +326,13 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   );
 }
 
-/** A group's heading; on All tasks (M78) a tap folds it, a chevron at the end. */
+/** A group's heading, pinned on top while its tasks scroll (M94); on All tasks (M78) a tap folds it, a chevron at the end. */
 function Heading({ folds, folded, onPress, children }: { folds: boolean; folded: boolean; onPress(): void; children: ReactNode }) {
   const { colors, space } = useTheme();
-  if (!folds) return <View style={[styles.group, { gap: space.sm, marginTop: space.lg }]}>{children}</View>;
+  // Padding, not margin, on the screen's background: pinned on top (M94), it covers the rows scrolling under it.
+  if (!folds) return <View style={[styles.group, { gap: space.sm, paddingTop: space.lg, backgroundColor: colors.bg }]}>{children}</View>;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ expanded: !folded }} style={[styles.group, styles.heading, { gap: space.sm, marginTop: space.md }]}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ expanded: !folded }} style={[styles.group, styles.heading, { gap: space.sm, paddingTop: space.md, backgroundColor: colors.bg }]}>
       {children}
       <View style={styles.fill} />
       <Feather name={folded ? 'chevron-right' : 'chevron-down'} size={16} color={colors.ink3} />

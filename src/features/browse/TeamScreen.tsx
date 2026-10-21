@@ -8,6 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Id } from '@/core/types';
 import { useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { TaskList } from '@/data/tasks/types';
+import { BarTitle, useBarTitle } from '@/shared/components';
 import { LoadError } from '@/shared/components/LoadError';
 import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -48,8 +49,11 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   const error = [teams, taskLists].find((q) => q.error && q.data === undefined)?.error;
   const retry = () => { teams.refetch(); taskLists.refetch(); };
 
+  const bar = useBarTitle();
   useLayoutEffect(() => {
     navigation.setOptions({
+      // Scrolled, the bar shows the team's name over "3 lists" (M94).
+      headerTitle: () => <BarTitle shown={bar.shown} title={team?.name ?? ''} line={taskLists.isPending ? undefined : lists.length ? t('browse.listCount', { count: lists.length }) : t('browse.noListsYet')} />,
       headerRight: team
         ? () => (
             <View style={styles.headerRight}>
@@ -153,6 +157,8 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
         getItemType={(item) => item.type}
+        onScroll={bar.onScroll}
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: space.huge }}
       />
