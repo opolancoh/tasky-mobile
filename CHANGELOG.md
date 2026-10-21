@@ -2,6 +2,13 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.8.0 — 2026-10-20
+
+- List tops: title in the bar on scroll, sort in •••, pinned headings (M94)
+- Task-row dates show the year outside this year
+- Spaces wording, Personal in Task detail, team name on the back button
+- Personal card: Just for you, opens with Completed folded (M93)
+
 ## 0.7.0 — 2026-10-20
 
 - Task detail: comments and history read-only while an assignment waits
