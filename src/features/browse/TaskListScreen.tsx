@@ -47,8 +47,8 @@ type Item =
  * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
  * selection bar takes the add field's place, and Completed folds away meanwhile.
  */
-export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>) {
-  const { taskListId } = route.params;
+export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean }>) {
+  const { taskListId, foldCompleted } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
@@ -57,7 +57,10 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const taskList = useTaskLists().data?.find((c) => c.id === taskListId);
   const tasks = useTasks({ taskListId, sort: 'taskList' });
   const userId = useSessionStore((s) => s.userId);
-  const folded = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
+  const savedFold = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
+  // From Home's Personal card (M93): Completed starts folded for this visit, and its heading opens it without saving.
+  const [visitFold, setVisitFold] = useState(foldCompleted ? true : undefined);
+  const folded = visitFold ?? savedFold;
   const doneCount = taskList?.completedTasks ?? 0;
   const showDone = doneCount > 0 && !folded;
   const heldCount = taskList?.onHoldTasks ?? 0;
@@ -68,7 +71,10 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id }>)
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
   const complete = useCompleteTask();
   const reopen = useReopenTask();
-  const toggleDone = () => userId && useFoldedLists.getState().setFolded(userId, taskListId, !folded);
+  const toggleDone = () => {
+    if (visitFold !== undefined) setVisitFold(!folded);
+    else if (userId) useFoldedLists.getState().setFolded(userId, taskListId, !folded);
+  };
   // Completing hides the task while Completed is folded, so it offers Undo (M56); open, the task shows up there.
   const completeTask = (task: TaskSummary) =>
     complete.mutate(task, {

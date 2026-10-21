@@ -65,7 +65,7 @@ export function HomeCards({ data, today, open, openImportant, openPersonal }: { 
       )}
       <Card tone={overdue ? 'danger' : 'plain'} icon="clock" count={overdue} label={t('home.overdue')} sub={overdue && oldest ? t('home.since', { date: labels.day(oldest) }) : t('home.nothingLate')} onPress={() => open('overdue')} />
       <Card tone={data.importantTotal ? 'danger' : 'plain'} icon="flag" count={data.importantTotal} label={t('home.important')} sub={t(data.importantTotal ? 'home.soonestFirst' : 'home.noneFlagged')} onPress={openImportant} />
-      <Card tone={data.inboxTotal ? 'accent' : 'plain'} icon="inbox" count={data.inboxTotal} label={t('home.inbox')} sub={t(data.inboxTotal ? 'home.notInList' : 'home.allSorted')} onPress={openPersonal} />
+      <Card tone={data.inboxTotal ? 'accent' : 'plain'} icon="inbox" count={data.inboxTotal} label={t('home.inbox')} sub={t(data.inboxTotal ? 'home.justForYou' : 'home.nothingOpen')} onPress={openPersonal} />
     </View>
   );
 }

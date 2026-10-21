@@ -75,7 +75,7 @@ export function TodayScreen() {
   // Important and Personal open the same screens as Spaces (one list each, the same rows). No Personal yet (D59): nothing to open.
   const personal = useTaskLists().data?.find((c) => c.isInbox);
   const openImportant = () => navigation.navigate('BrowseList', { kind: 'important' });
-  const openPersonal = () => personal && navigation.navigate('TaskList', { taskListId: personal.id });
+  const openPersonal = () => personal && navigation.navigate('TaskList', { taskListId: personal.id, foldCompleted: true });   // M93
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
   // First load (M27): skeleton cards, then sections and rows where they will be.
