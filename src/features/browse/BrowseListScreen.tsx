@@ -66,9 +66,9 @@ type Item =
  * Selecting (M81, all but Completed): a long press on a task or ••• › Select tasks; Cancel · "3 selected" · All on top
  * ("All 20" while more pages are to come: All selects what's loaded), the selection bar at the bottom.
  */
-export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string }>) {
+export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string; backTitle?: string }>) {
   // `person`: one person's tasks in a team (M79, from People), by date, no filter row; `personName` absent for the user.
-  const { kind, id, person, personName } = route.params;
+  const { kind, id, person, personName, backTitle } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
@@ -145,6 +145,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), () => start()) : undefined) : selects ? () => selectMenu(title, () => start()) : undefined;
     navigation.setOptions({
       headerBackVisible: true,
+      headerBackTitle: backTitle,   // from a team: the team screen has no title of its own
       gestureEnabled: true,
       headerLeft: undefined,
       headerTitle: undefined,

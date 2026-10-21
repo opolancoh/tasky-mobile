@@ -351,7 +351,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           <ListRow
             label={t('taskDetail.fields.taskList')}
             icon={<TaskListIcon taskList={fields.taskList} />}
-            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.taskList.name}</Text>}
+            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.taskList.isInbox ? t('browse.inbox') : fields.taskList.name}</Text>}
             onPress={() => open('taskList')}
           />
         ) : (

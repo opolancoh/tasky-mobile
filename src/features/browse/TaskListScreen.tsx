@@ -47,8 +47,8 @@ type Item =
  * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
  * selection bar takes the add field's place, and Completed folds away meanwhile.
  */
-export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean }>) {
-  const { taskListId, foldCompleted } = route.params;
+export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean; backTitle?: string }>) {
+  const { taskListId, foldCompleted, backTitle } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
@@ -98,6 +98,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
     }
     navigation.setOptions({
       headerBackVisible: true,
+      headerBackTitle: backTitle,   // from a team: the team screen has no title of its own
       gestureEnabled: true,
       headerLeft: undefined,
       headerTitle: undefined,

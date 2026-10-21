@@ -112,7 +112,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
           </View>
         );
       case 'all':
-        return <BrowseRow label={t('browse.allTasks')} icon={<Feather name="list" size={17} color={colors.accent} />} count={open} onPress={() => navigation.navigate('BrowseList', { kind: 'team', id: teamId })} />;
+        return <BrowseRow label={t('browse.allTasks')} icon={<Feather name="list" size={17} color={colors.accent} />} count={open} onPress={() => navigation.navigate('BrowseList', { kind: 'team', id: teamId, backTitle: team?.name })} />;
       case 'listsHead':
         return (
           <View style={[styles.section, { marginTop: space.xl }]}>
@@ -127,7 +127,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
       case 'list': {
         const c = item.list;
         return <BrowseRow label={c.name} icon={<ColorDot color={c.color} size={10} />} tint={faint(c.color, scheme)} count={c.openTasks ?? 0}
-          onPress={() => navigation.navigate('TaskList', { taskListId: c.id })} onLongPress={() => listMenu(c)} />;
+          onPress={() => navigation.navigate('TaskList', { taskListId: c.id, backTitle: team?.name })} onLongPress={() => listMenu(c)} />;
       }
       case 'empty':
         return (
