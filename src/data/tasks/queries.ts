@@ -15,8 +15,29 @@ export const useTaskLists = () => useQuery({ queryKey: taskKeys.taskLists, query
  * query the user has typed past is cancelled (the request's `signal`).
  */
 export const PEOPLE_LIMIT = 8;
-export const usePeople = (q: string, exclude: readonly string[] = []) =>
-  useQuery({ queryKey: taskKeys.people(q, exclude), queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, exclude, signal), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
+export const usePeople = (q: string, exclude: readonly string[] = [], within?: MembersOf) =>
+  useQuery({
+    queryKey: taskKeys.people(q, exclude, within && `${within.kind}:${within.id}`),
+    queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, exclude, within, signal),
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+
+/** People's first rows (D105, the hub's *Members on demand*, A): the owner, you, admins and a few more, with `total`. */
+export const MEMBERS_PREVIEW = 6;
+export const MEMBERS_PAGE = 30;
+export const useMembersPreview = (of: MembersOf) =>
+  useQuery({ queryKey: [...taskKeys.members(of.kind, of.id), 'preview'], queryFn: ({ signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PREVIEW }, signal) });
+
+/** Everyone in a team or list, a page at a time (See all, D105); `q` searches names on the API. Under `members`, so changes refresh it. */
+export const useMemberPages = (of: MembersOf, q: string) =>
+  useInfiniteQuery({
+    queryKey: [...taskKeys.members(of.kind, of.id), 'pages', q],
+    queryFn: ({ pageParam, signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PAGE, cursor: pageParam, q }, signal),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    placeholderData: keepPreviousData,
+  });
 
 /** The caller's tags (D60). */
 export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });

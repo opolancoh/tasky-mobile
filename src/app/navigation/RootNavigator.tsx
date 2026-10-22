@@ -15,6 +15,7 @@ import { ArchivedScreen } from '@/features/browse/ArchivedScreen';
 import { BrowseListScreen } from '@/features/browse/BrowseListScreen';
 import { BrowseScreen } from '@/features/browse/BrowseScreen';
 import { TaskListScreen } from '@/features/browse/TaskListScreen';
+import { MembersScreen } from '@/features/browse/MembersScreen';
 import { PeopleScreen } from '@/features/browse/PeopleScreen';
 import { RecentlyDeletedScreen } from '@/features/browse/RecentlyDeletedScreen';
 import { TeamScreen } from '@/features/browse/TeamScreen';
@@ -121,6 +122,7 @@ const RootStack = createNativeStackNavigator({
         TaskList: { screen: TaskListScreen, options: { headerShown: true } },
         Team: { screen: TeamScreen, options: { headerShown: true } },
         People: { screen: PeopleScreen, options: { headerShown: true } },
+        Members: { screen: MembersScreen, options: { headerShown: true } },
         BrowseList: { screen: BrowseListScreen, options: { headerShown: true } },
         Archived: { screen: ArchivedScreen, options: { headerShown: true } },
         RecentlyDeleted: { screen: RecentlyDeletedScreen, options: { headerShown: true } },

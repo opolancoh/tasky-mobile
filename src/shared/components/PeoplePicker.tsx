@@ -7,7 +7,7 @@ import { shortenEmail } from '@/core/text/shorten';
 import type { Id } from '@/core/types';
 import { isEmail } from '@/core/validation/rules';
 import { usePeople } from '@/data/tasks/queries';
-import { isEmailAssignee, type Person } from '@/data/tasks/types';
+import { isEmailAssignee, type MembersOf, type Person } from '@/data/tasks/types';
 import { ListRow, SectionLabel, SkeletonRow, Spinner, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
@@ -18,8 +18,10 @@ const SEARCH_DELAY = 250;
 const EMAIL_MAX = 60;
 
 export interface PeoplePickerProps {
-  /** Already there (the list's people, the current assignee): left out. */
+  /** Already there (the current assignee): left out. */
   exclude?: readonly Id[];
+  /** A list or team whose people the API leaves out (D105): the app needn't load them all. */
+  within?: MembersOf;
   /** The last row's label for a typed email: "Invite by email" or "Give it by email". */
   emailLabel: string;
   onPickPerson(person: Person): void;
@@ -34,7 +36,7 @@ export interface PeoplePickerProps {
  * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search is on its way (M73). The typed text lives here
  * (docs/performance.md); a pick clears it.
  */
-export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, busy = false }: PeoplePickerProps) {
+export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, onEmail, busy = false }: PeoplePickerProps) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const [text, setText] = useState('');
@@ -44,7 +46,7 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
     return () => clearTimeout(timer);
   }, [text]);
   // An email is searched too: someone you know with that address shows above Invite by email (D104). The API leaves out `exclude`.
-  const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)));   // an emailed assignee isn't a user id
+  const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)), within);   // an emailed assignee isn't a user id
   // Searching: from a keystroke until its results are in (the wait before asking, then the request); the last results stay meanwhile.
   const searching = text.trim() !== query || (people.isFetching && !people.isPending);
   const email = text.trim().toLowerCase();
