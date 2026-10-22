@@ -125,7 +125,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
             <Text variant="title" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
             <Text variant="subhead" color="ink2">{t(of.kind === 'team' ? (team?.role === 'owner' ? 'browse.peopleTeamOwner' : invites ? 'browse.peopleTeamAdmin' : 'browse.peopleTeamOnly') : invites ? 'browse.peopleCanInvite' : 'browse.peopleOwnerOnly')}</Text>
             {invites && <InviteField of={of} outsiders={outsiders} exclude={(members.data ?? []).map((m) => m.userId)} />}
-            {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
+            {invites && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>}
             {invites && of.kind === 'team' && team && <InviteLinkRow teamId={of.id} teamName={team.name} />}
             {(members.error || remove.error) && (
               <View style={{ marginTop: space.md }}>

@@ -19,7 +19,8 @@ src/core/
 │   ├── calendar.ts       Weeks from Monday, months: a month's weeks, its first and last day (Calendar, M72)
 │   └── reminders.ts      A reminder (date + time), the quick presets
 ├── text/
-│   └── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)
+│   ├── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)
+│   └── shorten.ts        shortenEmail: a long email cut in the middle, keeping its domain
 └── validation/
     ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled
     ├── limits.ts         The API's field limits

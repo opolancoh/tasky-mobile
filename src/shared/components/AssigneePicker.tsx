@@ -83,7 +83,7 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
             onPickPerson={(p) => onPick({ id: p.id, displayName: p.displayName })}
             onEmail={(email) => onPick(emailAssignee(email))}
           />
-          <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.sm }]}>{t('assign.outsideNote')}</Text>
+          <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.md }]}>{t('assign.outsideNote')}</Text>
         </View>
       )}
       {selected && <ListRow label={t('assign.unassign')} onPress={() => onPick(null)} chevron={false} divider={false} />}
