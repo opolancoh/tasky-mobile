@@ -16,14 +16,15 @@ import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
-import { Avatar, CheckCircle, ReminderIcon, TaskListIcon, TagsRow } from '@/shared/components';
+import { Avatar, CheckCircle, ReminderIcon, TagsRow } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { askReason, Button, chooseAction, confirm, ListRow, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { askReason, Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { CommentField } from './components/CommentField';
 import { CommentThread } from './components/CommentThread';
+import { FieldRow } from './components/FieldRow';
 import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
@@ -32,9 +33,10 @@ import { useTaskSheet } from './taskSheetStore';
 import { useRepeatText } from './useRepeatText';
 
 /**
- * Task detail (06-mobile.md, M25, M26), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
- * title in place, the Important flag (a red edge when on, M24), the rows for Task list, Assigned to (every task, M43, M44),
- * Due date, Reminder, Repeat and Tags (each a page in `TaskFieldSheet`), steps and notes. **Save** in the header sends what changed in one PATCH
+ * Task detail (06-mobile.md, M25, M26, laid out as M98), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
+ * title in place, the Important flag (red when on; no red edge, M98), the list on a line under the title, the steps under it, then
+ * the fields in groups: Assigned to (every task, M43, M44) · Due date, Reminder, Repeat · Tags (each a page in
+ * `TaskFieldSheet`; empty ones say what a tap does, "Add due date"), and notes. **Save** in the header sends what changed in one PATCH
  * (D56) and goes back with a toast; an error keeps the screen and the edits (M59). Leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
  * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
@@ -135,7 +137,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   });
 
   // On a shared list, an assignee who isn't among its people has only this task (D88, M71): "Outside the list".
-  const listOf = useTaskLists().data?.find((c) => c.id === task?.taskList?.id);
+  const taskLists = useTaskLists().data;
+  const listOf = taskLists?.find((c) => c.id === task?.taskList?.id);
   const sharedList = !!listOf && listOf.sharing !== 'private';
   const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
@@ -232,6 +235,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     );
   };
   const assigner = task.assignedBy?.displayName || t('notifications.someone');
+  // The line under the title (M98): the draft's list, then who sees it, as a list's own line says it (M64).
+  const lineList = taskLists?.find((c) => c.id === fields.taskList?.id);
+  const others = (people ?? []).filter((m) => m.userId !== me.id).map((m) => m.displayName.split(' ')[0]);
+  const whoSees = !lineList || lineList.sharing === 'private' ? null
+    : lineList.team ? lineList.team.name
+    : lineList.owner.id !== me.id ? t('browse.ownersList', { name: lineList.owner.displayName.split(' ')[0] })
+    : lineList.id === listOf?.id && others.length ? t('browse.sharedWith', { names: others.join(', ') })
+    : null;
+  const where = [fields.taskList ? (fields.taskList.isInbox ? t('browse.inbox') : fields.taskList.name) : '', whoSees].filter(Boolean).join(' · ');
 
   // Give it back (D70): asks first; someone who sees only this task loses it, so the screen closes.
   const giveBack = async () => {
@@ -273,7 +285,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       )}
 
       <View {...locked}>
-      <View style={[styles.head, { gap: space.md, paddingTop: space.sm }, fields.isImportant && [styles.edge, { borderLeftColor: colors.danger }]]}>
+      <View style={[styles.head, { gap: space.md, paddingTop: space.sm }]}>
         {held ? (
           <Pressable onPress={heldMenu} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('hold.menuLabel', { title: task.title })} style={styles.checkSpot}>
             <Feather name="pause-circle" size={28} color={colors.warn} />
@@ -293,6 +305,19 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           <Feather name="flag" size={22} color={fields.isImportant ? colors.danger : colors.ink3} />
         </Pressable>
       </View>
+
+      {/* Where it is (M98): the list and who sees it, under the title; a tap moves it. Seen only as its assignee: who gave it. */}
+      {fields.taskList ? (
+        <Pressable onPress={() => open('taskList')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`${t('taskDetail.fields.taskList')}: ${where}`} style={[styles.where, { gap: space.xs }]}>
+          {fields.taskList.isInbox ? <Feather name="inbox" size={14} color={colors.ink3} /> : <ColorDot color={fields.taskList.color} size={9} />}
+          <Text variant="footnote" color="ink2" numberOfLines={1} style={styles.fill}>{where}</Text>
+        </Pressable>
+      ) : (
+        <View style={[styles.where, { gap: space.xs }]}>
+          <Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={16} />
+          <Text variant="footnote" color="ink2" numberOfLines={1} style={styles.fill}>{`${t('taskDetail.from')} ${assigner}`}</Text>
+        </View>
+      )}
 
       {held && (
         // The banner (M80): why it waits, until when, who paused it and who can resume it, and Resume.
@@ -334,109 +359,91 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
       </View>
 
-      <View style={{ marginTop: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }}>
-        {waiting && (
-          <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, borderBottomColor: colors.line }]} accessibilityRole="summary">
-            <Feather name="user" size={20} color={colors.warn} />
-            <View style={styles.fill}>
-              <Text variant="body">{t('taskDetail.assignment')}</Text>
-              <Text variant="caption" color="ink2" numberOfLines={2}>{t('taskDetail.assignmentWaiting', { name: assigner })}</Text>
-            </View>
-            <Pill label={t('taskDetail.reject')} tone="quiet" onPress={() => reject(assigner)} disabled={command.isPending} />
-            <Pill label={t('taskDetail.accept')} onPress={accept} disabled={command.isPending} />
+      <View {...locked}>
+      <StepList canAdd={!completed} />
+      </View>
+
+      {waiting && (
+        <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, marginTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.line }]} accessibilityRole="summary">
+          <Feather name="user" size={20} color={colors.warn} />
+          <View style={styles.fill}>
+            <Text variant="body">{t('taskDetail.assignment')}</Text>
+            <Text variant="caption" color="ink2" numberOfLines={2}>{t('taskDetail.assignmentWaiting', { name: assigner })}</Text>
           </View>
-        )}
-        <View {...locked}>
-        {fields.taskList ? (
-          <ListRow
-            label={t('taskDetail.fields.taskList')}
-            icon={<TaskListIcon taskList={fields.taskList} />}
-            value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.taskList.isInbox ? t('browse.inbox') : fields.taskList.name}</Text>}
-            onPress={() => open('taskList')}
-          />
-        ) : (
-          <ListRow label={t('taskDetail.from')} icon={<Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={22} />} value={assigner} />
-        )}
-        {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
-        {outside ? (
-          <ListRow
-            label={t('taskDetail.fields.assignee')}
-            icon={<Avatar name={me.displayName} seed={me.id} size={22} />}
-            value={status ? t(`assign.status.${status}`) : t('assign.meShort')}
-          />
-        ) : fields.assignee ? (
-          <ListRow
-            label={t('taskDetail.fields.assignee')}
-            icon={<Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} />}
-            value={
-              <View style={styles.end}>
-                <Text variant="bodyMedium" color="accent" numberOfLines={1}>{fields.assignee.id === me.id ? t('assign.meShort') : fields.assignee.displayName}</Text>
-                {status && <Text variant="caption" color={status === 'declined' ? 'danger' : status === 'accepted' ? 'success' : 'ink2'} numberOfLines={2}>
-                  {status === 'declined' && task.declineReason ? t('taskDetail.declinedReason', { reason: task.declineReason }) : t(`assign.status.${status}`)}
-                  {sharedList && people && fields.assignee.id === task.assignee?.id && !people.some((m) => m.userId === fields.assignee?.id) ? ` · ${t('taskRow.outsideList')}` : ''}
-                </Text>}
-              </View>
-            }
-            onPress={() => open('assignee')}
-            onClear={() => edit({ assignee: null })}
-            clearLabel={t('assign.unassign')}
-          />
-        ) : (
-          <ListRow label={t('taskDetail.fields.assignee')} value={t('common.none')} icon={<Feather name="user" size={20} color={colors.ink3} />} onPress={() => open('assignee')} />
-        )}
-        <View {...fixed}>
-        {fields.dueDate ? (
-          <ListRow
-            label={t('taskDetail.fields.due')}
-            icon={<Feather name="calendar" size={20} color={colors.accent} />}
-            value={<Text variant="bodyMedium" color={overdue ? 'danger' : 'accent'}>{overdue ? t('taskDetail.overdue', { date: labels.day(fields.dueDate) }) : labels.day(fields.dueDate)}</Text>}
-            onPress={() => open('due')}
-            onClear={() => edit({ dueDate: null, repeat: null })}
-            clearLabel={t('taskDetail.clearDue')}
-          />
-        ) : (
-          <ListRow label={t('taskDetail.fields.due')} value={t('common.none')} icon={<Feather name="calendar" size={20} color={colors.ink3} />} onPress={() => open('due')} />
-        )}
+          <Pill label={t('taskDetail.reject')} tone="quiet" onPress={() => reject(assigner)} disabled={command.isPending} />
+          <Pill label={t('taskDetail.accept')} onPress={accept} disabled={command.isPending} />
         </View>
-        {fields.reminder ? (
-          <ListRow
-            label={t('taskDetail.fields.reminder')}
-            icon={<ReminderIcon color={colors.accent} />}
-            value={
-              <View style={styles.end}>
-                <Text variant="bodyMedium" color="accent">
-                  {fields.reminder.date === today ? `${t('dates.today')}, ${labels.time(fields.reminder.time)}` : labels.reminder(fields.reminder)}
-                </Text>
-                <Text variant="caption" color="ink2">{t('reminders.onlyYou')}</Text>
-              </View>
-            }
+      )}
+
+      {/* The fields in groups (M98): who · when · tags, a hairline between them; no List row (the line under the title). */}
+      <View {...locked}>
+      <View style={{ marginTop: space.md }}>
+        <View style={[styles.group, { borderTopColor: colors.line }]}>
+          {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
+          {outside ? (
+            <FieldRow
+              icon={() => <Avatar name={me.displayName} seed={me.id} size={22} />}
+              placeholder=""
+              value={t('taskDetail.assignedToMe')}
+            />
+          ) : (
+            <FieldRow
+              icon={(color) => (fields.assignee ? <Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} /> : <Feather name="user" size={20} color={color} />)}
+              placeholder={t('taskDetail.assignTo')}
+              value={fields.assignee && (fields.assignee.id === me.id ? t('taskDetail.assignedToMe') : t('taskDetail.assignedTo', { name: fields.assignee.displayName }))}
+              detail={fields.assignee && fields.assignee.id !== me.id && status && status !== 'accepted' && (   // only what isn't settled; never on yours (M98)
+                <View style={[styles.answer, { gap: space.xs + 2 }]}>
+                  {/* A thin amber ring: open, so it never reads as a list's (filled) dot. */}
+                  <View style={[styles.ring, { borderColor: colors.warn }]} />
+                  <Text variant="caption" color="ink2" numberOfLines={2} style={styles.fill}>
+                    {status === 'declined' && task.declineReason ? t('taskDetail.declinedReason', { reason: task.declineReason }) : t(`assign.status.${status}`)}
+                    {sharedList && people && fields.assignee.id === task.assignee?.id && !people.some((m) => m.userId === fields.assignee?.id) ? ` · ${t('taskRow.outsideList')}` : ''}
+                  </Text>
+                </View>
+              )}
+              onPress={() => open('assignee')}
+              onClear={() => edit({ assignee: null })}
+              clearLabel={t('assign.unassign')}
+            />
+          )}
+        </View>
+        <View style={[styles.group, { borderTopColor: colors.line }]}>
+          <View {...fixed}>
+            <FieldRow
+              icon={(color) => <Feather name="calendar" size={20} color={color} />}
+              placeholder={t('taskDetail.addDue')}
+              value={fields.dueDate && (overdue
+                ? <Text variant="body" color="danger">{t('taskDetail.overdue', { date: labels.day(fields.dueDate) })}</Text>
+                : t('taskDetail.dueOn', { date: labels.day(fields.dueDate) }))}
+              onPress={() => open('due')}
+              onClear={() => edit({ dueDate: null, repeat: null })}
+              clearLabel={t('taskDetail.clearDue')}
+            />
+          </View>
+          <FieldRow
+            icon={(color) => <ReminderIcon color={color} />}
+            placeholder={t('taskDetail.remindMe')}
+            value={fields.reminder && (fields.reminder.date === today ? `${t('dates.today')}, ${labels.time(fields.reminder.time)}` : labels.reminder(fields.reminder))}
+            detail={t('reminders.onlyYou')}
             onPress={() => open('reminder')}
             onClear={() => edit({ reminder: null })}
             clearLabel={t('reminders.remove')}
           />
-        ) : (
-          <ListRow label={t('taskDetail.fields.reminder')} value={t('common.none')} icon={<ReminderIcon color={colors.ink3} />} onPress={() => open('reminder')} />
-        )}
-        <View {...fixed}>
-        {fields.repeat ? (
-          <ListRow
-            label={t('taskDetail.fields.repeat')}
-            icon={<Feather name="repeat" size={20} color={colors.accent} />}
-            value={<Text variant="bodyMedium" color="accent" numberOfLines={2}>{describe(fields.repeat, fields.dueDate)}</Text>}
-            onPress={() => open('repeat')}
-            onClear={() => edit({ repeat: null })}
-            clearLabel={t('taskDetail.clearRepeat')}
-          />
-        ) : (
-          <ListRow label={t('taskDetail.fields.repeat')} value={t('common.none')} icon={<Feather name="repeat" size={20} color={colors.ink3} />} onPress={() => open('repeat')} />
-        )}
-        <TagsRow tags={fields.tags} onPress={() => open('tags')} onClear={fields.tags.length ? () => edit({ tags: [] }) : undefined} />
+          <View {...fixed}>
+            <FieldRow
+              icon={(color) => <Feather name="repeat" size={20} color={color} />}
+              placeholder={t('taskDetail.fields.repeat')}
+              value={fields.repeat && describe(fields.repeat, fields.dueDate)}
+              onPress={() => open('repeat')}
+              onClear={() => edit({ repeat: null })}
+              clearLabel={t('taskDetail.clearRepeat')}
+            />
+          </View>
+        </View>
+        <View {...fixed} style={[styles.group, { borderTopColor: colors.line }]}>
+          <TagsRow tags={fields.tags} onPress={() => open('tags')} onClear={fields.tags.length ? () => edit({ tags: [] }) : undefined} divider={false} placeholder={t('taskDetail.addTags')} />
         </View>
         {outside && <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('taskDetail.onlyListPeople')}</Text>}
-        </View>
-      </View>
-
-      <View {...locked}>
 
       {task.repeat && next && !completed && (
         <View style={styles.start}>
@@ -444,8 +451,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         </View>
       )}
 
-      <StepList canAdd={!completed} />
       <NotesField />
+      </View>
       </View>
 
       {comments && (
@@ -461,14 +468,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       )}
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
-        <Text variant="footnote" color="ink3">
-          {by(t('taskDetail.created', { when: when(task.createdAt) }), task.createdBy)}
-        </Text>
+        {/* The latest first (M98): Updated, then Created. */}
         {task.updatedAt && (
           <Text variant="footnote" color="ink3">
             {by(t('taskDetail.updated', { when: when(task.updatedAt) }), task.updatedBy)}
           </Text>
         )}
+        <Text variant="footnote" color="ink3">
+          {by(t('taskDetail.created', { when: when(task.createdAt) }), task.createdBy)}
+        </Text>
       </View>
       {/* History (D94, M83): on a task someone else sees, loaded only when asked for. */}
       {comments && <View {...locked}><HistorySection taskId={taskId} /></View>}
@@ -507,6 +515,9 @@ function SaveButton({ pending, onPress }: { pending: boolean; onPress(): void })
   return <TextButton label={t('taskDetail.save')} onPress={onPress} disabled={!dirty || !titled} busy={pending} />;
 }
 
+/** The title's size (M98): smaller than the type scale's title, so the fields move up. */
+const TITLE_SIZE = 22;
+
 /** The title, edited in place in the draft; only this field redraws while typing. */
 function TitleField({ completed, editable }: { completed: boolean; editable: boolean }) {
   const { t } = useTranslation();
@@ -526,35 +537,32 @@ function TitleField({ completed, editable }: { completed: boolean; editable: boo
       accessibilityLabel={t('taskDetail.title')}
       style={[
         styles.title,
-        { fontFamily: type.title.fontFamily, fontSize: type.title.fontSize, letterSpacing: type.title.letterSpacing, color: completed ? colors.ink3 : colors.heading },
+        { fontFamily: type.title.fontFamily, fontSize: TITLE_SIZE, letterSpacing: type.title.letterSpacing, color: completed ? colors.ink3 : colors.heading },
         completed && styles.struck,
       ]}
     />
   );
 }
 
-/** Plain-text notes, edited in place in the draft. */
+/** Plain-text notes, edited in place in the draft: no heading, between hairlines (M98). */
 function NotesField() {
   const { t } = useTranslation();
-  const { colors, radius, type } = useTheme();
+  const { colors, type } = useTheme();
   const notes = useTaskDraft((s) => s.draft?.notes ?? '');
   const edit = useTaskDraft((s) => s.edit);
   return (
-    <View style={{ marginTop: space.xxl, gap: space.sm }}>
-      <Text variant="label" color="ink2" accessibilityRole="header">
-        {t('taskDetail.notes')}
-      </Text>
+    <View style={[styles.notesBox, { borderColor: colors.line }]}>
       <TextInput
         value={notes}
         onChangeText={(text) => edit({ notes: text })}
         multiline
         placeholder={t('taskDetail.notesPlaceholder')}
-        placeholderTextColor={colors.ink3}
+        placeholderTextColor={colors.ink2}
         selectionColor={colors.accent}
         maxLength={taskLimits.notesMax}
         textAlignVertical="top"
         accessibilityLabel={t('taskDetail.notes')}
-        style={[styles.notes, { backgroundColor: colors.surface2, borderRadius: radius.md, padding: space.md, fontFamily: type.callout.fontFamily, fontSize: type.callout.fontSize, color: colors.ink }]}
+        style={[styles.notes, { paddingVertical: space.md, fontFamily: type.callout.fontFamily, fontSize: type.callout.fontSize, color: colors.ink }]}
       />
     </View>
   );
@@ -563,8 +571,6 @@ function NotesField() {
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-start' },
   banner: { borderRadius: 12, borderBottomWidth: 0 },
-  /** The M24 red edge, left of the circle. */
-  edge: { borderLeftWidth: 3, marginLeft: -13, paddingLeft: 10 },
   checkSpot: { marginTop: 4 },
   /** No lineHeight on a TextInput (it clips descenders on iOS). */
   title: { flex: 1, padding: 0, paddingTop: 2 },
@@ -574,7 +580,14 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   end: { alignItems: 'flex-end' },
   start: { alignItems: 'flex-start', marginTop: space.xs },
-  notes: { minHeight: 96 },
+  notes: { minHeight: 110, paddingHorizontal: 0 },
+  notesBox: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  group: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
+  /** Under the title, lined up with it (the 28 pt circle and its gap). */
+  where: { flexDirection: 'row', alignItems: 'center', marginLeft: 40, marginTop: 2 },
+  answer: { flexDirection: 'row', alignItems: 'center' },
+  /** The mark before Pending or Declined (M98). */
+  ring: { width: 10, height: 10, borderRadius: 5, borderWidth: 1.5 },
   delete: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
   locked: { opacity: 0.55 },
   assignment: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },

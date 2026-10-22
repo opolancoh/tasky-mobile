@@ -6,7 +6,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import { useShallow } from 'zustand/react/shallow';
 
 import { taskLimits } from '@/data/tasks/types';
-import { Text, useTheme } from '@/shared/ui';
+import { useTheme } from '@/shared/ui';
 
 import type { DraftStep } from '../taskDraft';
 import { useTaskDraft } from '../taskDraftStore';
@@ -19,34 +19,18 @@ const setSteps = (change: (steps: DraftStep[]) => DraftStep[]) => {
 };
 
 /**
- * Task detail's steps, edited in the draft (M26): "2 of 5" with a progress line, then each step (tick, rename in place,
- * swipe left to delete; screen readers get a Delete action), then "Add a step". Each row reads only its own step,
+ * Task detail's steps, edited in the draft (M26), right under the title (M98): one step per line (tick, rename in place,
+ * swipe left to delete; screen readers get a Delete action), then "+ Add a step" in the accent. Each row reads only its own step,
  * so typing redraws one row. Steps are capped at 100, so a plain list in the screen's scroll view is enough
  * (docs/performance.md, rule 3).
  */
 export function StepList({ canAdd }: { canAdd: boolean }) {
   const { t } = useTranslation();
-  const { colors, radius, space } = useTheme();
+  const { space } = useTheme();
   const keys = useTaskDraft(useShallow((s) => s.draft?.steps.map((x) => x.key) ?? []));
-  const done = useTaskDraft((s) => s.draft?.steps.filter((x) => x.isDone).length ?? 0);
 
   return (
-    <View style={{ marginTop: space.xxl }}>
-      <View style={[styles.head, { marginBottom: space.sm }]}>
-        <Text variant="label" color="ink2" accessibilityRole="header">
-          {t('taskDetail.steps')}
-        </Text>
-        {keys.length > 0 && (
-          <Text variant="label" color="ink3">
-            {t('taskRow.steps', { done, total: keys.length })}
-          </Text>
-        )}
-      </View>
-      {keys.length > 0 && (
-        <View style={[styles.track, { backgroundColor: colors.surface2, borderRadius: radius.pill, marginBottom: space.xs }]}>
-          <View style={[styles.fill, { width: `${(done / keys.length) * 100}%`, backgroundColor: colors.accent, borderRadius: radius.pill }]} />
-        </View>
-      )}
+    <View style={{ marginTop: space.sm, marginLeft: 4 }} accessibilityLabel={t('taskDetail.steps')}>
       {keys.map((key) => (
         <StepRow key={key} stepKey={key} />
       ))}
@@ -148,7 +132,7 @@ function AddStep() {
         submitBehavior="submit"
         returnKeyType="done"
         placeholder={t('taskDetail.addStep')}
-        placeholderTextColor={colors.ink3}
+        placeholderTextColor={colors.accent}
         maxLength={taskLimits.stepTitleMax}
         selectionColor={colors.accent}
         accessibilityLabel={t('taskDetail.addStep')}
@@ -159,9 +143,6 @@ function AddStep() {
 }
 
 const styles = StyleSheet.create({
-  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  track: { height: 4, overflow: 'hidden' },
-  fill: { height: 4 },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
   check: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center' },
   /** No lineHeight on a TextInput (it clips descenders on iOS). */

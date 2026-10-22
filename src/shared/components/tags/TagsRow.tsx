@@ -8,9 +8,10 @@ import type { TagItem } from './tagItems';
 
 /**
  * A form's Tags row (Quick add, task detail): the tag icon, the picked tags as chips (tinted with each tag's color, wrapping
- * onto more lines), a ✕ that clears them (a chevron when none). "None" when empty.
+ * onto more lines), a ✕ that clears them (a chevron when none). "None" when empty; with `placeholder`, that text in grey
+ * instead of the label, None and the chevron (Task detail, M98).
  */
-export function TagsRow({ tags, onPress, onClear, divider = true }: { tags: TagItem[]; onPress(): void; onClear?(): void; divider?: boolean }) {
+export function TagsRow({ tags, onPress, onClear, divider = true, placeholder }: { tags: TagItem[]; onPress(): void; onClear?(): void; divider?: boolean; placeholder?: string }) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
   return (
@@ -37,13 +38,13 @@ export function TagsRow({ tags, onPress, onClear, divider = true }: { tags: TagI
                 </View>
               ))
             ) : (
-              <Text variant="body">{t('tags.title')}</Text>
+              <Text variant="body" color={placeholder ? 'ink2' : undefined}>{placeholder ?? t('tags.title')}</Text>
             )}
           </View>
-          {tags.length === 0 && <Text variant="body" color="ink2">{t('tags.none')}</Text>}
+          {tags.length === 0 && !placeholder && <Text variant="body" color="ink2">{t('tags.none')}</Text>}
           {onClear ? (
             <ClearButton onPress={onClear} accessibilityLabel={t('tags.clear')} />
-          ) : (
+          ) : placeholder ? null : (
             <Feather name="chevron-right" size={18} color={colors.ink3} style={styles.trailing} />
           )}
         </View>
