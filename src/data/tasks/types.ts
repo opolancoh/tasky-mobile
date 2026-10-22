@@ -371,6 +371,8 @@ export interface CreateTaskListRequest {
   name: string;
   color: string;
   teamId?: Id;
+  /** Omitted: manual (D106). */
+  sortMode?: SortMode;
 }
 
 /** PATCH /task-lists/{id}: only what is sent changes. */

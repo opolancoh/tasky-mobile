@@ -342,9 +342,7 @@
       "teamHint": "Un equipo comparte todas sus listas con su gente. Tú eres el propietario.",
       "color": "Color",
       "noColor": "Sin color",
-      "in": "En",
-      "privateHint": "Privada hasta que la compartas",
-      "teamListHint": "Todos en {{name}} la ven",
+      "teamListHint": "Todos en {{name}} la ven.",
       "sortBy": "Ordenar tareas por",
       "sameForAll": "El nombre y el color son los mismos para todos en esta lista."
     },

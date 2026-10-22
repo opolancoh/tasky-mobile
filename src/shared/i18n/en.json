@@ -342,9 +342,7 @@
       "teamHint": "A team shares every list in it with its people. You’re its owner.",
       "color": "Color",
       "noColor": "No color",
-      "in": "In",
-      "privateHint": "Private until you share it",
-      "teamListHint": "Everyone in {{name}} sees it",
+      "teamListHint": "Everyone in {{name}} sees it.",
       "sortBy": "Sort tasks by",
       "sameForAll": "Name and color are the same for everyone in this list."
     },

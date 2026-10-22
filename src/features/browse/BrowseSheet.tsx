@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { byName } from '@/core/text/collate';
-import type { Id } from '@/core/types';
 import { limits } from '@/core/validation/limits';
 import { newTagName, stripInvalidTagChars, TAG_NAME_MAX } from '@/core/validation/tags';
 import { tasksApi } from '@/data/tasks/api';
@@ -19,7 +17,7 @@ import { SORT_MODES } from './browseSections';
 import { useBrowseSheet, type BrowseSheetTarget } from '@/shared/browseSheet/browseSheetStore';
 
 /**
- * Browse's sheets (M38, large size, M28): New list (name, color, where, sort) and Edit list (name and color; sort is in the list's menu, M64), New team
+ * Browse's sheets (M38, large size, M28): New list (name, color, sort; private, or in the team it was opened from, M97) and Edit list (name and color; sort is in the list's menu, M64), New team
  * and Rename team, Edit tag (name, the user's own color). A draft saved with Create or Save; Cancel with changes asks
  * first (M26). Mounted once in App; `useBrowseSheet` says what it edits.
  */
@@ -46,12 +44,12 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
     name: list?.name ?? team?.name ?? tag?.name ?? '',
     color: list?.color ?? tag?.color ?? (target.kind === 'list' ? (taskListColors.find((c) => !used.has(c)) ?? taskListColors[0]) : null),
     sort: list?.sortMode ?? ('manual' as SortMode),
-    teamId: target.kind === 'list' ? target.teamId : undefined,
   }));
   const [name, setName] = useState(initial.name);
   const [color, setColor] = useState<string | null>(initial.color);
   const [sort, setSort] = useState<SortMode>(initial.sort);
-  const [teamId, setTeamId] = useState<Id | undefined>(initial.teamId);
+  const teamId = target.kind === 'list' && !target.id ? target.teamId : undefined;
+  const newIn = teamId ? teams.find((x) => x.id === teamId) : undefined;
 
   const createList = useCreateTaskList();
   const updateList = useUpdateTaskList();
@@ -66,7 +64,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   const inbox = !!list?.isInbox;
   const trimmed = name.trim();
   const tagName = target.kind === 'tag' ? newTagName(name) : undefined;
-  const dirty = name !== initial.name || color !== initial.color || sort !== initial.sort || teamId !== initial.teamId;
+  const dirty = name !== initial.name || color !== initial.color || sort !== initial.sort;
   const valid = target.kind === 'tag' ? !!tagName : inbox || trimmed.length > 0;
 
   const title = target.kind === 'tag' ? t('browse.sheet.tag')
@@ -87,7 +85,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
           { onSuccess: () => done(t('browse.saved')) },
         );
       } else {
-        createList.mutate({ name: trimmed, color: color!, teamId }, {
+        createList.mutate({ name: trimmed, color: color!, teamId, sortMode: sort }, {
           onSuccess: (created) => { done(t('browse.created', { name: trimmed })); onCreated?.(created.id); },
         });
       }
@@ -119,7 +117,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   };
 
   const cancel = async () => {
-    if (dirty && !isNew) {
+    if (dirty) {
       const ok = await confirm({ title: t('browse.discardTitle'), message: t('browse.discardBody'), confirmLabel: t('browse.discard'), cancelLabel: t('browse.keepEditing') });
       if (!ok) return;
     }
@@ -151,15 +149,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
         )}
         {target.kind !== 'team' && !inbox && <Swatches value={color} onChange={setColor} allowNone={target.kind === 'tag'} />}
         {list && !inbox && list.sharing !== 'private' && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.sameForAll')}</Text>}
-        {target.kind === 'list' && isNew && teams.length > 0 && (
-          <>
-            <SectionLabel>{t('browse.sheet.in')}</SectionLabel>
-            <ListRow label={t('browse.myLists')} detail={t('browse.sheet.privateHint')} selected={!teamId} onPress={() => setTeamId(undefined)} />
-            {[...teams].sort(byName).map((x, i, all) => (
-              <ListRow key={x.id} label={x.name} detail={t('browse.sheet.teamListHint', { name: x.name })} selected={teamId === x.id} onPress={() => setTeamId(x.id)} divider={i < all.length - 1} />
-            ))}
-          </>
-        )}
+        {newIn && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.teamListHint', { name: newIn.name })}</Text>}
         {target.kind === 'list' && isNew && (
           <>
             <SectionLabel>{t('browse.sheet.sortBy')}</SectionLabel>
