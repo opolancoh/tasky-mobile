@@ -2,6 +2,18 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.9.0 — 2026-10-22
+
+- Task detail v2: the list under the title, steps first, grouped fields, 22 pt title, a ring before Pending or Declined (M98)
+- New list goes where it was opened, sends its sort, asks before discarding (M97, D106)
+- People shows a few members, See all the rest (M96, D105)
+- People picker: search a typed email, exclude sent to the API (D104)
+- PeoplePicker: Invite by email under the field, long emails cut in the middle (M73)
+- No past reminders on the pickers (M95)
+- Remove expo-dev-client
+- Pickers: custom reminder opens its wheel, off-step minutes, no date set on opening Custom
+- Pickers open on the set value: custom due dates, past years, a min on DateWheel
+
 ## 0.8.0 — 2026-10-20
 
 - List tops: title in the bar on scroll, sort in •••, pinned headings (M94)
