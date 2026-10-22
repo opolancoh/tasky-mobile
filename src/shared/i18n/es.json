@@ -520,6 +520,7 @@
     "task.completed": "Reabre la tarea para añadir pasos.",
     "tag.name_taken": "Ya hay una etiqueta con ese nombre.",
     "task.not_found": "Esta tarea ya no existe.",
+    "task.reminder_in_past": "Esa hora del recordatorio ya pasó. Elige una más tarde.",
     "sharing.already_member": "Esta persona ya puede verlo.",
     "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
     "sharing.inbox_private": "Tu lista Personal no se puede compartir.",

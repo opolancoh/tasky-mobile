@@ -8,6 +8,8 @@ export interface TimeWheelProps {
   /** 24-hour "HH:mm", e.g. "09:00". */
   value: LocalTime;
   onChange(value: LocalTime): void;
+  /** The earliest time that can be picked: turning before it picks it. */
+  min?: LocalTime;
   /** Decides 12-hour with AM/PM ("en") or 24-hour ("es"), and the AM/PM words. */
   locale: string;
   /** Minutes between rows: 15 gives 00, 15, 30, 45. A value between steps (09:10) gets its own row while the wheel is open. */
@@ -22,7 +24,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * A time picker: hour, minute, and AM/PM when the locale uses it. The value is always 24-hour
  * "HH:mm" (the API's TimeOnly); only the display follows the locale.
  */
-export function TimeWheel({ value, onChange, locale, minuteStep = 15, labels }: TimeWheelProps) {
+export function TimeWheel({ value, onChange, min, locale, minuteStep = 15, labels }: TimeWheelProps) {
   const [h, m] = value.split(':').map(Number) as [number, number];
   const twelve = useMemo(() => uses12HourCached(locale), [locale]);
 
@@ -40,7 +42,15 @@ export function TimeWheel({ value, onChange, locale, minuteStep = 15, labels }: 
   const minuteIndex = exact >= 0 ? exact : minutes.indexOf(Math.min(Math.round(m / minuteStep) * minuteStep, minutes[minutes.length - 1]!));
   const pm = h >= 12;
 
-  const emit = useCallback((hour: number, minute: number) => onChange(`${pad(hour)}:${pad(minute)}`), [onChange]);
+  const emit = useCallback(
+    (hour: number, minute: number) => {
+      const picked: LocalTime = `${pad(hour)}:${pad(minute)}`;
+      const next = min && picked < min ? min : picked;
+      if (next === value) return false;   // before `min` while on it already: the column goes back
+      onChange(next);
+    },
+    [onChange, min, value],
+  );
   const onHour = useCallback((i: number) => emit(twelve ? (i % 12) + (pm ? 12 : 0) : i, m), [emit, twelve, pm, m]);
   const onMinute = useCallback((i: number) => emit(h, minutes[i]!), [emit, h, minutes]);
   const onPeriod = useCallback((i: number) => emit((h % 12) + (i === 1 ? 12 : 0), m), [emit, h, m]);

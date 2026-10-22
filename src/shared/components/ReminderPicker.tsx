@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, formatLocalTime } from '@/core/dates/localDate';
 import type { LocalDate, LocalTime } from '@/core/types';
-import { reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
+import { earliestReminder, reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
 import { DateWheel, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
 
 interface ReminderPickerProps {
@@ -28,6 +28,9 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
   const { colors, radius, space } = useTheme();
   const locale = i18n.language;
   const presets = reminderPresets(now);
+  // Nothing in the past: no date before the earliest, and on that date no time before it.
+  const earliest = earliestReminder(now);
+  const atLeast = (at: ReminderAt): ReminderAt => (at.date < earliest.date || (at.date === earliest.date && at.time < earliest.time) ? earliest : at);
   // A reminder that isn't a quick choice opens on its date wheel, like Due date's Custom.
   const [open, setOpen] = useState<'date' | 'time' | null>(() => (value && !presets.some((p) => sameReminder(p.at, value)) ? 'date' : null));
   // With no reminder yet, the custom rows start from tomorrow 9:00; nothing is chosen until a tap or a scroll.
@@ -60,8 +63,8 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
       {open === 'date' && (
         <DateWheel
           value={shown.date}
-          onChange={(date) => onChange({ ...shown, date })}
-          min={now.date}
+          onChange={(date) => onChange(atLeast({ ...shown, date }))}
+          min={earliest.date}
           locale={locale}
           fromYear={Number(now.date.slice(0, 4))}
           labels={{ day: t('wheels.day'), month: t('wheels.month'), year: t('wheels.year') }}
@@ -78,6 +81,7 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
         <TimeWheel
           value={shown.time}
           onChange={(time) => onChange({ ...shown, time })}
+          min={shown.date === earliest.date ? earliest.time : undefined}
           locale={locale}
           labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }}
         />

@@ -87,7 +87,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; `min` (turning before it picks it, the column goes back if nothing changes); a past value shows with its own year; value `"2026-09-30"` |
-| `TimeWheel` | Hour, minute (15-minute steps by default; a value between steps, 09:10, gets its own row), AM/PM when the locale uses it; value always 24-hour `"09:00"` |
+| `TimeWheel` | Hour, minute (15-minute steps by default; a value between steps, 09:10, gets its own row), AM/PM when the locale uses it; `min` (as DateWheel's); value always 24-hour `"09:00"` |
 
 **Colors live only in `palettes/`** ([M10](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): `azure.json` (light and dark), checked against `PaletteColors` in `types.ts`, which also lists the contrast minimums. `useTheme()` gives the active palette, light or dark from the OS. Lint rejects color literals anywhere else.
 
@@ -112,7 +112,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail); opens with the set date checked, a date that isn't a quick choice on Custom with the wheel open; with no date the wheel starts on today and sets nothing until it turns |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
-| `ReminderPicker` | Four quick choices, a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `ReminderPicker` | Four quick choices, a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel; nothing before the next quarter hour, M95), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
 
 ## hooks/
