@@ -59,7 +59,8 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
       {open === 'date' && (
         <DateWheel
           value={shown.date}
-          onChange={(date) => onChange({ ...shown, date: date < now.date ? now.date : date })}
+          onChange={(date) => onChange({ ...shown, date })}
+          min={now.date}
           locale={locale}
           fromYear={Number(now.date.slice(0, 4))}
           labels={{ day: t('wheels.day'), month: t('wheels.month'), year: t('wheels.year') }}

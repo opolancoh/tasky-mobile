@@ -86,7 +86,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); unused since M94 moved Important's order and Assigned by me's switch into ••• |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |
-| `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; value `"2026-09-30"` |
+| `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; `min` (turning before it picks it, the column goes back if nothing changes); a past value shows with its own year; value `"2026-09-30"` |
 | `TimeWheel` | Hour, minute (15-minute steps by default), AM/PM when the locale uses it; value always 24-hour `"09:00"` |
 
 **Colors live only in `palettes/`** ([M10](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): `azure.json` (light and dark), checked against `PaletteColors` in `types.ts`, which also lists the contrast minimums. `useTheme()` gives the active palette, light or dark from the OS. Lint rejects color literals anywhere else.
@@ -109,7 +109,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |
 | `TaskListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
-| `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail) |
+| `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail); opens with the set date checked, a date that isn't a quick choice on Custom with the wheel open |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `ReminderPicker` | Four quick choices, a custom date and time (wheels), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |

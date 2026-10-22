@@ -22,15 +22,18 @@ export function DueDatePicker({ value, today, onPick, onChange }: DueDatePickerP
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
   const labels = useDateLabels(today);
-  const [custom, setCustom] = useState(false);
+  const quick = [
+    { label: t('dueDate.today'), date: today },
+    { label: t('dueDate.tomorrow'), date: addDays(today, 1) },
+    { label: t('dueDate.nextWeek'), date: nextMonday(today) },
+  ];
+  // A date that isn't a quick choice (a custom or past one) is Custom's: checked, with the wheel open on it.
+  const isCustom = !!value && !quick.some((q) => q.date === value);
+  const [custom, setCustom] = useState(isCustom);
 
   return (
     <ScrollView bounces={false}>
-      {[
-        { label: t('dueDate.today'), date: today },
-        { label: t('dueDate.tomorrow'), date: addDays(today, 1) },
-        { label: t('dueDate.nextWeek'), date: nextMonday(today) },
-      ].map(({ label, date }) => (
+      {quick.map(({ label, date }) => (
         <ListRow
           key={label}
           label={label}
@@ -41,7 +44,8 @@ export function DueDatePicker({ value, today, onPick, onChange }: DueDatePickerP
       ))}
       <ListRow
         label={t('dueDate.custom')}
-        value={custom && value ? <Text variant="body" color="accent">{labels.day(value)}</Text> : undefined}
+        value={(custom || isCustom) && value ? <Text variant="body" color="accent">{labels.day(value)}</Text> : undefined}
+        selected={isCustom}
         onPress={() => {
           setCustom((c) => !c);
           if (!value) onChange(today);
@@ -51,7 +55,8 @@ export function DueDatePicker({ value, today, onPick, onChange }: DueDatePickerP
       {custom && value && (
         <DateWheel
           value={value}
-          onChange={(date) => onChange(date < today ? today : date)}
+          onChange={onChange}
+          min={today}
           locale={locale}
           fromYear={Number(today.slice(0, 4))}
           labels={{ day: t('wheels.day'), month: t('wheels.month'), year: t('wheels.year') }}

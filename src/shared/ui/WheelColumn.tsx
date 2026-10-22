@@ -15,7 +15,8 @@ export interface WheelColumnProps {
   labels: readonly string[];
   /** The selected row. */
   index: number;
-  onChange(index: number): void;
+  /** Returns false when the value stays as it was (e.g. a date before the earliest): the wheel goes back to `index`. */
+  onChange(index: number): void | false;
   /** Read by screen readers, e.g. "Hour". */
   accessibilityLabel: string;
   width?: number;
@@ -49,9 +50,12 @@ export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, 
       if (next === settled.current) return;
       settled.current = next;
       Haptics.selectionAsync().catch(() => undefined);
-      onChange(next);
+      if (onChange(next) !== false) return;
+      // Nothing changed, so no new index will come: go back to the one shown.
+      settled.current = Math.min(index, max);
+      scrollRef.current?.scrollTo({ y: settled.current * WHEEL_ROW, animated: true });
     },
-    [max, onChange],
+    [index, max, onChange],
   );
 
   const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => settle(e.nativeEvent.contentOffset.y);

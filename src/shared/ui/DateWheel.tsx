@@ -8,9 +8,11 @@ export interface DateWheelProps {
   /** "2026-09-30". */
   value: LocalDate;
   onChange(value: LocalDate): void;
+  /** The earliest date that can be picked: turning before it picks it. A value already before it is shown as it is. */
+  min?: LocalDate;
   /** The month names' language ("September", "septiembre"). */
   locale: string;
-  /** The first year offered; the wheel offers `years` years from it. */
+  /** The first year offered (or the value's, if earlier); the wheel offers `years` years from it. */
   fromYear: number;
   years?: number;
   /** For screen readers. */
@@ -24,18 +26,24 @@ const daysIn = (year: number, month: number) => new Date(Date.UTC(year, month, 0
  * A date picker in three columns: day, month name, year (in that order in every language). Moving to
  * a shorter month keeps the day within it (31 → 30). The value is a LocalDate: no time, no zone.
  */
-export function DateWheel({ value, onChange, locale, fromYear, years = 6, labels }: DateWheelProps) {
+export function DateWheel({ value, onChange, min, locale, fromYear, years = 6, labels }: DateWheelProps) {
   const [y, m, d] = value.split('-').map(Number) as [number, number, number];
   const days = daysIn(y, m);
+  const firstYear = Math.min(fromYear, y);   // a past date (an overdue task) still shows its own year
 
   const dayLabels = useMemo(() => Array.from({ length: days }, (_, i) => String(i + 1)), [days]);
   const monthLabels = useMemo(() => monthNames(locale), [locale]);
-  const yearList = useMemo(() => Array.from({ length: years }, (_, i) => fromYear + i), [fromYear, years]);
+  const yearList = useMemo(() => Array.from({ length: years + fromYear - firstYear }, (_, i) => firstYear + i), [firstYear, fromYear, years]);
   const yearLabels = useMemo(() => yearList.map(String), [yearList]);
 
   const emit = useCallback(
-    (year: number, month: number, day: number) => onChange(`${year}-${pad(month)}-${pad(Math.min(day, daysIn(year, month)))}`),
-    [onChange],
+    (year: number, month: number, day: number) => {
+      const picked: LocalDate = `${year}-${pad(month)}-${pad(Math.min(day, daysIn(year, month)))}`;
+      const next = min && picked < min ? min : picked;
+      if (next === value) return false;   // e.g. before `min` while on it already: the column goes back
+      onChange(next);
+    },
+    [onChange, min, value],
   );
   const onDay = useCallback((i: number) => emit(y, m, i + 1), [emit, y, m]);
   const onMonth = useCallback((i: number) => emit(y, i + 1, d), [emit, y, d]);
