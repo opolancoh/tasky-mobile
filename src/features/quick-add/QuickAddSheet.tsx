@@ -74,7 +74,9 @@ function QuickAddForm() {
   const [page, setPage] = useState<Page>(startPage ?? 'form');
   const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(() => ({ ...EMPTY, title: startTitle, dueDate: startDue }));   // the draft when a page opened: tapping outside restores it
-  const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this Quick add, in the profile's zone
+  // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
+  const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
+  if (!now && me) setNow(nowIn(me.timeZone));
 
   const update = (changes: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...changes }));

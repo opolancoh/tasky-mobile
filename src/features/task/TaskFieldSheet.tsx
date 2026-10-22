@@ -39,7 +39,9 @@ function FieldSheet() {
   const hide = useTaskSheet((s) => s.hide);
   const edit = useTaskDraft((s) => s.edit);
   const me = useMe().data;
-  const [now] = useState(() => (me ? nowIn(me.timeZone) : null));   // "now" for this opening, in the profile's zone
+  // "Now" for this opening, in the profile's zone; set once the profile is in, so a page never stays blank.
+  const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
+  if (!now && me) setNow(nowIn(me.timeZone));
 
   // What a page changes before Done (the wheels, the tag list).
   const [due, setDue] = useState<LocalDate | null>(draft.dueDate);

@@ -13,7 +13,7 @@ interface DueDatePickerProps {
   today: LocalDate;
   /** A quick choice or No date: sets it and goes back (M21). */
   onPick(date: LocalDate | undefined): void;
-  /** The wheel, as it turns; kept only when the caller confirms (‹ Task, Done). */
+  /** The wheel, as it turns; kept only when the caller confirms (‹ Task, Done). With no date the wheel starts on today, and nothing is set until it turns. */
   onChange(date: LocalDate): void;
 }
 
@@ -44,17 +44,14 @@ export function DueDatePicker({ value, today, onPick, onChange }: DueDatePickerP
       ))}
       <ListRow
         label={t('dueDate.custom')}
-        value={(custom || isCustom) && value ? <Text variant="body" color="accent">{labels.day(value)}</Text> : undefined}
+        value={custom || isCustom ? <Text variant="body" color={value ? 'accent' : 'ink2'}>{labels.day(value ?? today)}</Text> : undefined}
         selected={isCustom}
-        onPress={() => {
-          setCustom((c) => !c);
-          if (!value) onChange(today);
-        }}
+        onPress={() => setCustom((c) => !c)}
         divider={!custom}
       />
-      {custom && value && (
+      {custom && (
         <DateWheel
-          value={value}
+          value={value ?? today}
           onChange={onChange}
           min={today}
           locale={locale}

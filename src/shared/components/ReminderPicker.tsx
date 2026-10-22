@@ -26,9 +26,10 @@ interface ReminderPickerProps {
 export function ReminderPicker({ value, onChange, onPick, onRemove, now }: ReminderPickerProps) {
   const { t, i18n } = useTranslation();
   const { colors, radius, space } = useTheme();
-  const [open, setOpen] = useState<'date' | 'time' | null>(null);
   const locale = i18n.language;
   const presets = reminderPresets(now);
+  // A reminder that isn't a quick choice opens on its date wheel, like Due date's Custom.
+  const [open, setOpen] = useState<'date' | 'time' | null>(() => (value && !presets.some((p) => sameReminder(p.at, value)) ? 'date' : null));
   // With no reminder yet, the custom rows start from tomorrow 9:00; nothing is chosen until a tap or a scroll.
   const shown = value ?? presets.find((p) => p.id === 'tomorrow')!.at;
   const valueColor = value ? 'accent' : 'ink2';
