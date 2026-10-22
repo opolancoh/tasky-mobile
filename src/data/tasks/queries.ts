@@ -15,8 +15,8 @@ export const useTaskLists = () => useQuery({ queryKey: taskKeys.taskLists, query
  * query the user has typed past is cancelled (the request's `signal`).
  */
 export const PEOPLE_LIMIT = 8;
-export const usePeople = (q: string) =>
-  useQuery({ queryKey: taskKeys.people(q), queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, signal), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
+export const usePeople = (q: string, exclude: readonly string[] = []) =>
+  useQuery({ queryKey: taskKeys.people(q, exclude), queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, exclude, signal), staleTime: 5 * 60_000, placeholderData: keepPreviousData });
 
 /** The caller's tags (D60). */
 export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksApi.tags });

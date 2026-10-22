@@ -26,7 +26,8 @@ export interface HttpClientOptions {
 
 export interface RequestOptions {
   body?: unknown;
-  query?: Record<string, string | number | boolean | undefined>;
+  /** An array repeats its key (`exclude=a&exclude=b`). */
+  query?: Record<string, string | number | boolean | readonly string[] | undefined>;
   /** The version last read; sent as If-Match on updates, deletes and commands. */
   ifMatch?: Version;
   /** No Authorization header and no refresh on 401 (sign-in, refresh, sign-out). */
@@ -74,7 +75,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
   function url(path: string, query?: RequestOptions['query']): string {
     const params = Object.entries(query ?? {})
       .filter(([, v]) => v !== undefined)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .flatMap(([k, v]) => (Array.isArray(v) ? v : [v]).map((one) => `${encodeURIComponent(k)}=${encodeURIComponent(String(one))}`))
       .join('&');
     const base = /^https?:\/\//.test(path) ? path : `${options.baseUrl}${path}`;
     return `${base}${params ? `?${params}` : ''}`;

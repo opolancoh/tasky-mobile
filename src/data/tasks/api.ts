@@ -71,8 +71,9 @@ export const tasksApi = {
   invite: (of: MembersOf, email: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email } }),
   /** POST …/invitations { userId } (201): someone from GET /people, or with a task given from the list (D88, D89). */
   inviteUser: (of: MembersOf, userId: Id) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId } }),
-  /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names. */
-  people: (q: string, limit: number, signal?: AbortSignal) => http().get<Person[]>('/people', { query: { q: q || undefined, limit }, signal }),
+  /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names (and the start of a known email); `exclude` is left out before the limit (D104). */
+  people: (q: string, limit: number, exclude: readonly string[], signal?: AbortSignal) =>
+    http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined }, signal }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),

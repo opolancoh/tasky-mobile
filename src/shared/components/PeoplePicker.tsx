@@ -7,7 +7,7 @@ import { shortenEmail } from '@/core/text/shorten';
 import type { Id } from '@/core/types';
 import { isEmail } from '@/core/validation/rules';
 import { usePeople } from '@/data/tasks/queries';
-import type { Person } from '@/data/tasks/types';
+import { isEmailAssignee, type Person } from '@/data/tasks/types';
 import { ListRow, SectionLabel, SkeletonRow, Spinner, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
@@ -30,8 +30,8 @@ export interface PeoplePickerProps {
 
 /**
  * Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most
- * (GET /people); typing searches names, colleagues in a company under Your company. A typed email puts the email row right
- * under the field, above the people found; a small ring spins in the field while a search is on its way (M73). The typed text lives here
+ * (GET /people); typing searches names, colleagues in a company under Your company. A typed email is searched too: someone you
+ * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search is on its way (M73). The typed text lives here
  * (docs/performance.md); a pick clears it.
  */
 export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, busy = false }: PeoplePickerProps) {
@@ -43,12 +43,13 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
     const timer = setTimeout(() => setQuery(text.trim()), SEARCH_DELAY);
     return () => clearTimeout(timer);
   }, [text]);
-  const people = usePeople(isEmail(query) ? '' : query);
+  // An email is searched too: someone you know with that address shows above Invite by email (D104). The API leaves out `exclude`.
+  const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)));   // an emailed assignee isn't a user id
   // Searching: from a keystroke until its results are in (the wait before asking, then the request); the last results stay meanwhile.
-  const searching = (text.trim() !== query && !isEmail(text.trim())) || (people.isFetching && !people.isPending);
+  const searching = text.trim() !== query || (people.isFetching && !people.isPending);
   const email = text.trim().toLowerCase();
   const typedEmail = isEmail(email);
-  const found = (people.data ?? []).filter((p) => !exclude.includes(p.id));
+  const found = people.data ?? [];
   const known = found.filter((p) => !p.colleague || p.via);
   const colleagues = found.filter((p) => p.colleague && !p.via);
 
@@ -66,6 +67,10 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
       busy={busy}
       divider={!last}
     />
+  );
+
+  const emailRow = (
+    <ListRow label={emailLabel} detail={shortenEmail(email, EMAIL_MAX)} icon={<Feather name="mail" size={18} color={colors.accent} />} onPress={() => onEmail(email)} chevron={false} busy={busy} divider={false} accessibilityLabel={`${emailLabel}, ${email}`} />
   );
 
   return (
@@ -88,10 +93,8 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
         />
         {searching && <Spinner size={16} accessibilityLabel={t('people.searching')} />}
       </View>
-      {/* A typed email: its row right under the field, before anyone found (M73). */}
-      {typedEmail && (
-        <ListRow label={emailLabel} detail={shortenEmail(email, EMAIL_MAX)} icon={<Feather name="mail" size={18} color={colors.accent} />} onPress={() => onEmail(email)} chevron={false} busy={busy} divider={false} accessibilityLabel={`${emailLabel}, ${email}`} />
-      )}
+      {/* A typed email: its row right under the field (M73), or under someone you know with that address (D104). */}
+      {typedEmail && !found.length && emailRow}
       {people.isPending ? (
         [60, 45].map((w) => <SkeletonRow key={w} width={w} />)
       ) : (
@@ -109,6 +112,7 @@ export function PeoplePicker({ exclude = [], emailLabel, onPickPerson, onEmail, 
               {colleagues.map((p, i) => row(p, i === colleagues.length - 1))}
             </View>
           )}
+          {typedEmail && !!found.length && emailRow}
           {!typedEmail && !!query && !found.length && <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('people.noneFound')}</Text>}
         </>
       )}
