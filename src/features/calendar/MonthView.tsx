@@ -32,7 +32,7 @@ type Item =
   | { type: 'nav'; key: string }
   | { type: 'grid'; key: string }
   | { type: 'chips'; key: string }
-  | { type: 'overdueHead'; key: string; title: string; count: number }
+  | { type: 'overdueHead'; key: string; title: string; count: number; foldable: boolean }
   | { type: 'day'; key: string; date: LocalDate }
   | { type: 'task'; key: string; task: TaskSummary; showDue: boolean }
   | { type: 'empty'; key: string }
@@ -47,7 +47,7 @@ type Picked = LocalDate | 'overdue';
  * Calendar, the Calendar tab's calendar view (M72, M99): a month (or a week, from the title's menu) with dots in the tasks'
  * list colors. The line under "Calendar" counts the range on screen and its overdue tasks; a chip holds the overdue ones
  * outside it ("Earlier"). Under the grid, every day of the range with tasks as the List view draws it (the current month
- * from today, its overdue on top), a + on each day for Quick add due that day; tapping a day in the grid scrolls to it.
+ * from today, its overdue on top and folding), a + on each day for Quick add due that day; tapping a day in the grid scrolls to it.
  * ‹ › move a month or a week; Today shows once another day is picked or today is off screen. Only dated tasks. Every open
  * task in the range, every page (GET /tasks?dueFrom=&dueTo=): the dots need them all, and the list draws from the same data.
  */
@@ -65,6 +65,8 @@ export function MonthView({ today }: { today: LocalDate }) {
   // Month or Week, kept on the device (calendarViewStore); the day and the month or week on screen start at today.
   const week = useCalendarView((s) => s.mode) === 'week';
   const setMode = useCalendarView((s) => s.setMode);
+  const overdueFolded = useCalendarView((s) => s.overdueFolded);
+  const setOverdueFolded = useCalendarView((s) => s.setOverdueFolded);
   const [refreshing, setRefreshing] = useState(false);
 
   const from = week ? weekStart(anchor) : monthStart(anchor);
@@ -94,13 +96,14 @@ export function MonthView({ today }: { today: LocalDate }) {
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'nav', key: 'nav' }, { type: 'grid', key: 'grid' }, { type: 'chips', key: 'chips' }];
   if (loading) [70, 55, 62].forEach((width, i) => items.push({ type: 'skeleton', key: `k-${i}`, width }));
   else if (day === 'overdue') {
-    items.push({ type: 'overdueHead', key: 'outside-head', title: chipLabel, count: outside });
+    items.push({ type: 'overdueHead', key: 'outside-head', title: chipLabel, count: outside, foldable: false });
     outsideTasks.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task, showDue: true }));
     if (overdue.pages.hasNextPage) items.push({ type: 'more', key: 'more' });
   } else {
     if (overIn.length) {
-      items.push({ type: 'overdueHead', key: 'over-head', title: t('calendar.overdue'), count: overIn.length });
-      overIn.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task, showDue: true }));
+      // The range's overdue tasks fold under their heading (M99), the fold kept on the device.
+      items.push({ type: 'overdueHead', key: 'over-head', title: t('calendar.overdue'), count: overIn.length, foldable: true });
+      if (!overdueFolded) overIn.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task, showDue: true }));
     }
     byDay.forEach((dayTasks, date) => {
       if (date < today) return;
@@ -122,6 +125,7 @@ export function MonthView({ today }: { today: LocalDate }) {
   const pick = (date: LocalDate) => {
     setDay(date);
     setAnchor(date);
+    if (date < today) setOverdueFolded(false);   // a past day opens Overdue, where its tasks are
     const index = items.findIndex((item) => item.key === (date < today ? 'over-head' : `d-${date}`));
     if (day !== 'overdue' && index >= 0) list.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
   };
@@ -184,7 +188,19 @@ export function MonthView({ today }: { today: LocalDate }) {
       case 'chips':
         return <OverdueChip count={outside} label={chipLabel} open={day === 'overdue'} onPress={toggleOverdue} />;
       case 'overdueHead':
-        return (
+        return item.foldable ? (
+          <Pressable
+            onPress={() => setOverdueFolded(!overdueFolded)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: !overdueFolded }}
+            hitSlop={8}
+            style={[styles.row, { gap: space.xs, marginTop: space.lg }]}
+          >
+            <Text variant="label" color="danger" accessibilityRole="header">{item.title}</Text>
+            <Feather name={overdueFolded ? 'chevron-right' : 'chevron-down'} size={14} color={colors.ink3} />
+            <Text variant="label" color="ink3">{item.count}</Text>
+          </Pressable>
+        ) : (
           <View style={[styles.row, { gap: space.sm, marginTop: space.lg }]}>
             <Text variant="label" color="danger" accessibilityRole="header">{item.title}</Text>
             <Text variant="label" color="ink3">{item.count}</Text>
