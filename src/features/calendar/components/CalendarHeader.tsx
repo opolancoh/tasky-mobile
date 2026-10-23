@@ -15,14 +15,16 @@ const VIEWS: { view: CalendarView; icon: ComponentProps<typeof Feather>['name'] 
 
 /**
  * The Calendar tab's top (M72, M74): the List | Calendar switch at the right of the bar (two icons, kept on the device),
- * then "Calendar" with every open task's count and the overdue ones in red.
+ * then "Calendar" with a count and the overdue ones in red: in Calendar the month or week on screen ("17 tasks · 3 overdue",
+ * M99), in List every open task.
  */
-export function CalendarHeader({ overdue }: { overdue: number }) {
+export function CalendarHeader({ overdue, count }: { overdue: number; count?: number }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const view = useCalendarView((s) => s.view);
   const setView = useCalendarView((s) => s.setView);
-  const total = useTasks({ limit: 1 }).data?.total;
+  const all = useTasks({ limit: 1 }, count === undefined).data?.total;
+  const total = count ?? all;
 
   return (
     <View style={{ paddingBottom: space.sm }}>
@@ -49,7 +51,7 @@ export function CalendarHeader({ overdue }: { overdue: number }) {
       <Text variant="largeTitle" accessibilityRole="header">{t('calendar.title')}</Text>
       {total !== undefined && total !== null && (
         <Text variant="subhead" color="ink2" style={{ marginTop: space.xxs }}>
-          {t('browse.openCount', { count: total })}
+          {count === undefined ? t('browse.openCount', { count: total }) : t('calendar.tasksCount', { count: total })}
           {overdue > 0 && <Text variant="subhead" color="danger">{` · ${t('calendar.overdueCount', { count: overdue })}`}</Text>}
         </Text>
       )}

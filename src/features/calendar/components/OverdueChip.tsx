@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text, useTheme } from '@/shared/ui';
 
-/** Overdue (red) over the days, with its count (M72); outlined while open. Hidden at 0. */
-export function OverdueChip({ count, open, onPress }: { count: number; open: boolean; onPress(): void }) {
+/** Overdue (red) over the days, with its count (M72); outlined while open. Hidden at 0. `label` names it otherwise ("Earlier", M99). */
+export function OverdueChip({ count, open, onPress, label }: { count: number; open: boolean; onPress(): void; label?: string }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   if (!count) return null;
@@ -19,7 +19,7 @@ export function OverdueChip({ count, open, onPress }: { count: number; open: boo
           { gap: space.xs + 2, paddingHorizontal: space.md, backgroundColor: colors.dangerSoft, borderColor: open ? colors.danger : 'transparent', opacity: pressed ? 0.7 : 1 },
         ]}
       >
-        <Text variant="label" color="danger">{t('calendar.overdue')}</Text>
+        <Text variant="label" color="danger">{label ?? t('calendar.overdue')}</Text>
         <Text variant="label" color="danger">{count}</Text>
       </Pressable>
     </View>
