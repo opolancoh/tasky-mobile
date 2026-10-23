@@ -29,7 +29,7 @@ import { NotificationAskSheet } from '@/shared/notifications/NotificationAskShee
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { ActionSheetHost, fonts, ThemeProvider, ToastHost, useAppearanceHydrated, useTheme } from '@/shared/ui';
+import { ActionSheetHost, fonts, ReasonSheetHost, ThemeProvider, ToastHost, useAppearanceHydrated, useTheme } from '@/shared/ui';
 
 import { parseJoinLink } from '@/core/links';
 
@@ -106,6 +106,7 @@ function Root() {
           <BrowseSheet />
           <BulkSheet />
           <ActionSheetHost />
+          <ReasonSheetHost />
           <ReminderSync />
           <PushWatcher />
           <NotificationAskSheet />

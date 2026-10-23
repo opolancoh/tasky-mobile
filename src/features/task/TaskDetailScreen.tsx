@@ -16,12 +16,13 @@ import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
 import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
-import { Avatar, CheckCircle, ReminderIcon, TagsRow } from '@/shared/components';
+import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { askReason, Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
+import { AnswerBar } from './components/AnswerBar';
 import { CommentField } from './components/CommentField';
 import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
@@ -39,7 +40,8 @@ import { useRepeatText } from './useRepeatText';
  * `TaskFieldSheet`; empty ones say what a tap does, "Add due date"), and notes. **Save** in the header sends what changed in one PATCH
  * (D56) and goes back with a toast; an error keeps the screen and the edits (M59). Leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
- * Delete, until they answer in its Assignment row (M35): Reject goes back, Accept turns it into the usual screen.
+ * Delete, until they answer in the bar docked at the bottom (M101): Decline asks for an optional reason and goes back, Accept
+ * turns it into the usual screen.
  * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
  * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
@@ -212,16 +214,10 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     });
   };
 
-  // M35: Accept unlocks this screen; Reject asks first, with an optional reason the assigner sees, then goes back.
+  // M101: Accept unlocks this screen; Decline asks first, with an optional reason the assigner sees, then goes back.
   const accept = () => command.mutate({ run: (x) => tasksApi.answerAssignment(x, true), optimistic: (x) => ({ ...x, assignmentStatus: 'accepted' }) });
-  const reject = async (assigner: string) => {
-    const reason = await askReason({
-      title: t('taskDetail.rejectTitle'),
-      message: t('taskDetail.rejectMessage', { name: assigner }),
-      confirmLabel: t('taskDetail.reject'),
-      cancelLabel: t('common.cancel'),
-      maxLength: taskLimits.rejectReasonMax,
-    });
+  const decline = async (assigner: string) => {
+    const reason = await askDecline(t, assigner);
     if (reason === null) return;
     command.mutate(
       { run: (x: Task) => tasksApi.answerAssignment(x, false, reason) },
@@ -229,7 +225,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         onSuccess: () => {
           leaving.current = true;
           navigation.goBack();
-          useToast.getState().show({ message: t('taskDetail.rejected', { name: assigner }) });
+          useToast.getState().show({ message: t('assign.declined', { name: assigner }) });
         },
       },
     );
@@ -275,9 +271,13 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const commentField = comments && !waiting
     ? <CommentField key={editingComment?.id ?? 'new'} taskId={taskId} people={mentionable} editing={editingComment} onDone={() => setEditingComment(null)} />
     : undefined;
+  // Waiting for the caller's answer (M101): Decline and Accept docked where the comment field would be.
+  const answerBar = waiting
+    ? <AnswerBar from={task.assignedBy} due={task.dueDate ? labels.day(task.dueDate) : undefined} busy={command.isPending} onDecline={() => decline(assigner)} onAccept={accept} />
+    : undefined;
 
   return (
-    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={commentField}>
+    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={answerBar ?? commentField}>
       {error && (
         <View style={{ marginBottom: space.md }}>
           <Notice>{errorMessage(error)}</Notice>
@@ -362,18 +362,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       <View {...locked}>
       <StepList canAdd={!completed} />
       </View>
-
-      {waiting && (
-        <View style={[styles.assignment, { gap: space.md, paddingVertical: space.sm, marginTop: space.md, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.line }]} accessibilityRole="summary">
-          <Feather name="user" size={20} color={colors.warn} />
-          <View style={styles.fill}>
-            <Text variant="body">{t('taskDetail.assignment')}</Text>
-            <Text variant="caption" color="ink2" numberOfLines={2}>{t('taskDetail.assignmentWaiting', { name: assigner })}</Text>
-          </View>
-          <Pill label={t('taskDetail.reject')} tone="quiet" onPress={() => reject(assigner)} disabled={command.isPending} />
-          <Pill label={t('taskDetail.accept')} onPress={accept} disabled={command.isPending} />
-        </View>
-      )}
 
       {/* The fields in groups (M98): who · when · tags, a hairline between them; no List row (the line under the title). */}
       <View {...locked}>

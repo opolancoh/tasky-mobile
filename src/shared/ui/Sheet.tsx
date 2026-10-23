@@ -16,6 +16,8 @@ export interface SheetAction {
   onPress(): void;
   /** Semibold, for the action that confirms (Add, Done). */
   emphasis?: boolean;
+  /** Red, for an action that drops something (Decline). */
+  destructive?: boolean;
   disabled?: boolean;
   /** A small spinner in its place while the action runs (M27), after 300 ms (M56); not pressable meanwhile. */
   busy?: boolean;
@@ -137,7 +139,7 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
 
 function HeaderAction({ action }: { action: SheetAction }) {
   const { colors, type } = useTheme();
-  const { label, icon, onPress, emphasis, disabled, busy, accessibilityLabel } = action;
+  const { label, icon, onPress, emphasis, destructive, disabled, busy, accessibilityLabel } = action;
   const spinner = useDelayedFlag(!!busy);
   return (
     <Pressable
@@ -150,7 +152,7 @@ function HeaderAction({ action }: { action: SheetAction }) {
       style={styles.action}
     >
       {({ pressed }) => {
-        const color = disabled ? colors.ink3 : pressed ? colors.accentPressed : colors.accent;
+        const color = disabled ? colors.ink3 : destructive ? colors.danger : pressed ? colors.accentPressed : colors.accent;
         if (spinner) return <ActivityIndicator size="small" color={colors.accent} />;
         return (
           <>

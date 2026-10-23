@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { Id, LocalDate } from '@/core/types';
 import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { askDecline, Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
@@ -101,13 +101,20 @@ export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
   );
 }
 
-/** An assignment waiting for the caller's answer: Accept here; rejecting (with a reason) is in Task detail (M35). */
+/** An assignment waiting for the caller's answer: Decline (with an optional reason) and Accept, here as in Task detail (M101). */
 export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
   const { t } = useTranslation();
   const labels = useDateLabels(today);
   const open = useOpenTask();
   const answer = useAnswerAssignment();
   const by = task.assignee?.displayName;
+  const from = task.assignedBy?.displayName || t('notifications.someone');
+  // Decline (M101): the same reason sheet as Task detail; the row leaves Requests once answered.
+  const decline = async () => {
+    const reason = await askDecline(t, from);
+    if (reason === null) return;
+    answer.mutate({ task, accept: false, reason }, { onSuccess: () => useToast.getState().show({ message: t('assign.declined', { name: from }) }) });
+  };
   return (
     <StreamRow
       lead={<Badge icon="user" tone="warn" />}
@@ -115,7 +122,12 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
       sub={task.dueDate ? t('today.assignedDue', { date: labels.day(task.dueDate) }) : t('today.assigned')}
       onPress={() => open(task)}
       label={by ? `${task.title}, ${by}` : task.title}
-      action={<Pill label={t('today.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('today.accepted') }) })} disabled={answer.isPending} />}
+      action={
+        <View style={styles.actions}>
+          <Pill label={t('assign.decline')} tone="quiet" onPress={decline} disabled={answer.isPending} />
+          <Pill label={t('today.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('today.accepted') }) })} disabled={answer.isPending} />
+        </View>
+      }
     />
   );
 }

@@ -396,7 +396,7 @@ export interface MyReminder {
 }
 
 /** API limits (TaskLimits.cs). */
-export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, rejectReasonMax: 500, taskListNameMax: 100, commentMax: 2_000 } as const;
+export const taskLimits = { titleMax: 500, notesMax: 10_000, stepTitleMax: 500, stepsMax: 100, declineReasonMax: 500, taskListNameMax: 100, commentMax: 2_000 } as const;
 
 
 /**

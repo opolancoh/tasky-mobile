@@ -203,10 +203,10 @@ export function useResumeTask() {
   });
 }
 
-/** Accept or reject a task assigned to the caller (while Pending). */
+/** Accept or decline (with an optional reason) a task assigned to the caller, while Pending. */
 export function useAnswerAssignment() {
   const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: ({ task, accept }: { task: TaskSummary; accept: boolean }) => tasksApi.answerAssignment(task, accept), onSettled: refetch });
+  return useMutation({ mutationFn: ({ task, accept, reason }: { task: TaskSummary; accept: boolean; reason?: string }) => tasksApi.answerAssignment(task, accept, reason), onSettled: refetch });
 }
 
 /**

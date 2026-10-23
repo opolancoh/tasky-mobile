@@ -12,6 +12,7 @@ export { CheckCircle, type CheckCircleProps } from './CheckCircle';
 export { easeNextLayout, useTaskCheck, useTaskSaving } from './useTaskCheck';
 export { UpdateRow } from './UpdateRow';
 export { Avatar } from './Faces';
+export { askDecline } from './askDecline';
 export { TaskOrigin } from './TaskOrigin';
 export { MeButton } from './MeButton';
 export { AssigneePicker, givesOutside, type AssigneePickerProps } from './AssigneePicker';
