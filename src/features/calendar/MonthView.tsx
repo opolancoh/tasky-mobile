@@ -57,11 +57,11 @@ export function MonthView({ today }: { today: LocalDate }) {
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
-  const overdue = useOverdue();
   const quickAdd = useQuickAdd((s) => s.show);
   const list = useRef<FlashListRef<Item>>(null);
   const [day, setDay] = useState<Picked>(today);
   const [anchor, setAnchor] = useState<LocalDate>(today);
+  const overdue = useOverdue(day === 'overdue');
   // Month or Week, kept on the device (calendarViewStore); the day and the month or week on screen start at today.
   const week = useCalendarView((s) => s.mode) === 'week';
   const setMode = useCalendarView((s) => s.setMode);
@@ -147,7 +147,7 @@ export function MonthView({ today }: { today: LocalDate }) {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([pages.refetch(), overdue.pages.refetch()]);
+    await Promise.all([pages.refetch(), overdue.refetch()]);
     setRefreshing(false);
   };
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });

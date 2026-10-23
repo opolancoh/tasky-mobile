@@ -46,8 +46,8 @@ export function DaysView({ today }: { today: LocalDate }) {
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
-  const overdue = useOverdue();
   const [overdueOpen, setOverdueOpen] = useState(false);
+  const overdue = useOverdue(overdueOpen);
   const [refreshing, setRefreshing] = useState(false);
   const pages = useTaskPages({ dueFrom: today, sort: 'due', limit: PAGE });
   const tasks = pages.data?.pages.flatMap((p) => p.items) ?? [];
@@ -55,6 +55,7 @@ export function DaysView({ today }: { today: LocalDate }) {
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'chips', key: 'chips' }];
   if (overdueOpen) {
     items.push({ type: 'overdueHead', key: 'overdue-head' });
+    if (overdue.pages.isPending) [70, 55].forEach((width, i) => items.push({ type: 'skeleton', key: `ok-${i}`, width }));   // loaded on opening
     overdue.tasks.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task }));
     if (overdue.pages.hasNextPage) items.push({ type: 'overdueMore', key: 'overdue-more' });
   }
@@ -85,7 +86,7 @@ export function DaysView({ today }: { today: LocalDate }) {
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([pages.refetch(), overdue.pages.refetch()]);
+    await Promise.all([pages.refetch(), overdue.refetch()]);
     setRefreshing(false);
   };
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
