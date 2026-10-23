@@ -35,6 +35,9 @@ export const taskKeys = {
   completing: ['tasks', 'complete'] as const,
   reopening: ['tasks', 'reopen'] as const,
   confirming: ['tasks', 'confirm'] as const,
+  /** A new task on its way (M100), then its assignee: its row spins and takes no taps until the answer. */
+  creating: ['tasks', 'create'] as const,
+  assigning: ['tasks', 'assign'] as const,
   /** One task (GET /tasks/{id}). Not under `views`: lists refetch on their own after a change. */
   detail: (taskId: Id) => ['tasks', 'task', taskId] as const,
   /** A task's comments (D92), newest first in pages. */

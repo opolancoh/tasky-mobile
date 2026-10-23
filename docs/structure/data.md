@@ -17,7 +17,7 @@ src/data/
 │   │                    delete, reorder), Recently Deleted, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore;
 │   │                    Home, the first tab (GET /home, GET /home/{section}, D67, D69, D86; named after the API) and the caller's invitations (join, decline, D68): the API's Tasks module holds sharing (D64)
 │   ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
-│   ├── optimistic.ts    `moveTask`: complete, reopen and confirm move the task in every cache at once, `restore` on error (M75); `editRows` and `cachedTask` for bulk actions: one task's row changed or taken out everywhere, rolled back alone (M81)
+│   ├── optimistic.ts    `moveTask`: complete, reopen and confirm move the task in every cache at once, `restore` on error (M75); `insertTask` (with `takesNew`, the filters a row can answer), `replaceTask`, `removeTask`: a new task in every cache before the POST (M100); `editRows` and `cachedTask` for bulk actions: one task's row changed or taken out everywhere, rolled back alone (M81)
 ├── collaboration/       Notifications: the list (unread only for Home's Updates), the unread count, mark read
 │   ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
 └── system/              GET /api/version (outside /api/v1, for Me › About, M48) and the server's address
@@ -38,7 +38,7 @@ src/data/
 
 - **No workspace in the keys** (M31): lists cover everything the user can see. Signing out clears the cache, so another user never sees them.
 - **Writes send `If-Match`** with the version last read. Task detail saves with `useSaveTask` (one PATCH with every change, D56; a `412` goes back to the screen, which rereads the task and keeps the edits). `useChangeTask` runs commands (complete, reopen, skip) one at a time (`scope`); a `412` rereads the task and runs the command once more.
-- **Optimistic only where it should feel instant:** complete, reopen, tick a step, reorder. Everything else waits for the response.
+- **Optimistic only where it should feel instant:** complete, reopen, tick a step, reorder, add a task (`useCreateTask`, M100: a UUIDv7 id from `newTaskId()`, also the Idempotency-Key). Everything else waits for the response.
 - **After a write,** invalidate the item and every task list it can appear in (`taskKeys.views`).
 - **Types are written by hand** for now; generated from `/openapi/v1.json` once the contract settles ([M5](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 

@@ -102,8 +102,11 @@ export const tasksApi = {
   /** POST /tags:reorder: the caller's own order (204). */
   reorderTags: (names: string[]) => http().post('/tags:reorder', { body: { names } }),
 
-  /** POST /tasks: a new task at the top of `taskListId`, or of the caller's Inbox (201). */
-  createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body }),
+  /**
+   * POST /tasks: a new task at the top of `taskListId`, or of the caller's Inbox (201). Its `id` is also the
+   * Idempotency-Key, so sending it again (Try again) never makes a second task.
+   */
+  createTask: (body: CreateTaskRequest) => http().post<Task>('/tasks', { body, idempotencyKey: body.id }),
 
   /** GET /tasks/{id}: the full task (D55). */
   get: (taskId: Id) => http().get<Task>(`/tasks/${taskId}`),

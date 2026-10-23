@@ -7,6 +7,7 @@ Plain TypeScript with no React, React Native or Expo imports (enforced by lint).
 ```
 src/core/
 ├── types.ts              Id, LocalDate, IsoDateTime, Version
+├── ids.ts                uuidv7: ids that sort by creation, as the API's (Idempotency-Key, a new task's id, M100)
 ├── links.ts              parseJoinLink: a team's invite link or an invitation email's, as a link or a pasted code (D95)
 ├── http/
 │   ├── client.ts         fetch with the API's rules
@@ -36,7 +37,7 @@ src/core/
 | Auth | `Authorization: Bearer` from the token manager; on a `401`, one refresh and one retry ([tokens.md](../auth/tokens.md)) |
 | Retries | Network errors, timeouts, `502`, `503`, `504`: reads up to 3 retries with backoff, honoring `Retry-After`; writes fail fast (none without a response, one for 502/503/504; `retriesFor`, M90) |
 | Timeout | 15 seconds per attempt |
-| Idempotency | Every `POST` gets an `Idempotency-Key`, reused by its retries |
+| Idempotency | Every `POST` gets an `Idempotency-Key`, reused by its retries; a caller can pass its own (`idempotencyKey`) to keep it across tries |
 | Concurrency | `ifMatch` sends the row version as `If-Match` |
 | `anonymous` | No token and no refresh: sign-in, refresh, sign-out and the other `/auth` calls |
 | `log` | Every request (with its headers), response and error (with headers and the body as received), wired in `app/services.ts`: the Metro terminal in development, and the Network log (M53) |

@@ -1,39 +1,122 @@
 import { useMutation, useQueryClient, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 
+import { todayIn } from '@/core/dates/localDate';
 import { isApiError } from '@/core/http/problem';
 import type { Id } from '@/core/types';
+import { http } from '@/data/http';
+import { tenancyKeys } from '@/data/tenancy/keys';
+import type { Me } from '@/data/tenancy/types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
-import { moveTask, settleTask, type Move } from './optimistic';
-import { assignTarget } from './types';
-import type { Comment, CommentsPage, TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
+import { insertTask, moveTask, removeTask, replaceTask, settleTask, type Move, type NewTaskPlace } from './optimistic';
+import { assignTarget, isEmailAssignee } from './types';
+import type { Comment, CommentsPage, TaskList, CreateTaskRequest, DeletedItem, MembersOf, OpenInvitation, Tag, Task, TaskSummary, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest, UserRef } from './types';
+
+/** A task to add (M100): `id` from `newTaskId()`, the same on Can't connect's Try again. */
+export interface NewTask {
+  id: Id;
+  body: CreateTaskRequest;
+  /** A due date without a reminder (M19): the API's 9:00 reminder (D31) is removed right after. */
+  withoutReminder?: boolean;
+  /** Assigned while adding (M43): POST /tasks takes none, so :assign follows. */
+  assignee?: UserRef;
+}
+
+/** A new task's id: a UUIDv7 picked before the API has it, so its row keeps its key (M100). */
+export const newTaskId = () => http().newId();
 
 /**
- * Creates a task. Not optimistic (06-mobile.md, Data): the sheet waits for the answer. Afterwards the
- * views, the task lists' counts (the Inbox may be new, D59) and the tags (a new name joins them) are refetched.
- * `withoutReminder`: a task created with a due date gets the caller's 9:00 reminder (D31); this
- * removes it right away, for someone who set a due date without a reminder (M19).
+ * Creates a task at once (M100): its row goes into every cached list that takes it (`insertTask`) before the POST, its
+ * circle spinning and the row taking no taps until the answer, which replaces it in place. Creates run one at a time
+ * (`scope`), so each lands on top in the order added. An error takes the row out with a toast, or Can't connect's
+ * capsule whose Try again sends the same id (also the Idempotency-Key: never a second task). The assignee follows as a
+ * mutation of its own (`assignNew`): failing it keeps the task. Then the views, the task lists' counts (the Inbox may be
+ * new, D59) and the tags refetch, once no other create is on its way (it would drop that one's row for a moment).
  */
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    meta: { asksNotifications: givesTask },
-    mutationFn: async ({ body, withoutReminder, assignee }: { body: CreateTaskRequest; withoutReminder?: boolean; assignee?: Id }) => {
-      let task = await tasksApi.createTask(body);
-      // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
-      if (withoutReminder) await tasksApi.removeReminder(task.id).catch(() => undefined);
-      // Assigned while adding (M43): POST /tasks doesn't take an assignee, so :assign follows.
-      if (assignee) task = await tasksApi.assign(task, assignTarget(assignee));
-      return task;
+    mutationKey: taskKeys.creating,
+    scope: { id: 'create-task' },
+    meta: { asksNotifications: givesNewTask, toastError: true },
+    onMutate: async (task: NewTask) => {
+      const draft = draftRow(queryClient, task);
+      if (draft) await insertTask(queryClient, draft.row, draft.place);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.views });
-      queryClient.invalidateQueries({ queryKey: taskKeys.taskLists });
-      queryClient.invalidateQueries({ queryKey: taskKeys.tags });
-      queryClient.invalidateQueries({ queryKey: MEMBERS });
+    mutationFn: async ({ id, body, withoutReminder }: NewTask) => {
+      const task = await tasksApi.createTask({ ...body, id });
+      if (!withoutReminder) return task;
+      // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
+      const removed = await tasksApi.removeReminder(task.id).then(() => true, () => false);
+      return removed ? { ...task, reminder: null } : task;
+    },
+    onSuccess: (task, { assignee }) => {
+      if (!assignee) return replaceTask(queryClient, task);
+      settleTask(queryClient, task);   // the row keeps its assignee until :assign answers
+      assignNew(queryClient, task, assignee);
+    },
+    onError: (_error, { id }) => removeTask(queryClient, id),
+    onSettled: (_task, error, { assignee }) => {
+      if ((assignee && !error) || queryClient.isMutating({ mutationKey: taskKeys.creating }) > 1) return;
+      refetchAfterCreate(queryClient);
     },
   });
+}
+
+const refetchAfterCreate = (queryClient: QueryClient) => {
+  queryClient.invalidateQueries({ queryKey: taskKeys.views });
+  queryClient.invalidateQueries({ queryKey: taskKeys.taskLists });
+  queryClient.invalidateQueries({ queryKey: taskKeys.tags });
+  queryClient.invalidateQueries({ queryKey: MEMBERS });
+};
+
+/**
+ * The assignee of a task just created (M43, M100), as its own mutation: an error keeps the task and says why in a toast,
+ * or Can't connect's Try again assigns again. Its row stays locked (`taskKeys.assigning`) until the answer.
+ */
+function assignNew(queryClient: QueryClient, task: Task, to: UserRef) {
+  queryClient.getMutationCache().build(queryClient, {
+    mutationKey: taskKeys.assigning,
+    meta: { toastError: true },
+    mutationFn: (created: Task) => tasksApi.assign(created, assignTarget(to.id)),
+    onSuccess: (saved: Task) => replaceTask(queryClient, saved),
+    onSettled: () => refetchAfterCreate(queryClient),
+  }).execute(task).catch(() => undefined);
+}
+
+/** The row a new task shows before the API answers, and what placing it needs; none until the task lists are in. */
+function draftRow(queryClient: QueryClient, { id, body, withoutReminder, assignee }: NewTask): { row: TaskSummary; place: NewTaskPlace } | undefined {
+  const lists = queryClient.getQueryData<TaskList[]>(taskKeys.taskLists);
+  const list = lists?.find((c) => (body.taskListId ? c.id === body.taskListId : c.isInbox));
+  if (!list) return undefined;
+  const me = queryClient.getQueryData<Me>(tenancyKeys.me);
+  const colors = queryClient.getQueryData<Tag[]>(taskKeys.tags);
+  const due = body.dueDate ?? null;
+  const at = (time: string) => (time.length === 5 ? `${time}:00` : time);
+  const reminder = body.reminderDate && body.reminderTime ? { date: body.reminderDate, time: at(body.reminderTime) } : due && !withoutReminder ? { date: due, time: '09:00:00' } : null;
+  const byEmail = isEmailAssignee(assignee?.id);
+  const row: TaskSummary = {
+    id,
+    taskList: { id: list.id, name: list.name, color: list.color, isInbox: list.isInbox, team: list.team },
+    title: body.title,
+    hasNotes: !!body.notes,
+    isImportant: !!body.isImportant,
+    dueDate: due,
+    repeats: false,
+    status: 'open',
+    completedAt: null,
+    assignee: assignee && !byEmail ? assignee : null,
+    assignmentStatus: assignee ? (assignee.id === me?.id ? 'accepted' : 'pending') : null,
+    invitedEmail: byEmail ? assignee!.displayName : null,
+    awaitsConfirmation: false,
+    stepsDone: 0,
+    stepsTotal: 0,
+    tags: (body.tags ?? []).map((name) => ({ name, color: colors?.find((g) => g.name.toLowerCase() === name.toLowerCase())?.color ?? null })),
+    version: 0,
+    reminder,
+  };
+  return { row, place: { today: me ? todayIn(me.timeZone) : undefined, mine: list.isInbox || list.sharing === 'private', sortMode: list.sortMode } };
 }
 
 /**
@@ -42,6 +125,7 @@ export function useCreateTask() {
  */
 const always = () => true;
 const givesTask = (v: { assignee?: Id | null }, me: Id | null) => !!v.assignee && v.assignee !== me;
+const givesNewTask = (v: NewTask, me: Id | null) => !!v.assignee && v.assignee.id !== me;
 
 /** Every team's and list's people, whose workload counts (M79) change with any task. */
 const MEMBERS = ['tasks', 'members'] as const;

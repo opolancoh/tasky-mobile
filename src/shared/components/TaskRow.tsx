@@ -91,7 +91,7 @@ export function TaskRow({ task, today, showDue = false, showList = true, showAss
               <Feather name="pause-circle" size={22} color={colors.warn} />
             </Pressable>
           ) : (
-            <CheckCircle checked={ticked} saving={check.saving} onPress={complete} label={t('taskRow.complete', { title: task.title })} />
+            <CheckCircle checked={ticked} saving={check.spinning} onPress={complete} label={t('taskRow.complete', { title: task.title })} />
           )}
           <View style={styles.main}>
             <Text variant="bodyMedium" numberOfLines={2} style={ticked ? { color: colors.ink3 } : undefined}>

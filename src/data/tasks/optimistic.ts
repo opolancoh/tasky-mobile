@@ -1,14 +1,16 @@
 import type { InfiniteData, QueryClient, QueryKey } from '@tanstack/react-query';
 
-import type { Id } from '@/core/types';
+import { addDays } from '@/core/dates/localDate';
+import { collator } from '@/core/text/collate';
+import type { Id, LocalDate } from '@/core/types';
 
 import { taskKeys } from './keys';
-import type { Home, Task, TaskFilter, TaskList, TaskSummary } from './types';
+import type { Home, SortMode, Task, TaskFilter, TaskList, TaskSummary } from './types';
 
 /** Where a toggle moves a task (M56, M75): out of the open lists into Completed, or back. */
 export type Move = 'completed' | 'open';
 
-type Page = { items: TaskSummary[]; total?: number | null };
+type Page = { items: TaskSummary[]; total?: number | null; nextCursor?: string | null };
 type Kind = 'open' | 'completed' | 'any';
 
 const isPage = (d: unknown): d is Page => !!d && Array.isArray((d as Page).items);
@@ -195,4 +197,165 @@ export function editRows(queryClient: QueryClient, id: Id, patch: Partial<TaskSu
     const back = original;
     changed.forEach((key) => queryClient.setQueryData(key, (data: unknown) => editData(data, (p) => (p.items.some((i) => i.id === id) ? { ...p, items: p.items.map((i) => (i.id === id ? back : i)) } : p))));
   };
+}
+
+/** A full task as its row (TaskSummaryResponse), for the API's answer to a create (M100). */
+export const toSummary = (t: Task): TaskSummary => ({
+  id: t.id, taskList: t.taskList, title: t.title, hasNotes: !!t.notes, isImportant: t.isImportant, dueDate: t.dueDate ?? null,
+  repeats: !!t.repeat, status: t.status, completedAt: t.completedAt ?? null, assignee: t.assignee, assignmentStatus: t.assignmentStatus ?? null,
+  assignedBy: t.assignedBy, declineReason: t.declineReason, awaitsConfirmation: t.awaitsConfirmation, invitedEmail: t.invitedEmail,
+  stepsDone: t.steps.filter((x) => x.isDone).length, stepsTotal: t.steps.length, tags: t.tags, version: t.version, reminder: t.reminder,
+  holdReason: t.holdReason, holdUntil: t.holdUntil, resumer: t.resumer, commentCount: t.commentCount,
+});
+
+/** What placing a new task needs beyond its row (M100): the caller's today, whether its list is theirs alone, its sort. */
+export interface NewTaskPlace {
+  today: LocalDate | undefined;
+  /** Inbox or a private list: `mine=true` and Important take it. */
+  mine: boolean;
+  sortMode: SortMode | undefined;
+}
+
+/**
+ * Whether a new open task belongs in a list fetched with `filter` (GET /tasks): every narrowing a row can answer by
+ * itself. Undefined when the app can't tell (another assignee, `assignment`, `assignedBy`): that list waits for the refetch.
+ */
+export function takesNew(filter: TaskFilter, task: TaskSummary, place: NewTaskPlace): boolean | undefined {
+  const { taskListId, teamId, mine, status, important, due, dueFrom, dueTo, tag, assignee, sort, limit, ...rest } = filter;
+  void sort; void limit;
+  if (Object.keys(rest).length || (assignee && assignee !== 'none')) return undefined;
+  if (status && status !== 'open') return false;
+  if (taskListId && taskListId !== task.taskList?.id) return false;
+  if (teamId && teamId !== task.taskList?.team?.id) return false;
+  if (mine && !place.mine) return false;
+  if (important !== undefined && important !== task.isImportant) return false;
+  if (tag && !task.tags.some((x) => x.name.toLowerCase() === tag.toLowerCase())) return false;
+  if (assignee === 'none' && (task.assignee || task.invitedEmail)) return false;
+  const d = task.dueDate;
+  if ((dueFrom && (!d || d < dueFrom)) || (dueTo && (!d || d > dueTo))) return false;
+  if (due?.length) {
+    const today = place.today;
+    if (!today) return undefined;
+    if (!due.includes(!d ? 'none' : d < today ? 'overdue' : d === today ? 'today' : 'upcoming')) return false;
+  }
+  return true;
+}
+
+/** Where a new task goes among `items` in a list's order: on top (Manual, Newest, D85), or by due date, flag or title. */
+function placeOf(items: TaskSummary[], task: TaskSummary, order: 'top' | 'due' | 'important' | 'title'): number {
+  const after = (x: TaskSummary) => {
+    if (order === 'due') return !task.dueDate ? false : !x.dueDate || x.dueDate > task.dueDate;
+    if (order === 'important') return task.isImportant || !x.isImportant;
+    if (order === 'title') return collator.compare(x.title, task.title) > 0;
+    return true;
+  };
+  const i = items.findIndex(after);
+  return i < 0 ? items.length : i;
+}
+
+const orderFor = (filter: TaskFilter, sortMode: SortMode | undefined) => {
+  const sort = filter.sort ?? (filter.taskListId ? 'taskList' : 'due');
+  if (sort === 'due') return 'due';
+  if (sort === 'created' || !sortMode || sortMode === 'manual') return 'top';
+  return sortMode === 'dueDate' ? 'due' : sortMode === 'important' ? 'important' : 'title';
+};
+
+/** One cached list with the new task in its place, `total` one more; a place past the loaded pages only counts it. */
+function insertInList(data: unknown, task: TaskSummary, order: ReturnType<typeof orderFor>): unknown {
+  const pages: Page[] | undefined = isPage(data) ? [data] : isPages(data) ? data.pages : undefined;
+  if (!pages?.length) return data;
+  const loaded = pages.reduce((n, p) => n + p.items.length, 0);
+  let at = placeOf(pages.flatMap((p) => p.items), task, order);
+  if (at === loaded && pages[pages.length - 1]!.nextCursor) at = -1;   // after what's loaded: its page brings it
+  const next = pages.map((p, i) => {
+    const page = i === 0 && p.total != null ? { ...p, total: p.total + 1 } : p;
+    if (at < 0) return page;
+    const here = at < p.items.length || i === pages.length - 1;
+    if (!here) {
+      at -= p.items.length;
+      return page;
+    }
+    const items = [...p.items.slice(0, at), task, ...p.items.slice(at)];
+    at = -1;
+    return { ...page, items };
+  });
+  return isPage(data) ? next[0] : { ...(data as InfiniteData<Page>), pages: next };
+}
+
+/** Home's sections a new task lands in (D86): today (due or reminded today), overdue, or within Coming up's week. */
+function homeSectionOf(task: TaskSummary, today: LocalDate | undefined): 'today' | 'overdue' | 'comingUp' | undefined {
+  const d = task.dueDate;
+  if (!today) return undefined;
+  if (d === today || (task.reminder?.date === today && (!d || d > today))) return 'today';
+  if (d && d < today) return 'overdue';
+  if (d && d > today && d <= addDays(today, 7)) return 'comingUp';
+  return undefined;
+}
+
+const atTop = (p: Home['today'], task: TaskSummary) => ({ ...p, items: [task, ...p.items], total: p.total == null ? p.total : p.total + 1 });
+
+/**
+ * A new task shows at once (M100): it goes into every cached list whose filter takes it (`takesNew`), in its place, Home's
+ * section and totals, and its list's count. Lists it can't place (search, another person's) get it from the refetch.
+ * Undo is `removeTask`: by id, so tasks added after it keep their rows.
+ */
+export async function insertTask(queryClient: QueryClient, task: TaskSummary, place: NewTaskPlace) {
+  await queryClient.cancelQueries({ queryKey: taskKeys.views });
+  eachList(queryClient, (key, data, where) => {
+    let next: unknown = data;
+    if (where.home && key.length === 3) {
+      const home = data as Home;
+      const section = homeSectionOf(task, place.today);
+      next = {
+        ...home,
+        ...(section ? { [section]: atTop(home[section], task) } : {}),
+        openTotal: home.openTotal + 1,
+        inboxTotal: home.inboxTotal + (task.taskList?.isInbox ? 1 : 0),
+        importantTotal: home.importantTotal + (task.isImportant && place.mine ? 1 : 0),
+      };
+    } else if (where.home) {
+      const name = key[3];
+      const takes = name === 'important' ? task.isImportant && place.mine
+        : name === 'inbox' ? !!task.taskList?.isInbox
+        : name === 'coming-up' ? homeSectionOf(task, place.today) === 'comingUp'
+        : (name === 'today' || name === 'overdue') && homeSectionOf(task, place.today) === name;
+      if (takes) next = insertInList(data, task, 'top');
+    } else if (where.filter && takesNew(where.filter, task, place)) {
+      next = insertInList(data, task, orderFor(where.filter, where.filter.taskListId ? place.sortMode : undefined));
+    }
+    if (next !== data) queryClient.setQueryData(key, next);
+  });
+  const listId = task.taskList?.id;
+  queryClient.setQueryData<TaskList[]>(taskKeys.taskLists, (lists) => lists?.map((c) => (c.id === listId ? { ...c, openTasks: (c.openTasks ?? 0) + 1 } : c)));
+}
+
+/** The task's row replaced wherever it shows: the API's answer to a create or its assignment (M100), in the same place. */
+export function replaceTask(queryClient: QueryClient, saved: Task) {
+  const row = toSummary(saved);
+  eachList(queryClient, (key, data) => {
+    if (!holds(data, row.id)) return;
+    queryClient.setQueryData(key, editData(data, (p) => ({ ...p, items: p.items.map((x) => (x.id === row.id ? row : x)) })));
+  });
+  queryClient.setQueryData(taskKeys.detail(saved.id), saved);
+}
+
+/** A task out of every cached list (a create the API refused); counts follow with the refetch. */
+export function removeTask(queryClient: QueryClient, id: Id) {
+  eachList(queryClient, (key, data) => {
+    if (!holds(data, id)) return;
+    queryClient.setQueryData(key, editData(data, (p) => {
+      const x = p.items.find((i) => i.id === id);
+      return x ? editPage(p, id, 'remove', x) : p;
+    }));
+  });
+}
+
+/** Whether a cached list has the task in any page or Home section. */
+function holds(data: unknown, id: Id): boolean {
+  let found = false;
+  editData(data, (p) => {
+    found ||= p.items.some((x) => x.id === id);
+    return p;
+  });
+  return found;
 }

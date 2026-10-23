@@ -57,8 +57,8 @@ function Badge({ icon, tone }: { icon: ComponentProps<typeof Feather>['name']; t
 function Check({ task }: { task: TaskSummary }) {
   const { t } = useTranslation();
   const complete = useCompleteTask();
-  const { saving, tap } = useTaskCheck(task, (x) => complete.mutate(x));
-  return <CheckCircle checked={false} saving={saving} onPress={tap} label={t('taskRow.complete', { title: task.title })} />;
+  const { spinning, tap } = useTaskCheck(task, (x) => complete.mutate(x));
+  return <CheckCircle checked={false} saving={spinning} onPress={tap} label={t('taskRow.complete', { title: task.title })} />;
 }
 
 const Flag = () => {

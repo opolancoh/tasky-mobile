@@ -1,10 +1,11 @@
-import { randomUUID } from 'expo-crypto';
+import { getRandomValues } from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 import { createTokenManager, type TokenPair, type TokenStore } from '@/core/auth/tokens';
 import { createHttpClient } from '@/core/http/client';
+import { uuidv7 } from '@/core/ids';
 import { combineLoggers, createConsoleHttpLogger } from '@/core/http/httpLog';
 import { isApiError } from '@/core/http/problem';
 import { configureHttp } from '@/data/http';
@@ -38,7 +39,7 @@ const tokenStore: TokenStore = {
 
 export const httpClient = createHttpClient({
   baseUrl: config.apiUrl,
-  newId: randomUUID,
+  newId: () => uuidv7(getRandomValues(new Uint8Array(10))),
   onClientTooOld: () => useSessionStore.getState().requireUpdate(),
   // Development only: every call in the Metro terminal; EXPO_PUBLIC_HTTP_LOG=off|errors|all (default all).
   // and, while recording, the Network log (Me › About, support and admin); and always, Error reports' breadcrumbs (M89).

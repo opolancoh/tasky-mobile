@@ -7,14 +7,13 @@ import { nowIn } from '@/core/dates/localDate';
 import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
-import { useCreateTask } from '@/data/tasks/mutations';
+import { newTaskId, useCreateTask } from '@/data/tasks/mutations';
 import { useTaskLists, useTags } from '@/data/tasks/queries';
 import { taskLimits, type UserRef } from '@/data/tasks/types';
-import { errorMessage } from '@/shared/i18n/errors';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { AssigneePicker, Avatar, givesOutside, TaskListIcon, TaskListPicker, DueDatePicker, ReminderIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { ClearButton, ListRow, Notice, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
+import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
@@ -45,7 +44,7 @@ const INBOX = { isInbox: true, color: '' };
 /**
  * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
  * The form is a summary (Task list, then a row per set field, each with ✕) with a bottom icon bar (M18)
- * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add creates the task (POST /tasks) and closes the sheet.
+ * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add closes the sheet at once and the task shows in its lists (M100), saved by POST /tasks.
  */
 export function QuickAddSheet() {
   const session = useQuickAdd((s) => s.session);
@@ -78,10 +77,7 @@ function QuickAddForm() {
   const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
   if (!now && me) setNow(nowIn(me.timeZone));
 
-  const update = (changes: Partial<Draft>) => {
-    setDraft((d) => ({ ...d, ...changes }));
-    if (create.error) create.reset();
-  };
+  const update = (changes: Partial<Draft>) => setDraft((d) => ({ ...d, ...changes }));
 
   const today = now?.date;
   const inbox = taskLists.find((c) => c.isInbox);
@@ -93,7 +89,7 @@ function QuickAddForm() {
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
   // Never waits for the lists (M27): with none picked the task goes to the user's Inbox (POST without a task list, M31).
-  const canAdd = titleText.length > 0 && !create.isPending;
+  const canAdd = titleText.length > 0;
 
   const labels = useDateLabels(today);
   const dayText = labels.day;
@@ -104,8 +100,10 @@ function QuickAddForm() {
   function submit() {
     if (!canAdd) return;
     const chosen = draft.reminder ?? undefined;
+    // At once (M100): the task shows in its lists and the sheet closes; an error comes as a toast, or Can't connect's Try again.
     create.mutate(
       {
+        id: newTaskId(),
         body: {
           taskListId: taskList?.id,
           title: titleText,
@@ -117,15 +115,11 @@ function QuickAddForm() {
           reminderTime: chosen?.time,
         },
         withoutReminder: !draft.reminder && !!draft.dueDate,
-        assignee: canAssign ? draft.assignee?.id : undefined,
-      },
-      {
-        onSuccess: () => {
-          if (userId) useRecentTags.getState().used(userId, tags);
-          hide();
-        },
+        assignee: canAssign ? draft.assignee : undefined,
       },
     );
+    if (userId) useRecentTags.getState().used(userId, tags);
+    hide();
   }
 
   const toggleTag = (name: string) => update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
@@ -159,7 +153,7 @@ function QuickAddForm() {
   };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
     page === 'form'
-      ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd && !create.isPending, busy: create.isPending, onPress: submit } }
+      ? { title: t('quickAdd.title'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t('quickAdd.submit'), emphasis: true, disabled: !canAdd, onPress: submit } }
       : { title: titles[page], left: back };
 
   const barItems: BarItem[] = [
@@ -173,12 +167,11 @@ function QuickAddForm() {
 
   return (
     // The form fits its rows (M29); its pages are the large size (M28).
-    <Sheet visible={open} size={page === 'form' ? 'fit' : 'large'} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <View pointerEvents={create.isPending ? 'none' : 'auto'}><QuickAddBar items={barItems} /></View> : undefined}>
+    <Sheet visible={open} size={page === 'form' ? 'fit' : 'large'} onDismiss={page === 'form' ? hide : () => setPage('form')} onBackdropPress={page === 'form' ? hide : discardPage} dismissLabel={t('quickAdd.close')} {...header} footer={page === 'form' ? <QuickAddBar items={barItems} /> : undefined}>
       {/* Full sheet width (a ScrollView clips its children), padded inside, so the divider reaches the edges. */}
       {page === 'form' && (
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          pointerEvents={create.isPending ? 'none' : 'auto'}   // locked while Add saves
           bounces={false}
           style={[styles.summary, { marginHorizontal: -space.lg }]}
           contentContainerStyle={{ paddingHorizontal: space.lg }}
@@ -210,11 +203,6 @@ function QuickAddForm() {
               />
             )}
           </View>
-          {create.error && (
-            <View style={{ marginBottom: space.md }}>
-              <Notice>{errorMessage(create.error)}</Notice>
-            </View>
-          )}
 
           <View style={[styles.divider, { backgroundColor: colors.line, marginHorizontal: -space.lg }]} />
 

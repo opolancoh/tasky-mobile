@@ -15,7 +15,7 @@ export interface HttpClientOptions {
   baseUrl: string;
   /** Headers sent on every request: X-Client, X-Device-Name, Accept-Language. */
   headers: () => Record<string, string>;
-  /** A new UUID, for Idempotency-Key. */
+  /** A new UUIDv7: an Idempotency-Key, or the id of something the app creates. */
   newId: () => string;
   timeoutMs?: number;
   /** A 426: the API no longer accepts this app version (X-Client); the app asks the user to update. */
@@ -34,6 +34,8 @@ export interface RequestOptions {
   anonymous?: boolean;
   /** Sent as the Authorization header instead of the session's, with no refresh on 401 (a pending sign-out, M88). */
   accessToken?: string;
+  /** A POST's Idempotency-Key when the caller keeps it across tries (Can't connect's Try again); otherwise a new one per call. */
+  idempotencyKey?: string;
   signal?: AbortSignal;
 }
 
@@ -42,6 +44,8 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export interface HttpClient {
   /** The configured base URL, e.g. "http://localhost:5186/api/v1". */
   readonly baseUrl: string;
+  /** A new UUIDv7, e.g. the id of a task the app shows before the API has it. */
+  newId(): string;
   /** A path is relative to `baseUrl`; a full URL (http…) is used as is, e.g. the API's /api/version. */
   get<T>(path: string, options?: RequestOptions): Promise<T>;
   post<T = void>(path: string, options?: RequestOptions): Promise<T>;
@@ -116,7 +120,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
   }
 
   async function request<T>(method: Method, path: string, opts: RequestOptions = {}): Promise<T> {
-    const idempotencyKey = method === 'POST' ? options.newId() : undefined;
+    const idempotencyKey = method === 'POST' ? (opts.idempotencyKey ?? options.newId()) : undefined;
     let refreshed = false;
     const id = ++seq;
     const target = log ? url(path, opts.query) : '';
@@ -170,6 +174,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
 
   return {
     baseUrl: options.baseUrl,
+    newId: options.newId,
     get: (path, opts) => request('GET', path, opts),
     post: (path, opts) => request('POST', path, opts),
     put: (path, opts) => request('PUT', path, opts),

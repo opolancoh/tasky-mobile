@@ -51,6 +51,8 @@ export interface TagChange {
 
 /** POST /tasks. The title is plain text: `#name` in it is not a tag (D60, M31). */
 export interface CreateTaskRequest {
+  /** A UUIDv7 the app picks, so the row it shows at once keeps its key (M100). */
+  id?: Id;
   /** The task list; omitted: the caller's Inbox, created on first need (D59). */
   taskListId?: Id;
   title: string;
