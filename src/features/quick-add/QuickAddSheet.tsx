@@ -259,12 +259,7 @@ function QuickAddForm() {
               <ListRow
                 label={t('quickAdd.fields.reminder')}
                 icon={<ReminderIcon color={colors.accent} />}
-                value={
-                  <View style={styles.end}>
-                    <Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>
-                    <Text variant="caption" color="ink2">{t('reminders.onlyYou')}</Text>
-                  </View>
-                }
+                value={<Text variant="bodyMedium" color="accent">{reminderText(reminder)}</Text>}
                 onPress={() => openPage('reminder')}
                 onClear={() => update({ reminder: null })}
                 clearLabel={t('reminders.remove')}
@@ -316,7 +311,6 @@ function QuickAddForm() {
 const styles = StyleSheet.create({
   // Font and size only on inputs: a lineHeight on an iOS TextInput clips descenders.
   title: { flex: 1, paddingTop: 8, paddingBottom: 16, paddingHorizontal: 0 },
-  end: { alignItems: 'flex-end' },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
   /** ClearButton's negative vertical margin is for rows; the title keeps its own height. */
   clearTitle: { marginVertical: 0 },

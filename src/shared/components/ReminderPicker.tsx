@@ -21,7 +21,8 @@ interface ReminderPickerProps {
 
 /**
  * Picks the caller's reminder on a task (Quick add's Reminder page, task detail): four quick choices (`onPick`), then a custom date and time with the
- * shared DateWheel and TimeWheel (one open at a time), and Remove reminder.
+ * shared DateWheel and TimeWheel (one open at a time), and Remove reminder. That only the user gets it is said here, once, not on
+ * the task's rows.
  */
 export function ReminderPicker({ value, onChange, onPick, onRemove, now }: ReminderPickerProps) {
   const { t, i18n } = useTranslation();
@@ -51,6 +52,7 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
           />
         ))}
       </View>
+      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('reminders.onlyYou')}</Text>
 
       <SectionLabel style={{ marginTop: space.xxl }}>{t('reminders.custom')}</SectionLabel>
       <ListRow

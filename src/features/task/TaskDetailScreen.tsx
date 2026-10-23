@@ -424,7 +424,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
             icon={(color) => <ReminderIcon color={color} />}
             placeholder={t('taskDetail.remindMe')}
             value={fields.reminder && (fields.reminder.date === today ? `${t('dates.today')}, ${labels.time(fields.reminder.time)}` : labels.reminder(fields.reminder))}
-            detail={t('reminders.onlyYou')}
             onPress={() => open('reminder')}
             onClear={() => edit({ reminder: null })}
             clearLabel={t('reminders.remove')}
