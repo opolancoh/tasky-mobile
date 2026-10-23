@@ -73,6 +73,8 @@ function QuickAddForm() {
   const startList = useQuickAdd((s) => s.taskListId);
   const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle ?? '', dueDate: startDue, taskListId: startList }));
   const [page, setPage] = useState<Page>(startPage ?? 'form');
+  // Opened on the form, the title has the keyboard at once (M104); once a page has opened, coming back doesn't raise it again.
+  const [focusTitle, setFocusTitle] = useState(!startPage);
   const titleInput = useRef<TextInput>(null);
   const [beforePage, setBeforePage] = useState<Draft>(draft);   // the draft when a page opened: tapping outside restores it
   // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
@@ -130,7 +132,8 @@ function QuickAddForm() {
   const clearTags = () => update({ tags: [] });
 
   const openPage = (next: Exclude<Page, 'form'>) => {
-    Keyboard.dismiss();   // the keyboard only when typing (M30); Notes brings it back for its own field
+    Keyboard.dismiss();   // pages with nothing to type close the keyboard (M30); Notes brings it back for its own field
+    setFocusTitle(false);
     setBeforePage(draft);
     setPage(next);
   };
@@ -182,6 +185,7 @@ function QuickAddForm() {
           <View style={styles.titleRow}>
             <TextInput
             ref={titleInput}
+            autoFocus={focusTitle}
             value={draft.title}
             onChangeText={(title) => update({ title })}
             placeholder={t('quickAdd.placeholder')}
@@ -190,6 +194,7 @@ function QuickAddForm() {
             accessibilityLabel={t('quickAdd.fields.title')}
             multiline
             submitBehavior="blurAndSubmit"
+            onSubmitEditing={submit}   // Return adds and closes, like Add (M104); a blank title only drops the keyboard
             maxLength={taskLimits.titleMax}
             returnKeyType="done"
             style={[styles.title, { fontFamily: type.headline.fontFamily, fontSize: type.headline.fontSize, color: colors.heading }]}
@@ -210,12 +215,15 @@ function QuickAddForm() {
           <View style={[styles.divider, { backgroundColor: colors.line, marginHorizontal: -space.lg }]} />
 
           <View>
-            <ListRow
-              label={t('quickAdd.fields.taskList')}
-              icon={<TaskListIcon taskList={taskList ?? INBOX} />}
-              value={<Text variant="bodyMedium" color="accent">{taskList?.name ?? t('taskLists.inbox')}</Text>}
-              onPress={() => openPage('taskList')}
-            />
+            {/* Opened from a list, the task goes there: no List row (M103). */}
+            {!startList && (
+              <ListRow
+                label={t('quickAdd.fields.taskList')}
+                icon={<TaskListIcon taskList={taskList ?? INBOX} />}
+                value={<Text variant="bodyMedium" color="accent">{taskList?.name ?? t('taskLists.inbox')}</Text>}
+                onPress={() => openPage('taskList')}
+              />
+            )}
             {canAssign && draft.assignee && (
               <ListRow
                 label={t('quickAdd.fields.assignee')}

@@ -11,7 +11,7 @@ export interface QuickAddStart {
   page?: QuickAddStartPage;
   /** The due date the form starts with (Calendar's Add a task, M72). */
   dueDate?: LocalDate;
-  /** The list the task goes to instead of the Inbox (a list's Add a task, M103). */
+  /** The list the task goes to instead of the Inbox, with no List row to change it (a list's Add a task, M103). */
   taskListId?: Id;
   /** Called when Add is tapped: a Manual list scrolls up to its new task (M60). */
   onAdded?(): void;
