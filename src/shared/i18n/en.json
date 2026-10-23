@@ -153,7 +153,17 @@
     "movedToday": "Moved to today",
     "declinedBy": "{{name}} declined",
     "droppedBy": "{{name}} dropped it",
-    "completedBy": "{{name}} completed it"
+    "completedBy": "{{name}} completed it",
+    "review": "Review",
+    "doItMyself": "I’ll do it",
+    "giveToSomeoneElse": "Give it to someone else",
+    "leaveUnassigned": "Leave it unassigned",
+    "deleteTask": "Delete task",
+    "deleteTitle": "Delete this task?",
+    "deleteMessage": "You can restore it from Recently Deleted for 30 days.",
+    "deleted": "Task deleted",
+    "yoursNow": "It’s yours now",
+    "leftUnassigned": "Unassigned: anyone in {{list}} can take it"
   },
   "taskRow": {
     "complete": "Complete {{title}}",
@@ -700,6 +710,7 @@
     "empty": "Nothing yet",
     "emptyBody": "When people share lists and teams with you, what they do for you shows here.",
     "respond": "Respond",
+    "review": "Review",
     "confirm": "Confirm",
     "openUnread_one": "Activity, {{count}} new",
     "openUnread_other": "Activity, {{count}} new"

@@ -11,11 +11,11 @@ export type ActivityGo =
   | { to: 'people'; of: MembersOf };
 
 /** Where a notification leads now (M58), or null when there is nowhere to go. `needs`: it waits for the user. */
-export type ActivityState = { needs?: 'respond' | 'confirm'; go: ActivityGo } | null;
+export type ActivityState = { needs?: 'respond' | 'review' | 'confirm'; go: ActivityGo } | null;
 
-const TASK_NEEDS: Partial<Record<Notification['kind'], { section: 'toAnswer' | 'followUp'; needs: 'respond' | 'confirm' }>> = {
+const TASK_NEEDS: Partial<Record<Notification['kind'], { section: 'toAnswer' | 'followUp'; needs: 'respond' | 'review' | 'confirm' }>> = {
   assigned: { section: 'toAnswer', needs: 'respond' },
-  assignmentRejected: { section: 'followUp', needs: 'respond' },
+  assignmentRejected: { section: 'followUp', needs: 'review' },   // what happens to it now is the user's call (M102)
   assignmentDropped: { section: 'followUp', needs: 'respond' },
   assignmentCompleted: { section: 'followUp', needs: 'confirm' },
 };

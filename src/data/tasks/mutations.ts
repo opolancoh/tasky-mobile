@@ -301,7 +301,13 @@ export function useSaveTask(taskId: Id) {
 /** DELETE /tasks/{id}: the task goes to Recently Deleted; `useRestoreTask` brings it back. */
 export function useDeleteTask() {
   const refetch = useRefetchTasks();
-  return useMutation({ mutationFn: (task: Task) => tasksApi.remove(task), onSettled: refetch });
+  return useMutation({ mutationFn: (task: Pick<Task, 'id' | 'version'>) => tasksApi.remove(task), onSettled: refetch });
+}
+
+/** POST /tasks/{id}:assign { userId }, or :unassign with `to` null, from a row (a declined task's Review, M102). */
+export function useReassignTask() {
+  const refetch = useRefetchTasks();
+  return useMutation({ mutationFn: ({ task, to }: { task: TaskSummary; to: Id | null }) => (to ? tasksApi.assign(task, to) : tasksApi.unassign(task)), onSettled: refetch });
 }
 
 /**

@@ -1,16 +1,19 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ComponentProps, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Id, LocalDate } from '@/core/types';
-import { useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useUpdateTask } from '@/data/tasks/mutations';
+import { restoreTask, useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useDeleteTask, useReassignTask, useUpdateTask } from '@/data/tasks/mutations';
+import { useTaskLists } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { askDecline, Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { confirm, Pill, Text, useTheme, useToast } from '@/shared/ui';
+import { useMe } from '@/data/tenancy/queries';
+import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoice } from '@/shared/ui';
 
 
 /**
@@ -133,8 +136,8 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
 }
 
 /**
- * A task the caller gave someone that needs them (D71, M45): declined (with the reason; the row opens the task to
- * reassign, unassign or delete it), dropped (given back, D100: to assign again), or completed and waiting for Confirm, here.
+ * A task the caller gave someone that needs them (D71, M45): declined ("Oscar declined · reason" and Review, M102),
+ * dropped (given back, D100: to assign again), or completed and waiting for Confirm, here.
  */
 export function FollowUpRow({ task }: { task: TaskSummary }) {
   const { t } = useTranslation();
@@ -145,15 +148,61 @@ export function FollowUpRow({ task }: { task: TaskSummary }) {
   const declined = task.assignmentStatus === 'declined';
   const answered = declined || !!task.droppedBy;
   const label = task.droppedBy ? 'today.droppedBy' : declined ? 'today.declinedBy' : 'today.completedBy';
+  const review = useReviewDeclined();
+  const reason = declined && !task.droppedBy ? task.declineReason : null;
   return (
     <StreamRow
       lead={<Avatar name={who} seed={person?.id ?? who} size={30} />}
       title={task.title}
-      sub={<Text variant="footnote" color={answered ? 'danger' : 'success'}>{t(label, { name: who.split(' ')[0] })}</Text>}
+      sub={
+        <Text variant="footnote" color={answered ? 'danger' : 'success'} numberOfLines={1}>
+          {t(label, { name: who.split(' ')[0] })}
+          {reason ? <Text variant="footnote" color="ink2">{` · ${reason}`}</Text> : null}
+        </Text>
+      }
       onPress={() => open(task)}
-      action={answered ? undefined : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />}
+      action={
+        declined && !task.droppedBy ? <Pill label={t('today.review')} onPress={() => review.run(task)} disabled={review.busy} />
+          : answered ? undefined
+          : <Pill label={t('taskRow.confirm')} onPress={() => confirmTask.mutate(task)} disabled={confirmTask.isPending} />
+      }
     />
   );
+}
+
+/**
+ * Review on a declined row (M102): what happens to the task now, in a menu. I'll do it (:assign to the caller), Give it
+ * to someone else (Task detail with the Assigned to picker open), Leave it unassigned (a shared list only: on a list
+ * nobody else sees, unassigned is yours anyway), Delete task (asks first, Undo). Each takes the row out of Requests.
+ */
+function useReviewDeclined() {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const queryClient = useQueryClient();
+  const me = useMe().data;
+  const lists = useTaskLists().data;
+  const reassign = useReassignTask();
+  const remove = useDeleteTask();
+  const toast = (message: string) => useToast.getState().show({ message });
+  const run = async (task: TaskSummary) => {
+    const sharing = lists?.find((c) => c.id === task.taskList?.id)?.sharing;
+    const choices: [ActionChoice, 'mine' | 'other' | 'none' | 'delete'][] = [
+      [{ label: t('today.doItMyself'), icon: 'check' }, 'mine'],
+      [{ label: t('today.giveToSomeoneElse'), icon: 'user-plus' }, 'other'],
+      ...(sharing && sharing !== 'private' ? [[{ label: t('today.leaveUnassigned'), icon: 'user-x' }, 'none'] as [ActionChoice, 'none']] : []),
+      [{ label: t('today.deleteTask'), icon: 'trash-2', destructive: true }, 'delete'],
+    ];
+    const i = await chooseAction({ title: task.title, actions: choices.map(([c]) => c), cancelLabel: t('common.cancel') });
+    const pick = i === null ? null : choices[i][1];
+    if (pick === 'mine' && me) reassign.mutate({ task, to: me.id }, { onSuccess: () => toast(t('today.yoursNow')) });
+    if (pick === 'other') navigation.navigate('TaskDetail', { taskId: task.id, pick: 'assignee' });
+    if (pick === 'none') reassign.mutate({ task, to: null }, { onSuccess: () => toast(t('today.leftUnassigned', { list: task.taskList?.name ?? '' })) });
+    if (pick === 'delete') {
+      const ok = await confirm({ title: t('today.deleteTitle'), message: t('today.deleteMessage'), confirmLabel: t('today.deleteTask'), cancelLabel: t('common.cancel') });
+      if (ok) remove.mutate(task, { onSuccess: () => useToast.getState().show({ message: t('today.deleted'), action: { label: t('common.undo'), onPress: () => restoreTask(queryClient, task.id) } }) });
+    }
+  };
+  return { run, busy: reassign.isPending || remove.isPending };
 }
 
 /** A task on hold whose Until has come, for the caller to resume (D91, M80): why it waits, and Resume. */

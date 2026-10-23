@@ -153,7 +153,17 @@
     "movedToday": "Movida a hoy",
     "declinedBy": "{{name}} la rechazó",
     "droppedBy": "{{name}} la dejó",
-    "completedBy": "{{name}} la completó"
+    "completedBy": "{{name}} la completó",
+    "review": "Revisar",
+    "doItMyself": "La hago yo",
+    "giveToSomeoneElse": "Dársela a otra persona",
+    "leaveUnassigned": "Dejarla sin asignar",
+    "deleteTask": "Eliminar tarea",
+    "deleteTitle": "¿Eliminar esta tarea?",
+    "deleteMessage": "Puedes restaurarla desde Eliminados recientemente durante 30 días.",
+    "deleted": "Tarea eliminada",
+    "yoursNow": "Ahora es tuya",
+    "leftUnassigned": "Sin asignar: cualquiera en {{list}} puede tomarla"
   },
   "taskRow": {
     "complete": "Completar {{title}}",
@@ -700,6 +710,7 @@
     "empty": "Nada todavía",
     "emptyBody": "Cuando compartan listas y equipos contigo, lo que hagan por ti aparece aquí.",
     "respond": "Responder",
+    "review": "Revisar",
     "confirm": "Confirmar",
     "openUnread_one": "Actividad, {{count}} nueva",
     "openUnread_other": "Actividad, {{count}} nuevas"

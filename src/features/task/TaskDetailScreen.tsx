@@ -47,8 +47,8 @@ import { useRepeatText } from './useRepeatText';
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  */
-export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean }>) {
-  const { taskId, commentId, fromPush } = route.params;
+export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee' }>) {
+  const { taskId, commentId, fromPush, pick } = route.params;
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -81,6 +81,14 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     if (task) load(task);
   }, [task, load]);
   useEffect(() => clear, [clear]);
+  // Opened to pick someone (a declined task's Give it to someone else, M102): the Assigned to picker, once the draft is there.
+  const picked = useRef(false);
+  const ready = !!fields;
+  useEffect(() => {
+    if (!pick || !ready || picked.current) return;
+    picked.current = true;
+    open(pick);
+  }, [pick, ready, open]);
 
   // A task that is gone (deleted elsewhere, no longer shared) closes its screen (06-mobile.md, Errors); opened from a push,
   // Activity instead, with a toast (M88).
