@@ -7,7 +7,7 @@ import { useTheme } from '@/shared/ui';
 
 export interface BarItem {
   key: string;
-  icon: 'flag' | 'calendar' | 'reminder' | 'user' | 'tag' | 'file-text';
+  icon: 'flag' | 'calendar' | 'reminder' | 'user' | 'tag' | 'align-left';
   label: string;
   /** What the field holds, read after the label; undefined when unset. */
   value?: string;

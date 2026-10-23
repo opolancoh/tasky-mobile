@@ -42,7 +42,8 @@ const NO_NAMES: string[] = [];
 const INBOX = { isInbox: true, color: '' };
 
 /**
- * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab.
+ * Quick add (06-mobile.md, M14, M15): the full form in a sheet, the same from every tab and from a list's Add a task,
+ * where it starts on that list (M103).
  * The form is a summary (Task list, then a row per set field, each with ✕) with a bottom icon bar (M18)
  * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add closes the sheet at once and the task shows in its lists (M100), saved by POST /tasks.
  */
@@ -69,10 +70,11 @@ function QuickAddForm() {
   const startTitle = useQuickAdd((s) => s.title);
   const startPage = useQuickAdd((s) => s.page);
   const startDue = useQuickAdd((s) => s.dueDate);
-  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle, dueDate: startDue }));
+  const startList = useQuickAdd((s) => s.taskListId);
+  const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle ?? '', dueDate: startDue, taskListId: startList }));
   const [page, setPage] = useState<Page>(startPage ?? 'form');
   const titleInput = useRef<TextInput>(null);
-  const [beforePage, setBeforePage] = useState<Draft>(() => ({ ...EMPTY, title: startTitle, dueDate: startDue }));   // the draft when a page opened: tapping outside restores it
+  const [beforePage, setBeforePage] = useState<Draft>(draft);   // the draft when a page opened: tapping outside restores it
   // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
   const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
   if (!now && me) setNow(nowIn(me.timeZone));
@@ -120,6 +122,7 @@ function QuickAddForm() {
     );
     if (userId) useRecentTags.getState().used(userId, tags);
     hide();
+    useQuickAdd.getState().onAdded?.();
   }
 
   const toggleTag = (name: string) => update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
@@ -162,7 +165,7 @@ function QuickAddForm() {
     { key: 'reminder', icon: 'reminder', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
     ...(canAssign ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
     { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => openPage('tags') },
-    { key: 'notes', icon: 'file-text', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
+    { key: 'notes', icon: 'align-left', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
   ];
 
   return (
@@ -257,7 +260,7 @@ function QuickAddForm() {
             {notesText.length > 0 && (
               <ListRow
                 label={t('quickAdd.fields.notes')}
-                icon={<Feather name="file-text" size={20} color={colors.ink3} />}
+                icon={<Feather name="align-left" size={20} color={colors.ink3} />}
                 detail={notesText}
                 onPress={() => openPage('notes')}
                 onClear={() => update({ notes: '' })}

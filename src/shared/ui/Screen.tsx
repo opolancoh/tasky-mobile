@@ -9,8 +9,6 @@ export interface ScreenProps {
   children: ReactNode;
   /** Scrolls the content; it (and `footer`) ends right above the keyboard, on the UI thread. */
   scroll?: boolean;
-  /** Lifts the content above the keyboard on the UI thread: a list with a field docked at its bottom (M62). Not with `scroll`. */
-  followKeyboard?: boolean;
   /** Safe-area edges to pad. Screens under a header or tab bar leave those edges out. */
   edges?: Edge[];
   contentStyle?: ViewStyle;
@@ -21,7 +19,7 @@ export interface ScreenProps {
 }
 
 /** Every screen's root: background, safe areas, side padding, optional scrolling. */
-export function Screen({ children, scroll = false, followKeyboard = false, edges = ['top', 'bottom'], contentStyle, scrollRef, footer }: ScreenProps) {
+export function Screen({ children, scroll = false, edges = ['top', 'bottom'], contentStyle, scrollRef, footer }: ScreenProps) {
   const { colors, space } = useTheme();
   const padding = { paddingHorizontal: space.xxl, flexGrow: 1 };
 
@@ -34,8 +32,6 @@ export function Screen({ children, scroll = false, followKeyboard = false, edges
           </ScrollView>
           {footer}
         </KeyboardRoom>
-      ) : followKeyboard ? (
-        <KeyboardRoom bottomPadded={edges.includes('bottom')}><View style={[padding, contentStyle]}>{children}</View></KeyboardRoom>
       ) : (
         <View style={[padding, contentStyle]}>{children}</View>
       )}

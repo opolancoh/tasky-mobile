@@ -221,8 +221,6 @@
     "listEmptyBody": "Añade una abajo.",
     "addTask": "Añade una tarea",
     "addTaskTo": "Añadir una tarea a {{name}}",
-    "addTaskSend": "Añadir",
-    "taskAdded": "Añadida: {{title}}",
     "completedToast": "Completada «{{title}}»",
     "listAllDone": "Todo listo",
     "sort": {

@@ -31,8 +31,8 @@ export function NothingOpen({ done }: { done: boolean | undefined }) {
   const showSheet = useShowBrowseSheet();
   const go: Record<Action, () => void> = {
     task: () => showQuickAdd(),
-    reminder: () => showQuickAdd('', 'reminder'),
-    date: () => showQuickAdd('', 'due'),
+    reminder: () => showQuickAdd({ page: 'reminder' }),
+    date: () => showQuickAdd({ page: 'due' }),
     list: () => showSheet({ kind: 'list' }),
     share: () => navigation.navigate('Tabs', { screen: 'Browse' }),
   };

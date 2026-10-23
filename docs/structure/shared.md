@@ -37,7 +37,7 @@ src/shared/
 ├── browseSheet/
 │   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen, e.g. Home's Make a list (M67)
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show(title?, page?, dueDate?) from the tab bar +, on its due date or reminder picker from Home (M67), or due on a day from Calendar (M72)
+│   └── quickAddStore.ts   Quick add open or closed; show({ title, page, dueDate, taskListId, onAdded }) from the tab bar +, on its due date or reminder picker from Home (M67), due on a day from Calendar (M72), or on a list from its Add a task (M103)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
@@ -69,7 +69,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Notice` | A message above a form: error or info |
 | `RuleCheck` | A rule that turns green as you type (password length) |
 | `Logo` | The Azignia mark and name |
-| `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling (`scrollRef` to scroll it, e.g. to an error at the top), which ends right above the keyboard on the UI thread; `followKeyboard` lifts the content above the keyboard on the UI thread, for a list with a field docked at its bottom (M62); `footer` (with `scroll`): docked under the content, above the keyboard (Task detail's comment field, M82) |
+| `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling (`scrollRef` to scroll it, e.g. to an error at the top), which ends right above the keyboard on the UI thread; `footer` (with `scroll`): docked under the content, above the keyboard (Task detail's comment field, M82) |
 | `Sheet` | The large size by default ([M28](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner after 300 ms, M27, M56) |
 | `ListRow` | A settings-style row: icon, label, value or a two-line detail, chevron, check mark or ✕ to clear; a divider below; `busy` while saving what the tap chose (a spinner in the chevron's place, M56) |
 | `confirm` | `await confirm({ title, message, confirmLabel, cancelLabel })`: an action sheet on iOS, an alert on Android. **Every delete asks through it**, and so does discarding edits. `chooseAction({ title, actions, cancelLabel })`: a native menu of actions for one thing (Browse's long press and •••); resolves the index or null |

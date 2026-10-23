@@ -20,7 +20,7 @@ import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from 
 
 import { useBrowseMenus } from './browseMenus';
 import { canInvite } from './browseSections';
-import { AddTaskField } from './components/AddTaskField';
+import { AddTaskButton } from './components/AddTaskButton';
 import { CompletedRow } from './components/CompletedRow';
 import { useFoldedLists } from './foldedListsStore';
 
@@ -35,8 +35,8 @@ type Item =
   | { type: 'skeleton'; key: string; width: number };
 
 /**
- * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. A field docked at the bottom, empty
- * list or full, adds a task by its title (M62); the list and the field ride above the keyboard. The top (M64): the title,
+ * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. Add a task, docked at the bottom, empty
+ * list or full, opens Quick add on this list (M103). The top (M64): the title,
  * then one line, "3 open · Shared with Luis" (only the count on a private list); add people beside ••• for those who
  * invite, and ••• opens the list's menu as a sheet. After the open tasks,
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
@@ -45,7 +45,7 @@ type Item =
  * it (D70, M45); a tap opens People. Tasks on hold (D91, M80) wait in their own section between the open tasks and
  * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
  * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
- * selection bar takes the add field's place, and Completed folds away meanwhile. Scrolled, the bar shows the name over
+ * selection bar takes Add a task's place, and Completed folds away meanwhile. Scrolled, the bar shows the name over
  * "3 open" (M94).
  */
 export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean; backTitle?: string }>) {
@@ -222,7 +222,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
   };
 
   return (
-    <Screen edges={['bottom']} contentStyle={styles.fill} followKeyboard>
+    <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
         ref={list}
         data={items}
@@ -234,11 +234,9 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
         onEndReached={() => showDone && done.hasNextPage && !done.isFetchingNextPage && done.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"   // a row's circle still completes while the keyboard is up
-        keyboardDismissMode="interactive"   // dragging the list closes the keyboard; the typed title stays
         contentContainerStyle={{ paddingBottom: space.lg }}
       />
-      {selecting ? <SelectionBar /> : <AddTaskField taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />}
+      {selecting ? <SelectionBar /> : <AddTaskButton taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />}
     </Screen>
   );
 }

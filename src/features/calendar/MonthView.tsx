@@ -213,7 +213,7 @@ export function MonthView({ today }: { today: LocalDate }) {
             weekday={labels.weekday(item.date)}
             under={labels.under(item.date)}
             isToday={item.date === today}
-            onAdd={() => quickAdd('', undefined, item.date)}
+            onAdd={() => quickAdd({ dueDate: item.date })}
             addLabel={t('calendar.addOn', { date: labels.day(item.date) })}
           />
         );
