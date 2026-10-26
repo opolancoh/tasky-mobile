@@ -122,7 +122,7 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={task.title}
-      sub={task.dueDate ? t('today.assignedDue', { date: labels.day(task.dueDate) }) : t('today.assigned')}
+      sub={task.dueDate ? t('assign.gaveYouDue', { name: from, date: labels.day(task.dueDate) }) : t('assign.gaveYou', { name: from })}
       onPress={() => open(task)}
       label={by ? `${task.title}, ${by}` : task.title}
       action={

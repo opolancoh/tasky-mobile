@@ -32,7 +32,7 @@ export function AnswerBar({ from, due, busy, onDecline, onAccept }: { from?: Use
       <View style={[styles.line, { gap: space.sm }]}>
         <Avatar name={name} seed={from?.id ?? name} size={22} />
         <Text variant="footnote" color="ink2" numberOfLines={1} style={styles.fill}>
-          {due ? t('taskDetail.gaveYouDue', { name, date: due }) : t('taskDetail.gaveYou', { name })}
+          {due ? t('assign.gaveYouDue', { name, date: due }) : t('assign.gaveYou', { name })}
         </Text>
       </View>
       <View style={[styles.line, { gap: space.sm }]}>

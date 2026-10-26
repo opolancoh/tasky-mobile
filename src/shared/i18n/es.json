@@ -127,8 +127,6 @@
     "invitedBy": "{{name}} te invitó · {{kind}}",
     "kindList": "una lista compartida",
     "kindTeam": "un equipo",
-    "assigned": "Asignada a ti",
-    "assignedDue": "Asignada a ti · {{date}}",
     "join": "Unirme",
     "decline": "Rechazar",
     "accept": "Aceptar",
@@ -582,8 +580,6 @@
     "keepEditing": "Seguir editando",
     "deleteTitle": "¿Eliminar esta tarea?",
     "deleteMessage": "Puedes restaurarla desde Eliminados recientemente durante 30 días.",
-    "gaveYou": "{{name}} te la asignó",
-    "gaveYouDue": "{{name}} te la asignó · vence {{date}}",
     "accept": "Aceptar",
     "from": "De",
     "giveBack": "Devolverla",
@@ -822,7 +818,9 @@
     "onlyYou": "Solo tú ves esta lista. Asignártela la pone en Asignadas a mí.",
     "outside": "Solo esta tarea",
     "outsideNote": "Verá solo esta tarea, no la lista ni a sus personas. ¿No tiene cuenta en Azignia? Recibe un correo y la encuentra al registrarse.",
-    "invited": "Invitada"
+    "invited": "Invitada",
+    "gaveYou": "{{name}} te la asignó",
+    "gaveYouDue": "{{name}} te la asignó · vence {{date}}"
   },
   "networkLog": {
     "title": "Registro de red",

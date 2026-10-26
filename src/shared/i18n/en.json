@@ -127,8 +127,6 @@
     "invitedBy": "{{name}} invited you · {{kind}}",
     "kindList": "a shared list",
     "kindTeam": "a team",
-    "assigned": "Assigned to you",
-    "assignedDue": "Assigned to you · {{date}}",
     "join": "Join",
     "decline": "Decline",
     "accept": "Accept",
@@ -582,8 +580,6 @@
     "keepEditing": "Keep editing",
     "deleteTitle": "Delete this task?",
     "deleteMessage": "You can restore it from Recently Deleted for 30 days.",
-    "gaveYou": "{{name}} gave you this",
-    "gaveYouDue": "{{name}} gave you this · due {{date}}",
     "accept": "Accept",
     "from": "From",
     "giveBack": "Give it back",
@@ -822,7 +818,9 @@
     "onlyYou": "Only you see this list. Assigning it to yourself puts it in Assigned to me.",
     "outside": "Only this task",
     "outsideNote": "They see this task only, not the list or its people. No Azignia account? They get an email and find it after signing up.",
-    "invited": "Invited"
+    "invited": "Invited",
+    "gaveYou": "{{name}} gave you this",
+    "gaveYouDue": "{{name}} gave you this · due {{date}}"
   },
   "networkLog": {
     "title": "Network log",
