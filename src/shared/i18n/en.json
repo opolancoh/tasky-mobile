@@ -147,7 +147,9 @@
     "deleteMessage": "You can restore it from Recently Deleted for 30 days.",
     "deleted": "Task deleted",
     "yoursNow": "It’s yours now",
-    "leftUnassigned": "Unassigned: anyone in {{list}} can take it"
+    "leftUnassigned": "Unassigned: anyone in {{list}} can take it",
+    "assignedBy": "Assigned by {{name}}",
+    "assignedByDue": "Assigned by {{name}} · {{date}}"
   },
   "taskRow": {
     "complete": "Complete {{title}}",

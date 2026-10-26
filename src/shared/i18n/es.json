@@ -147,7 +147,9 @@
     "deleteMessage": "Puedes restaurarla desde Eliminados recientemente durante 30 días.",
     "deleted": "Tarea eliminada",
     "yoursNow": "Ahora es tuya",
-    "leftUnassigned": "Sin asignar: cualquiera en {{list}} puede tomarla"
+    "leftUnassigned": "Sin asignar: cualquiera en {{list}} puede tomarla",
+    "assignedBy": "Te asignó {{name}}",
+    "assignedByDue": "Te asignó {{name}} · {{date}}"
   },
   "taskRow": {
     "complete": "Completar {{title}}",

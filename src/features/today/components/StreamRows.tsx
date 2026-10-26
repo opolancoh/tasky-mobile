@@ -18,9 +18,9 @@ import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoic
 
 /**
  * Home's rows (M32, M65), shared by Home and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
- * task), the title on one line, one line saying when or why, and one action. Tapping the row opens what it is about.
+ * task), the title on one line (two on requests), one line saying when or why, and one action. Tapping the row opens what it is about.
  */
-function StreamRow({ lead, title, sub, action, onPress, label, taskId }: { lead: ReactNode; title: string; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
+function StreamRow({ lead, title, titleLines = 1, sub, action, onPress, label, taskId }: { lead: ReactNode; title: string; titleLines?: number; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
   const { colors, space } = useTheme();
   const saving = useTaskSaving(taskId);
   return (
@@ -29,7 +29,7 @@ function StreamRow({ lead, title, sub, action, onPress, label, taskId }: { lead:
         <View style={[styles.row, { gap: space.md, paddingVertical: space.sm + 2, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
           {lead}
           <View style={styles.main}>
-            <Text variant="bodyMedium" numberOfLines={1}>
+            <Text variant="bodyMedium" numberOfLines={titleLines}>
               {title}
             </Text>
             {sub ? (
@@ -70,12 +70,25 @@ const Flag = () => {
   return <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
 };
 
+/** Decline as a round ✕ before a request's answer (M105): a task opens the Decline sheet, an invitation asks first. */
+function DeclineButton({ onPress, disabled }: { onPress(): void; disabled?: boolean }) {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  return (
+    <Pressable onPress={onPress} disabled={disabled} hitSlop={6} accessibilityRole="button" accessibilityLabel={t('today.decline')} style={[styles.decline, { backgroundColor: colors.surface2 }]}>
+      <Feather name="x" size={16} color={colors.ink2} />
+    </Pressable>
+  );
+}
+
+const firstName = (name: string) => name.split(' ')[0];
+
 function useOpenTask() {
   const navigation = useNavigation();
   return (task: { id: string }) => navigation.navigate('TaskDetail', { taskId: task.id });
 }
 
-/** An invitation (M34): Decline and Join here; the row opens Invitation. */
+/** An invitation (M34): ✕ (asks first) and Join here; the row opens Invitation. */
 export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
   const { t } = useTranslation();
   const navigation = useNavigation();
@@ -92,11 +105,12 @@ export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={invitation.name}
-      sub={invitation.invitedBy?.displayName ? t('today.invitedBy', { name: invitation.invitedBy.displayName, kind }) : kind}
+      titleLines={2}
+      sub={invitation.invitedBy?.displayName ? t('today.invitedBy', { name: firstName(invitation.invitedBy.displayName), kind }) : kind}
       onPress={() => navigation.navigate('Invitation', { invitationId: invitation.id })}
       action={
         <View style={styles.actions}>
-          <Pill label={t('today.decline')} tone="quiet" onPress={() => respond(false)} disabled={answer.isPending} />
+          <DeclineButton onPress={() => respond(false)} disabled={answer.isPending} />
           <Pill label={t('today.join')} onPress={() => respond(true)} disabled={answer.isPending} />
         </View>
       }
@@ -104,7 +118,7 @@ export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
   );
 }
 
-/** An assignment waiting for the caller's answer: Decline (with an optional reason) and Accept, here as in Task detail (M101). */
+/** An assignment waiting for the caller's answer: ✕ (the Decline sheet, an optional reason) and Accept, as in Task detail (M101). */
 export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
   const { t } = useTranslation();
   const labels = useDateLabels(today);
@@ -122,12 +136,13 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={task.title}
-      sub={task.dueDate ? t('assign.gaveYouDue', { name: from, date: labels.day(task.dueDate) }) : t('assign.gaveYou', { name: from })}
+      titleLines={2}
+      sub={task.dueDate ? t('today.assignedByDue', { name: firstName(from), date: labels.day(task.dueDate) }) : t('today.assignedBy', { name: firstName(from) })}
       onPress={() => open(task)}
       label={by ? `${task.title}, ${by}` : task.title}
       action={
         <View style={styles.actions}>
-          <Pill label={t('assign.decline')} tone="quiet" onPress={decline} disabled={answer.isPending} />
+          <DeclineButton onPress={decline} disabled={answer.isPending} />
           <Pill label={t('today.accept')} onPress={() => answer.mutate({ task, accept: true }, { onSuccess: () => useToast.getState().show({ message: t('today.accepted') }) })} disabled={answer.isPending} />
         </View>
       }
@@ -154,6 +169,7 @@ export function FollowUpRow({ task }: { task: TaskSummary }) {
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={task.title}
+      titleLines={2}
       sub={
         <Text variant="footnote" color={answered ? 'danger' : 'success'} numberOfLines={1}>
           {t(label, { name: who.split(' ')[0] })}
@@ -215,6 +231,7 @@ export function HoldRow({ task }: { task: TaskSummary }) {
     <StreamRow
       lead={<Badge icon="users" tone="accent" />}
       title={task.title}
+      titleLines={2}
       sub={<Text variant="footnote" style={{ color: colors.warn }} numberOfLines={1}>{task.holdReason ? t('hold.untilTodayWhy', { reason: task.holdReason }) : t('hold.untilToday')}</Text>}
       onPress={() => open(task)}
       action={<Pill label={t('hold.resume')} onPress={() => holds.resumeTask(task)} disabled={holds.busy} />}
@@ -260,5 +277,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
   main: { flex: 1, minWidth: 0, gap: 2 },
   badge: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  actions: { flexDirection: 'row', gap: 6 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  decline: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
 });
