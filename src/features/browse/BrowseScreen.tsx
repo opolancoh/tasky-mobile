@@ -28,7 +28,6 @@ type Item =
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
-  | { type: 'skeletonSection'; key: string }
   | { type: 'skeleton'; key: string; width: number };
 
 /** Over this many lists, teams and tags, a filter field shows under the title (M38). */
@@ -84,11 +83,11 @@ export function BrowseScreen() {
   const loading = taskLists.isPending || teams.isPending;
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
-  // Loading (M27, M70): every row waits as a skeleton shaped like it (tile, name, count): two sections, each a heading and rows.
+  // Loading (M27, M70): the sections' headings where they will be, each row waiting as a skeleton shaped like it (tile, name, count).
   if (loading) {
-    [[58, 72, 46, 64, 52, 68], [55, 40, 62]].forEach((widths, s) => {
-      items.push({ type: 'skeletonSection', key: `ks${s}` });
-      widths.forEach((width) => items.push({ type: 'skeleton', key: `k${s}-${width}`, width }));
+    ([['teams', 'browse.teams', [44, 56]], ['mine', 'browse.myLists', [58, 72, 46, 64]], ['shared', 'browse.sharedWithMe', [55, 40]]] as const).forEach(([key, title, widths]) => {
+      items.push({ type: 'section', key: `s-${key}`, title: t(title) });
+      widths.forEach((width) => items.push({ type: 'skeleton', key: `k-${key}-${width}`, width }));
     });
   } else if (query) {
     // Filtering: flat results, by kind.
@@ -163,7 +162,12 @@ export function BrowseScreen() {
             </View>
             <Text variant="largeTitle" accessibilityRole="header">{t('browse.title')}</Text>
             {editing ? <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{t('browse.editHint')}</Text>
-              : summary && <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{summary}</Text>}
+              : summary ? <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{summary}</Text>
+              : (
+                <View accessible accessibilityLabel={t('browse.loading')} style={{ marginTop: space.xs + 4, marginBottom: 4 }}>
+                  <Skeleton width={150} height={12} />
+                </View>
+              )}
             {many && !editing && (
               <View style={{ marginTop: space.lg }}>
                 <SearchField value={filter} onChangeText={setFilter} placeholder={t('browse.filter')} clearLabel={t('browse.clearFilter')} />
@@ -261,12 +265,6 @@ export function BrowseScreen() {
         );
       case 'hint':
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
-      case 'skeletonSection':
-        return (
-          <View accessible={item.key === 'ks0'} accessibilityLabel={t('browse.loading')} style={{ marginTop: space.xxl + 2, marginBottom: space.xs + 2 }}>
-            <Skeleton width={92} height={12} />
-          </View>
-        );
       case 'skeleton':
         return <BrowseRowSkeleton width={item.width} />;
     }

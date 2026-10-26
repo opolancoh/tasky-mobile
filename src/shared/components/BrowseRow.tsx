@@ -69,14 +69,15 @@ export function BrowseRow({ label, icon, tint, count, zero, sub, aside, onPress,
   );
 }
 
-/** A Spaces row being loaded (M27, M70): the tile, the name (`width`, in percent) and a short count, as tall as a row. */
-export function BrowseRowSkeleton({ width }: { width: number }) {
+/** A row being loaded (M27, M70): the tile, the name (`width`, in percent), the line under it on Home's rows (`sub`), a short count. */
+export function BrowseRowSkeleton({ width, sub }: { width: number; sub?: number }) {
   const { space } = useTheme();
   return (
     <View style={[styles.row, { gap: space.md }]}>
       <Skeleton width={30} height={30} radius={radius.sm + 1} />
-      <View style={styles.label}>
+      <View style={[styles.label, { gap: 6 }]}>
         <Skeleton width={`${width}%`} height={14} />
+        {sub !== undefined && <Skeleton width={`${sub}%`} height={10} />}
       </View>
       <Skeleton width={18} height={12} />
     </View>

@@ -35,8 +35,7 @@ type Item =
   | { type: 'section'; key: string; title: string; count?: number; seeAll?: boolean }
   | { type: 'request'; key: string; request: Request }
   | { type: 'row'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: Tone; count?: number; zero?: boolean; sub?: ReactNode; onPress(): void }
-  | { type: 'skeletonSection'; key: string }
-  | { type: 'skeletonRow'; key: string; width: number };
+  | { type: 'skeletonRow'; key: string; width: number; sub: number };
 
 /**
  * Home, the first tab (06-mobile.md, M105): the date and what's next; two cards (Today, Overdue); Requests (3 rows and See
@@ -65,11 +64,26 @@ export function TodayScreen() {
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
-  // First load (M27): skeleton cards, then sections and rows where they will be.
+  // More (moved from Spaces, M105): no counts; each loads only when opened, so it shows while Home loads too.
+  const more: Item[] = [
+    { type: 'section', key: 's-more', title: t('browse.more') },
+    { type: 'row', key: 'all', label: t('browse.allTasks'), icon: 'layers', tone: 'quiet', onPress: () => navigation.navigate('BrowseList', { kind: 'all' }) },
+    { type: 'row', key: 'done', label: t('browse.completed'), icon: 'check-circle', tone: 'quiet', onPress: () => navigation.navigate('BrowseList', { kind: 'completed' }) },
+    { type: 'row', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', onPress: () => navigation.navigate('Archived') },
+    { type: 'row', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') },
+  ];
+  // First load (M27; later launches show the last Home kept on the device): the screen's shape with its headings, rows
+  // waiting where their numbers go; Requests only once known.
   if (!data && home.isPending) {
-    items.push({ type: 'cardsSkeleton', key: 'kc' });
-    items.push({ type: 'skeletonSection', key: 'ks1' }, ...[60, 48, 66].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr1-${i}`, width })));
-    items.push({ type: 'skeletonSection', key: 'ks2' }, ...[64, 58].map((width, i) => ({ type: 'skeletonRow' as const, key: `kr2-${i}`, width })));
+    const rows = (key: string, widths: [number, number][]) => widths.map(([width, sub], i) => ({ type: 'skeletonRow' as const, key: `${key}-${i}`, width, sub }));
+    items.push(
+      { type: 'cardsSkeleton', key: 'kc' },
+      { type: 'section', key: 's-mine', title: t('home.myStuff') },
+      ...rows('km', [[34, 44], [30, 36], [36, 28]]),
+      { type: 'section', key: 's-assignments', title: t('home.assignments') },
+      ...rows('ka', [[48, 20], [46, 20]]),
+      ...more,
+    );
   }
 
   if (data && today) {
@@ -97,12 +111,7 @@ export function TodayScreen() {
       { type: 'section', key: 's-assignments', title: t('home.assignments') },
       { type: 'row', key: 'byMe', label: t('browse.assignedBy'), icon: 'send', tone: 'accent', count: c.assignedByMe, zero: true, sub: late(c.assignedByMeLate), onPress: () => navigation.navigate('BrowseList', { kind: 'assignedBy' }) },
       { type: 'row', key: 'toMe', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: c.assignedToMe, zero: true, sub: late(c.assignedToMeLate), onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) },
-      // More (moved from Spaces, M105): no counts; each loads only when opened.
-      { type: 'section', key: 's-more', title: t('browse.more') },
-      { type: 'row', key: 'all', label: t('browse.allTasks'), icon: 'layers', tone: 'quiet', onPress: () => navigation.navigate('BrowseList', { kind: 'all' }) },
-      { type: 'row', key: 'done', label: t('browse.completed'), icon: 'check-circle', tone: 'quiet', onPress: () => navigation.navigate('BrowseList', { kind: 'completed' }) },
-      { type: 'row', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', onPress: () => navigation.navigate('Archived') },
-      { type: 'row', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') },
+      ...more,
     );
   }
 
@@ -179,10 +188,8 @@ export function TodayScreen() {
         const [bg, fg] = tones[item.tone];
         return <BrowseRow label={item.label} icon={<Feather name={item.icon} size={17} color={fg} />} tint={bg} count={item.count} zero={item.zero} sub={item.sub} onPress={item.onPress} />;
       }
-      case 'skeletonSection':
-        return <Skeleton width={92} height={12} style={{ marginTop: space.xxl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':
-        return <BrowseRowSkeleton width={item.width} />;
+        return <BrowseRowSkeleton width={item.width} sub={item.sub} />;
     }
   };
 
