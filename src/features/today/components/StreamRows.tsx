@@ -241,7 +241,7 @@ export function HoldRow({ task }: { task: TaskSummary }) {
   );
 }
 
-/** An overdue task of the caller's: when it was due (red) and Today, which moves it to today. */
+/** An overdue task (M105): when it was due (red), then its list; at the right its flag and face, and Today, which moves it to today. */
 export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
   const { t } = useTranslation();
   const labels = useDateLabels(today);
@@ -251,25 +251,32 @@ export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDat
     <StreamRow
       lead={<Check task={task} />} taskId={task.id}
       title={task.title}
-      sub={<Text variant="footnote" color="danger">{labels.day(task.dueDate!)}</Text>}
+      meta={
+        <>
+          <Text variant="footnote" color="danger">{labels.day(task.dueDate!)}</Text>
+          <Text variant="footnote" color="ink3">·</Text>
+          <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
+        </>
+      }
       onPress={() => open(task)}
-      action={<Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />}
+      action={
+        <View style={styles.actions}>
+          <Marks task={task} />
+          <Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />
+        </View>
+      }
     />
   );
 }
 
-/**
- * A task in Today (M105): its reminder time today, then its list; at the right a red flag when important (M44) and the
- * face of whoever else has it.
- */
+/** A task in Today (M105): its reminder time today, then its list; at the right its flag and face. */
 export function TaskStreamRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
-  const { t } = useTranslation();
   const labels = useDateLabels(today);
   const { colors } = useTheme();
   const open = useOpenTask();
-  const meId = useSessionStore((s) => s.userId);
-  const other = task.assignee && task.assignee.id !== meId ? task.assignee : null;
   const time = task.reminder?.date === today ? task.reminder.time : null;
+  const meId = useSessionStore((s) => s.userId);
+  const marked = task.isImportant || (!!task.assignee && task.assignee.id !== meId);
   return (
     <StreamRow
       lead={<Check task={task} />} taskId={task.id}
@@ -282,13 +289,21 @@ export function TaskStreamRow({ task, today }: { task: TaskSummary; today: Local
         </>
       }
       onPress={() => open(task)}
-      action={task.isImportant || other ? (
-        <View style={styles.actions}>
-          {task.isImportant && <Flag />}
-          {other && <View accessible accessibilityLabel={t('taskRow.assignedTo', { name: other.displayName })}><Avatar name={other.displayName} seed={other.id} size={24} /></View>}
-        </View>
-      ) : undefined}
+      action={marked ? <View style={styles.actions}><Marks task={task} /></View> : undefined}
     />
+  );
+}
+
+/** A red flag when important (M44), and the face of whoever else has the task. */
+function Marks({ task }: { task: TaskSummary }) {
+  const { t } = useTranslation();
+  const meId = useSessionStore((s) => s.userId);
+  const other = task.assignee && task.assignee.id !== meId ? task.assignee : null;
+  return (
+    <>
+      {task.isImportant && <Flag />}
+      {other && <View accessible accessibilityLabel={t('taskRow.assignedTo', { name: other.displayName })}><Avatar name={other.displayName} seed={other.id} size={24} /></View>}
+    </>
   );
 }
 
