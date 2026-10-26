@@ -29,7 +29,7 @@ import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
 import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
-import { TaskDetailSkeleton } from './components/TaskDetailSkeleton';
+import { CommentFieldSkeleton, TaskDetailSkeleton } from './components/TaskDetailSkeleton';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
 import { useTaskSheet } from './taskSheetStore';
@@ -152,9 +152,12 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
   if (!task || !me || !today || !fields) {
+    // Comments only where the screen will show them: a list others see (known from cached lists), or not known from a row.
+    const previewList = taskLists?.find((c) => c.id === preview?.taskList?.id);
+    const skeletonComments = !query.error && (!preview?.taskList || (!!previewList && previewList.sharing !== 'private'));
     return (
-      <Screen scroll edges={['bottom']}>
-        {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton preview={preview} today={today} />}
+      <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={skeletonComments ? <CommentFieldSkeleton /> : undefined}>
+        {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton comments={skeletonComments} />}
       </Screen>
     );
   }
