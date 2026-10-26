@@ -88,10 +88,11 @@ export function PushWatcher() {
       void readNotificationPermission();   // maybe changed in Settings
       void registerPush().catch(() => undefined);
     });
-    const token = Notifications.addPushTokenListener(() => void registerPush().catch(() => undefined));
+    // Throws in Expo Go on Android (no push there).
+    const token = pushSupported ? Notifications.addPushTokenListener(() => void registerPush().catch(() => undefined)) : null;
     return () => {
       app.remove();
-      token.remove();
+      token?.remove();
     };
   }, []);
 

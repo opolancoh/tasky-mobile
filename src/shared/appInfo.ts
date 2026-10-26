@@ -1,8 +1,10 @@
 import * as Application from 'expo-application';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
+import { isRunningInExpoGo } from 'expo';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-const expoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+// Constants.executionEnvironment no longer reports Expo Go on Android (SDK 58).
+const expoGo = isRunningInExpoGo();
 
 /**
  * This app's release (M46): the version from app.json (sent in X-Client) and, in a store build, the build number EAS
