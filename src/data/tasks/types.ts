@@ -315,7 +315,7 @@ export interface HomeCounts {
   /** Open tasks the caller gave someone else, pending or accepted (declined ones are requests). */
   assignedByMe: number;
   assignedByMeLate: number;
-  /** Open tasks someone else gave the caller that they accepted. */
+  /** Open tasks assigned to the caller and accepted, self-assigned included (pending ones are requests). */
   assignedToMe: number;
   assignedToMeLate: number;
   /** Every open task the caller can see; 0 with no requests is a first day. */

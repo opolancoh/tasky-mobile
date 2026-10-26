@@ -120,7 +120,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const filter: TaskFilter = {
     all: { sort: 'due' as const, ...shown },
     important: { important: true, mine: true, sort },   // the user's own, as on Home (D61)
-    assigned: { assignee: 'me' },
+    assigned: { assignee: 'me', assignment: 'accepted' as const },   // pending ones are Requests (M105)
     assignedBy: { assignedBy: 'me' as const },
     completed: { status: 'completed' as const },
     tag: { tag: id },

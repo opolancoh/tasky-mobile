@@ -77,9 +77,9 @@ export function HomeCardsSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', justifyContent: 'space-between' },
+  grid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'stretch' },
   cell: { width: '48.5%' },
-  card: { borderRadius: radius.xl - 4, minHeight: 96, gap: 1 },
+  card: { flex: 1, borderRadius: radius.xl - 4, minHeight: 96, gap: 1 },
   top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: 34 },
   count: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34, letterSpacing: -0.5 },
   icon: { marginTop: 4 },
