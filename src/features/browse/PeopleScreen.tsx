@@ -15,6 +15,7 @@ import { PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, ListRow, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite, canLeave } from './browseSections';
 import { MemberRow } from './components/MemberRow';
@@ -57,6 +58,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   // Sharing a private list that has tasks given outside it (D88, M71): the first invitation asks about those people.
   const privateList = !!taskList && taskList.sharing === 'private' && invites;
   const listTasks = useTasks({ taskListId: of.id, sort: 'taskList' }, privateList);
+  const refreshControl = usePullRefresh(members, open, listTasks);
   const outsiders = privateList && !open.data?.length
     ? [...new Map((listTasks.data?.items ?? []).filter((x) => x.assignee && x.assignee.id !== me?.id).map((x) => [x.assignee!.id, x.assignee!])).values()]
     : [];
@@ -139,6 +141,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

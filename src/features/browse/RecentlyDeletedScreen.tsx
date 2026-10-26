@@ -10,6 +10,7 @@ import type { DeletedItem } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 type Item = { type: 'header'; key: string } | { type: 'item'; key: string; item: DeletedItem } | { type: 'footer'; key: string };
 
@@ -24,6 +25,7 @@ export function RecentlyDeletedScreen() {
   const { colors, space } = useTheme();
   const me = useMe().data;
   const deleted = useRecentlyDeleted();
+  const refreshControl = usePullRefresh(deleted);
   const restore = useRestoreItem();
   const list = deleted.data?.items ?? [];
   const items: Item[] = [{ type: 'header', key: 'header' }, ...list.map((item) => ({ type: 'item' as const, key: `${item.kind}-${item.id}`, item })), { type: 'footer', key: 'footer' }];
@@ -64,7 +66,7 @@ export function RecentlyDeletedScreen() {
 
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
-      <FlashList data={items} renderItem={renderItem} keyExtractor={(item) => item.key} getItemType={(item) => item.type} showsVerticalScrollIndicator={false} />
+      <FlashList refreshControl={refreshControl} data={items} renderItem={renderItem} keyExtractor={(item) => item.key} getItemType={(item) => item.type} showsVerticalScrollIndicator={false} />
     </Screen>
   );
 }

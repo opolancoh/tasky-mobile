@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { monthOf, weekStart } from '@/core/dates/calendar';
 import type { LocalDate } from '@/core/types';
@@ -12,6 +12,7 @@ import type { TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
 import { Button, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { CalendarHeader } from './components/CalendarHeader';
 import { DayHeading } from './components/DayHeading';
@@ -48,7 +49,6 @@ export function DaysView({ today }: { today: LocalDate }) {
   const complete = useCompleteTask();
   const [overdueOpen, setOverdueOpen] = useState(false);
   const overdue = useOverdue(overdueOpen);
-  const [refreshing, setRefreshing] = useState(false);
   const pages = useTaskPages({ dueFrom: today, sort: 'due', limit: PAGE });
   const tasks = pages.data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -84,11 +84,7 @@ export function DaysView({ today }: { today: LocalDate }) {
   }
   items.push({ type: 'footer', key: 'footer' });
 
-  const refresh = async () => {
-    setRefreshing(true);
-    await Promise.all([pages.refetch(), overdue.refetch()]);
-    setRefreshing(false);
-  };
+  const refreshControl = usePullRefresh(pages, overdue);
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
 
   const renderItem = ({ item }: { item: Item }) => {
@@ -143,7 +139,7 @@ export function DaysView({ today }: { today: LocalDate }) {
       onEndReached={() => pages.hasNextPage && !pages.isFetchingNextPage && pages.fetchNextPage()}
       onEndReachedThreshold={0.5}
       showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ink3} />}
+      refreshControl={refreshControl}
     />
   );
 }

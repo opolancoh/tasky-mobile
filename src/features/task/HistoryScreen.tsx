@@ -7,6 +7,7 @@ import type { Id } from '@/core/types';
 import { useHistory } from '@/data/tasks/queries';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { HistoryRow } from './components/HistoryRow';
 
@@ -19,11 +20,13 @@ export function HistoryScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const history = useHistory(taskId, true);
+  const refreshControl = usePullRefresh(history);
   const items = history.data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         keyExtractor={(h) => h.id}
         renderItem={({ item }) => <HistoryRow entry={item} />}

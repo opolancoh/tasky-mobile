@@ -1,7 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { useMarkRead } from '@/data/collaboration/mutations';
 import { useNotifications } from '@/data/collaboration/queries';
@@ -9,6 +8,7 @@ import type { Notification } from '@/data/collaboration/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { UpdateRow } from '@/shared/components';
 import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 const PAGE = 20;
 
@@ -27,7 +27,6 @@ export function ActivityScreen() {
   const { colors, space } = useTheme();
   const list = useNotifications(PAGE);
   const markRead = useMarkRead();
-  const [refreshing, setRefreshing] = useState(false);
   const all = list.data?.pages.flatMap((p) => p.items) ?? [];
   const fresh = all.filter((n) => !n.readAt), earlier = all.filter((n) => n.readAt);
 
@@ -42,11 +41,7 @@ export function ActivityScreen() {
   }
   items.push({ type: 'footer', key: 'footer' });
 
-  const refresh = async () => {
-    setRefreshing(true);
-    await list.refetch();
-    setRefreshing(false);
-  };
+  const refreshControl = usePullRefresh(list);
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -97,7 +92,7 @@ export function ActivityScreen() {
         onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && list.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ink3} />}
+        refreshControl={refreshControl}
       />
     </Screen>
   );

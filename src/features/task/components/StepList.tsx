@@ -19,23 +19,43 @@ const setSteps = (change: (steps: DraftStep[]) => DraftStep[]) => {
 };
 
 /**
- * Task detail's steps, edited in the draft (M26), right under the title (M98): one step per line (tick, rename in place,
- * swipe left to delete; screen readers get a Delete action), then "+ Add a step" in the accent. Each row reads only its own step,
- * so typing redraws one row. Steps are capped at 100, so a plain list in the screen's scroll view is enough
- * (docs/performance.md, rule 3).
+ * Task detail's steps, edited in the draft (M26), after the fields (M106): once there is one, "Steps" with "2 of 5" and a
+ * progress line; then each step, open ones first (tick, rename in place, swipe left to delete; screen readers get a Delete
+ * action), then "+ Add a step". Each row reads only its own step, so typing redraws one row. Steps are capped at 100, so a
+ * plain list in the screen's scroll view is enough (docs/performance.md, rule 3).
  */
 export function StepList({ canAdd }: { canAdd: boolean }) {
-  const { t } = useTranslation();
   const { space } = useTheme();
   // Open steps first, done ones after, each in their order; the saved order doesn't change.
   const keys = useTaskDraft(useShallow((s) => [...(s.draft?.steps ?? [])].sort((a, b) => Number(a.isDone) - Number(b.isDone)).map((x) => x.key)));
+  const adds = canAdd && keys.length < taskLimits.stepsMax;
+  if (!keys.length && !adds) return null;
 
   return (
-    <View style={{ marginTop: space.sm, marginLeft: 4 }} accessibilityLabel={t('taskDetail.steps')}>
+    <View style={{ marginTop: space.xxl }}>
+      {keys.length > 0 && <StepsHeading />}
       {keys.map((key) => (
         <StepRow key={key} stepKey={key} />
       ))}
-      {canAdd && keys.length < taskLimits.stepsMax ? <AddStep /> : keys.length > 0 && <View style={styles.row}><StepProgress /></View>}
+      {adds && <AddStep />}
+    </View>
+  );
+}
+
+/** "Steps" and "2 of 5", then a progress line. */
+function StepsHeading() {
+  const { t } = useTranslation();
+  const { colors, radius, space } = useTheme();
+  const [done, total] = useTaskDraft(useShallow((s) => [s.draft?.steps.filter((x) => x.isDone).length ?? 0, s.draft?.steps.length ?? 0]));
+  return (
+    <View style={{ marginBottom: space.xs, gap: space.sm }}>
+      <View style={styles.head}>
+        <Text variant="label" color="ink2" accessibilityRole="header">{t('taskDetail.steps')}</Text>
+        <Text variant="label" color="ink3">{t('taskDetail.stepsDone', { done, total })}</Text>
+      </View>
+      <View style={[styles.track, { backgroundColor: colors.surface2, borderRadius: radius.pill }]}>
+        <View style={[styles.progress, { width: `${(done / total) * 100}%`, backgroundColor: colors.accent, borderRadius: radius.pill }]} />
+      </View>
     </View>
   );
 }
@@ -111,14 +131,6 @@ function StepRow({ stepKey }: { stepKey: string }) {
   );
 }
 
-/** "2 of 4" after the steps: how far along the task is. */
-function StepProgress() {
-  const { t } = useTranslation();
-  const [done, total] = useTaskDraft(useShallow((s) => [s.draft?.steps.filter((x) => x.isDone).length ?? 0, s.draft?.steps.length ?? 0]));
-  if (!total) return null;
-  return <Text variant="footnote" color="ink3">{t('taskDetail.stepsDone', { done, total })}</Text>;
-}
-
 function AddStep() {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
@@ -141,18 +153,20 @@ function AddStep() {
         submitBehavior="submit"
         returnKeyType="done"
         placeholder={t('taskDetail.addStep')}
-        placeholderTextColor={colors.accent}
+        placeholderTextColor={colors.ink3}
         maxLength={taskLimits.stepTitleMax}
         selectionColor={colors.accent}
         accessibilityLabel={t('taskDetail.addStep')}
         style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
       />
-      {!title && <StepProgress />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  track: { height: 4, overflow: 'hidden' },
+  progress: { height: 4 },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
   check: { width: 19, height: 19, borderRadius: 10, borderWidth: 1.6, alignItems: 'center', justifyContent: 'center' },
   /** No lineHeight on a TextInput (it clips descenders on iOS). */

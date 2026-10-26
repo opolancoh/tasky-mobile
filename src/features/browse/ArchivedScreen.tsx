@@ -7,6 +7,7 @@ import { useArchivedTaskLists } from '@/data/tasks/queries';
 import type { TaskList } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canManage } from './browseSections';
 
@@ -17,6 +18,7 @@ export function ArchivedScreen() {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const archived = useArchivedTaskLists();
+  const refreshControl = usePullRefresh(archived);
   const unarchive = useArchiveTaskList();
   const lists = archived.data ?? [];
   const items: Item[] = [{ type: 'header', key: 'header' }, ...lists.map((taskList) => ({ type: 'list' as const, key: taskList.id, taskList })), { type: 'footer', key: 'footer' }];
@@ -60,7 +62,7 @@ export function ArchivedScreen() {
 
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
-      <FlashList data={items} renderItem={renderItem} keyExtractor={(item) => item.key} getItemType={(item) => item.type} showsVerticalScrollIndicator={false} />
+      <FlashList refreshControl={refreshControl} data={items} renderItem={renderItem} keyExtractor={(item) => item.key} getItemType={(item) => item.type} showsVerticalScrollIndicator={false} />
     </Screen>
   );
 }

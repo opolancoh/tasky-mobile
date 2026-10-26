@@ -1,9 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
+import { useEffect, type ComponentProps, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, nowIn } from '@/core/dates/localDate';
 import { useHome, useTaskLists } from '@/data/tasks/queries';
@@ -15,6 +15,7 @@ import { BrowseRow, BrowseRowSkeleton } from '@/shared/components/BrowseRow';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { Button, fonts, Screen, Skeleton, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { ActivityBell } from './components/ActivityBell';
 import { HomeCards, HomeCardsSkeleton } from './components/HomeCards';
@@ -49,7 +50,6 @@ export function TodayScreen() {
   const navigation = useNavigation();
   const me = useMe().data;
   const home = useHome();
-  const [refreshing, setRefreshing] = useState(false);
 
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
@@ -106,11 +106,7 @@ export function TodayScreen() {
     );
   }
 
-  const refresh = async () => {
-    setRefreshing(true);
-    await home.refetch();
-    setRefreshing(false);
-  };
+  const refreshControl = usePullRefresh(home);
 
   /** The line under the date: the next reminder later today, else overdue, else today's count; a new account is welcomed. */
   const nextLine = (d: Home) => {
@@ -195,7 +191,7 @@ export function TodayScreen() {
         getItemType={(item) => item.type}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: space.huge }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ink3} />}
+        refreshControl={refreshControl}
       />
     </Screen>
   );

@@ -11,6 +11,7 @@ import { LoadError } from '@/shared/components/LoadError';
 import { errorMessage } from '@/shared/i18n/errors';
 import { useSession } from '@/shared/session/SessionProvider';
 import { confirm, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 /**
  * Settings › Signed-in devices (M41): every device where the user is signed in, this one first; Sign out on another
@@ -21,6 +22,7 @@ export function SessionsScreen() {
   const { colors, space } = useTheme();
   const me = useMe().data;
   const sessions = useSessions();
+  const refreshControl = usePullRefresh(sessions);
   const revoke = useRevokeSession();
   const { signOutEverywhere } = useSession();
   const list = [...(sessions.data ?? [])].sort((a, b) => Number(b.isCurrent) - Number(a.isCurrent));
@@ -38,6 +40,7 @@ export function SessionsScreen() {
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={list}
         keyExtractor={(s) => s.id}
         ListHeaderComponent={

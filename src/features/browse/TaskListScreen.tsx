@@ -17,6 +17,7 @@ import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/s
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
 import { canInvite } from './browseSections';
@@ -55,7 +56,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
-  const taskList = useTaskLists().data?.find((c) => c.id === taskListId);
+  const taskLists = useTaskLists();
+  const taskList = taskLists.data?.find((c) => c.id === taskListId);
   const tasks = useTasks({ taskListId, sort: 'taskList' });
   const userId = useSessionStore((s) => s.userId);
   const folded = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
@@ -67,6 +69,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const done = useTaskPages({ taskListId, status: 'completed', limit: 20 }, showDone);   // nothing fetched while folded
   const shared = !!taskList && taskList.sharing !== 'private';
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
+  const refreshControl = usePullRefresh(tasks, held, done, members, taskLists);
   const complete = useCompleteTask();
   const reopen = useReopenTask();
   const toggleDone = () => userId && useFoldedLists.getState().setFolded(userId, taskListId, !folded);
@@ -218,6 +221,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         ref={list}
         data={items}
         renderItem={renderItem}

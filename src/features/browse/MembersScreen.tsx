@@ -8,6 +8,7 @@ import { useMemberPages, useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { MembersOf } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { MemberRow } from './components/MemberRow';
 
@@ -34,6 +35,7 @@ export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: 
     return () => clearTimeout(timer);
   }, [text]);
   const pages = useMemberPages(of, query);
+  const refreshControl = usePullRefresh(pages);
   const members = pages.data?.pages.flatMap((p) => p.items) ?? [];
   const total = pages.data?.pages[0]?.total ?? members.length;
   const name = route.params.name ?? '';
@@ -45,6 +47,7 @@ export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: 
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={members}
         keyExtractor={(m) => m.userId}
         renderItem={({ item }) => <MemberRow of={of} team={team} member={item} />}

@@ -17,6 +17,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { chooseAction, ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
 import { useAssignedByGroup, type AssignedByGroup } from './assignedByGroupStore';
@@ -130,10 +131,12 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   // Completed at the end (M105): its count from a one-task page; its rows only while open and once the open ones are all in.
   const withDone = WITH_DONE.includes(kind);
   const doneFilter: TaskFilter = { ...filter, sort: undefined, status: 'completed' };
-  const doneCount = useTasks({ ...doneFilter, limit: 1 }, withDone).data?.total ?? 0;
+  const doneHead = useTasks({ ...doneFilter, limit: 1 }, withDone);
+  const doneCount = doneHead.data?.total ?? 0;
   const doneFolded = useFoldedLists((s) => !!s.byUser[me?.id ?? '']?.[kind]);
   const showDone = withDone && doneCount > 0 && !doneFolded && pages.isSuccess && !pages.hasNextPage;
   const done = useTaskPages({ ...doneFilter, limit: PAGE }, showDone);
+  const refreshControl = usePullRefresh(pages, doneHead, done, taskLists);
   const lists = new Map((taskLists.data ?? []).map((c) => [c.id, c]));
   // Nobody on it, in a list only the user sees (Inbox, a private list of theirs): the task is theirs.
   const alone = (task: TaskSummary) => {
@@ -331,6 +334,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

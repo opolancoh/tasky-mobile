@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useReorderTaskLists, useReorderTags, useReorderTeams } from '@/data/tasks/mutations';
 import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
@@ -16,6 +16,7 @@ import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from '@/shared/components/BrowseRow';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 import { useFoldedSections, type SpacesSection } from './foldedSectionsStore';
 
 type Group = 'mine' | 'shared' | 'teams' | 'tags';
@@ -56,7 +57,6 @@ export function BrowseScreen() {
   const { listMenu, teamMenu, tagMenu } = useBrowseMenus();
   const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
 
   const all = taskLists.data ?? [];
   // In the user's own order (D108), then A–Z for teams they haven't placed: as GET /teams sends them.
@@ -140,11 +140,7 @@ export function BrowseScreen() {
 
   }
 
-  const refresh = async () => {
-    setRefreshing(true);
-    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch()]);
-    setRefreshing(false);
-  };
+  const refreshControl = usePullRefresh(taskLists, teams, tags);
 
   const tile = (name: ComponentProps<typeof Feather>['name'], color: string) => <Feather name={name} size={17} color={color} />;
 
@@ -286,7 +282,7 @@ export function BrowseScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: space.huge }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.ink3} />}
+        refreshControl={refreshControl}
       />
     </Screen>
   );

@@ -12,6 +12,7 @@ import { CompletedHeading } from '@/shared/components/CompletedHeading';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { LoadError } from '@/shared/components/LoadError';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { AskRow, FollowUpRow, HoldRow, InvitationRow, OverdueRow, TaskStreamRow } from './components/StreamRows';
@@ -52,7 +53,8 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   const holds = useHomeSection('holds', requests && followUp.isSuccess && !followUp.hasNextPage);   // D91: after the follow-ups
   const invitations = useInvitations(requests);
   // Today's Completed: its count from Home (GET /home), its rows only while open and once the open ones are all in.
-  const doneCount = useHome().data?.counts.doneToday ?? 0;
+  const home = useHome();
+  const doneCount = home.data?.counts.doneToday ?? 0;
   const userId = me?.id ?? '';
   const folded = useFoldedLists((s) => !!s.byUser[userId]?.[TODAY_FOLD]);
   const showDone = isToday && doneCount > 0 && !folded && tasks.isSuccess && !tasks.hasNextPage;
@@ -73,6 +75,8 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   // Only a load with nothing to show; a failed refresh keeps the list and shows Can't connect's capsule (M90).
   const error = [tasks, followUp, invitations].find((q) => q.error && q.data === undefined)?.error;
   const retry = () => { void tasks.refetch(); void followUp.refetch(); void invitations.refetch(); };
+
+  const refreshControl = usePullRefresh(tasks, followUp, holds, invitations, home, done);
 
   const loadMore = () => {
     if (tasks.hasNextPage) {
@@ -168,6 +172,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
         getItemType={(item) => item.type}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        refreshControl={refreshControl}
         showsVerticalScrollIndicator={false}
       />
     </Screen>

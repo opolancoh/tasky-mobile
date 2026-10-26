@@ -12,6 +12,7 @@ import { LoadError } from '@/shared/components/LoadError';
 import { SelectionBar, SelectionTopBar } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { faint, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useRecentSearches } from './recentSearchesStore';
 import { SearchRow, searchWords } from './SearchRow';
@@ -44,6 +45,7 @@ export function SearchScreen() {
   const [query, setQuery] = useState('');
   const [preset, setPreset] = useState({ text: '', n: 0 });
   const results = useSearch(query);
+  const refreshControl = usePullRefresh(results);
   const tags = useTags().data ?? [];
   const recent = useRecentSearches((s) => (me ? s.byUser[me.id] : undefined)) ?? NO_RECENT;
   const remember = useRecentSearches((s) => s.remember);
@@ -146,6 +148,7 @@ export function SearchScreen() {
     <Screen edges={['top']} contentStyle={styles.fill}>
       {selecting && <SelectionTopBar tasks={tasks} paged={results.hasNextPage} />}
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

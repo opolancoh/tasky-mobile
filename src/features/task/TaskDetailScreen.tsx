@@ -34,10 +34,10 @@ import { useTaskSheet } from './taskSheetStore';
 import { useRepeatText } from './useRepeatText';
 
 /**
- * Task detail (06-mobile.md, M25, M26, laid out as M98), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
- * title in place, the Important flag (red when on; no red edge, M98), the list on a line under the title, the steps under it, then
+ * Task detail (06-mobile.md, M25, M26, laid out as M98 and M106), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
+ * title in place, the Important flag (red when on; no red edge, M98), the list on a line under the title, then
  * the fields in groups: Assigned to (every task, M43, M44) · Due date, Reminder, Repeat · Tags (each a page in
- * `TaskFieldSheet`; empty ones say what a tap does, "Add due date"), and notes. **Save** in the header sends what changed in one PATCH
+ * `TaskFieldSheet`; empty ones say what a tap does, "Add due date"), then the steps and notes under their headings. **Save** in the header sends what changed in one PATCH
  * (D56) and goes back with a toast; an error keeps the screen and the edits (M59). Leaving with unsaved changes asks first. Complete / reopen, Skip and Delete are commands that act at once,
  * saving pending edits first. A task assigned to the caller and waiting for their answer is read-only, with no Save or
  * Delete, until they answer in the bar docked at the bottom (M101): Decline asks for an optional reason and goes back, Accept
@@ -367,10 +367,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
       </View>
 
-      <View {...locked}>
-      <StepList canAdd={!completed} />
-      </View>
-
       {/* The fields in groups (M98): who · when · tags, a hairline between them; no List row (the line under the title). */}
       <View {...locked}>
       <View style={{ marginTop: space.md }}>
@@ -446,6 +442,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         </View>
       )}
 
+      <StepList canAdd={!completed} />
       <NotesField />
       </View>
       </View>
@@ -539,25 +536,26 @@ function TitleField({ completed, editable }: { completed: boolean; editable: boo
   );
 }
 
-/** Plain-text notes, edited in place in the draft: no heading, between hairlines (M98). */
+/** Plain-text notes, edited in place in the draft: "Notes" over a filled box (M106). */
 function NotesField() {
   const { t } = useTranslation();
-  const { colors, type } = useTheme();
+  const { colors, radius, type } = useTheme();
   const notes = useTaskDraft((s) => s.draft?.notes ?? '');
   const edit = useTaskDraft((s) => s.edit);
   return (
-    <View style={[styles.notesBox, { borderColor: colors.line }]}>
+    <View style={{ marginTop: space.xxl, gap: space.sm }}>
+      <Text variant="label" color="ink2" accessibilityRole="header">{t('taskDetail.notes')}</Text>
       <TextInput
         value={notes}
         onChangeText={(text) => edit({ notes: text })}
         multiline
         placeholder={t('taskDetail.notesPlaceholder')}
-        placeholderTextColor={colors.ink2}
+        placeholderTextColor={colors.ink3}
         selectionColor={colors.accent}
         maxLength={taskLimits.notesMax}
         textAlignVertical="top"
         accessibilityLabel={t('taskDetail.notes')}
-        style={[styles.notes, { paddingVertical: space.md, fontFamily: type.callout.fontFamily, fontSize: type.callout.fontSize, color: colors.ink }]}
+        style={[styles.notes, { backgroundColor: colors.surface2, borderRadius: radius.md, padding: space.md, fontFamily: type.callout.fontFamily, fontSize: type.callout.fontSize, color: colors.ink }]}
       />
     </View>
   );
@@ -575,8 +573,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   end: { alignItems: 'flex-end' },
   start: { alignItems: 'flex-start', marginTop: space.xs },
-  notes: { minHeight: 110, paddingHorizontal: 0 },
-  notesBox: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  notes: { minHeight: 96 },
   group: { borderTopWidth: StyleSheet.hairlineWidth, paddingVertical: 4 },
   /** Under the title, lined up with it (the 28 pt circle and its gap). */
   where: { flexDirection: 'row', alignItems: 'center', marginLeft: 40, marginTop: 2 },

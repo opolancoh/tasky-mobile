@@ -11,6 +11,7 @@ import { ReminderIcon } from '@/shared/components';
 import { LoadError } from '@/shared/components/LoadError';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 type Item =
   | { type: 'header'; key: string }
@@ -31,8 +32,10 @@ export function RemindersScreen() {
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
   const pages = useMyReminderPages();
-  const lists = new Map((useTaskLists().data ?? []).map((c) => [c.id, c]));
+  const taskLists = useTaskLists();
+  const lists = new Map((taskLists.data ?? []).map((c) => [c.id, c]));
   const reminders = pages.data?.pages.flatMap((p) => p.items) ?? [];
+  const refreshControl = usePullRefresh(pages, taskLists);
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
   let day = '';
@@ -93,6 +96,7 @@ export function RemindersScreen() {
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

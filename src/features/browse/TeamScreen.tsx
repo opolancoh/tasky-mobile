@@ -11,6 +11,7 @@ import type { TaskList } from '@/data/tasks/types';
 import { BarTitle, useBarTitle } from '@/shared/components';
 import { LoadError } from '@/shared/components/LoadError';
 import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
@@ -48,6 +49,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   // Only a load with nothing to show; a failed refresh keeps the screen and shows Can't connect's capsule (M90).
   const error = [teams, taskLists].find((q) => q.error && q.data === undefined)?.error;
   const retry = () => { teams.refetch(); taskLists.refetch(); };
+  const refreshControl = usePullRefresh(teams, taskLists);
 
   const bar = useBarTitle();
   useLayoutEffect(() => {
@@ -153,6 +155,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

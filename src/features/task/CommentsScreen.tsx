@@ -7,6 +7,7 @@ import type { Id } from '@/core/types';
 import { useComments } from '@/data/tasks/queries';
 import { LoadError } from '@/shared/components/LoadError';
 import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { CommentRow, useCommentMenu } from './components/CommentThread';
 
@@ -20,12 +21,14 @@ export function CommentsScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const comments = useComments(taskId);
+  const refreshControl = usePullRefresh(comments);
   const menu = useCommentMenu(taskId);
   const items = comments.data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        refreshControl={refreshControl}
         data={items}
         keyExtractor={(c) => c.id}
         renderItem={({ item }) => <CommentRow comment={item} onPress={() => menu(item)} />}

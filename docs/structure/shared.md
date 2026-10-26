@@ -51,6 +51,7 @@ src/shared/
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   ├── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
+│   ├── usePullRefresh.tsx  Pull to refresh on every list screen
 │   └── foldedListsStore.ts  The lists (and Home's views) whose Completed the user folded, per user, on the device (M63, M105)
 └── i18n/
     ├── i18n.ts            i18next setup, device language and time zone
@@ -128,6 +129,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | Hook | Purpose |
 |---|---|
 | `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
+| `usePullRefresh(...queries)` | Every list screen's `refreshControl`: a pull refetches the screen's queries (those enabled) |
 | `useFoldedLists` | Whether a list's Completed is folded (open by default), per user, on the device: a task list by id, Home's views by name (`today`, `important`, `assigned`, `assignedBy`) (M63, M105) |
 
 ## notifications/
