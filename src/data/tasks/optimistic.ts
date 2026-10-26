@@ -99,9 +99,24 @@ export async function moveTask(queryClient: QueryClient, task: TaskSummary, to: 
     queryClient.setQueryData(key, next);
   };
 
+  // Today's Completed (M105): a task leaving Today lands at its top, and back; done today counts it now.
+  const doneKey = taskKeys.homeSection('done-today');
+  const inToday = holds(queryClient.getQueryData(taskKeys.homeSection('today')), task.id);
+  const inDone = holds(queryClient.getQueryData(doneKey), task.id);
+  const step = to === 'completed' ? (inToday ? 1 : 0) : inDone ? -1 : 0;
+  if (step) {
+    const done = queryClient.getQueryData<InfiniteData<Page>>(doneKey);
+    const change = to === 'completed' ? 'insert' : 'remove';
+    set(doneKey, done, done
+      ? { ...done, pages: done.pages.map((p, i) => (change === 'insert' && i > 0 ? p : editPage(p, moved.id, change, moved))) }
+      : { pages: [{ items: [moved], total: 1, nextCursor: null }], pageParams: [undefined] });
+  }
+
   for (const [key, data] of queryClient.getQueriesData({ queryKey: taskKeys.views })) {
-    if (key.length === 3 && key[2] === 'home') set(key, data, editHome(data as Home, moved, to));
-    else if (data) {
+    if (key.length === 3 && key[2] === 'home') {
+      const home = editHome(data as Home, moved, to);
+      set(key, data, step ? { ...home, counts: { ...home.counts, today: Math.max(0, home.counts.today - step), doneToday: Math.max(0, home.counts.doneToday + step) } } : home);
+    } else if (data && key[3] !== 'done-today') {
       const { kind, filter } = kindOf(key);
       set(key, data, editList(data, kind, filter, moved, to));
     }
