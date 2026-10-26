@@ -35,7 +35,7 @@ export type ActivityNotification = Pick<Notification, 'kind' | 'teamId' | 'taskL
  * A notification's state from what the app already reads (M58): needs the user (an open invitation; a task still in
  * Today's to answer or follow-up sections), something to see (its task, list, team or people), or nowhere to go
  * (removed, deleted, an invitation no longer open, a list or team the user left). Same queries as Today (GET /home and
- * the lists), so no extra requests; a task past a section's first 5 shows as something to see. A tapped push asks it
+ * the lists), so no extra requests; a task past Home's first 20 requests shows as something to see. A tapped push asks it
  * too (shared/notifications/push.ts), so it opens what its Activity row opens.
  */
 export function activityState(n: ActivityNotification, { invitations, taskLists, teams, home }: ActivitySources): ActivityState {
@@ -67,7 +67,7 @@ export function activityState(n: ActivityNotification, { invitations, taskLists,
       return n.taskId && inList ? { go: { to: 'task', id: n.taskId } } : null;
     default: {
       if (!n.taskId) return subject ? { go: subject } : null;
-      const waiting = taskNeeds && home?.[taskNeeds.section].items.some((t) => t.id === n.taskId);
+      const waiting = taskNeeds && home?.requests[taskNeeds.section].some((t) => t.id === n.taskId);
       return { needs: waiting ? taskNeeds.needs : undefined, go: { to: 'task', id: n.taskId, ...(n.commentId ? { commentId: n.commentId } : {}) } };
     }
   }

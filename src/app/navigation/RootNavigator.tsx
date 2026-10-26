@@ -37,6 +37,7 @@ import { TimeZoneScreen } from '@/features/me/TimeZoneScreen';
 import { InvitationScreen } from '@/features/sharing/InvitationScreen';
 import { JoinPasteScreen } from '@/features/sharing/JoinPasteScreen';
 import { JoinScreen } from '@/features/sharing/JoinScreen';
+import { RemindersScreen } from '@/features/today/RemindersScreen';
 import { TodayListScreen } from '@/features/today/TodayListScreen';
 import { TodayScreen } from '@/features/today/TodayScreen';
 import { CommentsScreen } from '@/features/task/CommentsScreen';
@@ -112,6 +113,8 @@ const RootStack = createNativeStackNavigator({
         TaskHistory: { screen: HistoryScreen, options: { headerShown: true } },
         // See all and the cards (M33, M65); an invitation from Requests (M34).
         TodayList: { screen: TodayListScreen, options: { headerShown: true } },
+        // Home's Reminders (M105): every upcoming reminder, by day.
+        Reminders: { screen: RemindersScreen, options: { headerShown: true } },
         Invitation: { screen: InvitationScreen, options: { headerShown: true } },
         // Links into the app (D95, M84): what a link opens (from LinkWatcher or a paste), and pasting one.
         JoinLink: { screen: JoinScreen, options: { headerShown: true, presentation: 'modal' } },

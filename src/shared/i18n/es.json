@@ -89,8 +89,6 @@
     "overdueSince_other": "{{count}} atrasadas, la más antigua desde {{date}}",
     "forToday_one": "{{count}} tarea para hoy",
     "forToday_other": "{{count}} tareas para hoy",
-    "allDoneNext": "Todo hecho · Siguiente: {{title}}, {{day}}",
-    "allDoneWeek": "Todo hecho · Nada más esta semana",
     "nothingToday": "Nada para hoy",
     "loading": "Cargando tu día",
     "today": "Hoy",
@@ -106,36 +104,18 @@
     "justForYou": "Solo para ti",
     "nothingOpen": "Nada pendiente",
     "requests": "Solicitudes",
-    "assigned": "Asignadas a mí",
-    "comingUp": "Próximamente",
     "seeAll": "Ver todo",
-    "from": "De {{name}}",
-    "dismiss": "Ocultar",
-    "dismissAction": "Ocultar de Inicio",
-    "dismissed": "Oculta de Inicio",
-    "allDoneTitle": "Todo hecho por hoy",
-    "completed_one": "{{count}} completada.",
-    "completed_other": "{{count}} completadas.",
-    "nextIs": "Siguiente: {{title}}, {{day}}.",
-    "fromLists": "De tus listas",
     "nothingTodayShort": "Nada para hoy",
     "welcome": "Te damos la bienvenida a Azignia, {{name}}",
     "welcomeTo": "Te damos la bienvenida a {{name}}",
-    "start": {
-      "nothingOpen": "Nada abierto aquí",
-      "allDone": "Todo listo",
-      "line": "Empieza con una de estas.",
-      "task": "Añade una tarea",
-      "taskSub": "Lo que tengas en mente",
-      "date": "Ponle fecha a una tarea",
-      "dateSub": "Aparece aquí ese día",
-      "list": "Crea una lista",
-      "listSub": "La compra, un proyecto, un viaje",
-      "share": "Comparte una lista",
-      "shareSub": "Planéala con tu familia o un equipo",
-      "reminder": "Pon un recordatorio",
-      "reminderSub": "Azignia te avisa a esa hora"
-    }
+    "myStuff": "Mis cosas",
+    "reminders": "Recordatorios",
+    "next7Days": "Próximos 7 días",
+    "noneComingUp": "Ninguno próximo",
+    "assignments": "Asignaciones",
+    "late_one": "{{count}} atrasada",
+    "late_other": "{{count}} atrasadas",
+    "allDoneToday": "Todo listo por hoy"
   },
   "today": {
     "invitedBy": "{{name}} te invitó · {{kind}}",
@@ -505,7 +485,9 @@
     "time": "Hora",
     "remove": "Quitar recordatorio",
     "body": "Recordatorio",
-    "channel": "Recordatorios"
+    "channel": "Recordatorios",
+    "listSub": "Próximos, el más cercano primero",
+    "listEmpty": "No hay recordatorios próximos. Agrega uno a una tarea y aparecerá aquí."
   },
   "wheels": {
     "day": "Día",
@@ -631,25 +613,18 @@
     "title": {
       "requests": "Solicitudes",
       "overdue": "Atrasadas",
-      "today": "Hoy",
-      "coming-up": "Próximamente",
-      "assigned": "Asignadas a mí",
-      "undated": "De tus listas"
+      "today": "Hoy"
     },
     "sub": {
-      "requests": "Invitaciones, asignaciones por responder, seguimientos",
+      "requests": "Invitaciones, tareas por responder, seguimientos",
       "overdue": "Tareas abiertas de antes de hoy, las más antiguas primero",
-      "today": "Para hoy, o con un recordatorio hoy",
-      "coming-up": "Los próximos 7 días, luego más adelante",
-      "assigned": "Tareas que otros te dieron y aceptaste, después de 7 días o sin fecha",
-      "undated": "Tareas abiertas sin fecha, las más nuevas primero"
+      "today": "Para hoy, o con un recordatorio hoy"
     },
     "items_one": "{{count}} elemento",
     "items_other": "{{count}} elementos",
     "loadingMore": "Cargando más",
     "allShown": "Se muestran las {{count}}",
-    "empty": "No hay nada aquí.",
-    "later": "Más adelante"
+    "empty": "No hay nada aquí."
   },
   "notifications": {
     "someone": "Alguien",

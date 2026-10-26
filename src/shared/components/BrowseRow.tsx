@@ -11,8 +11,12 @@ export interface BrowseRowProps {
   icon: ReactNode;
   /** The tile's fill, e.g. the list's color, faint. */
   tint?: string;
-  /** Open count; shown only above zero, and omitted for rows without one (Completed). */
+  /** Open count; shown only above zero (or at zero with `zero`), and omitted for rows without one (Completed). */
   count?: number;
+  /** Show the count at 0 too (Home's Assignments, M105). */
+  zero?: boolean;
+  /** A line under the name (Home's rows, M105): what it holds, or a red “2 late”. */
+  sub?: ReactNode;
   /** What tells this row apart: a people icon (a list the user shares), the owner's name (shared with them). */
   aside?: ReactNode;
   onPress?(): void;
@@ -22,8 +26,8 @@ export interface BrowseRowProps {
   move?: { up?(): void; down?(): void };
 }
 
-/** A Browse row (M38): tile, name, aside, open count (hidden at 0), chevron. 48 pt tall. Long press opens its menu. */
-export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPress, move }: BrowseRowProps) {
+/** A Spaces and Home row (M38, M105): tile, name (a line under it), aside, open count (hidden at 0), chevron. 48 pt tall. Long press opens its menu. */
+export function BrowseRow({ label, icon, tint, count, zero, sub, aside, onPress, onLongPress, move }: BrowseRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   return (
@@ -39,7 +43,14 @@ export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPres
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
           <View style={[styles.tile, { backgroundColor: tint ?? colors.accentSoft }]}>{icon}</View>
-          <Text variant="body" numberOfLines={1} style={styles.label}>{label}</Text>
+          {sub ? (
+            <View style={styles.label}>
+              <Text variant="body" numberOfLines={1}>{label}</Text>
+              {typeof sub === 'string' ? <Text variant="footnote" color="ink3" numberOfLines={1}>{sub}</Text> : sub}
+            </View>
+          ) : (
+            <Text variant="body" numberOfLines={1} style={styles.label}>{label}</Text>
+          )}
           {aside}
           {move ? (
             <View style={styles.arrows}>
@@ -48,7 +59,7 @@ export function BrowseRow({ label, icon, tint, count, aside, onPress, onLongPres
             </View>
           ) : (
             <>
-              {!!count && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
+              {(!!count || (zero && count === 0)) && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
               <Feather name="chevron-right" size={18} color={colors.ink3} />
             </>
           )}
@@ -94,7 +105,7 @@ export function OwnerMark({ name }: { name: string }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', minHeight: 48 },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingVertical: 4 },
   tile: { width: 30, height: 30, borderRadius: radius.sm + 1, alignItems: 'center', justifyContent: 'center' },
   label: { flex: 1, minWidth: 0 },
   count: { fontVariant: ['tabular-nums'] },

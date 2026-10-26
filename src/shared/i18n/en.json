@@ -89,8 +89,6 @@
     "overdueSince_other": "{{count}} overdue, the oldest since {{date}}",
     "forToday_one": "{{count}} task for today",
     "forToday_other": "{{count}} tasks for today",
-    "allDoneNext": "All done · Next: {{title}}, {{day}}",
-    "allDoneWeek": "All done · Nothing else this week",
     "nothingToday": "Nothing due today",
     "loading": "Loading your day",
     "today": "Today",
@@ -106,36 +104,18 @@
     "justForYou": "Just for you",
     "nothingOpen": "Nothing open",
     "requests": "Requests",
-    "assigned": "Assigned to me",
-    "comingUp": "Coming up",
     "seeAll": "See all",
-    "from": "From {{name}}",
-    "dismiss": "Dismiss",
-    "dismissAction": "Dismiss from Home",
-    "dismissed": "Dismissed from Home",
-    "allDoneTitle": "All done for today",
-    "completed_one": "{{count}} completed.",
-    "completed_other": "{{count}} completed.",
-    "nextIs": "Next: {{title}}, {{day}}.",
-    "fromLists": "From your lists",
     "nothingTodayShort": "Nothing today",
     "welcome": "Welcome to Azignia, {{name}}",
     "welcomeTo": "Welcome to {{name}}",
-    "start": {
-      "nothingOpen": "Nothing open here",
-      "allDone": "All done",
-      "line": "Start with one of these.",
-      "task": "Add a task",
-      "taskSub": "Anything on your mind",
-      "date": "Give a task a date",
-      "dateSub": "It shows up here on its day",
-      "list": "Make a list",
-      "listSub": "Groceries, a project, a trip",
-      "share": "Share a list",
-      "shareSub": "Plan it with family or a team",
-      "reminder": "Set a reminder",
-      "reminderSub": "Azignia rings at that time"
-    }
+    "myStuff": "My stuff",
+    "reminders": "Reminders",
+    "next7Days": "Next 7 days",
+    "noneComingUp": "None coming up",
+    "assignments": "Assignments",
+    "late_one": "{{count}} late",
+    "late_other": "{{count}} late",
+    "allDoneToday": "All done for today"
   },
   "today": {
     "invitedBy": "{{name}} invited you · {{kind}}",
@@ -505,7 +485,9 @@
     "time": "Time",
     "remove": "Remove reminder",
     "body": "Reminder",
-    "channel": "Reminders"
+    "channel": "Reminders",
+    "listSub": "Upcoming, soonest first",
+    "listEmpty": "No reminders coming up. Add one to a task and it shows here."
   },
   "wheels": {
     "day": "Day",
@@ -631,25 +613,18 @@
     "title": {
       "requests": "Requests",
       "overdue": "Overdue",
-      "today": "Today",
-      "coming-up": "Coming up",
-      "assigned": "Assigned to me",
-      "undated": "From your lists"
+      "today": "Today"
     },
     "sub": {
-      "requests": "Invitations, assignments to answer, follow-ups",
+      "requests": "Invitations, tasks to answer, follow-ups",
       "overdue": "Open tasks due before today, oldest first",
-      "today": "Due today, or with a reminder today",
-      "coming-up": "Next 7 days, then later",
-      "assigned": "Accepted tasks others gave you, after the next 7 days or with no date",
-      "undated": "Open tasks with no date, newest first"
+      "today": "Due today, or with a reminder today"
     },
     "items_one": "{{count}} item",
     "items_other": "{{count}} items",
     "loadingMore": "Loading more",
     "allShown": "All {{count}} shown",
-    "empty": "Nothing here.",
-    "later": "Later"
+    "empty": "Nothing here."
   },
   "notifications": {
     "someone": "Someone",

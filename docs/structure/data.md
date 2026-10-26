@@ -15,7 +15,7 @@ src/data/
 │   ├── api.ts  keys.ts  queries.ts  types.ts
 ├── tasks/               Lists (create, edit, archive, delete, reorder), teams, people and invitations to them, tags (color, rename, merge,
 │   │                    delete, reorder), Recently Deleted, task lists (GET /tasks), one task and its edits: steps, tags, reminder, move, delete and restore;
-│   │                    Home, the first tab (GET /home, GET /home/{section}, D67, D69, D86; named after the API) and the caller's invitations (join, decline, D68): the API's Tasks module holds sharing (D64)
+│   │                    Home, the first tab (GET /home: counts and requests, D107; GET /home/{section} for the screens it opens; named after the API), the caller's upcoming reminders (GET /me/reminders, Home › Reminders) and the caller's invitations (join, decline, D68): the API's Tasks module holds sharing (D64)
 │   ├── api.ts  keys.ts  queries.ts  mutations.ts  types.ts
 │   ├── optimistic.ts    `moveTask`: complete, reopen and confirm move the task in every cache at once, `restore` on error (M75); `insertTask` (with `takesNew`, the filters a row can answer), `replaceTask`, `removeTask`: a new task in every cache before the POST (M100); `editRows` and `cachedTask` for bulk actions: one task's row changed or taken out everywhere, rolled back alone (M81)
 ├── collaboration/       Notifications: the list (unread only for Home's Updates), the unread count, mark read

@@ -21,8 +21,8 @@ import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from 
 import { useBrowseMenus } from './browseMenus';
 import { canInvite } from './browseSections';
 import { AddTaskButton } from './components/AddTaskButton';
-import { CompletedRow } from './components/CompletedRow';
-import { useFoldedLists } from './foldedListsStore';
+import { CompletedRow } from '@/shared/components/CompletedRow';
+import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 
 type Item =
   | { type: 'header'; key: string }
@@ -48,8 +48,8 @@ type Item =
  * selection bar takes Add a task's place, and Completed folds away meanwhile. Scrolled, the bar shows the name over
  * "3 open" (M94).
  */
-export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; foldCompleted?: boolean; backTitle?: string }>) {
-  const { taskListId, foldCompleted, backTitle } = route.params;
+export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; backTitle?: string }>) {
+  const { taskListId, backTitle } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
@@ -58,10 +58,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
   const taskList = useTaskLists().data?.find((c) => c.id === taskListId);
   const tasks = useTasks({ taskListId, sort: 'taskList' });
   const userId = useSessionStore((s) => s.userId);
-  const savedFold = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
-  // From Home's Personal card (M93): Completed starts folded for this visit, and its heading opens it without saving.
-  const [visitFold, setVisitFold] = useState(foldCompleted ? true : undefined);
-  const folded = visitFold ?? savedFold;
+  const folded = useFoldedLists((s) => (userId ? !!s.byUser[userId]?.[taskListId] : false));
   const doneCount = taskList?.completedTasks ?? 0;
   const showDone = doneCount > 0 && !folded;
   const heldCount = taskList?.onHoldTasks ?? 0;
@@ -72,10 +69,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; fo
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
   const complete = useCompleteTask();
   const reopen = useReopenTask();
-  const toggleDone = () => {
-    if (visitFold !== undefined) setVisitFold(!folded);
-    else if (userId) useFoldedLists.getState().setFolded(userId, taskListId, !folded);
-  };
+  const toggleDone = () => userId && useFoldedLists.getState().setFolded(userId, taskListId, !folded);
   // Completing hides the task while Completed is folded, so it offers Undo (M56); open, the task shows up there.
   const completeTask = (task: TaskSummary) =>
     complete.mutate(task, {

@@ -14,7 +14,7 @@ import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonRow, Text, useTheme } 
 
 import { useBrowseMenus } from './browseMenus';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
-import { BrowseRow } from './components/BrowseRow';
+import { BrowseRow } from '@/shared/components/BrowseRow';
 
 type Item =
   | { type: 'header'; key: string }

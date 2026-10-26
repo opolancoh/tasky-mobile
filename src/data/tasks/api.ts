@@ -149,7 +149,7 @@ export const tasksApi = {
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),
 
   /** GET /me/reminders: the caller's reminders from today on, open tasks only, soonest first (D11), for the device to schedule. */
-  myReminders: (limit: number) => http().get<{ items: MyReminder[]; nextCursor: string | null }>('/me/reminders', { query: { limit } }),
+  myReminders: (limit: number, cursor?: string) => http().get<{ items: MyReminder[]; nextCursor: string | null }>('/me/reminders', { query: { limit, cursor } }),
 
   /** PUT /tasks/{id}/reminder: sets the caller's reminder. */
   setReminder: (taskId: Id, date: LocalDate, time: LocalTime) => http().put(`/tasks/${taskId}/reminder`, { body: { date, time } }),
@@ -218,8 +218,8 @@ export const tasksApi = {
   /** POST /tasks/{id}:confirm: whoever assigned it saw that its assignee completed it (D71). */
   confirm: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:confirm`, { ifMatch: task.version }),
 
-  /** GET /home (D67): every Today section's first `limit` items and totals, in one request. */
-  home: (limit: number) => http().get<Home>('/home', { query: { limit } }),
+  /** GET /home (D107): Home's numbers, its requests and the next reminder today, in one request. */
+  home: () => http().get<Home>('/home'),
 
   /** GET /home/{section} (D67): one section, keyset-paged; `total` on the first page. */
   homeSection: (section: HomeSection, limit: number, cursor?: string) => http().get<TaskPage>(`/home/${section}`, { query: { limit, cursor } }),

@@ -50,16 +50,24 @@ export const useTags = () => useQuery({ queryKey: taskKeys.tags, queryFn: tasksA
 export const useTasks = (filter: TaskFilter, enabled = true) =>
   useQuery({ queryKey: taskKeys.list(filter), queryFn: () => tasksApi.list(filter), enabled });
 
-/** Rows each Today section shows (M32); its See all pages by `HOME_PAGE`. Named after the API's GET /home. */
-export const HOME_PREVIEW = 5;
+/** How many rows a screen Home opens loads at a time. */
 export const HOME_PAGE = 20;
 
-/** The Today tab in one request (GET /home, D67, M33). */
-export const useHome = () => useQuery({ queryKey: taskKeys.home, queryFn: () => tasksApi.home(HOME_PREVIEW) });
+/** Home in one request (GET /home, D107, M105). */
+export const useHome = () => useQuery({ queryKey: taskKeys.home, queryFn: tasksApi.home });
+
+/** The caller's upcoming reminders, soonest first, a page at a time (Home › Reminders, M105; GET /me/reminders). */
+export const useMyReminderPages = () =>
+  useInfiniteQuery({
+    queryKey: taskKeys.myReminders,
+    queryFn: ({ pageParam }) => tasksApi.myReminders(HOME_PAGE, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
 
 /**
- * One Today section (GET /home/{section}), a page at a time (See all, M33): the next page loads as the list nears its end. `enabled: false`
- * waits (Needs attention pages its overdue tasks after the assignments to answer).
+ * One Home section (GET /home/{section}), a page at a time (the screens Home opens, M105): the next page loads as the list
+ * nears its end. `enabled: false` waits (Requests pages its follow-ups after the tasks to answer).
  */
 export const useHomeSection = (section: HomeSection, enabled = true) =>
   useInfiniteQuery({

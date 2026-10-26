@@ -1,6 +1,5 @@
 import type { InfiniteData, QueryClient, QueryKey } from '@tanstack/react-query';
 
-import { addDays } from '@/core/dates/localDate';
 import { collator } from '@/core/text/collate';
 import type { Id, LocalDate } from '@/core/types';
 
@@ -53,18 +52,14 @@ function editList(data: unknown, kind: Kind, filter: TaskFilter | undefined, mov
   return data;
 }
 
-/** Home (GET /home): a completed task leaves its sections at once; its counts follow. Reopening waits for the refetch. */
-function editHome(home: Home, moved: TaskSummary, to: Move, wasWaiting: boolean): Home {
+/** Home (GET /home, D107): a completed task leaves its requests at once; the numbers follow with the refetch. Reopening waits for it. */
+function editHome(home: Home, moved: TaskSummary, to: Move): Home {
   if (to !== 'completed') return home;
-  const out = (p: Home['today']) => editPage(p, moved.id, 'remove', moved);
-  const wasToday = home.today.items.some((x) => x.id === moved.id);
-  return {
-    ...home,
-    toAnswer: out(home.toAnswer), followUp: out(home.followUp), overdue: out(home.overdue), today: out(home.today), comingUp: out(home.comingUp), assigned: out(home.assigned),
-    doneToday: wasToday ? home.doneToday + 1 : home.doneToday,
-    inboxTotal: moved.taskList?.isInbox && !wasWaiting ? Math.max(0, home.inboxTotal - 1) : home.inboxTotal,
-    openTotal: wasWaiting ? home.openTotal : Math.max(0, home.openTotal - 1),
-  };
+  const out = (rows: TaskSummary[]) => (rows.some((x) => x.id === moved.id) ? rows.filter((x) => x.id !== moved.id) : rows);
+  const r = home.requests;
+  const requests = { ...r, toAnswer: out(r.toAnswer), followUp: out(r.followUp), holds: out(r.holds) };
+  const gone = r.toAnswer.length + r.followUp.length + r.holds.length - (requests.toAnswer.length + requests.followUp.length + requests.holds.length);
+  return gone ? { ...home, requests: { ...requests, total: Math.max(0, r.total - gone) } } : home;
 }
 
 /** The API's answer: its version (and status) on every cached row of the task, so the next command sends the right If-Match. */
@@ -73,10 +68,10 @@ export function settleTask(queryClient: QueryClient, saved: Task) {
   const fix = (d: unknown): unknown => {
     if (isPage(d)) return d.items.some((x) => x.id === saved.id) ? { ...d, items: d.items.map(patch) } : d;
     if (isPages(d)) return { ...d, pages: d.pages.map((p) => fix(p) as Page) };
-    if (d && typeof d === 'object' && 'today' in d) {
-      const home = d as Home;
-      const section = (p: Home['today']) => fix(p) as Home['today'];
-      return { ...home, toAnswer: section(home.toAnswer), followUp: section(home.followUp), overdue: section(home.overdue), today: section(home.today), comingUp: section(home.comingUp), assigned: section(home.assigned) };
+    if (d && typeof d === 'object' && 'requests' in d) {
+      const home = d as Home, r = home.requests;
+      const rows = (xs: TaskSummary[]) => (xs.some((x) => x.id === saved.id) ? xs.map(patch) : xs);
+      return { ...home, requests: { ...r, toAnswer: rows(r.toAnswer), followUp: rows(r.followUp), holds: rows(r.holds) } };
     }
     return d;
   };
@@ -105,7 +100,7 @@ export async function moveTask(queryClient: QueryClient, task: TaskSummary, to: 
   };
 
   for (const [key, data] of queryClient.getQueriesData({ queryKey: taskKeys.views })) {
-    if (key.length === 3 && key[2] === 'home') set(key, data, editHome(data as Home, moved, to, task.awaitsConfirmation));
+    if (key.length === 3 && key[2] === 'home') set(key, data, editHome(data as Home, moved, to));
     else if (data) {
       const { kind, filter } = kindOf(key);
       set(key, data, editList(data, kind, filter, moved, to));
@@ -135,10 +130,12 @@ export interface RowsWhere {
   home: boolean;
 }
 
-/** Every row of Home's sections through `edit`. */
-const editHomeSections = (home: Home, edit: (p: Home['today']) => Home['today']): Home => ({
-  ...home, toAnswer: edit(home.toAnswer), followUp: edit(home.followUp), overdue: edit(home.overdue), today: edit(home.today), comingUp: edit(home.comingUp), assigned: edit(home.assigned),
-});
+/** Every row of Home's requests through `edit` (D107: Home's only task rows). */
+const editHomeRows = (home: Home, edit: (p: Page) => Page): Home => {
+  const rows = (items: TaskSummary[]) => edit({ items, nextCursor: null, total: null } as Page).items;
+  const r = home.requests;
+  return { ...home, requests: { ...r, toAnswer: rows(r.toAnswer), followUp: rows(r.followUp), holds: rows(r.holds) } };
+};
 
 /** Every cached list a task row can be in, with where it sits (not Recently Deleted or the invitations). */
 function eachList(queryClient: QueryClient, visit: (key: QueryKey, data: unknown, where: RowsWhere) => void) {
@@ -154,7 +151,7 @@ function eachList(queryClient: QueryClient, visit: (key: QueryKey, data: unknown
 function editData(data: unknown, edit: (p: Page) => Page): unknown {
   if (isPage(data)) return edit(data);
   if (isPages(data)) return { ...data, pages: data.pages.map(edit) };
-  if (data && typeof data === 'object' && 'today' in data) return editHomeSections(data as Home, (p) => edit(p) as Home['today']);
+  if (data && typeof data === 'object' && 'requests' in data) return editHomeRows(data as Home, edit);
   return data;
 }
 
@@ -282,17 +279,14 @@ function insertInList(data: unknown, task: TaskSummary, order: ReturnType<typeof
   return isPage(data) ? next[0] : { ...(data as InfiniteData<Page>), pages: next };
 }
 
-/** Home's sections a new task lands in (D86): today (due or reminded today), overdue, or within Coming up's week. */
-function homeSectionOf(task: TaskSummary, today: LocalDate | undefined): 'today' | 'overdue' | 'comingUp' | undefined {
+/** Home's section a new task lands in: today (due or reminded today) or overdue. */
+function homeSectionOf(task: TaskSummary, today: LocalDate | undefined): 'today' | 'overdue' | undefined {
   const d = task.dueDate;
   if (!today) return undefined;
   if (d === today || (task.reminder?.date === today && (!d || d > today))) return 'today';
   if (d && d < today) return 'overdue';
-  if (d && d > today && d <= addDays(today, 7)) return 'comingUp';
   return undefined;
 }
-
-const atTop = (p: Home['today'], task: TaskSummary) => ({ ...p, items: [task, ...p.items], total: p.total == null ? p.total : p.total + 1 });
 
 /**
  * A new task shows at once (M100): it goes into every cached list whose filter takes it (`takesNew`), in its place, Home's
@@ -304,20 +298,23 @@ export async function insertTask(queryClient: QueryClient, task: TaskSummary, pl
   eachList(queryClient, (key, data, where) => {
     let next: unknown = data;
     if (where.home && key.length === 3) {
-      const home = data as Home;
+      // Home's numbers (D107): the card or row the new task counts in goes up at once.
+      const home = data as Home, c = home.counts;
       const section = homeSectionOf(task, place.today);
       next = {
         ...home,
-        ...(section ? { [section]: atTop(home[section], task) } : {}),
-        openTotal: home.openTotal + 1,
-        inboxTotal: home.inboxTotal + (task.taskList?.isInbox ? 1 : 0),
-        importantTotal: home.importantTotal + (task.isImportant && place.mine ? 1 : 0),
+        counts: {
+          ...c,
+          ...(section ? { [section]: c[section] + 1 } : {}),
+          openTotal: c.openTotal + 1,
+          personal: c.personal + (task.taskList?.isInbox ? 1 : 0),
+          important: c.important + (task.isImportant && place.mine ? 1 : 0),
+        },
       };
     } else if (where.home) {
       const name = key[3];
       const takes = name === 'important' ? task.isImportant && place.mine
         : name === 'inbox' ? !!task.taskList?.isInbox
-        : name === 'coming-up' ? homeSectionOf(task, place.today) === 'comingUp'
         : (name === 'today' || name === 'overdue') && homeSectionOf(task, place.today) === name;
       if (takes) next = insertInList(data, task, 'top');
     } else if (where.filter && takesNew(where.filter, task, place)) {

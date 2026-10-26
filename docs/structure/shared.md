@@ -35,9 +35,9 @@ src/shared/
 │   ├── SelectCheck.tsx    A picked row's round check
 │   └── BulkSheet.tsx      Date, Move and Assign (people in every selected list) for the selection; mounted in App
 ├── browseSheet/
-│   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen, e.g. Home's Make a list (M67)
+│   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show({ title, page, dueDate, taskListId, onAdded }) from the tab bar +, on its due date or reminder picker from Home (M67), due on a day from Calendar (M72), or on a list from its Add a task (M103)
+│   └── quickAddStore.ts   Quick add open or closed; show({ title, dueDate, taskListId, onAdded }) from the tab bar +, due on a day from Calendar (M72), or on a list from its Add a task (M103)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
@@ -45,10 +45,12 @@ src/shared/
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx   BarTitle.tsx
+│   ├── BrowseRow.tsx   CompletedRow.tsx   CompletedHeading.tsx   (rows Home and Spaces share, M105)
 │   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
-│   └── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
+│   ├── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
+│   └── foldedListsStore.ts  The lists (and Home's views) whose Completed the user folded, per user, on the device (M63, M105)
 └── i18n/
     ├── i18n.ts            i18next setup, device language and time zone
     ├── en.json  es.json   Every string
@@ -116,12 +118,16 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `ReminderPicker` | Four quick choices, a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel; nothing before the next quarter hour, M95), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
+| `BrowseRow`, `BrowseRowSkeleton`, `SharedMark`, `OwnerMark` | A Spaces and Home row (M38, M105): a 30 pt tile, the name (a line under it with `sub`), an aside, the count (hidden at 0 unless `zero`), a chevron; arrows in Edit |
+| `CompletedRow` | A completed task: the filled circle reopens it, the title struck through, its list under it |
+| `CompletedHeading` | A list's Completed heading: a tap folds or unfolds it, its count beside it (M63, M105) |
 
 ## hooks/
 
 | Hook | Purpose |
 |---|---|
 | `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
+| `useFoldedLists` | Whether a list's Completed is folded (open by default), per user, on the device: a task list by id, Home's views by name (`today`, `important`, `assigned`, `assignedBy`) (M63, M105) |
 
 ## notifications/
 

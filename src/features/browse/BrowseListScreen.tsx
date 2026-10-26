@@ -9,7 +9,7 @@ import { weekStart } from '@/core/dates/calendar';
 import { addDays, todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
-import { useTags, useTaskLists, useTaskPages, useTeams } from '@/data/tasks/queries';
+import { useTags, useTaskLists, useTaskPages, useTasks, useTeams } from '@/data/tasks/queries';
 import type { TaskFilter, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, BarTitle, TaskRow, useBarTitle } from '@/shared/components';
@@ -21,7 +21,9 @@ import { chooseAction, ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } f
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
 import { useAssignedByGroup, type AssignedByGroup } from './assignedByGroupStore';
 import { useBrowseMenus } from './browseMenus';
-import { CompletedRow } from './components/CompletedRow';
+import { CompletedHeading } from '@/shared/components/CompletedHeading';
+import { CompletedRow } from '@/shared/components/CompletedRow';
+import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 import { FilterStrip } from './components/FilterStrip';
 import { useImportantOrder, type ImportantOrder } from './importantOrderStore';
 
@@ -43,6 +45,8 @@ const statusGroup = (task: TaskSummary): StatusGroup =>
 const needsYou = (task: TaskSummary) => statusGroup(task) === 'needsYou';
 
 const PAGE = 20;
+/** Lists Home opens that end with their Completed (M105): folding, remembered per list like a task list's (M63). */
+const WITH_DONE: BrowseListKind[] = ['important', 'assigned', 'assignedBy'];
 /** Groups that need every task (List, Person, Assigned by me) load 200 at a time, the API's largest page (M78). */
 const WHOLE_PAGE = 200;
 
@@ -51,6 +55,8 @@ type Item =
   | { type: 'group'; key: string; name: string; color: string; count?: number; danger?: boolean }
   | { type: 'person'; key: string; id: Id | null; name: string; count: number; late: number }
   | { type: 'task'; key: string; task: TaskSummary }
+  | { type: 'doneHead'; key: string; folded: boolean; count: number }
+  | { type: 'done'; key: string; task: TaskSummary }
   | { type: 'footer'; key: string };
 
 /**
@@ -121,6 +127,13 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     team: { teamId: id as Id, sort: 'due' as const, ...shown, ...(person ? { assignee: person } : {}) },
   }[kind];
   const pages = useTaskPages({ ...filter, limit: whole ? WHOLE_PAGE : PAGE });
+  // Completed at the end (M105): its count from a one-task page; its rows only while open and once the open ones are all in.
+  const withDone = WITH_DONE.includes(kind);
+  const doneFilter: TaskFilter = { ...filter, sort: undefined, status: 'completed' };
+  const doneCount = useTasks({ ...doneFilter, limit: 1 }, withDone).data?.total ?? 0;
+  const doneFolded = useFoldedLists((s) => !!s.byUser[me?.id ?? '']?.[kind]);
+  const showDone = withDone && doneCount > 0 && !doneFolded && pages.isSuccess && !pages.hasNextPage;
+  const done = useTaskPages({ ...doneFilter, limit: PAGE }, showDone);
   const lists = new Map((taskLists.data ?? []).map((c) => [c.id, c]));
   // Nobody on it, in a list only the user sees (Inbox, a private list of theirs): the task is theirs.
   const alone = (task: TaskSummary) => {
@@ -243,6 +256,10 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       });
     }
   } else if (!whole) tasks.forEach((task) => items.push({ type: 'task', key: task.id, task }));
+  if (withDone && doneCount > 0 && pages.isSuccess && !pages.hasNextPage) {
+    items.push({ type: 'doneHead', key: 'done-head', folded: doneFolded, count: doneCount });
+    if (showDone) done.data?.pages.flatMap((p) => p.items).forEach((task) => items.push({ type: 'done', key: `c-${task.id}`, task }));
+  }
   items.push({ type: 'footer', key: 'footer' });
   const open = (task: { id: Id }) => navigation.navigate('TaskDetail', { taskId: task.id });
 
@@ -294,12 +311,16 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         return kind === 'completed'
           ? <CompletedRow task={item.task} onPress={() => open(item.task)} />
           : <TaskRow task={item.task} today={today} showDue showList={!listed} showAssignment={given} hideFace={(given && group === 'person') || byPerson || !!person} selectable={selects} onComplete={(task) => complete.mutate(task)} onPress={open} />;
+      case 'doneHead':
+        return <CompletedHeading folded={item.folded} count={item.count} onPress={() => me && useFoldedLists.getState().setFolded(me.id, kind, !item.folded)} />;
+      case 'done':
+        return <CompletedRow task={item.task} onPress={() => open(item.task)} />;
       case 'footer':
         return pages.isPending || (whole && pages.hasNextPage) ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
         ) : pages.hasNextPage ? (
           <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>
-        ) : !tasks.length ? (
+        ) : !tasks.length && !doneCount ? (
           <Text variant="subhead" color="ink3" style={{ paddingVertical: space.lg }}>{scoped && show ? t('browse.showEmpty') : t(`browse.listEmptyFor.${kind}`)}</Text>
         ) : tasks.length > PAGE ? (
           <View style={styles.footer}><Text variant="footnote" color="ink3">{t('browse.allShown', { count: tasks.length })}</Text></View>
@@ -317,7 +338,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
         stickyHeaderIndices={items.flatMap((item, i) => (item.type === 'group' || item.type === 'person' ? [i] : []))}
         onScroll={bar.onScroll}
         scrollEventThrottle={16}
-        onEndReached={() => pages.hasNextPage && !pages.isFetchingNextPage && pages.fetchNextPage()}
+        onEndReached={() => (pages.hasNextPage ? !pages.isFetchingNextPage && pages.fetchNextPage() : showDone && done.hasNextPage && !done.isFetchingNextPage && done.fetchNextPage())}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
       />

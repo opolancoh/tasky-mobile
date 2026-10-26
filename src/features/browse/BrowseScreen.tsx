@@ -7,7 +7,7 @@ import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { byName } from '@/core/text/collate';
 import { useReorderTaskLists, useReorderTags } from '@/data/tasks/mutations';
-import { useTaskLists, useTags, useTasks, useTeams } from '@/data/tasks/queries';
+import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -16,7 +16,7 @@ import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, Text, useTheme 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
-import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from './components/BrowseRow';
+import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from '@/shared/components/BrowseRow';
 import { useFoldedSections, type SpacesSection } from './foldedSectionsStore';
 
 type Group = 'mine' | 'shared' | 'tags';
@@ -26,7 +26,6 @@ type Item =
   | { type: 'list'; key: string; taskList: TaskList; group?: Group; index: number; size: number; flat?: boolean }
   | { type: 'team'; key: string; team: Team; count: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
-  | { type: 'nav'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: 'accent' | 'danger' | 'success' | 'quiet'; count?: number; onPress(): void }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
   | { type: 'skeletonSection'; key: string }
@@ -36,11 +35,10 @@ type Item =
 const FILTER_FROM = 25;
 
 /**
- * Spaces, the second tab (06-mobile.md, M38, M70; the route keeps the name Browse): everything the user can see. Four rows
- * that are always there: Personal, Important, Assigned to me, Assigned by me (M71), All tasks; then My lists, Shared with me, Teams (a row each,
- * A–Z) and Tags, each folding from its heading (kept on the device); More (Completed, Archived, Recently Deleted) has no
- * counts and loads nothing until opened. Every count opens its list. Edit reorders lists inside their section and tags
- * (arrows); a long press opens a row's menu (what the role allows).
+ * Spaces, the second tab (06-mobile.md, M38, M70, M105; the route keeps the name Browse): the user's lists, teams and tags.
+ * My lists, Shared with me, Teams (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Personal,
+ * Important, Assigned to me and by me, All tasks and More live on Home (M105). Every count opens its list. Edit reorders
+ * lists inside their section and tags (arrows); a long press opens a row's menu (what the role allows).
  */
 export function BrowseScreen() {
   const { t } = useTranslation();
@@ -50,11 +48,6 @@ export function BrowseScreen() {
   const taskLists = useTaskLists();
   const teams = useTeams();
   const tags = useTags();
-  // The rows' counts: `total` on a one-task page (GET /tasks, open). Important is the user's own, as on Home (D61, M31).
-  const important = useTasks({ important: true, mine: true, limit: 1 });
-  const assigned = useTasks({ assignee: 'me', limit: 1 });
-  const assignedBy = useTasks({ assignedBy: 'me', limit: 1 });
-  const allTasks = useTasks({ limit: 1 });
   const folded = useFoldedSections((s) => (me ? s.byUser[me.id] : undefined)) ?? {};
   const toggleFold = useFoldedSections((s) => s.toggle);
   const reorderLists = useReorderTaskLists();
@@ -85,37 +78,14 @@ export function BrowseScreen() {
 
   const items: Item[] = [{ type: 'header', key: 'header' }];
   const loading = taskLists.isPending || teams.isPending;
-  // The fixed rows wait together, as skeleton rows, until Personal and every count are in: no row without its number.
-  const fixedLoading = taskLists.isPending || [important, assigned, assignedBy, allTasks].some((q) => q.isPending);
-  const pushFixedSkeleton = () => [64, 52, 70, 66, 46].forEach((width) => items.push({ type: 'skeleton', key: `kf-${width}`, width }));
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
-  // After Personal: Important, Assigned to me, Assigned by me, All tasks, with their counts.
-  const pushRows = () => {
-    items.push(
-      { type: 'nav', key: 'important', label: t('browse.important'), icon: 'flag', tone: 'danger', count: important.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
-      { type: 'nav', key: 'assigned', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: assigned.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) },
-      { type: 'nav', key: 'assignedBy', label: t('browse.assignedBy'), icon: 'send', tone: 'accent', count: assignedBy.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'assignedBy' }) },
-      { type: 'nav', key: 'all', label: t('browse.allTasks'), icon: 'layers', tone: 'quiet', count: allTasks.data?.total ?? undefined, onPress: () => navigation.navigate('BrowseList', { kind: 'all' }) },
-    );
-  };
-  // More (M70): no counts, the same three rows always; each loads only when opened.
-  const pushMore = () => {
-    items.push({ type: 'section', key: 's-more', title: t('browse.more') });
-    items.push({ type: 'nav', key: 'done', label: t('browse.completed'), icon: 'check-circle', tone: 'success', onPress: () => navigation.navigate('BrowseList', { kind: 'completed' }) });
-    items.push({ type: 'nav', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', onPress: () => navigation.navigate('Archived') });
-    items.push({ type: 'nav', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') });
-  };
-
-  // Loading (M27, M70): every row waits as a skeleton shaped like it (tile, name, count): the five fixed rows, then two
-  // sections, each a heading and rows; More shows at once (no counts).
+  // Loading (M27, M70): every row waits as a skeleton shaped like it (tile, name, count): two sections, each a heading and rows.
   if (loading) {
-    pushFixedSkeleton();
     [[58, 72, 46, 64, 52, 68], [55, 40, 62]].forEach((widths, s) => {
       items.push({ type: 'skeletonSection', key: `ks${s}` });
       widths.forEach((width) => items.push({ type: 'skeleton', key: `k${s}-${width}`, width }));
     });
-    pushMore();
   } else if (query) {
     // Filtering: flat results, by kind.
     const ls = all.filter((c) => !c.isInbox && c.name.toLowerCase().includes(query));
@@ -126,12 +96,6 @@ export function BrowseScreen() {
     if (gs.length) items.push({ type: 'section', key: 's-fg', title: t('browse.tags') }, ...gs.map((tag, index) => ({ type: 'tag' as const, key: `g-${tag.name}`, tag, index, size: gs.length })));
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
-    // Personal, Important, Assigned to me, Assigned by me, All tasks (M70, M71): always there, in this order.
-    if (!editing && fixedLoading) pushFixedSkeleton();
-    else if (!editing) {
-      if (groups.inbox) items.push({ type: 'list', key: 'inbox', taskList: groups.inbox, index: 0, size: 1 });
-      pushRows();
-    }
     // A section folds from its heading (not while editing): its rows go, its count shows.
     const fold = (section: SpacesSection, count: number) => (editing ? undefined : { section, folded: !!folded[section], count });
     const isOpen = (section: SpacesSection) => editing || !folded[section];
@@ -164,19 +128,15 @@ export function BrowseScreen() {
       if (isOpen('tags')) tagList.forEach((tag, index) => items.push({ type: 'tag', key: `g-${tag.name}`, tag, index, size: tagList.length }));
     }
 
-    if (!editing) {
-      pushMore();
-    }
   }
 
   const refresh = async () => {
     setRefreshing(true);
-    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch(), important.refetch(), assigned.refetch(), assignedBy.refetch(), allTasks.refetch()]);
+    await Promise.all([taskLists.refetch(), teams.refetch(), tags.refetch()]);
     setRefreshing(false);
   };
 
   const tile = (name: ComponentProps<typeof Feather>['name'], color: string) => <Feather name={name} size={17} color={color} />;
-  const toneOf = { accent: [colors.accentSoft, colors.accent], danger: [colors.dangerSoft, colors.danger], success: [colors.successSoft, colors.success], quiet: [colors.surface2, colors.ink2] } as const;
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -272,10 +232,6 @@ export function BrowseScreen() {
             move={editing && !query ? { up: item.index > 0 ? () => move('tags', item.tag.name, -1) : undefined, down: item.index < item.size - 1 ? () => move('tags', item.tag.name, 1) : undefined } : undefined}
           />
         );
-      }
-      case 'nav': {
-        const [bg, fg] = toneOf[item.tone];
-        return <BrowseRow label={item.label} icon={tile(item.icon, fg)} tint={bg} count={item.count} onPress={item.onPress} />;
       }
       case 'action':
         // A section's first step (M38): a dashed + tile, the action in the accent color, an example under it.

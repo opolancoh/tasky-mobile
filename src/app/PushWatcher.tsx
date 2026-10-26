@@ -10,7 +10,6 @@ import { useUnreadCount } from '@/data/collaboration/queries';
 import type { NotificationKind } from '@/data/collaboration/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
-import { HOME_PREVIEW } from '@/data/tasks/queries';
 import { activityState, openActivityGo } from '@/shared/components/useActivityState';
 import { askForNotifications, readNotificationPermission, useNotificationPermission } from '@/shared/notifications/permission';
 import { pushSupported, registerPush } from '@/shared/notifications/push';
@@ -63,7 +62,7 @@ async function openTapped(data: Record<string, unknown>, queryClient: QueryClien
     fetch(taskKeys.invitations, tasksApi.invitations),
     fetch(taskKeys.taskLists, tasksApi.taskLists),
     fetch(taskKeys.teams, tasksApi.teams),
-    fetch(taskKeys.home, () => tasksApi.home(HOME_PREVIEW)),
+    fetch(taskKeys.home, tasksApi.home),
   ]);
   const state = activityState(
     { kind: data.kind as NotificationKind, taskId: id('taskId'), commentId: id('commentId'), taskListId: id('taskListId'), teamId: id('teamId') },

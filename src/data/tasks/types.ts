@@ -295,27 +295,49 @@ export interface MyInvitation {
 }
 
 /** Home's task sections (GET /home/{section}, D67, D86). */
-export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'coming-up' | 'assigned' | 'important' | 'inbox' | 'holds';
+export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'done-today' | 'important' | 'inbox' | 'holds';
 
-/** GET /home (D67, D69, D86): Home's invitations, each section's first page, and the totals behind its cards. */
-export interface Home {
-  invitations: MyInvitation[];
-  toAnswer: TaskPage;
-  /** Tasks the caller assigned that were declined or dropped (D100), or completed and wait for them to confirm (D71). */
-  followUp: TaskPage;
-  overdue: TaskPage;
-  today: TaskPage;
-  comingUp: TaskPage;
-  /** Accepted tasks others gave the caller, past Coming up or undated: not in any section above (D86). */
-  assigned: TaskPage;
-  /** Today's tasks already completed: "2 of 9 done" with `today.total` (D86). */
+/** GET /home's numbers (D107): one aggregate over the open tasks the caller can see. Late: due before today. */
+export interface HomeCounts {
+  /** Due today, or the caller's reminder today and not due before. */
+  today: number;
+  /** Today's scope, completed (D86): "3 of 9 done" with `today`. */
   doneToday: number;
-  importantTotal: number;
-  inboxTotal: number;
-  /** Every open task the caller can see; 0 with nothing to answer is a new user's first day (M51). */
+  overdue: number;
+  /** The oldest overdue due date. */
+  overdueSince: LocalDate | null;
+  /** The caller's own flagged tasks (`mine`, D61). */
+  important: number;
+  /** Every open task in the Personal list (D101). */
+  personal: number;
+  /** Open tasks with the caller's reminder from today through today + 6. */
+  remindersNext7Days: number;
+  /** Open tasks the caller gave someone else, pending or accepted (declined ones are requests). */
+  assignedByMe: number;
+  assignedByMeLate: number;
+  /** Open tasks someone else gave the caller that they accepted. */
+  assignedToMe: number;
+  assignedToMeLate: number;
+  /** Every open task the caller can see; 0 with no requests is a first day. */
   openTotal: number;
-  /** Tasks on hold whose Until has come, for the caller to resume (D91): with Requests. */
-  holds: TaskPage;
+}
+
+/** What waits on the caller, up to 20 rows in all (Home shows 3; Activity reads them all, M58), and how many in all. */
+export interface HomeRequests {
+  invitations: MyInvitation[];
+  toAnswer: TaskSummary[];
+  /** Tasks the caller assigned that were declined or dropped (D100), or completed and wait for them to confirm (D71). */
+  followUp: TaskSummary[];
+  /** Tasks on hold whose Until has come, for the caller to resume (D91). */
+  holds: TaskSummary[];
+  total: number;
+}
+
+/** GET /home (D107, M105): Home's numbers, its requests and the next reminder today (the header's line). */
+export interface Home {
+  counts: HomeCounts;
+  requests: HomeRequests;
+  next: { taskId: Id; title: string; time: string } | null;
 }
 
 export type TeamRole = 'owner' | 'admin' | 'member';

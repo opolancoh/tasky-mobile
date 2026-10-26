@@ -9,7 +9,7 @@ import type { Id, LocalDate } from '@/core/types';
 import { restoreTask, useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useDeleteTask, useReassignTask, useUpdateTask } from '@/data/tasks/mutations';
 import { useTaskLists } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { askDecline, Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { askDecline, Avatar, CheckCircle, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useMe } from '@/data/tenancy/queries';
@@ -254,32 +254,6 @@ export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today:
     : when === 'due' && task.dueDate ? <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>{labels.day(task.dueDate)}</Text>
     : undefined;
   return <StreamRow lead={<Check task={task} />} taskId={task.id} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
-}
-
-/** A task with no date (From your lists, M66): where it lives, and Today, which gives it today's date. */
-export function UndatedRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
-  const { t } = useTranslation();
-  const open = useOpenTask();
-  const update = useUpdateTask();
-  return (
-    <StreamRow
-      lead={<Check task={task} />} taskId={task.id}
-      title={task.title}
-      sub={<TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />}
-      onPress={() => open(task)}
-      action={<Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />}
-    />
-  );
-}
-
-/** A task someone else gave the caller and they accepted (Assigned to me, D86): who it's from and when it's due. */
-export function AssignedRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
-  const { t } = useTranslation();
-  const labels = useDateLabels(today);
-  const open = useOpenTask();
-  const from = task.assignedBy?.displayName ? t('home.from', { name: task.assignedBy.displayName.split(' ')[0] }) : t('today.assigned');
-  const sub = task.dueDate ? `${from} · ${labels.day(task.dueDate)}` : from;
-  return <StreamRow lead={<Check task={task} />} taskId={task.id} title={task.title} sub={task.isImportant ? <>{sub}  <Flag /></> : sub} onPress={() => open(task)} />;
 }
 
 const styles = StyleSheet.create({

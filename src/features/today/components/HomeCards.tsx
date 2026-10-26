@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/core/types';
-import type { Home } from '@/data/tasks/types';
+import type { HomeCounts } from '@/data/tasks/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { fonts, radius, Skeleton, Text, useTheme } from '@/shared/ui';
 
@@ -12,7 +12,7 @@ import type { TodayListSection } from '../todaySections';
 
 type Tone = 'accent' | 'danger' | 'success' | 'plain';
 
-/** One card: the count (or a check), an icon at the right, a name and one line; grey at 0. Opens its See all (M33). */
+/** One card: the count (or a check), an icon at the right, a name and one line; grey at 0. Opens its screen (M105). */
 function Card({ tone, icon, count, label, sub, bar, onPress }: { tone: Tone; icon: ComponentProps<typeof Feather>['name']; count: ReactNode; label: string; sub: string; bar?: ReactNode; onPress(): void }) {
   const { colors, space } = useTheme();
   const [bg, fg] = tone === 'accent' ? [colors.accentSoft, colors.accent] : tone === 'danger' ? [colors.dangerSoft, colors.danger] : tone === 'success' ? [colors.successSoft, colors.success] : [colors.surface2, colors.ink3];
@@ -43,29 +43,22 @@ function Progress({ done, total }: { done: number; total: number }) {
   );
 }
 
-/**
- * Home's four cards (M65): Today, Overdue, Important, Personal; each opens its full list. Important and Personal open the
- * same screens as Spaces, so their rows are the same everywhere.
- */
-export function HomeCards({ data, today, open, openImportant, openPersonal }: { data: Home; today: LocalDate; open(section: TodayListSection): void; openImportant(): void; openPersonal(): void }) {
+/** Home's two cards (M105): Today ("3 of 9 done", a bar) and Overdue (since its oldest); each opens its screen. */
+export function HomeCards({ counts, today, open }: { counts: HomeCounts; today: LocalDate; open(section: TodayListSection): void }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const labels = useDateLabels(today);
-  const left = data.today.total ?? 0;
-  const total = left + data.doneToday;
-  const allDone = !left && data.doneToday > 0;
-  const overdue = data.overdue.total ?? 0;
-  const oldest = data.overdue.items[0]?.dueDate;
+  const left = counts.today;
+  const total = left + counts.doneToday;
+  const allDone = !left && counts.doneToday > 0;
   return (
     <View style={styles.grid}>
       {allDone ? (
-        <Card tone="success" icon="calendar" count={<Feather name="check" size={26} color={colors.success} style={styles.check} />} label={t('home.today')} sub={t('home.allDoneCount', { count: data.doneToday })} bar={<Progress done={1} total={1} />} onPress={() => open('today')} />
+        <Card tone="success" icon="calendar" count={<Feather name="check" size={26} color={colors.success} style={styles.check} />} label={t('home.today')} sub={t('home.allDoneCount', { count: counts.doneToday })} bar={<Progress done={1} total={1} />} onPress={() => open('today')} />
       ) : (
-        <Card tone={left ? 'accent' : 'plain'} icon="calendar" count={left} label={t('home.today')} sub={total ? t('home.doneOf', { done: data.doneToday, total }) : t('home.nothingTodayShort')} bar={total ? <Progress done={data.doneToday} total={total} /> : undefined} onPress={() => open('today')} />
+        <Card tone={left ? 'accent' : 'plain'} icon="calendar" count={left} label={t('home.today')} sub={total ? t('home.doneOf', { done: counts.doneToday, total }) : t('home.nothingTodayShort')} bar={total ? <Progress done={counts.doneToday} total={total} /> : undefined} onPress={() => open('today')} />
       )}
-      <Card tone={overdue ? 'danger' : 'plain'} icon="clock" count={overdue} label={t('home.overdue')} sub={overdue && oldest ? t('home.since', { date: labels.day(oldest) }) : t('home.nothingLate')} onPress={() => open('overdue')} />
-      <Card tone={data.importantTotal ? 'danger' : 'plain'} icon="flag" count={data.importantTotal} label={t('home.important')} sub={t(data.importantTotal ? 'home.soonestFirst' : 'home.noneFlagged')} onPress={openImportant} />
-      <Card tone={data.inboxTotal ? 'accent' : 'plain'} icon="inbox" count={data.inboxTotal} label={t('home.inbox')} sub={t(data.inboxTotal ? 'home.justForYou' : 'home.nothingOpen')} onPress={openPersonal} />
+      <Card tone={counts.overdue ? 'danger' : 'plain'} icon="clock" count={counts.overdue} label={t('home.overdue')} sub={counts.overdue && counts.overdueSince ? t('home.since', { date: labels.day(counts.overdueSince) }) : t('home.nothingLate')} onPress={() => open('overdue')} />
     </View>
   );
 }
@@ -74,7 +67,7 @@ export function HomeCards({ data, today, open, openImportant, openPersonal }: { 
 export function HomeCardsSkeleton() {
   return (
     <View style={styles.grid}>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1].map((i) => (
         <View key={i} style={styles.cell}>
           <Skeleton width="100%" height={96} radius={radius.xl - 4} />
         </View>
@@ -84,7 +77,7 @@ export function HomeCardsSkeleton() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
+  grid: { flexDirection: 'row', justifyContent: 'space-between' },
   cell: { width: '48.5%' },
   card: { borderRadius: radius.xl - 4, minHeight: 96, gap: 1 },
   top: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', minHeight: 34 },
