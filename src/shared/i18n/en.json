@@ -115,7 +115,13 @@
     "assignments": "Assignments",
     "late_one": "{{count}} late",
     "late_other": "{{count}} late",
-    "allDoneToday": "All done for today"
+    "allDoneToday": "All done for today",
+    "overdueN_one": "{{count}} overdue",
+    "overdueN_other": "{{count}} overdue",
+    "todayN_one": "{{count}} today",
+    "todayN_other": "{{count}} today",
+    "comingUpN_one": "{{count}} coming up",
+    "comingUpN_other": "{{count}} coming up"
   },
   "today": {
     "invitedBy": "{{name}} invited you · {{kind}}",

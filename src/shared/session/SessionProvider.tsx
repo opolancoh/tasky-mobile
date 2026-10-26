@@ -11,6 +11,7 @@ import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
 import { getInstallId, pushSupported, unregisterPush } from '@/shared/notifications/push';
 import { clearReminders } from '@/shared/notifications/reminders';
 
+import { useHomeCache } from './homeCacheStore';
 import { keepPendingSignOut, retryPendingSignOut } from './pendingSignOut';
 import { useSessionStore, type SessionStatus } from './sessionStore';
 
@@ -100,6 +101,7 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
     await tokens.clear();
     await clearReminders().catch(() => undefined);   // this user's reminders leave the phone (M42)
     queryClient.clear();
+    useHomeCache.getState().clear();
     await i18n.changeLanguage(deviceLanguage());
     useSessionStore.getState().setUser(null);
     useSessionStore.getState().setStatus('signedOut');

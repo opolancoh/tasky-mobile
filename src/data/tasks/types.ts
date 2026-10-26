@@ -308,8 +308,15 @@ export interface HomeCounts {
   overdueSince: LocalDate | null;
   /** The caller's own flagged tasks (`mine`, D61). */
   important: number;
+  /** Important's overdue, today's and coming up (next 7 days): its row's line (M105). */
+  importantOverdue: number;
+  importantToday: number;
+  importantComingUp: number;
   /** Every open task in the Personal list (D101). */
   personal: number;
+  personalOverdue: number;
+  personalToday: number;
+  personalComingUp: number;
   /** Open tasks with the caller's reminder from today through today + 6. */
   remindersNext7Days: number;
   /** Open tasks the caller gave someone else, pending or accepted (declined ones are requests). */

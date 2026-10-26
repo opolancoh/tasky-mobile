@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
-import { useState, type ComponentProps, type ReactNode } from 'react';
+import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 
@@ -10,6 +10,7 @@ import { useHome, useTaskLists } from '@/data/tasks/queries';
 import type { Home } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
+import { useHomeCache } from '@/shared/session/homeCacheStore';
 import { BrowseRow, BrowseRowSkeleton } from '@/shared/components/BrowseRow';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
@@ -53,7 +54,12 @@ export function TodayScreen() {
   const now = me ? nowIn(me.timeZone) : undefined;
   const today = now?.date;
   const labels = useDateLabels(today);
-  const data = home.data;
+  // The last Home on this device shows at once while GET /home refreshes it.
+  const cached = useHomeCache((s) => (me ? s.byUser[me.id] : undefined));
+  const data = home.data ?? cached;
+  useEffect(() => {
+    if (me && home.data) useHomeCache.getState().save(me.id, home.data);
+  }, [me, home.data]);
   // No Personal yet (D59): its row opens nothing.
   const personal = useTaskLists().data?.find((c) => c.isInbox);
   const open = (section: TodayListSection) => navigation.navigate('TodayList', { section });
@@ -70,6 +76,14 @@ export function TodayScreen() {
     const c = data.counts;
     const requests = homeRequests(data);
     const late = (n: number) => (n ? <Text variant="footnote" color="danger">{t('home.late', { count: n })}</Text> : undefined);
+    const urgency = (overdue: number, due: number, soon: number, usual: string) =>
+      overdue || due ? (
+        <Text variant="footnote" color="ink3" numberOfLines={1}>
+          {overdue ? <Text variant="footnote" color="danger">{t('home.overdueN', { count: overdue })}</Text> : null}
+          {overdue && due ? ' · ' : ''}
+          {due ? t('home.todayN', { count: due }) : ''}
+        </Text>
+      ) : soon ? t('home.comingUpN', { count: soon }) : usual;
     items.push({ type: 'cards', key: 'cards' });
     if (requests.length) {
       items.push({ type: 'section', key: 's-requests', title: t('home.requests'), count: data.requests.total, seeAll: data.requests.total > SHORT });
@@ -77,8 +91,8 @@ export function TodayScreen() {
     }
     items.push(
       { type: 'section', key: 's-mine', title: t('home.myStuff') },
-      { type: 'row', key: 'important', label: t('home.important'), icon: 'flag', tone: 'danger', count: c.important, sub: t(c.important ? 'home.soonestFirst' : 'home.noneFlagged'), onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
-      { type: 'row', key: 'personal', label: t('home.inbox'), icon: 'inbox', tone: 'accent', count: c.personal, sub: t(c.personal ? 'home.justForYou' : 'home.nothingOpen'), onPress: () => personal && navigation.navigate('TaskList', { taskListId: personal.id }) },
+      { type: 'row', key: 'important', label: t('home.important'), icon: 'flag', tone: 'danger', count: c.important, sub: c.important ? urgency(c.importantOverdue, c.importantToday, c.importantComingUp, t('home.soonestFirst')) : t('home.noneFlagged'), onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
+      { type: 'row', key: 'personal', label: t('home.inbox'), icon: 'inbox', tone: 'accent', count: c.personal, sub: c.personal ? urgency(c.personalOverdue, c.personalToday, c.personalComingUp, t('home.justForYou')) : t('home.nothingOpen'), onPress: () => personal && navigation.navigate('TaskList', { taskListId: personal.id }) },
       { type: 'row', key: 'reminders', label: t('home.reminders'), icon: 'bell', tone: 'warn', count: c.remindersNext7Days, sub: t(c.remindersNext7Days ? 'home.next7Days' : 'home.noneComingUp'), onPress: () => navigation.navigate('Reminders') },
       { type: 'section', key: 's-assignments', title: t('home.assignments') },
       { type: 'row', key: 'byMe', label: t('browse.assignedBy'), icon: 'send', tone: 'accent', count: c.assignedByMe, zero: true, sub: late(c.assignedByMeLate), onPress: () => navigation.navigate('BrowseList', { kind: 'assignedBy' }) },

@@ -15,6 +15,7 @@ import { breadcrumbRecorder } from '@/shared/errors/breadcrumbs';
 import { configureErrorReports } from '@/shared/errors/errorReports';
 import { networkRecorder } from '@/shared/network/networkLog';
 import i18n from '@/shared/i18n/i18n';
+import { useHomeCache } from '@/shared/session/homeCacheStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 
 import { config } from './config';
@@ -59,6 +60,7 @@ export const tokenManager = createTokenManager({
   isSessionEnded: (e) => isApiError(e) && (e.status === 401 || e.status === 403),
   onEnded: () => {
     queryClient.clear();
+    useHomeCache.getState().clear();
     useSessionStore.getState().setUser(null);
     useSessionStore.getState().setStatus('signedOut');
   },

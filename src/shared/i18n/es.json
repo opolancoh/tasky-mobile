@@ -115,7 +115,13 @@
     "assignments": "Asignaciones",
     "late_one": "{{count}} atrasada",
     "late_other": "{{count}} atrasadas",
-    "allDoneToday": "Todo listo por hoy"
+    "allDoneToday": "Todo listo por hoy",
+    "overdueN_one": "{{count}} atrasada",
+    "overdueN_other": "{{count}} atrasadas",
+    "todayN_one": "{{count}} para hoy",
+    "todayN_other": "{{count}} para hoy",
+    "comingUpN_one": "{{count}} próxima",
+    "comingUpN_other": "{{count}} próximas"
   },
   "today": {
     "invitedBy": "{{name}} te invitó · {{kind}}",
