@@ -7,7 +7,7 @@ export { TagPicker } from './tags/TagPicker';
 export { TagsRow } from './tags/TagsRow';
 export { sortByRecent, type TagItem } from './tags/tagItems';
 export { useRecentTags, RECENT_TAGS_MAX } from './tags/recentTagsStore';
-export { TaskRow, type TaskRowProps } from './TaskRow';
+export { TaskMarks, TaskMeta, TaskRow, type TaskRowProps } from './TaskRow';
 export { CheckCircle, type CheckCircleProps } from './CheckCircle';
 export { easeNextLayout, useTaskCheck, useTaskSaving } from './useTaskCheck';
 export { UpdateRow } from './UpdateRow';

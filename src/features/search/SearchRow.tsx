@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
+import type { LocalDate } from '@/core/types';
 import type { TaskSummary } from '@/data/tasks/types';
-import { CheckCircle, TaskOrigin, useTaskCheck } from '@/shared/components';
+import { CheckCircle, TaskMarks, TaskMeta, useTaskCheck } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
 import { selectable, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
@@ -18,10 +19,10 @@ export const searchWords = (q: string) => fold(q).split(/[^\p{L}\p{N}]+/u).filte
 
 /**
  * A search result (M40): the circle (completes an open task; a completed one shows its check and reopens), the title with
- * the words found in bold, its list, and "Completed" for a completed one. On hold (D91, M80): the pause icon (Resume,
- * Complete, Edit the reason) and "· On hold". A long press starts selecting (M81); while selecting, a tap picks it.
+ * the words found in bold, then the line and the right of every task row (`TaskMeta`, `TaskMarks`). On hold (D91, M80): the
+ * pause icon (Resume, Complete, Edit the reason). A long press starts selecting (M81); while selecting, a tap picks it.
  */
-export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: string[]; onPress(): void }) {
+export function SearchRow({ task, words, today, onPress }: { task: TaskSummary; words: string[]; today: LocalDate | undefined; onPress(): void }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const complete = useCompleteTask();
@@ -64,13 +65,9 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
                 words.some((w) => fold(p).startsWith(w)) ? <Text key={i} variant="bodyMedium" color={done ? 'ink2' : 'heading'}>{p}</Text> : p,
               )}
             </Text>
-            <View style={[styles.meta, { gap: space.xs }]}>
-              <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
-              {done && <Text variant="footnote" color="ink3">· {t('search.completed')}</Text>}
-              {held && <Text variant="footnote" style={{ color: colors.warn }}>· {t('hold.onHold')}</Text>}
-              {task.isImportant && !done && <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} style={styles.flag} />}
-            </View>
+            <TaskMeta task={task} today={today} showDue />
           </View>
+          {!done && <TaskMarks task={task} />}
         </View>
       )}
     </Pressable>
@@ -80,8 +77,6 @@ export function SearchRow({ task, words, onPress }: { task: TaskSummary; words: 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   main: { flex: 1, minWidth: 0, gap: 3 },
-  meta: { flexDirection: 'row', alignItems: 'center' },
   shrink: { flexShrink: 1 },
-  flag: { marginLeft: 6 },
   pause: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },   // important: the last item of the meta line (M44)
 });

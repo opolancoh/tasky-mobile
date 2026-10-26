@@ -5,17 +5,19 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { todayIn } from '@/core/dates/localDate';
+import { useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
 import { HOME_PAGE, useHome, useHomeSection, useInvitations } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { CompletedHeading } from '@/shared/components/CompletedHeading';
+import { TaskRow } from '@/shared/components';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { LoadError } from '@/shared/components/LoadError';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
-import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Pill, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 
-import { AskRow, FollowUpRow, HoldRow, InvitationRow, OverdueRow, TaskStreamRow } from './components/StreamRows';
+import { AskRow, FollowUpRow, HoldRow, InvitationRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
 
 type Item =
@@ -43,6 +45,8 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
   const navigation = useNavigation();
+  const complete = useCompleteTask();
+  const update = useUpdateTask();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
 
@@ -102,6 +106,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   }
   items.push({ type: 'footer', key: 'footer' });
 
+  const openTask = (task: { id: string }) => navigation.navigate('TaskDetail', { taskId: task.id });
   const title = t(`todayList.title.${section}`);
   // The hub's line (M105): "6 open · 3 done", "28 overdue · oldest first", "3 waiting on you"; none at 0.
   const line = total === undefined || total + (isToday ? doneCount : 0) === 0 ? null
@@ -126,17 +131,18 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
       case 'hold':
         return <HoldRow task={item.task} />;
       case 'overdue':
-        return <OverdueRow task={item.task} today={today!} />;
+        return (
+          <TaskRow
+            task={item.task} today={today} onComplete={(task) => complete.mutate(task)} onPress={openTask}
+            action={<Pill label={t('today.toToday')} onPress={() => update.mutate({ task: item.task, body: { dueDate: today! } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />}
+          />
+        );
       case 'task':
-        return <TaskStreamRow task={item.task} today={today!} />;
+        return <TaskRow task={item.task} today={today} showTime onComplete={(task) => complete.mutate(task)} onPress={openTask} />;
       case 'doneHead':
         return <CompletedHeading folded={item.folded} count={item.count} onPress={() => userId && useFoldedLists.getState().setFolded(userId, TODAY_FOLD, !item.folded)} />;
       case 'done':
-        return (
-          <View style={[styles.line, { borderBottomColor: colors.line }]}>
-            <CompletedRow task={item.task} onPress={() => navigation.navigate('TaskDetail', { taskId: item.task.id })} />
-          </View>
-        );
+        return <CompletedRow task={item.task} onPress={() => openTask(item.task)} />;
       case 'footer':
         return loading ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
@@ -181,7 +187,6 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  line: { borderBottomWidth: StyleSheet.hairlineWidth },
   empty: { flexDirection: 'row', alignItems: 'center' },
   emptyIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 56 },

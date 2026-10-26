@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { todayIn } from '@/core/dates/localDate';
 import { useSearch, useTags } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
@@ -42,6 +43,7 @@ export function SearchScreen() {
   const { colors, space, scheme } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
+  const today = me ? todayIn(me.timeZone) : undefined;
   const [query, setQuery] = useState('');
   const [preset, setPreset] = useState({ text: '', n: 0 });
   const results = useSearch(query);
@@ -134,7 +136,7 @@ export function SearchScreen() {
       case 'hint':
         return <Text variant="subhead" color="ink2" style={{ marginTop: space.lg }}>{item.text}</Text>;
       case 'task':
-        return <SearchRow task={item.task} words={words} onPress={() => open(item.task)} />;
+        return <SearchRow task={item.task} words={words} today={today} onPress={() => open(item.task)} />;
       case 'footer':
         return results.isPending ? <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
           : results.hasNextPage ? <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>

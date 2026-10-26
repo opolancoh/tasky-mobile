@@ -5,27 +5,25 @@ import type { ComponentProps, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import type { Id, LocalDate } from '@/core/types';
-import { restoreTask, useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useDeleteTask, useReassignTask, useUpdateTask } from '@/data/tasks/mutations';
+import type { LocalDate } from '@/core/types';
+import { restoreTask, useAnswerAssignment, useAnswerInvitation, useConfirmTask, useDeleteTask, useReassignTask } from '@/data/tasks/mutations';
 import { useTaskLists } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { askDecline, Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { askDecline } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useMe } from '@/data/tenancy/queries';
-import { useSessionStore } from '@/shared/session/sessionStore';
 import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoice } from '@/shared/ui';
 
 
 /**
- * Home's rows (M32, M65), shared by Home and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
- * task), the title on one line (two on requests), one line saying when or why, and one action. Tapping the row opens what it is about.
+ * A request's row (M105), on Home and in Requests: an icon, the title on up to two lines, one line saying who did what, and
+ * its answer. Tapping the row opens what it is about. Tasks themselves use `TaskRow`.
  */
-function StreamRow({ lead, title, titleLines = 1, sub, meta, action, onPress, label, taskId }: { lead: ReactNode; title: string; titleLines?: number; sub?: ReactNode; /** A line of views (a list's dot), instead of `sub`'s text. */ meta?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
+function StreamRow({ lead, title, titleLines = 1, sub, action, onPress, label }: { lead: ReactNode; title: string; titleLines?: number; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string }) {
   const { colors, space } = useTheme();
-  const saving = useTaskSaving(taskId);
   return (
-    <Pressable onPress={onPress} disabled={saving} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ busy: saving }}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
       {({ pressed }) => (
         <View style={[styles.row, { gap: space.md, paddingVertical: space.sm + 2, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
           {lead}
@@ -38,9 +36,8 @@ function StreamRow({ lead, title, titleLines = 1, sub, meta, action, onPress, la
                 {sub}
               </Text>
             ) : null}
-            {meta ? <View style={[styles.meta, { gap: space.xs }]}>{meta}</View> : null}
           </View>
-          {action && <View pointerEvents={saving ? 'none' : 'auto'}>{action}</View>}
+          {action}
         </View>
       )}
     </Pressable>
@@ -57,20 +54,6 @@ function Badge({ icon, tone }: { icon: ComponentProps<typeof Feather>['name']; t
     </View>
   );
 }
-
-/** The complete circle (M75): the row leaves Home at once, and comes back if the API says no. */
-function Check({ task }: { task: TaskSummary }) {
-  const { t } = useTranslation();
-  const complete = useCompleteTask();
-  const { spinning, tap } = useTaskCheck(task, (x) => complete.mutate(x));
-  return <CheckCircle checked={false} saving={spinning} onPress={tap} label={t('taskRow.complete', { title: task.title })} />;
-}
-
-const Flag = () => {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
-  return <Feather name="flag" size={15} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
-};
 
 /** Decline as a round ✕ before a request's answer (M105): a task opens the Decline sheet, an invitation asks first. */
 function DeclineButton({ onPress, disabled }: { onPress(): void; disabled?: boolean }) {
@@ -241,76 +224,9 @@ export function HoldRow({ task }: { task: TaskSummary }) {
   );
 }
 
-/** An overdue task (M105): when it was due (red), then its list; at the right its flag and face, and Today, which moves it to today. */
-export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
-  const { t } = useTranslation();
-  const labels = useDateLabels(today);
-  const open = useOpenTask();
-  const update = useUpdateTask();
-  return (
-    <StreamRow
-      lead={<Check task={task} />} taskId={task.id}
-      title={task.title}
-      meta={
-        <>
-          <Text variant="footnote" color="danger">{labels.day(task.dueDate!)}</Text>
-          <Text variant="footnote" color="ink3">·</Text>
-          <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
-        </>
-      }
-      onPress={() => open(task)}
-      action={
-        <View style={styles.actions}>
-          <Marks task={task} />
-          <Pill label={t('today.toToday')} onPress={() => update.mutate({ task, body: { dueDate: today } }, { onSuccess: () => useToast.getState().show({ message: t('today.movedToday') }) })} disabled={update.isPending} />
-        </View>
-      }
-    />
-  );
-}
-
-/** A task in Today (M105): its reminder time today, then its list; at the right its flag and face. */
-export function TaskStreamRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
-  const labels = useDateLabels(today);
-  const { colors } = useTheme();
-  const open = useOpenTask();
-  const time = task.reminder?.date === today ? task.reminder.time : null;
-  const meId = useSessionStore((s) => s.userId);
-  const marked = task.isImportant || (!!task.assignee && task.assignee.id !== meId);
-  return (
-    <StreamRow
-      lead={<Check task={task} />} taskId={task.id}
-      title={task.title}
-      meta={
-        <>
-          {time && <Text variant="footnote" style={{ color: colors.accent, fontWeight: '600' }}>{labels.time(time)}</Text>}
-          {time && <Text variant="footnote" color="ink3">·</Text>}
-          <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
-        </>
-      }
-      onPress={() => open(task)}
-      action={marked ? <View style={styles.actions}><Marks task={task} /></View> : undefined}
-    />
-  );
-}
-
-/** A red flag when important (M44), and the face of whoever else has the task. */
-function Marks({ task }: { task: TaskSummary }) {
-  const { t } = useTranslation();
-  const meId = useSessionStore((s) => s.userId);
-  const other = task.assignee && task.assignee.id !== meId ? task.assignee : null;
-  return (
-    <>
-      {task.isImportant && <Flag />}
-      {other && <View accessible accessibilityLabel={t('taskRow.assignedTo', { name: other.displayName })}><Avatar name={other.displayName} seed={other.id} size={24} /></View>}
-    </>
-  );
-}
-
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
   main: { flex: 1, minWidth: 0, gap: 2 },
-  meta: { flexDirection: 'row', alignItems: 'center' },
   badge: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   decline: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },

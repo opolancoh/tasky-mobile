@@ -17,7 +17,7 @@ src/features/
 ├── error-reports/  ErrorReportsScreen.tsx  ErrorReportScreen.tsx  statusTone.ts (Me › About › Error reports, everyone while testing, with Test an error, M89)
 ├── network-log/    NetworkLogScreen.tsx  NetworkLogEntryScreen.tsx  shareText.ts (Share, curl)  useSessionInfo.ts (Me › About, support and admin, M53)
 ├── today/          TodayScreen.tsx (Home, the first tab)  TodayListScreen.tsx (Today, Overdue, Requests)  RemindersScreen.tsx (M105)  todaySections.ts  components/HomeCards.tsx  components/RequestRows.tsx  components/ActivityBell.tsx (M74)
-│   └── components/       StreamRows (the rows Home and its screens share)
+│   └── components/       StreamRows (request rows, on Home and in Requests)
 ├── sharing/        InvitationScreen.tsx
 ├── activity/       ActivityScreen.tsx (from Home's bell)
 ├── calendar/       CalendarScreen.tsx (the third tab)  MonthView (Calendar)  DaysView (List)  calendarViewStore.ts (List | Calendar and Month | Week, on the device)  useOverdue.ts  useCalendarLabels.ts
