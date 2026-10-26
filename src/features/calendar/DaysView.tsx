@@ -8,7 +8,7 @@ import { monthOf, weekStart } from '@/core/dates/calendar';
 import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTaskPages } from '@/data/tasks/queries';
-import type { TaskSummary } from '@/data/tasks/types';
+import { previewOf, type TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
 import { Button, SkeletonRow, Text, useTheme } from '@/shared/ui';
@@ -85,7 +85,7 @@ export function DaysView({ today }: { today: LocalDate }) {
   items.push({ type: 'footer', key: 'footer' });
 
   const refreshControl = usePullRefresh(pages, overdue);
-  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
+  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {

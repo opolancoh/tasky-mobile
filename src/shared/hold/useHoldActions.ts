@@ -42,7 +42,7 @@ export function useHoldActions() {
 
   const canHold = (task: Pick<TaskSummary, 'taskList' | 'status'>) => holdable(queryClient, task);
 
-  const putOnHold = async (task: TaskSummary) => {
+  const putOnHold = async (task: Pick<TaskSummary, 'id' | 'version' | 'title'>) => {
     const reasons = HOLD_REASONS.map((r) => t(`hold.reason.${r}`));
     const i = await chooseAction({
       title: t('hold.title', { title: task.title }),

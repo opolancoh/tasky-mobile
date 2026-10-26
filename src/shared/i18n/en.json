@@ -600,7 +600,10 @@
     "declinedReason": "Declined: {{reason}}",
     "onlyListPeople": "Only the people who see its list change the title, date, Important, repeat and tags.",
     "saved": "Saved",
-    "stepsDone": "{{done}} of {{total}}"
+    "stepsDone": "{{done}} of {{total}}",
+    "move": "Move to list…",
+    "menu": "More actions",
+    "loading": "Loading the task"
   },
   "repeat": {
     "never": "Never",

@@ -3,6 +3,7 @@ import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Keyboard, Pressable, StyleSheet, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -13,7 +14,7 @@ import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
-import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
+import { isEmailAssignee, taskLimits, type Comment, type Task, type TaskPreview, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
 import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared/components';
@@ -28,6 +29,7 @@ import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
 import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
+import { TaskDetailSkeleton } from './components/TaskDetailSkeleton';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
 import { useTaskSheet } from './taskSheetStore';
@@ -47,8 +49,8 @@ import { useRepeatText } from './useRepeatText';
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  */
-export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee' }>) {
-  const { taskId, commentId, fromPush, pick } = route.params;
+export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee'; preview?: TaskPreview }>) {
+  const { taskId, commentId, fromPush, pick, preview } = route.params;
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -133,9 +135,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
   // Waiting for the caller's answer (M35): nothing changes until they accept, so there is no Save.
   const waiting = !!task && !!me && task.assignee?.id === me.id && task.assignmentStatus === 'pending';
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: waiting ? undefined : () => <SaveButton pending={save.isPending} onPress={saveAndLeave} /> });
-  });
 
   // Leaving with unsaved changes asks first (HIG): Discard or Keep editing. Back does nothing while Save runs (M59).
   usePreventRemove(dirty || save.isPending, ({ data }) => {
@@ -153,7 +152,11 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
   if (!task || !me || !today || !fields) {
-    return <Screen edges={['bottom']}>{query.error && !missing ? <LoadError error={query.error} onRetry={() => void query.refetch()} /> : null}</Screen>;
+    return (
+      <Screen scroll edges={['bottom']}>
+        {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton preview={preview} today={today} />}
+      </Screen>
+    );
   }
 
   const locale = i18n.language;
@@ -261,6 +264,24 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       },
     });
   };
+  // The ••• menu (M107): only what the caller may do; a sheet from the bottom, as a list's •••.
+  const openMenu = async () => {
+    const actions = [
+      held ? { key: 'resume', label: t('hold.resume'), icon: 'play' as const }
+        : !completed && holds.canHold(task) ? { key: 'hold', label: t('hold.put'), icon: 'pause-circle' as const } : null,
+      !outside ? { key: 'move', label: t('taskDetail.move'), icon: 'folder' as const } : null,
+      outside ? { key: 'back', label: t('taskDetail.giveBack'), icon: 'corner-up-left' as const, destructive: true }
+        : { key: 'delete', label: t('taskDetail.delete'), icon: 'trash-2' as const, destructive: true },
+    ].filter((a) => !!a);
+    const i = await chooseAction({ title: task.title, actions, cancelLabel: t('common.cancel') });
+    const key = i === null ? null : actions[i].key;
+    if (key === 'resume') resumeHeld();
+    // Saving first changes the version: hold the task as saved.
+    if (key === 'hold' && (await saveDraft())) holds.putOnHold(queryClient.getQueryData<Task>(taskKeys.detail(taskId)) ?? task);
+    if (key === 'move') open('taskList');
+    if (key === 'back') giveBack();
+    if (key === 'delete') deleteTask();
+  };
   const confirmDone = () => run({ run: (x) => tasksApi.confirm(x), optimistic: (x) => ({ ...x, awaitsConfirmation: false }) }, t('taskDetail.confirmed'));
   // While waiting, everything reads only (fields, comments, history): dimmed, and taps don't reach them. While Save runs, taps don't reach them (M59).
   const locked = waiting ? ({ pointerEvents: 'none', style: styles.locked, accessibilityState: { disabled: true } } as const) : save.isPending ? ({ pointerEvents: 'none' } as const) : {};
@@ -286,6 +307,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
   return (
     <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={answerBar ?? commentField}>
+      <TaskHeader hidden={waiting} pending={save.isPending} onSave={saveAndLeave} onMenu={openMenu} />
       {error && (
         <View style={{ marginBottom: space.md }}>
           <Notice>{errorMessage(error)}</Notice>
@@ -473,38 +495,37 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       {/* History (D94, M83): on a task someone else sees, loaded only when asked for. */}
       {comments && <View {...locked}><HistorySection taskId={taskId} /></View>}
 
-      {!waiting && holds.canHold(task) && (
-        <Pressable onPress={holdTask} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
-          {({ pressed }) => (
-            <>
-              <Feather name="pause-circle" size={17} color={colors.ink2} />
-              <Text variant="bodyMedium" color="ink2" style={{ opacity: pressed ? 0.6 : 1 }}>{t('hold.put')}</Text>
-            </>
-          )}
-        </Pressable>
-      )}
-      {!waiting && (
-      <Pressable onPress={outside ? giveBack : deleteTask} disabled={remove.isPending || command.isPending} accessibilityRole="button" style={[styles.delete, { gap: space.sm, marginTop: space.lg }]}>
-        {({ pressed }) => (
-          <>
-            <Feather name={outside ? 'corner-up-left' : 'trash-2'} size={17} color={colors.danger} />
-            <Text variant="bodyMedium" color="danger" style={{ opacity: pressed || remove.isPending ? 0.6 : 1 }}>
-              {t(outside ? 'taskDetail.giveBack' : 'taskDetail.delete')}
-            </Text>
-          </>
-        )}
-      </Pressable>
-      )}
     </Screen>
   );
 }
 
-/** Save in the header: enabled once something changed (and the title isn't blank); busy while it saves (M56). */
-function SaveButton({ pending, onPress }: { pending: boolean; onPress(): void }) {
+/** Sets the header once the task is loaded (its menu needs the task); nothing while an assignment waits for an answer (M35). */
+function TaskHeader({ hidden, pending, onSave, onMenu }: { hidden: boolean; pending: boolean; onSave(): void; onMenu(): void }) {
+  const navigation = useNavigation();
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerRight: hidden ? undefined : () => <HeaderActions pending={pending} onSave={onSave} onMenu={onMenu} /> });
+  });
+  return null;
+}
+
+/** The header (M107): ••• at the edge; Save fades in to its left once something changed (off while the title is blank), busy while it saves (M56). */
+function HeaderActions({ pending, onSave, onMenu }: { pending: boolean; onSave(): void; onMenu(): void }) {
   const { t } = useTranslation();
+  const { colors, space } = useTheme();
   const dirty = useDirty();
   const titled = useTaskDraft((s) => !!s.draft?.title.trim());
-  return <TextButton label={t('taskDetail.save')} onPress={onPress} disabled={!dirty || !titled} busy={pending} />;
+  return (
+    <View style={[styles.headerRight, { gap: space.md }]}>
+      {(dirty || pending) && (
+        <Animated.View entering={FadeIn.duration(200)}>
+          <TextButton label={t('taskDetail.save')} onPress={onSave} disabled={!titled} busy={pending} />
+        </Animated.View>
+      )}
+      <Pressable onPress={onMenu} disabled={pending} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('taskDetail.menu')} style={styles.more}>
+        <Feather name="more-horizontal" size={22} color={colors.accent} />
+      </Pressable>
+    </View>
+  );
 }
 
 /** The title's size (M98): smaller than the type scale's title, so the fields move up. */
@@ -580,7 +601,8 @@ const styles = StyleSheet.create({
   answer: { flexDirection: 'row', alignItems: 'center' },
   /** The mark before Pending or Declined (M98). */
   ring: { width: 10, height: 10, borderRadius: 5, borderWidth: 1.5 },
-  delete: { flexDirection: 'row', alignItems: 'center', minHeight: 44, alignSelf: 'flex-start' },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   locked: { opacity: 0.55 },
   assignment: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
 });

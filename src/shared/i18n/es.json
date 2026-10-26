@@ -600,7 +600,10 @@
     "declinedReason": "Rechazada: {{reason}}",
     "onlyListPeople": "Solo quienes ven su lista cambian el título, la fecha, Importante, la repetición y las etiquetas.",
     "saved": "Guardado",
-    "stepsDone": "{{done}} de {{total}}"
+    "stepsDone": "{{done}} de {{total}}",
+    "move": "Mover a otra lista…",
+    "menu": "Más acciones",
+    "loading": "Cargando la tarea"
   },
   "repeat": {
     "never": "Nunca",
