@@ -361,6 +361,21 @@ export function useReorderTaskLists() {
   });
 }
 
+/** The caller's team order in Spaces (team_position, D108). Optimistic, like task lists. */
+export function useReorderTeams() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: Id[]) => tasksApi.reorderTeams(ids),
+    onMutate: (ids) => {
+      const before = queryClient.getQueryData<Team[]>(taskKeys.teams);
+      if (before) queryClient.setQueryData(taskKeys.teams, [...before].sort((a, b) => order(ids, a.id) - order(ids, b.id)));
+      return { before };
+    },
+    onError: (_e, _ids, context) => context?.before && queryClient.setQueryData(taskKeys.teams, context.before),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.teams }),
+  });
+}
+
 /** The caller's tag order. Optimistic, like task lists. */
 export function useReorderTags() {
   const queryClient = useQueryClient();

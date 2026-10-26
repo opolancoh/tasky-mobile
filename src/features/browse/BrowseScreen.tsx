@@ -5,8 +5,7 @@ import { useState, type ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
-import { byName } from '@/core/text/collate';
-import { useReorderTaskLists, useReorderTags } from '@/data/tasks/mutations';
+import { useReorderTaskLists, useReorderTags, useReorderTeams } from '@/data/tasks/mutations';
 import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
@@ -19,12 +18,12 @@ import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from '@/shared/components/BrowseRow';
 import { useFoldedSections, type SpacesSection } from './foldedSectionsStore';
 
-type Group = 'mine' | 'shared' | 'tags';
+type Group = 'mine' | 'shared' | 'teams' | 'tags';
 type Item =
   | { type: 'header'; key: string }
   | { type: 'section'; key: string; title: string; add?: { label: string; onPress(): void }; fold?: { section: SpacesSection; folded: boolean; count: number } }
   | { type: 'list'; key: string; taskList: TaskList; group?: Group; index: number; size: number; flat?: boolean }
-  | { type: 'team'; key: string; team: Team; count: number }
+  | { type: 'team'; key: string; team: Team; count: number; index?: number; size?: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
@@ -36,7 +35,7 @@ const FILTER_FROM = 25;
 
 /**
  * Spaces, the second tab (06-mobile.md, M38, M70, M105; the route keeps the name Browse): the user's lists, teams and tags.
- * My lists, Shared with me, Teams (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Personal,
+ * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Personal,
  * Important, Assigned to me and by me, All tasks and More live on Home (M105). Every count opens its list. Edit reorders
  * lists inside their section and tags (arrows); a long press opens a row's menu (what the role allows).
  */
@@ -52,6 +51,7 @@ export function BrowseScreen() {
   const toggleFold = useFoldedSections((s) => s.toggle);
   const reorderLists = useReorderTaskLists();
   const reorderTags = useReorderTags();
+  const reorderTeams = useReorderTeams();
   const showSheet = useShowBrowseSheet();
   const { listMenu, teamMenu, tagMenu } = useBrowseMenus();
   const [editing, setEditing] = useState(false);
@@ -59,7 +59,8 @@ export function BrowseScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const all = taskLists.data ?? [];
-  const teamList = [...(teams.data ?? [])].sort(byName);
+  // In the user's own order (D108), then A–Z for teams they haven't placed: as GET /teams sends them.
+  const teamList = teams.data ?? [];
   const tagList = tags.data ?? [];
   const groups = groupTaskLists(all, teamList, me?.id);
   const many = all.length + teamList.length + tagList.length > FILTER_FROM;
@@ -70,6 +71,9 @@ export function BrowseScreen() {
     if (group === 'tags') {
       const names = tagList.map((x) => x.name);
       reorderTags.mutate(moveInOrder(names, names, id, by));
+    } else if (group === 'teams') {
+      const ids = teamList.map((x) => x.id);
+      reorderTeams.mutate(moveInOrder(ids, ids, id, by));
     } else {
       const ids = all.filter((c) => !c.isInbox).map((c) => c.id);
       reorderLists.mutate(moveInOrder(ids, (group === 'mine' ? groups.mine : groups.shared).map((c) => c.id), id, by));
@@ -100,6 +104,20 @@ export function BrowseScreen() {
     const fold = (section: SpacesSection, count: number) => (editing ? undefined : { section, folded: !!folded[section], count });
     const isOpen = (section: SpacesSection) => editing || !folded[section];
 
+    // Teams first (M105), then My lists, Shared with me and Tags. Edit reorders them too (D108), with no add or join rows.
+    const newTeam = () => showSheet({ kind: 'team' });
+    if (editing) {
+      if (teamList.length) {
+        items.push({ type: 'section', key: 's-teams', title: t('browse.teams') });
+        teamList.forEach((team, index) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id), index, size: teamList.length }));
+      }
+    } else {
+      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
+      if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })); }
+      else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
+      // Links into the app (D95, M84): an invite link someone sent, pasted.
+      if (!teamList.length || isOpen('teams')) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
+    }
     // Someone invited without an Inbox yet (D59): Start your own lists, which opens New list.
     if (!groups.inbox) {
       if (!editing) items.push({ type: 'action', key: 'start', label: t('browse.start'), body: t('browse.startBody'), icon: 'plus', onPress: () => showSheet({ kind: 'list' }) });
@@ -113,14 +131,6 @@ export function BrowseScreen() {
     if (groups.shared.length) {
       items.push({ type: 'section', key: 's-shared', title: t('browse.sharedWithMe'), fold: fold('shared', groups.shared.length) });
       if (isOpen('shared')) lists('shared', groups.shared);
-    }
-    if (!editing) {
-      const newTeam = () => showSheet({ kind: 'team' });
-      items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
-      if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })); }
-      else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
-      // Links into the app (D95, M84): an invite link someone sent, pasted.
-      if (!teamList.length || isOpen('teams')) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
     }
     // Tags appear with the first one: they're added from a task, not here.
     if (tagList.length) {
@@ -144,7 +154,7 @@ export function BrowseScreen() {
         return (
           <View style={{ paddingBottom: space.sm }}>
             <View style={styles.bar}>
-              {all.length + tagList.length > 1 && !query && (
+              {all.length + tagList.length + teamList.length > 1 && !query && (
                 <Pressable onPress={() => setEditing(!editing)} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
                   <Text variant="button" color="accent">{t(editing ? 'common.done' : 'browse.edit')}</Text>
                 </Pressable>
@@ -175,12 +185,12 @@ export function BrowseScreen() {
                 hitSlop={8}
                 style={[styles.fill, styles.foldHead, { gap: space.xs }]}
               >
-                <Text variant="label" color="ink2" accessibilityRole="header">{item.title}</Text>
+                <Text variant="label" color="ink2" accessibilityRole="header" style={styles.caps}>{item.title}</Text>
                 <Feather name={item.fold.folded ? 'chevron-right' : 'chevron-down'} size={14} color={colors.ink3} />
                 {item.fold.folded && <Text variant="label" color="ink3">{item.fold.count}</Text>}
               </Pressable>
             ) : (
-              <Text variant="label" color="ink2" accessibilityRole="header" style={styles.fill}>{item.title}</Text>
+              <Text variant="label" color="ink2" accessibilityRole="header" style={[styles.fill, styles.caps]}>{item.title}</Text>
             )}
             {item.add && (
               <Pressable onPress={item.add.onPress} accessibilityRole="button" accessibilityLabel={item.add.label} style={styles.add}>
@@ -217,6 +227,7 @@ export function BrowseScreen() {
             count={item.count}
             onPress={() => navigation.navigate('Team', { teamId: item.team.id })}
             onLongPress={() => teamMenu(item.team)}
+            move={editing && !query && item.index !== undefined ? { up: item.index > 0 ? () => move('teams', item.team.id, -1) : undefined, down: item.index < item.size! - 1 ? () => move('teams', item.team.id, 1) : undefined } : undefined}
           />
         );
       case 'tag': {
@@ -280,6 +291,8 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
   barButton: { minHeight: 44, justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
+  // Section names in capitals, as on Home (M105).
+  caps: { textTransform: 'uppercase', letterSpacing: 0.4 },
   foldHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   add: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10, marginVertical: -6 },
   start: { flexDirection: 'row', alignItems: 'center', minHeight: 56 },

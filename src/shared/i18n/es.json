@@ -163,7 +163,7 @@
   "browse": {
     "title": "Espacios",
     "edit": "Editar",
-    "editHint": "Usa las flechas para cambiar tu orden. Los equipos van de la A a la Z.",
+    "editHint": "Usa las flechas para cambiar el orden de tus equipos, listas y etiquetas.",
     "filter": "Filtrar listas, equipos y etiquetas",
     "clearFilter": "Borrar filtro",
     "noMatch": "Ninguna lista, equipo o etiqueta coincide con “{{query}}”.",

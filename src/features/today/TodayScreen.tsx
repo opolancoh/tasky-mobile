@@ -144,7 +144,7 @@ export function TodayScreen() {
         // The heading sits on its rows: no line under it (M105).
         return (
           <View style={[styles.sectionHead, { marginTop: space.xl, gap: space.sm }]}>
-            <Text variant="label" color="ink2" accessibilityRole="header">
+            <Text variant="label" color="ink2" accessibilityRole="header" style={styles.caps}>
               {item.title}
             </Text>
             {item.count !== undefined && (
@@ -191,5 +191,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   bar: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', minHeight: 44 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
+  // Section names in capitals (M105), as in the hub.
+  caps: { textTransform: 'uppercase', letterSpacing: 0.4 },
   push: { marginLeft: 'auto' },
 });

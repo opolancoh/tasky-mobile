@@ -36,6 +36,8 @@ export const tasksApi = {
 
   /** POST /task-lists:reorder: the caller's own Browse order (204). */
   reorderTaskLists: (ids: Id[]) => http().post('/task-lists:reorder', { body: { ids } }),
+  /** POST /teams:reorder (D108): the caller's own order of their teams in Spaces. */
+  reorderTeams: (ids: Id[]) => http().post('/teams:reorder', { body: { ids } }),
 
   /** GET /teams: the caller's teams, with their role. */
   teams: () => getAll<Team>('/teams'),

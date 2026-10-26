@@ -163,7 +163,7 @@
   "browse": {
     "title": "Spaces",
     "edit": "Edit",
-    "editHint": "Use the arrows to change your order. Teams stay A–Z.",
+    "editHint": "Use the arrows to change your order of teams, lists and tags.",
     "filter": "Filter lists, teams and tags",
     "clearFilter": "Clear filter",
     "noMatch": "No lists, teams or tags match “{{query}}”.",
