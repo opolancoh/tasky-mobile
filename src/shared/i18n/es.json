@@ -416,7 +416,12 @@
     "late_other": "{{count}} vencidas",
     "showEmpty": "Nada por aquí. Prueba otro filtro.",
     "personTasks": "Tareas de {{name}}",
-    "yourTasks": "Tus tareas"
+    "yourTasks": "Tus tareas",
+    "teamCount_one": "{{count}} equipo",
+    "teamCount_other": "{{count}} equipos",
+    "tagCount_one": "{{count}} etiqueta",
+    "tagCount_other": "{{count}} etiquetas",
+    "summaryEmpty": "Aquí verás tus equipos, listas y etiquetas"
   },
   "search": {
     "title": "Buscar",

@@ -129,7 +129,7 @@ export function TodayScreen() {
     switch (item.type) {
       case 'header':
         return (
-          <View style={{ paddingBottom: space.md, gap: space.xxs }}>
+          <View style={{ paddingBottom: space.lg, gap: space.xs }}>
             {/* Activity behind the bell (M74); Me (profile, settings, sign out) behind the avatar (M39). */}
             <View style={[styles.bar, { gap: space.sm }]}>
               <ActivityBell />
@@ -157,7 +157,7 @@ export function TodayScreen() {
       case 'section':
         // The heading sits on its rows: no line under it (M105).
         return (
-          <View style={[styles.sectionHead, { marginTop: space.xl, gap: space.sm }]}>
+          <View style={[styles.sectionHead, { marginTop: space.xxl, gap: space.sm }]}>
             <Text variant="label" color="ink2" accessibilityRole="header" style={styles.caps}>
               {item.title}
             </Text>
@@ -180,7 +180,7 @@ export function TodayScreen() {
         return <BrowseRow label={item.label} icon={<Feather name={item.icon} size={17} color={fg} />} tint={bg} count={item.count} zero={item.zero} sub={item.sub} onPress={item.onPress} />;
       }
       case 'skeletonSection':
-        return <Skeleton width={92} height={12} style={{ marginTop: space.xl + space.xs, marginBottom: space.xs }} />;
+        return <Skeleton width={92} height={12} style={{ marginTop: space.xxl + space.xs, marginBottom: space.xs }} />;
       case 'skeletonRow':
         return <BrowseRowSkeleton width={item.width} />;
     }

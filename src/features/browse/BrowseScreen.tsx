@@ -148,6 +148,11 @@ export function BrowseScreen() {
 
   const tile = (name: ComponentProps<typeof Feather>['name'], color: string) => <Feather name={name} size={17} color={color} />;
 
+  const ownLists = all.filter((c) => !c.isInbox).length;
+  const summary = taskLists.isPending || teams.isPending || tags.isPending ? null
+    : [teamList.length && t('browse.teamCount', { count: teamList.length }), ownLists && t('browse.listCount', { count: ownLists }), tagList.length && t('browse.tagCount', { count: tagList.length })]
+        .filter(Boolean).join(' · ') || t('browse.summaryEmpty');
+
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
       case 'header':
@@ -161,14 +166,15 @@ export function BrowseScreen() {
               )}
             </View>
             <Text variant="largeTitle" accessibilityRole="header">{t('browse.title')}</Text>
-            {editing && <Text variant="subhead" color="ink2" style={{ marginTop: space.xxs }}>{t('browse.editHint')}</Text>}
+            {editing ? <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{t('browse.editHint')}</Text>
+              : summary && <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{summary}</Text>}
             {many && !editing && (
-              <View style={{ marginTop: space.md }}>
+              <View style={{ marginTop: space.lg }}>
                 <SearchField value={filter} onChangeText={setFilter} placeholder={t('browse.filter')} clearLabel={t('browse.clearFilter')} />
               </View>
             )}
             {(taskLists.error || teams.error) && (
-              <View style={{ marginTop: space.md }}>
+              <View style={{ marginTop: space.lg }}>
                 <Notice>{errorMessage(taskLists.error ?? teams.error)}</Notice>
               </View>
             )}
@@ -176,7 +182,7 @@ export function BrowseScreen() {
         );
       case 'section':
         return (
-          <View style={[styles.section, { marginTop: space.xl }]}>
+          <View style={[styles.section, { marginTop: space.xxl }]}>
             {item.fold ? (
               <Pressable
                 onPress={() => me && toggleFold(me.id, item.fold!.section)}
@@ -261,7 +267,7 @@ export function BrowseScreen() {
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
       case 'skeletonSection':
         return (
-          <View accessible={item.key === 'ks0'} accessibilityLabel={t('browse.loading')} style={{ marginTop: space.xl + 2, marginBottom: space.xs + 2 }}>
+          <View accessible={item.key === 'ks0'} accessibilityLabel={t('browse.loading')} style={{ marginTop: space.xxl + 2, marginBottom: space.xs + 2 }}>
             <Skeleton width={92} height={12} />
           </View>
         );

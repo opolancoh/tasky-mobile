@@ -416,7 +416,12 @@
     "late_other": "{{count}} late",
     "showEmpty": "Nothing here. Try another filter.",
     "personTasks": "{{name}}’s tasks",
-    "yourTasks": "Your tasks"
+    "yourTasks": "Your tasks",
+    "teamCount_one": "{{count}} team",
+    "teamCount_other": "{{count}} teams",
+    "tagCount_one": "{{count}} tag",
+    "tagCount_other": "{{count}} tags",
+    "summaryEmpty": "Your teams, lists and tags show here"
   },
   "search": {
     "title": "Search",
