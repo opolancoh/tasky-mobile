@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View, type TextInput } from 'react-native';
+import { StyleSheet, View, type TextInputInstance } from 'react-native';
 
 import { limits } from '@/core/validation/limits';
 import { isFilled, isPassword } from '@/core/validation/rules';
@@ -26,8 +26,8 @@ export function SignUpScreen() {
   const { t } = useTranslation();
   const { space } = useTheme();
   const navigation = useNavigation();
-  const emailRef = useRef<TextInput>(null);
-  const passwordRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInputInstance>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
 
   const [displayName, setDisplayName] = useState('');
   const [nameLeft, setNameLeft] = useState(false);

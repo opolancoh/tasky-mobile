@@ -1,5 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
@@ -13,7 +13,7 @@ export interface ScreenProps {
   edges?: Edge[];
   contentStyle?: ViewStyle;
   /** The scroll view, with `scroll` (e.g. to bring an error at the top into view). */
-  scrollRef?: Ref<ScrollView>;
+  scrollRef?: Ref<ScrollViewInstance>;
   /** With `scroll`: docked under the scrolling content, full width, above the keyboard (Task detail's comment field, M82). */
   footer?: ReactNode;
 }

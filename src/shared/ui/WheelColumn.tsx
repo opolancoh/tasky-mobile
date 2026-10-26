@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Platform, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
+import { Animated, Platform, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
@@ -31,7 +31,7 @@ export interface WheelColumnProps {
  * The selection band is drawn by the picker that holds the columns (TimeWheel, DateWheel).
  */
 export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, accessibilityLabel, width, align = 'center' }: WheelColumnProps) {
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const [scrollY] = useState(() => new Animated.Value(index * WHEEL_ROW));
   const settled = useRef(index);   // the index the wheel rests on; avoids echoing a change back
   const max = labels.length - 1;

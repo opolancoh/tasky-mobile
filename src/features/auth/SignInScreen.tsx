@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View, type TextInput } from 'react-native';
+import { StyleSheet, View, type TextInputInstance } from 'react-native';
 
 import { limits } from '@/core/validation/limits';
 import { errorMessage, fieldErrors } from '@/shared/i18n/errors';
@@ -20,7 +20,7 @@ export function SignInScreen() {
   const { space } = useTheme();
   const { signIn } = useSession();
   const navigation = useNavigation();
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
 
   const emailField = useEmailField(usePendingLink.getState().email ?? '');   // from an invitation email's link (D95)
   const email = emailField.value;

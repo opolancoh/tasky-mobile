@@ -20,7 +20,7 @@ export function LinkWatcher() {
   const link = usePendingLink((s) => s.link);
 
   useEffect(() => {
-    const take = (url: string | null) => {
+    const take = (url?: string | null) => {
       const found = url ? parseJoinLink(url) : null;
       if (found) usePendingLink.getState().set(found);
     };

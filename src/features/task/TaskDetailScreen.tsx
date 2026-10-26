@@ -3,7 +3,7 @@ import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, TextInput, View, type ScrollViewInstance } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import { formatInstant, todayIn } from '@/core/dates/localDate';
@@ -68,7 +68,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const { describe } = useRepeatText();
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
   const leaving = useRef(false);   // set when the screen closes on purpose (after Save or Delete): no discard prompt
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).

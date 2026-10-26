@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 
 import { nowIn } from '@/core/dates/localDate';
 import type { ReminderChoice } from '@/core/dates/reminders';
@@ -74,7 +74,7 @@ function QuickAddForm() {
   const [page, setPage] = useState<Page>('form');
   // The title has the keyboard at once (M104); once a page has opened, coming back doesn't raise it again.
   const [focusTitle, setFocusTitle] = useState(true);
-  const titleInput = useRef<TextInput>(null);
+  const titleInput = useRef<TextInputInstance>(null);
   const [beforePage, setBeforePage] = useState<Draft>(draft);   // the draft when a page opened: tapping outside restores it
   // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
   const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));

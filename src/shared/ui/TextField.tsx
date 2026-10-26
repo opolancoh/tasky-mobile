@@ -1,5 +1,5 @@
 import { forwardRef, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
@@ -16,7 +16,7 @@ export interface TextFieldProps extends TextInputProps {
 }
 
 /** Calm style: a label and an underlined input; the line turns accent on focus and red on error. */
-export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
   { label, error, hint, secureToggle, footer, onFocus, onBlur, style, ...rest },
   ref,
 ) {

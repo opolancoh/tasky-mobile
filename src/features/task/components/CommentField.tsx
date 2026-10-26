@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 
 import type { Id } from '@/core/types';
 import { useCommentActions } from '@/data/tasks/mutations';
@@ -24,7 +24,7 @@ export function CommentField({ taskId, people, editing, onDone }: { taskId: Id; 
   const { add, update } = useCommentActions(taskId);
   const saving = editing ? update : add;
   const spinner = useDelayedFlag(saving.isPending);
-  const input = useRef<TextInput>(null);
+  const input = useRef<TextInputInstance>(null);
   const [text, setText] = useState(() => (editing ? plainText(editing) : ''));
   const [picked, setPicked] = useState<UserRef[]>(() => editing?.mentions ?? []);
   const ready = text.trim().length > 0 && text.trim().length <= taskLimits.commentMax;
