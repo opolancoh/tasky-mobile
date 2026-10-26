@@ -2,6 +2,39 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.10.0 — 2026-10-26
+
+- Task detail loads as one skeleton, top to bottom, comment field docked where comments show (M108)
+- Task detail: ••• menu with Save only when changed (M107); the row's title, list and due date while it loads (M108)
+- Home and Spaces skeletons in the screens' shape: real headings, two-line rows, More as it is
+- One task row everywhere: list · when · progress · assignment; flag, face and one action at the right
+- Overdue rows as Today's: due date · list, flag, face, Today (M105)
+- Task detail: steps and notes under their headings, after the fields (M106) in the structure doc
+- Home: the line under the date opens what it names, with a › (M105)
+- Pull to refresh on every list screen (usePullRefresh)
+- Today: a completed task lands in Completed at once, done today counts it (M75, M105)
+- Expo Go on Android (SDK 58): stub the topic module, detect Expo Go with isRunningInExpoGo, no push token listener there
+- Today screen as the hub: time · list, flag and face at the right, one line under the title, empty cards
+- Requests: ✕ and one answer, two-line titles, first names (Assigned by Maximiliano · Fri)
+- Home and Spaces: one spacing scale; Spaces' line under the title (3 teams · 8 lists · 5 tags)
+- Requests: "Marta gave you this · due Fri", the same text as Task detail's answer bar
+- Task detail: open steps first, "2 of 4" on the Add a step row
+- Requests: one icon for every kind (people, accent)
+- Home: urgency lines on Important and Personal; last Home kept on the device for instant launch (M105)
+- Home: Assigned to me lists accepted tasks only, matching its count; Today and Overdue cards share one height
+- Spaces: Teams first, Edit reorders teams (D108); section names in capitals on Home and Spaces
+- Expo SDK 58: React Native 0.88, React 19.3; refs typed as TextInputInstance/ScrollViewInstance
+- Home v5: two cards, Requests, My stuff, Assignments, More; Reminders screen; Completed in every list (M105)
+- Quick add: no List row from a list (M103), opens with the keyboard, Return adds (M104)
+- A list adds through Quick add: Add a task opens it on that list (M103)
+- A declined task on Home: Review and its menu (M102)
+- Answering a task given to you: Decline and Accept docked, a reason sheet (M101)
+- Adding a task shows at once: optimistic create with a client UUIDv7 id (M100)
+- Calendar: the overdue chip asks for its count only, loads its tasks when opened (M99)
+- Reminder: "Only you get this reminder" once, in the picker (M98)
+- Calendar: Overdue under the grid folds, folded at first, kept across launches (M99)
+- Calendar counts and lists the month on screen, + per day, Earlier chip (M99)
+
 ## 0.9.0 — 2026-10-22
 
 - Task detail v2: the list under the title, steps first, grouped fields, 22 pt title, a ring before Pending or Declined (M98)
