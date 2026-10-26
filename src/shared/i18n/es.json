@@ -625,16 +625,29 @@
       "overdue": "Atrasadas",
       "today": "Hoy"
     },
-    "sub": {
-      "requests": "Invitaciones, tareas por responder, seguimientos",
-      "overdue": "Tareas abiertas de antes de hoy, las más antiguas primero",
-      "today": "Para hoy, o con un recordatorio hoy"
-    },
-    "items_one": "{{count}} elemento",
-    "items_other": "{{count}} elementos",
     "loadingMore": "Cargando más",
     "allShown": "Se muestran las {{count}}",
-    "empty": "No hay nada aquí."
+    "line": {
+      "today": "{{open}} abiertas · {{done}} hechas",
+      "overdue_one": "{{count}} atrasada · la más antigua primero",
+      "overdue_other": "{{count}} atrasadas · las más antiguas primero",
+      "requests_one": "{{count}} te espera",
+      "requests_other": "{{count}} te esperan"
+    },
+    "empty": {
+      "today": {
+        "title": "Nada para hoy",
+        "line": "Aquí aparecen las tareas para hoy o con tu recordatorio de hoy."
+      },
+      "overdue": {
+        "title": "Nada atrasado",
+        "line": "Aquí aparecen las tareas que pasaron su fecha."
+      },
+      "requests": {
+        "title": "Nada que responder",
+        "line": "Aquí aparecen las tareas que te dan, los rechazos y las invitaciones."
+      }
+    }
   },
   "notifications": {
     "someone": "Alguien",

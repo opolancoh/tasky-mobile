@@ -1,5 +1,6 @@
 import { useNavigation, type StaticScreenProps } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
+import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
@@ -39,7 +40,7 @@ const TODAY_FOLD = 'today';
 export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayListSection }>) {
   const { section } = route.params;
   const { t } = useTranslation();
-  const { colors, space } = useTheme();
+  const { colors, radius, space } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
@@ -98,7 +99,9 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   items.push({ type: 'footer', key: 'footer' });
 
   const title = t(`todayList.title.${section}`);
-  const subtitle = t(`todayList.sub.${section}`);
+  // The hub's line (M105): "6 open · 3 done", "28 overdue · oldest first", "3 waiting on you"; none at 0.
+  const line = total === undefined || total + (isToday ? doneCount : 0) === 0 ? null
+    : isToday ? t('todayList.line.today', { open: total, done: doneCount }) : t(`todayList.line.${section}`, { count: total });
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -106,9 +109,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
         return (
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             <Text variant="title" accessibilityRole="header">{title}</Text>
-            <Text variant="subhead" color="ink2">
-              {total !== undefined ? `${t('todayList.items', { count: total })} · ${subtitle}` : subtitle}
-            </Text>
+            {line && <Text variant="subhead" color="ink2">{line}</Text>}
             {error && <LoadError error={error} onRetry={retry} />}
           </View>
         );
@@ -123,11 +124,15 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
       case 'overdue':
         return <OverdueRow task={item.task} today={today!} />;
       case 'task':
-        return <TaskStreamRow task={item.task} today={today!} when="time" />;
+        return <TaskStreamRow task={item.task} today={today!} />;
       case 'doneHead':
         return <CompletedHeading folded={item.folded} count={item.count} onPress={() => userId && useFoldedLists.getState().setFolded(userId, TODAY_FOLD, !item.folded)} />;
       case 'done':
-        return <CompletedRow task={item.task} onPress={() => navigation.navigate('TaskDetail', { taskId: item.task.id })} />;
+        return (
+          <View style={[styles.line, { borderBottomColor: colors.line }]}>
+            <CompletedRow task={item.task} onPress={() => navigation.navigate('TaskDetail', { taskId: item.task.id })} />
+          </View>
+        );
       case 'footer':
         return loading ? (
           <View>{[70, 55, 62].map((w) => <SkeletonRow key={w} width={w} />)}</View>
@@ -137,7 +142,15 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
             <Text variant="footnote" color="ink3">{t('todayList.loadingMore')}</Text>
           </View>
         ) : shown === 0 && !(isToday && doneCount) ? (
-          <Text variant="subhead" color="ink3" style={{ paddingVertical: space.lg }}>{t('todayList.empty')}</Text>
+          <View style={[styles.empty, { backgroundColor: colors.surface2, borderRadius: radius.md, padding: space.md, gap: space.md, marginTop: space.xs }]}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.successSoft }]}>
+              <Feather name="check" size={18} color={colors.success} />
+            </View>
+            <View style={styles.fill}>
+              <Text variant="bodyMedium">{t(`todayList.empty.${section}.title`)}</Text>
+              <Text variant="footnote" color="ink2">{t(`todayList.empty.${section}.line`)}</Text>
+            </View>
+          </View>
         ) : shown > HOME_PAGE ? (
           <View style={styles.footer}>
             <Text variant="footnote" color="ink3">{t('todayList.allShown', { count: shown })}</Text>
@@ -163,5 +176,8 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  line: { borderBottomWidth: StyleSheet.hairlineWidth },
+  empty: { flexDirection: 'row', alignItems: 'center' },
+  emptyIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 56 },
 });

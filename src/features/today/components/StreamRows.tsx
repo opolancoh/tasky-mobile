@@ -9,10 +9,11 @@ import type { Id, LocalDate } from '@/core/types';
 import { restoreTask, useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useDeleteTask, useReassignTask, useUpdateTask } from '@/data/tasks/mutations';
 import { useTaskLists } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { askDecline, CheckCircle, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { askDecline, Avatar, CheckCircle, TaskOrigin, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useMe } from '@/data/tenancy/queries';
+import { useSessionStore } from '@/shared/session/sessionStore';
 import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoice } from '@/shared/ui';
 
 
@@ -20,7 +21,7 @@ import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoic
  * Home's rows (M32, M65), shared by Home and See all (TodayList): a lead (the complete circle, or an icon for what isn't a
  * task), the title on one line (two on requests), one line saying when or why, and one action. Tapping the row opens what it is about.
  */
-function StreamRow({ lead, title, titleLines = 1, sub, action, onPress, label, taskId }: { lead: ReactNode; title: string; titleLines?: number; sub?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
+function StreamRow({ lead, title, titleLines = 1, sub, meta, action, onPress, label, taskId }: { lead: ReactNode; title: string; titleLines?: number; sub?: ReactNode; /** A line of views (a list's dot), instead of `sub`'s text. */ meta?: ReactNode; action?: ReactNode; onPress(): void; label?: string; /** A task's row: no taps while its toggle saves (M75). */ taskId?: Id }) {
   const { colors, space } = useTheme();
   const saving = useTaskSaving(taskId);
   return (
@@ -37,6 +38,7 @@ function StreamRow({ lead, title, titleLines = 1, sub, action, onPress, label, t
                 {sub}
               </Text>
             ) : null}
+            {meta ? <View style={[styles.meta, { gap: space.xs }]}>{meta}</View> : null}
           </View>
           {action && <View pointerEvents={saving ? 'none' : 'auto'}>{action}</View>}
         </View>
@@ -67,7 +69,7 @@ function Check({ task }: { task: TaskSummary }) {
 const Flag = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  return <Feather name="flag" size={12} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
+  return <Feather name="flag" size={15} color={colors.danger} accessibilityLabel={t('taskRow.important')} />;
 };
 
 /** Decline as a round ✕ before a request's answer (M105): a task opens the Decline sheet, an invitation asks first. */
@@ -257,25 +259,43 @@ export function OverdueRow({ task, today }: { task: TaskSummary; today: LocalDat
 }
 
 /**
- * A task in Today, Coming up, Important or the Inbox. Lean (M32): the title, then only what says when
- * (`when`: Today's reminder time, Coming up's day, the due date elsewhere), with a red flag last when important (M44).
+ * A task in Today (M105): its reminder time today, then its list; at the right a red flag when important (M44) and the
+ * face of whoever else has it.
  */
-export function TaskStreamRow({ task, today, when }: { task: TaskSummary; today: LocalDate; when: 'time' | 'day' | 'due' | 'none' }) {
+export function TaskStreamRow({ task, today }: { task: TaskSummary; today: LocalDate }) {
+  const { t } = useTranslation();
   const labels = useDateLabels(today);
   const { colors } = useTheme();
   const open = useOpenTask();
-  const overdue = !!task.dueDate && task.dueDate < today;
-  const sub =
-    when === 'time' ? (task.reminder?.date === today ? <Text variant="footnote" style={{ color: colors.accent, fontWeight: '600' }}>{labels.time(task.reminder.time)}</Text> : undefined)
-    : when === 'day' ? labels.day(task.dueDate!)
-    : when === 'due' && task.dueDate ? <Text variant="footnote" color={overdue ? 'danger' : 'ink3'}>{labels.day(task.dueDate)}</Text>
-    : undefined;
-  return <StreamRow lead={<Check task={task} />} taskId={task.id} title={task.title} sub={task.isImportant ? <>{sub}{sub ? '  ' : ''}<Flag /></> : sub} onPress={() => open(task)} />;
+  const meId = useSessionStore((s) => s.userId);
+  const other = task.assignee && task.assignee.id !== meId ? task.assignee : null;
+  const time = task.reminder?.date === today ? task.reminder.time : null;
+  return (
+    <StreamRow
+      lead={<Check task={task} />} taskId={task.id}
+      title={task.title}
+      meta={
+        <>
+          {time && <Text variant="footnote" style={{ color: colors.accent, fontWeight: '600' }}>{labels.time(time)}</Text>}
+          {time && <Text variant="footnote" color="ink3">·</Text>}
+          <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />
+        </>
+      }
+      onPress={() => open(task)}
+      action={task.isImportant || other ? (
+        <View style={styles.actions}>
+          {task.isImportant && <Flag />}
+          {other && <View accessible accessibilityLabel={t('taskRow.assignedTo', { name: other.displayName })}><Avatar name={other.displayName} seed={other.id} size={24} /></View>}
+        </View>
+      ) : undefined}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
   main: { flex: 1, minWidth: 0, gap: 2 },
+  meta: { flexDirection: 'row', alignItems: 'center' },
   badge: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   decline: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },

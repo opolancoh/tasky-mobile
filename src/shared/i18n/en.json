@@ -625,16 +625,29 @@
       "overdue": "Overdue",
       "today": "Today"
     },
-    "sub": {
-      "requests": "Invitations, tasks to answer, follow-ups",
-      "overdue": "Open tasks due before today, oldest first",
-      "today": "Due today, or with a reminder today"
-    },
-    "items_one": "{{count}} item",
-    "items_other": "{{count}} items",
     "loadingMore": "Loading more",
     "allShown": "All {{count}} shown",
-    "empty": "Nothing here."
+    "line": {
+      "today": "{{open}} open · {{done}} done",
+      "overdue_one": "{{count}} overdue · oldest first",
+      "overdue_other": "{{count}} overdue · oldest first",
+      "requests_one": "{{count}} waiting on you",
+      "requests_other": "{{count}} waiting on you"
+    },
+    "empty": {
+      "today": {
+        "title": "Nothing today",
+        "line": "Tasks due today, or with your reminder today, show here."
+      },
+      "overdue": {
+        "title": "Nothing late",
+        "line": "Tasks past their due date show here."
+      },
+      "requests": {
+        "title": "Nothing to answer",
+        "line": "Tasks given to you, declines and invitations show here."
+      }
+    }
   },
   "notifications": {
     "someone": "Someone",
