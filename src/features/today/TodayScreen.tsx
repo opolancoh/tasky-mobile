@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { useEffect, type ComponentProps, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, nowIn } from '@/core/dates/localDate';
 import { useHome, useTaskLists } from '@/data/tasks/queries';
@@ -108,15 +108,21 @@ export function TodayScreen() {
 
   const refreshControl = usePullRefresh(home);
 
-  /** The line under the date: the next reminder later today, else overdue, else today's count; a new account is welcomed. */
-  const nextLine = (d: Home) => {
+  /**
+   * The line under the date: the next reminder later today, else overdue, else today's count; a new account is welcomed.
+   * It opens what it names (M105): the task, Overdue or Today.
+   */
+  const nextLine = (d: Home): { text: ReactNode; onPress?(): void } => {
     const c = d.counts;
     if (!c.openTotal && !d.requests.total)
-      return me?.tenant.type === 'organization' && me.tenant.name ? t('home.welcomeTo', { name: me.tenant.name }) : t('home.welcome', { name: me?.displayName.split(' ')[0] ?? '' });
-    if (d.next) return <>{t('home.next')} <Text variant="subhead" style={{ fontFamily: fonts.semibold }}>{d.next.title}</Text> {t('home.at', { time: labels.time(d.next.time) })}</>;
-    if (c.overdue && c.overdueSince) return <Text variant="subhead" color="danger">{t('home.overdueSince', { count: c.overdue, date: labels.day(c.overdueSince) })}</Text>;
-    if (c.today) return t('home.forToday', { count: c.today });
-    return t(c.doneToday ? 'home.allDoneToday' : 'home.nothingToday');
+      return { text: me?.tenant.type === 'organization' && me.tenant.name ? t('home.welcomeTo', { name: me.tenant.name }) : t('home.welcome', { name: me?.displayName.split(' ')[0] ?? '' }) };
+    if (d.next) {
+      const taskId = d.next.taskId;
+      return { text: <>{t('home.next')} <Text variant="subhead" style={{ fontFamily: fonts.semibold }}>{d.next.title}</Text> {t('home.at', { time: labels.time(d.next.time) })}</>, onPress: () => navigation.navigate('TaskDetail', { taskId }) };
+    }
+    if (c.overdue && c.overdueSince) return { text: <Text variant="subhead" color="danger">{t('home.overdueSince', { count: c.overdue, date: labels.day(c.overdueSince) })}</Text>, onPress: () => open('overdue') };
+    if (c.today) return { text: t('home.forToday', { count: c.today }), onPress: () => open('today') };
+    return c.doneToday ? { text: t('home.allDoneToday'), onPress: () => open('today') } : { text: t('home.nothingToday') };
   };
 
   const tones = { accent: [colors.accentSoft, colors.accent], danger: [colors.dangerSoft, colors.danger], warn: [colors.warnSoft, colors.warn], quiet: [colors.surface2, colors.ink2] } as const;
@@ -135,9 +141,7 @@ export function TodayScreen() {
               {today ? formatLocalDate(today, i18n.language, { weekday: 'long', month: 'short', day: 'numeric' }) : ''}
             </Text>
             {data && today ? (
-              <Text variant="subhead" color="ink2" numberOfLines={1}>
-                {nextLine(data)}
-              </Text>
+              <HeaderLine {...nextLine(data)} />
             ) : (
               <View accessible accessibilityLabel={t('home.loading')} style={{ paddingTop: space.xs }}>
                 <Skeleton width={170} height={12} />
@@ -197,6 +201,19 @@ export function TodayScreen() {
   );
 }
 
+/** Home's line under the date; when it names something, the whole line opens it, with a › (M105). */
+function HeaderLine({ text, onPress }: { text: ReactNode; onPress?(): void }) {
+  const { colors } = useTheme();
+  const line = <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{text}</Text>;
+  if (!onPress) return line;
+  return (
+    <Pressable onPress={onPress} accessibilityRole="link" hitSlop={{ top: 12, bottom: 12 }} style={({ pressed }) => [styles.line, pressed && styles.pressed]}>
+      {line}
+      <Feather name="chevron-right" size={15} color={colors.ink3} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   bar: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', minHeight: 44 },
@@ -204,4 +221,7 @@ const styles = StyleSheet.create({
   // Section names in capitals (M105), as in the hub.
   caps: { textTransform: 'uppercase', letterSpacing: 0.4 },
   push: { marginLeft: 'auto' },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', maxWidth: '100%' },
+  shrink: { flexShrink: 1 },
+  pressed: { opacity: 0.5 },
 });
