@@ -9,7 +9,7 @@ import type { Id, LocalDate } from '@/core/types';
 import { restoreTask, useAnswerAssignment, useAnswerInvitation, useCompleteTask, useConfirmTask, useDeleteTask, useReassignTask, useUpdateTask } from '@/data/tasks/mutations';
 import { useTaskLists } from '@/data/tasks/queries';
 import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
-import { askDecline, Avatar, CheckCircle, useTaskCheck, useTaskSaving } from '@/shared/components';
+import { askDecline, CheckCircle, useTaskCheck, useTaskSaving } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useMe } from '@/data/tenancy/queries';
@@ -120,7 +120,7 @@ export function AskRow({ task, today }: { task: TaskSummary; today: LocalDate })
   };
   return (
     <StreamRow
-      lead={<Badge icon="user" tone="warn" />}
+      lead={<Badge icon="users" tone="accent" />}
       title={task.title}
       sub={task.dueDate ? t('today.assignedDue', { date: labels.day(task.dueDate) }) : t('today.assigned')}
       onPress={() => open(task)}
@@ -152,7 +152,7 @@ export function FollowUpRow({ task }: { task: TaskSummary }) {
   const reason = declined && !task.droppedBy ? task.declineReason : null;
   return (
     <StreamRow
-      lead={<Avatar name={who} seed={person?.id ?? who} size={30} />}
+      lead={<Badge icon="users" tone="accent" />}
       title={task.title}
       sub={
         <Text variant="footnote" color={answered ? 'danger' : 'success'} numberOfLines={1}>
@@ -213,7 +213,7 @@ export function HoldRow({ task }: { task: TaskSummary }) {
   const holds = useHoldActions();
   return (
     <StreamRow
-      lead={<Feather name="pause-circle" size={24} color={colors.warn} />}
+      lead={<Badge icon="users" tone="accent" />}
       title={task.title}
       sub={<Text variant="footnote" style={{ color: colors.warn }} numberOfLines={1}>{task.holdReason ? t('hold.untilTodayWhy', { reason: task.holdReason }) : t('hold.untilToday')}</Text>}
       onPress={() => open(task)}
