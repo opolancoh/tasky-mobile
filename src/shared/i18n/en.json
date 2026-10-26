@@ -596,7 +596,8 @@
     "awaitsConfirmationBody": "Confirm you saw it, or reopen it.",
     "declinedReason": "Declined: {{reason}}",
     "onlyListPeople": "Only the people who see its list change the title, date, Important, repeat and tags.",
-    "saved": "Saved"
+    "saved": "Saved",
+    "stepsDone": "{{done}} of {{total}}"
   },
   "repeat": {
     "never": "Never",

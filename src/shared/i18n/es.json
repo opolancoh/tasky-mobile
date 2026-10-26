@@ -596,7 +596,8 @@
     "awaitsConfirmationBody": "Confirma que la viste, o reábrela.",
     "declinedReason": "Rechazada: {{reason}}",
     "onlyListPeople": "Solo quienes ven su lista cambian el título, la fecha, Importante, la repetición y las etiquetas.",
-    "saved": "Guardado"
+    "saved": "Guardado",
+    "stepsDone": "{{done}} de {{total}}"
   },
   "repeat": {
     "never": "Nunca",

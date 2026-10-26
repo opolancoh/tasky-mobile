@@ -6,7 +6,7 @@ import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeabl
 import { useShallow } from 'zustand/react/shallow';
 
 import { taskLimits } from '@/data/tasks/types';
-import { useTheme } from '@/shared/ui';
+import { Text, useTheme } from '@/shared/ui';
 
 import type { DraftStep } from '../taskDraft';
 import { useTaskDraft } from '../taskDraftStore';
@@ -27,14 +27,15 @@ const setSteps = (change: (steps: DraftStep[]) => DraftStep[]) => {
 export function StepList({ canAdd }: { canAdd: boolean }) {
   const { t } = useTranslation();
   const { space } = useTheme();
-  const keys = useTaskDraft(useShallow((s) => s.draft?.steps.map((x) => x.key) ?? []));
+  // Open steps first, done ones after, each in their order; the saved order doesn't change.
+  const keys = useTaskDraft(useShallow((s) => [...(s.draft?.steps ?? [])].sort((a, b) => Number(a.isDone) - Number(b.isDone)).map((x) => x.key)));
 
   return (
     <View style={{ marginTop: space.sm, marginLeft: 4 }} accessibilityLabel={t('taskDetail.steps')}>
       {keys.map((key) => (
         <StepRow key={key} stepKey={key} />
       ))}
-      {canAdd && keys.length < taskLimits.stepsMax && <AddStep />}
+      {canAdd && keys.length < taskLimits.stepsMax ? <AddStep /> : keys.length > 0 && <View style={styles.row}><StepProgress /></View>}
     </View>
   );
 }
@@ -110,6 +111,14 @@ function StepRow({ stepKey }: { stepKey: string }) {
   );
 }
 
+/** "2 of 4" after the steps: how far along the task is. */
+function StepProgress() {
+  const { t } = useTranslation();
+  const [done, total] = useTaskDraft(useShallow((s) => [s.draft?.steps.filter((x) => x.isDone).length ?? 0, s.draft?.steps.length ?? 0]));
+  if (!total) return null;
+  return <Text variant="footnote" color="ink3">{t('taskDetail.stepsDone', { done, total })}</Text>;
+}
+
 function AddStep() {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
@@ -138,6 +147,7 @@ function AddStep() {
         accessibilityLabel={t('taskDetail.addStep')}
         style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
       />
+      {!title && <StepProgress />}
     </View>
   );
 }
