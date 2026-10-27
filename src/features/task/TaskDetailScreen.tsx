@@ -27,7 +27,6 @@ import { AnswerBar } from './components/AnswerBar';
 import { CommentField } from './components/CommentField';
 import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
-import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
 import { TaskDetailSkeleton } from './components/TaskDetailSkeleton';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
@@ -48,6 +47,7 @@ import { useRepeatText } from './useRepeatText';
  * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
+ * History is a screen of its own, from ••• on the same tasks (M109).
  */
 export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee' }>) {
   const { taskId, commentId, fromPush, pick } = route.params;
@@ -264,12 +264,17 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       },
     });
   };
+  // Comments (D92, M82): when someone else sees the task, or it already has some (the history stays); History in ••• the same (M109).
+  const givenTo = !!task.assignee && task.assignee.id !== me.id && !isEmailAssignee(task.assignee.id);
+  const commentCount = task.commentCount ?? 0;
+  const comments = sharedList || givenTo || outside || commentCount > 0;
   // The ••• menu (M107): only what the caller may do; a sheet from the bottom, as a list's •••.
   const openMenu = async () => {
     const actions = [
       held ? { key: 'resume', label: t('hold.resume'), icon: 'play' as const }
         : !completed && holds.canHold(task) ? { key: 'hold', label: t('hold.put'), icon: 'pause-circle' as const } : null,
       !outside ? { key: 'move', label: t('taskDetail.move'), icon: 'folder' as const } : null,
+      comments ? { key: 'history', label: t('history.title'), icon: 'clock' as const } : null,
       outside ? { key: 'back', label: t('taskDetail.giveBack'), icon: 'corner-up-left' as const, destructive: true }
         : { key: 'delete', label: t('taskDetail.delete'), icon: 'trash-2' as const, destructive: true },
     ].filter((a) => !!a);
@@ -279,6 +284,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     // Saving first changes the version: hold the task as saved.
     if (key === 'hold' && (await saveDraft())) holds.putOnHold(queryClient.getQueryData<Task>(taskKeys.detail(taskId)) ?? task);
     if (key === 'move') open('taskList');
+    if (key === 'history') navigation.navigate('TaskHistory', { taskId });
     if (key === 'back') giveBack();
     if (key === 'delete') deleteTask();
   };
@@ -288,10 +294,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
   const error = save.error ?? command.error ?? remove.error;
 
-  // Comments (D92, M82): when someone else sees the task, or it already has some (the history stays).
-  const givenTo = !!task.assignee && task.assignee.id !== me.id && !isEmailAssignee(task.assignee.id);
-  const commentCount = task.commentCount ?? 0;
-  const comments = sharedList || givenTo || outside || commentCount > 0;
   // Who can be mentioned: who sees the task (its list's people, its assignee; for an outside assignee, who gave it).
   const mentionable = [...new Map([
     ...(people ?? []).map((m) => [m.userId, { id: m.userId, displayName: m.displayName }] as const),
@@ -344,7 +346,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         </Pressable>
       ) : (
         <View style={[styles.where, { gap: space.xs }]}>
-          <Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={16} />
+          <Avatar name={assigner} seed={task.assignedBy?.id ?? assigner} size={20} />
           <Text variant="footnote" color="ink2" numberOfLines={1} style={styles.fill}>{`${t('taskDetail.from')} ${assigner}`}</Text>
         </View>
       )}
@@ -396,13 +398,13 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
           {outside ? (
             <FieldRow
-              icon={() => <Avatar name={me.displayName} seed={me.id} size={22} />}
+              icon={(color) => <Feather name="user" size={20} color={color} />}
               placeholder=""
               value={t('taskDetail.assignedToMe')}
             />
           ) : (
             <FieldRow
-              icon={(color) => (fields.assignee ? <Avatar name={fields.assignee.displayName} seed={fields.assignee.id} size={22} /> : <Feather name="user" size={20} color={color} />)}
+              icon={(color) => <Feather name="user" size={20} color={color} />}
               placeholder={t('taskDetail.assignTo')}
               value={fields.assignee && (fields.assignee.id === me.id ? t('taskDetail.assignedToMe') : t('taskDetail.assignedTo', { name: fields.assignee.displayName }))}
               detail={fields.assignee && fields.assignee.id !== me.id && status && status !== 'accepted' && (   // only what isn't settled; never on yours (M98)
@@ -492,8 +494,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           {by(t('taskDetail.created', { when: when(task.createdAt) }), task.createdBy)}
         </Text>
       </View>
-      {/* History (D94, M83): on a task someone else sees, loaded only when asked for. */}
-      {comments && <View {...locked}><HistorySection taskId={taskId} /></View>}
 
     </Screen>
   );

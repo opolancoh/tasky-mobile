@@ -12,14 +12,14 @@ import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 import { HistoryRow } from './components/HistoryRow';
 
 /**
- * A task's whole history (D94, M83): past 60, Task detail's Show history opens this. Newest first, 20 more as it scrolls
- * (the same query as Task detail's); a FlashList, so a thousand changes cost what twenty do.
+ * A task's history (D94, M109): Task detail's ••• › History opens it; nothing is asked for until then. Newest first, 20
+ * more as it scrolls; a FlashList, so a thousand changes cost what twenty do.
  */
 export function HistoryScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
   const { taskId } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const history = useHistory(taskId, true);
+  const history = useHistory(taskId);
   const refreshControl = usePullRefresh(history);
   const items = history.data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -35,6 +35,7 @@ export function HistoryScreen({ route }: StaticScreenProps<{ taskId: Id }>) {
           history.isPending ? <View>{[70, 50, 60].map((w) => <SkeletonRow key={w} width={w} />)}</View>
           : history.error ? <Notice>{errorMessage(history.error)}</Notice>
           : history.hasNextPage ? <View style={styles.footer}><ActivityIndicator color={colors.ink3} /></View>
+          : !items.length ? <Text variant="footnote" color="ink3">{t('history.none')}</Text>
           : null
         }
         onEndReached={() => history.hasNextPage && !history.isFetchingNextPage && history.fetchNextPage()}

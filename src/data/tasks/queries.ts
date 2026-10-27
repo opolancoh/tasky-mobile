@@ -124,20 +124,19 @@ export const useInviteLink = (teamId: Id, enabled: boolean) => useQuery({ queryK
 export const useLinkPreview = (kind: 'team' | 'invitation', code: string) =>
   useQuery({ queryKey: taskKeys.linkPreview(kind, code), queryFn: () => tasksApi.previewLink(kind, code), retry: false });
 
-/** How many a list inside Task detail shows before it moves to its own screen (M83): more would draw too much at once. */
+/** How many comments Task detail shows before they move to their own screen (M83): more would draw too much at once. */
 export const INLINE_MAX = 60;
 
 /**
- * A task's history (D94): nothing until `enabled` (Show history), then 20 at a time, newest first. Forgotten as soon
+ * A task's history (D94, M109): asked for only when its screen opens, then 20 at a time, newest first. Forgotten as soon
  * as nothing shows it (`gcTime` 0): most people never look, and a later look reads it fresh.
  */
-export const useHistory = (taskId: Id, enabled: boolean) =>
+export const useHistory = (taskId: Id) =>
   useInfiniteQuery({
     queryKey: taskKeys.history(taskId),
     queryFn: ({ pageParam }) => tasksApi.history(taskId, 20, pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    enabled,
     gcTime: 0,
   });
 
