@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Keyboard, Pressable, StyleSheet, TextInput, View, type ScrollViewInstance } from 'react-native';
@@ -24,13 +24,13 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { AnswerBar } from './components/AnswerBar';
-import { CommentField } from './components/CommentField';
 import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
 import { StepList } from './components/StepList';
 import { TaskDetailSkeleton } from './components/TaskDetailSkeleton';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
+import { useCommentSheet } from './commentSheetStore';
 import { useTaskSheet } from './taskSheetStore';
 import { useRepeatText } from './useRepeatText';
 
@@ -45,7 +45,7 @@ import { useRepeatText } from './useRepeatText';
  * turns it into the usual screen.
  * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
  * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
- * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
+ * shows Confirm (D71). Comments (D92, M82, M110): a thread at the end, "+ Add a comment" under it opening the comment page, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  * History is a screen of its own, from ••• on the same tasks (M109).
  */
@@ -72,7 +72,6 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const labels = useDateLabels(today);
   const scroller = useRef<ScrollViewInstance>(null);
   const leaving = useRef(false);   // set when the screen closes on purpose (after Save or Delete): no discard prompt
-  const [editingComment, setEditingComment] = useState<Comment | null>(null);
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
     useShallow((s) => (s.draft ? { isImportant: s.draft.isImportant, dueDate: s.draft.dueDate, reminder: s.draft.reminder, repeat: s.draft.repeat, taskList: s.draft.taskList, assignee: s.draft.assignee, tags: s.draft.tags } : null)),
@@ -299,16 +298,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     ...(people ?? []).map((m) => [m.userId, { id: m.userId, displayName: m.displayName }] as const),
     ...[task.assignee, task.assignedBy].filter((u): u is UserRef => !!u && !isEmailAssignee(u.id)).map((u) => [u.id, u] as const),
   ]).values()].filter((u) => u.id !== me.id && !!u.displayName);
-  const commentField = comments && !waiting
-    ? <CommentField key={editingComment?.id ?? 'new'} taskId={taskId} people={mentionable} editing={editingComment} onDone={() => setEditingComment(null)} />
-    : undefined;
-  // Waiting for the caller's answer (M101): Decline and Accept docked where the comment field would be.
+  // Writing opens the comment page (M110); not while an assignment waits for an answer.
+  const writeComment = (editing?: Comment) => useCommentSheet.getState().show(taskId, mentionable, editing);
+  // Waiting for the caller's answer (M101): Decline and Accept docked at the bottom.
   const answerBar = waiting
     ? <AnswerBar from={task.assignedBy} due={task.dueDate ? labels.day(task.dueDate) : undefined} busy={command.isPending} onDecline={() => decline(assigner)} onAccept={accept} />
     : undefined;
 
   return (
-    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={answerBar ?? commentField}>
+    <Screen scroll scrollRef={scroller} edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={answerBar}>
       <TaskHeader hidden={waiting} pending={save.isPending} onSave={saveAndLeave} onMenu={openMenu} />
       {error && (
         <View style={{ marginBottom: space.md }}>
@@ -478,7 +476,8 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           count={commentCount}
           highlight={commentId}
           onHighlight={() => setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 300)}
-          onEdit={setEditingComment}
+          onEdit={writeComment}
+          onAdd={waiting ? undefined : () => writeComment()}
         />
         </View>
       )}

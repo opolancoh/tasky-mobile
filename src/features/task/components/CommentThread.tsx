@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef } from 'react';
@@ -20,10 +21,11 @@ import { useWhen } from './useWhen';
  * A task's comments (D92, M82, the hub's A's): at the end of Task detail, newest last, the latest 20 and **Show earlier**;
  * past 60, **See all comments** on its own screen (M83, a FlashList). A tap on a comment opens its menu
  * (`useCommentMenu`). `highlight`: the comment a notification opened (tinted), `onHighlight` once it's on screen.
+ * `onAdd`: "+ Add a comment" under the thread (M110).
  */
-export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }: { taskId: Id; count: number; highlight?: Id; onHighlight(): void; onEdit(comment: Comment): void }) {
+export function CommentThread({ taskId, count, highlight, onHighlight, onEdit, onAdd }: { taskId: Id; count: number; highlight?: Id; onHighlight(): void; onEdit(comment: Comment): void; onAdd?(): void }) {
   const { t } = useTranslation();
-  const { space } = useTheme();
+  const { colors, space } = useTheme();
   const navigation = useNavigation();
   const comments = useComments(taskId);
   const menu = useCommentMenu(taskId, onEdit);
@@ -62,12 +64,22 @@ export function CommentThread({ taskId, count, highlight, onHighlight, onEdit }:
           {items.map((c) => <CommentRow key={c.id} comment={c} lit={c.id === highlight} onPress={() => menu(c)} />)}
         </>
       )}
+      {onAdd && (
+        <Pressable onPress={onAdd} hitSlop={8} accessibilityRole="button" style={[styles.add, { gap: space.xs, marginTop: space.xs }]}>
+          {({ pressed }) => (
+            <>
+              <Feather name="plus" size={16} color={pressed ? colors.accentPressed : colors.accent} />
+              <Text variant="label" style={{ fontSize: 14, color: pressed ? colors.accentPressed : colors.accent }}>{t('comments.add')}</Text>
+            </>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }
 
 /**
- * A comment's menu: your own **Edit** (where the field is, `onEdit`), **Copy text**, **Delete**; someone else's **Copy
+ * A comment's menu: your own **Edit** (the comment page, `onEdit`), **Copy text**, **Delete**; someone else's **Copy
  * text**, and **Delete** for whoever manages the list. Deleting asks first.
  */
 export function useCommentMenu(taskId: Id, onEdit?: (comment: Comment) => void) {
@@ -126,6 +138,7 @@ export function CommentRow({ comment: c, lit = false, onPress }: { comment: Comm
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'baseline' },
   start: { alignItems: 'flex-start' },
+  add: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44 },
   row: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: 10 },
   main: { flex: 1, minWidth: 0, gap: 2 },
   shrink: { flexShrink: 1 },

@@ -23,6 +23,7 @@ import { installErrorCapture } from '@/shared/errors/captureErrors';
 import { addScreenCrumb } from '@/shared/errors/breadcrumbs';
 import { ErrorBoundary } from '@/shared/errors/ErrorBoundary';
 import { BulkSheet } from '@/shared/selection/BulkSheet';
+import { CommentSheet } from '@/features/task/components/CommentSheet';
 import { TaskFieldSheet } from '@/features/task/TaskFieldSheet';
 import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { NotificationAskSheet } from '@/shared/notifications/NotificationAskSheet';
@@ -103,6 +104,7 @@ function Root() {
         <>
           <QuickAddSheet />
           <TaskFieldSheet />
+          <CommentSheet />
           <BrowseSheet />
           <BulkSheet />
           <ActionSheetHost />
