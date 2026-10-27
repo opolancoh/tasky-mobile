@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ClearButton, Text, useTheme } from '@/shared/ui';
+import { ClearButton, Skeleton, Text, useTheme } from '@/shared/ui';
 
 /**
  * A Task detail field (M98): empty, its icon and what a tap does in grey ("Add due date"); set, the icon and the value
@@ -35,6 +35,17 @@ export function FieldRow({ icon, placeholder, value, detail, onPress, onClear, c
         </View>
       )}
     </Pressable>
+  );
+}
+
+/** A FieldRow being loaded: same height, an icon and a value. */
+export function FieldRowSkeleton({ width = '50%' }: { width?: `${number}%` }) {
+  const { space } = useTheme();
+  return (
+    <View style={[styles.row, { gap: space.md, paddingVertical: space.xs }]}>
+      <View style={styles.icon}><Skeleton width={22} height={22} radius={7} /></View>
+      <Skeleton width={width} height={15} />
+    </View>
   );
 }
 

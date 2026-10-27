@@ -10,7 +10,7 @@ import { addDays, todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTags, useTaskLists, useTaskPages, useTasks, useTeams } from '@/data/tasks/queries';
-import { previewOf, type TaskFilter, type TaskSummary } from '@/data/tasks/types';
+import type { TaskFilter, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -264,7 +264,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     if (showDone) done.data?.pages.flatMap((p) => p.items).forEach((task) => items.push({ type: 'done', key: `c-${task.id}`, task }));
   }
   items.push({ type: 'footer', key: 'footer' });
-  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {

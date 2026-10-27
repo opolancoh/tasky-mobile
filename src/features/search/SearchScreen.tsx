@@ -7,7 +7,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { todayIn } from '@/core/dates/localDate';
 import { useSearch, useTags } from '@/data/tasks/queries';
-import { previewOf, type TaskSummary } from '@/data/tasks/types';
+import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
 import { SelectionBar, SelectionTopBar } from '@/shared/selection/SelectionBar';
@@ -69,7 +69,7 @@ export function SearchScreen() {
   };
   const open = (task: TaskSummary) => {
     if (me) remember(me.id, query);
-    navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+    navigation.navigate('TaskDetail', { taskId: task.id });
   };
 
   const items: Item[] = [{ type: 'header', key: 'header' }];

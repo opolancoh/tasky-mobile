@@ -10,7 +10,7 @@ import { addDays } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
 import { useTaskPages } from '@/data/tasks/queries';
-import { previewOf, type TaskSummary } from '@/data/tasks/types';
+import type { TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
@@ -146,7 +146,7 @@ export function MonthView({ today }: { today: LocalDate }) {
   };
 
   const refreshControl = usePullRefresh(pages, overdue);
-  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
   const title = week ? labels.week(from) : labels.month(anchor);
 
   const renderItem = ({ item }: { item: Item }) => {

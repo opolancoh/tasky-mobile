@@ -7,7 +7,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { todayIn } from '@/core/dates/localDate';
 import { useCompleteTask, useUpdateTask } from '@/data/tasks/mutations';
 import { HOME_PAGE, useHome, useHomeSection, useInvitations } from '@/data/tasks/queries';
-import { type MyInvitation, previewOf, type TaskSummary } from '@/data/tasks/types';
+import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { CompletedHeading } from '@/shared/components/CompletedHeading';
 import { TaskRow } from '@/shared/components';
@@ -106,7 +106,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   }
   items.push({ type: 'footer', key: 'footer' });
 
-  const openTask = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+  const openTask = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
   const title = t(`todayList.title.${section}`);
   // The hub's line (M105): "6 open · 3 done", "28 overdue · oldest first", "3 waiting on you"; none at 0.
   const line = total === undefined || total + (isToday ? doneCount : 0) === 0 ? null

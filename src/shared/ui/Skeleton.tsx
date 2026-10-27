@@ -47,6 +47,17 @@ export function Skeleton({ width, height, radius = 6, style }: SkeletonProps) {
   );
 }
 
+/** A section being loaded: its heading, then `lines` of text or a `box` of that height. */
+export function SkeletonSection({ lines = 2, box }: { lines?: number; box?: number }) {
+  const { space } = useTheme();
+  return (
+    <View style={{ gap: space.sm }}>
+      <Skeleton width="22%" height={12} />
+      {box ? <Skeleton width="100%" height={box} radius={12} /> : Array.from({ length: lines }, (_, i) => <Skeleton key={i} width={i === lines - 1 ? '60%' : '100%'} height={14} />)}
+    </View>
+  );
+}
+
 /** A list row being loaded: a circle and two lines, as tall as a task row. `width` is the first line's, in percent. */
 export function SkeletonRow({ width = 70 }: { width?: number }) {
   const { space } = useTheme();

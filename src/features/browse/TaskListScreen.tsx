@@ -9,7 +9,7 @@ import { todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { useCompleteTask, useReopenTask } from '@/data/tasks/mutations';
 import { useTaskLists, useMembers, useTasks, useTaskPages, useTeams } from '@/data/tasks/queries';
-import { previewOf, type TaskSummary } from '@/data/tasks/types';
+import type { TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -119,7 +119,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
     });
   });
 
-  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+  const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
   const items: Item[] = [{ type: 'header', key: 'header' }];
   const rows = tasks.data?.items ?? [];
   if (tasks.isPending) [70, 55, 62].forEach((width) => items.push({ type: 'skeleton', key: `k${width}`, width }));

@@ -8,7 +8,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { LocalDate } from '@/core/types';
 import { restoreTask, useAnswerAssignment, useAnswerInvitation, useConfirmTask, useDeleteTask, useReassignTask } from '@/data/tasks/mutations';
 import { useTaskLists } from '@/data/tasks/queries';
-import { type MyInvitation, previewOf, type TaskSummary } from '@/data/tasks/types';
+import type { MyInvitation, TaskSummary } from '@/data/tasks/types';
 import { askDecline } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
@@ -70,7 +70,7 @@ const firstName = (name: string) => name.split(' ')[0];
 
 function useOpenTask() {
   const navigation = useNavigation();
-  return (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id, preview: previewOf(task) });
+  return (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
 }
 
 /** An invitation (M34): ✕ (asks first) and Join here; the row opens Invitation. */

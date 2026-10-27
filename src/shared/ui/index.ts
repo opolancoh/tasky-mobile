@@ -15,7 +15,7 @@ export { SectionLabel } from './SectionLabel';
 export { Segmented, type SegmentedProps } from './Segmented';
 export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
-export { Skeleton, SkeletonRow, type SkeletonProps } from './Skeleton';
+export { Skeleton, SkeletonRow, SkeletonSection, type SkeletonProps } from './Skeleton';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { Text, type TextProps } from './Text';
 export { TextButton, type TextButtonProps } from './TextButton';

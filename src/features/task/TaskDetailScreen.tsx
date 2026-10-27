@@ -14,7 +14,7 @@ import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
 import { useMembers, useTask, useTaskLists } from '@/data/tasks/queries';
-import { isEmailAssignee, taskLimits, type Comment, type Task, type TaskPreview, type UserRef } from '@/data/tasks/types';
+import { isEmailAssignee, taskLimits, type Comment, type Task, type UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
 import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared/components';
@@ -29,7 +29,7 @@ import { CommentThread } from './components/CommentThread';
 import { FieldRow } from './components/FieldRow';
 import { HistorySection } from './components/HistorySection';
 import { StepList } from './components/StepList';
-import { CommentFieldSkeleton, TaskDetailSkeleton } from './components/TaskDetailSkeleton';
+import { TaskDetailSkeleton } from './components/TaskDetailSkeleton';
 import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraft';
 import { useDirty, useTaskDraft } from './taskDraftStore';
 import { useTaskSheet } from './taskSheetStore';
@@ -49,8 +49,8 @@ import { useRepeatText } from './useRepeatText';
  * shows Confirm (D71). Comments (D92, M82): a thread at the end and a field docked at the bottom, on a task someone else
  * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
  */
-export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee'; preview?: TaskPreview }>) {
-  const { taskId, commentId, fromPush, pick, preview } = route.params;
+export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee' }>) {
+  const { taskId, commentId, fromPush, pick } = route.params;
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
@@ -152,12 +152,9 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const people = useMembers({ kind: 'taskList', id: listOf?.id ?? '' }, sharedList).data;
 
   if (!task || !me || !today || !fields) {
-    // Comments only where the screen will show them: a list others see (known from cached lists), or not known from a row.
-    const previewList = taskLists?.find((c) => c.id === preview?.taskList?.id);
-    const skeletonComments = !query.error && (!preview?.taskList || (!!previewList && previewList.sharing !== 'private'));
     return (
-      <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }} footer={skeletonComments ? <CommentFieldSkeleton /> : undefined}>
-        {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton comments={skeletonComments} />}
+      <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
+        {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton />}
       </Screen>
     );
   }

@@ -203,11 +203,6 @@ export interface TaskSummary {
   droppedBy?: UserRef | null;
 }
 
-/** What a task row already knows, passed to Task detail so it shows at once while the task loads (M108). */
-export type TaskPreview = Pick<TaskSummary, 'title' | 'taskList' | 'dueDate' | 'isImportant' | 'status'>;
-
-export const previewOf = ({ title, taskList, dueDate, isImportant, status }: TaskSummary): TaskPreview => ({ title, taskList, dueDate, isImportant, status });
-
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
 export interface TaskPage {
   items: TaskSummary[];
