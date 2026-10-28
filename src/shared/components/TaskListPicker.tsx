@@ -64,7 +64,7 @@ export function TaskListPicker({ taskLists, loading, selectedId, note, onPick }:
           {rows(recent)}
         </>
       )}
-      <SectionLabel action={{ icon: 'info', label: t('taskLists.kinds.title'), onPress: () => inform(t('taskLists.kinds.title'), t('taskLists.kinds.body'), t('common.done')) }}>{t('taskLists.all')}</SectionLabel>
+      <SectionLabel info={{ label: t('taskLists.kinds.title'), onPress: () => inform(t('taskLists.kinds.title'), t('taskLists.kinds.body'), t('common.done')) }}>{t('taskLists.all')}</SectionLabel>
       {rows(rest)}
       {!found.length && <Text variant="footnote" color="ink3" style={styles.note}>{t('taskLists.none')}</Text>}
     </ScrollView>

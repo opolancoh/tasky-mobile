@@ -88,7 +88,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Toast` | `useToast.getState().show({ message, action, icon })` from anywhere; `ToastHost` (mounted in App) shows it above the tab bar, with one action such as Undo; with `icon` it is a capsule (Can't connect, M90) |
 | `WheelColumn`, `WheelFrame` | One snapping wheel column (rows fade and shrink with native-driver animations, no re-render while scrolling; adjustable for screen readers; a haptic tick on change) and the band behind the columns |
 | `ClearButton` | The ✕ that clears a value: 44 pt target drawn like a 20 pt chevron, flush with the row's padding |
-| `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM"); `action`: one icon at its right (a section's Share, M91) |
+| `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM"); `action`: one icon at its right (a section's Share, M91); `info`: a grey ⓘ right after the words that explains the section (the List page's kinds of lists, M111) |
 | `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); unused since M94 moved Important's order and Assigned by me's switch into ••• |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |

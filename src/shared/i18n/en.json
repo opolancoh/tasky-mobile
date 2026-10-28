@@ -635,7 +635,7 @@
       "team": "Team · {{name}}"
     },
     "kinds": {
-      "title": "Kinds of lists",
+      "title": "Who sees each list",
       "body": "Personal: your own space. Only you see it, and its tasks stay yours.\n\nPrivate: a list only you see. You can still give one of its tasks to someone; they’ll see that task, not the list.\n\nShared: a list you share with specific people. Everyone in it sees all its tasks.\n\nTeam: a list that belongs to a team. Everyone in the team sees it. The row shows the team’s name."
     }
   },

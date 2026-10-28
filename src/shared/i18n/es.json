@@ -635,7 +635,7 @@
       "team": "Equipo · {{name}}"
     },
     "kinds": {
-      "title": "Tipos de listas",
+      "title": "Quién ve cada lista",
       "body": "Personal: tu propio espacio. Solo tú la ves y sus tareas son tuyas.\n\nPrivada: una lista que solo ves tú. Aun así puedes darle una de sus tareas a alguien; verá esa tarea, no la lista.\n\nCompartida: una lista que compartes con personas concretas. Todas ven todas sus tareas.\n\nEquipo: una lista de un equipo. Todo el equipo la ve. La fila muestra el nombre del equipo."
     }
   },
