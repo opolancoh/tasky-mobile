@@ -466,7 +466,7 @@
     "on": "activado",
     "toolbar": "Opciones rápidas",
     "clearDue": "Quitar la fecha límite",
-    "listsFor": "Solo listas donde {{name}} puede tenerla: tus listas privadas ({{name}} ve solo esta tarea) y las compartidas o de equipo donde está {{name}}."
+    "listsFor": "Listas donde {{name}} puede tenerla"
   },
   "dates": {
     "today": "Hoy",
@@ -633,6 +633,10 @@
       "private": "Privada",
       "shared": "Compartida",
       "team": "Equipo · {{name}}"
+    },
+    "kinds": {
+      "title": "Tipos de listas",
+      "body": "Personal: tu propio espacio. Solo tú la ves y sus tareas son tuyas.\n\nPrivada: una lista que solo ves tú. Aun así puedes darle una de sus tareas a alguien; verá esa tarea, no la lista.\n\nCompartida: una lista que compartes con personas concretas. Todas ven todas sus tareas.\n\nEquipo: una lista de un equipo. Todo el equipo la ve. La fila muestra el nombre del equipo."
     }
   },
   "todayList": {

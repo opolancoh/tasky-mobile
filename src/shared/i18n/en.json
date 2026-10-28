@@ -466,7 +466,7 @@
     "on": "on",
     "toolbar": "Quick options",
     "clearDue": "Remove due date",
-    "listsFor": "Only lists {{name}} can have it in: your private lists ({{name}} sees just this task) and shared or team lists {{name}} is in."
+    "listsFor": "Lists {{name}} can have it in"
   },
   "dates": {
     "today": "Today",
@@ -633,6 +633,10 @@
       "private": "Private",
       "shared": "Shared",
       "team": "Team · {{name}}"
+    },
+    "kinds": {
+      "title": "Kinds of lists",
+      "body": "Personal: your own space. Only you see it, and its tasks stay yours.\n\nPrivate: a list only you see. You can still give one of its tasks to someone; they’ll see that task, not the list.\n\nShared: a list you share with specific people. Everyone in it sees all its tasks.\n\nTeam: a list that belongs to a team. Everyone in the team sees it. The row shows the team’s name."
     }
   },
   "todayList": {

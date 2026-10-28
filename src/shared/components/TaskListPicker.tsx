@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import type { Id } from '@/core/types';
 import type { TaskList } from '@/data/tasks/types';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { ListRow, SearchField, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { inform, ListRow, SearchField, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
 import { useRecentLists } from './recentListsStore';
 import { TaskListIcon } from './TaskListIcon';
@@ -15,8 +15,9 @@ const KIND_ORDER = { private: 0, shared: 1, team: 2 } as const;
 
 /**
  * The List page (M111), the same wherever a list is picked: a search, Recent (the last 3 picked, not while searching),
- * then All lists, Personal first, then private, shared and team lists, each saying what it is under its name. A tap
- * picks and goes back. `note` explains a narrowed set (only the lists a person can have the task in). Skeleton rows while `loading`.
+ * then All lists (an ⓘ explains the kinds of lists), Personal first, then private, shared and team lists, each saying what it
+ * is under its name. A tap picks and goes back. `note`, under the search, says why the set is narrowed (the lists a person
+ * can have the task in). Skeleton rows while `loading`.
  */
 export function TaskListPicker({ taskLists, loading, selectedId, note, onPick }: { taskLists: TaskList[]; loading?: boolean; selectedId: Id | undefined; note?: string; onPick(taskList: TaskList): void }) {
   const { t } = useTranslation();
@@ -55,19 +56,17 @@ export function TaskListPicker({ taskLists, loading, selectedId, note, onPick }:
 
   return (
     <ScrollView keyboardShouldPersistTaps="handled">
-      <View style={{ marginBottom: space.md }}>
-        <SearchField value={text} onChangeText={setText} placeholder={t('taskLists.search')} clearLabel={t('search.clearField')} />
-      </View>
+      <SearchField value={text} onChangeText={setText} placeholder={t('taskLists.search')} clearLabel={t('search.clearField')} />
+      {note && <Text variant="footnote" color="ink2" style={[styles.note, { marginTop: space.sm }]}>{note}</Text>}
       {recent.length > 0 && (
         <>
           <SectionLabel>{t('taskLists.recent')}</SectionLabel>
           {rows(recent)}
-          <View style={{ marginTop: space.lg }}><SectionLabel>{t('taskLists.all')}</SectionLabel></View>
         </>
       )}
+      <SectionLabel action={{ icon: 'info', label: t('taskLists.kinds.title'), onPress: () => inform(t('taskLists.kinds.title'), t('taskLists.kinds.body'), t('common.done')) }}>{t('taskLists.all')}</SectionLabel>
       {rows(rest)}
       {!found.length && <Text variant="footnote" color="ink3" style={styles.note}>{t('taskLists.none')}</Text>}
-      {note && <Text variant="footnote" color="ink3" style={[styles.note, { marginTop: space.md }]}>{note}</Text>}
     </ScrollView>
   );
 }

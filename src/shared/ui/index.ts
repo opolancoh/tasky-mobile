@@ -2,7 +2,7 @@ export { Button, type ButtonProps } from './Button';
 export { ClearButton, type ClearButtonProps } from './ClearButton';
 export { ColorDot, faint } from './ColorDot';
 export { ActionSheetHost, chooseAction, type ActionChoice } from './ActionSheet';
-export { confirm, type ConfirmOptions } from './confirm';
+export { confirm, inform, type ConfirmOptions } from './confirm';
 export { askReason, ReasonSheetHost, type AskReasonOptions } from './ReasonSheet';
 export { DateWheel, type DateWheelProps } from './DateWheel';
 export { ListRow, type ListRowProps } from './ListRow';

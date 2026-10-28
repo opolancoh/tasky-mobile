@@ -29,3 +29,8 @@ export function confirm({ title, message, confirmLabel, cancelLabel, destructive
     ], { cancelable: true, onDismiss: () => resolve(false) });
   });
 }
+
+/** Explains something, with one button to close it: an alert on both platforms (the ⓘ on the List page, M111). */
+export function inform(title: string, message: string, okLabel: string): void {
+  Alert.alert(title, message, [{ text: okLabel }], { cancelable: true });
+}
