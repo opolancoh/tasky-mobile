@@ -44,7 +44,7 @@ src/shared/
 │   ├── pendingSignOut.ts  A sign-out made offline, kept in SecureStore and sent at launch or on coming back (M88)
 │   ├── homeCacheStore.ts  Home's last GET /home per user, on the device; cleared on sign-out (M105)
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── TaskListIcon.tsx   TaskListPicker.tsx   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
+│   ├── TaskListIcon.tsx   TaskListPicker.tsx   recentListsStore.ts   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx   BarTitle.tsx
 │   ├── BrowseRow.tsx   CompletedRow.tsx   CompletedHeading.tsx   (rows Home and Spaces share, M105)
 │   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
@@ -114,7 +114,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `TaskRow`, `TaskMeta`, `TaskMarks` | Every task row (06-mobile.md, HIG rules): round checkbox (completes), title at most 2 lines, `TaskMeta` (list · when · progress · assignment, joined by “·”; `showTime` for Today's reminder time), then `TaskMarks` at the right (the flag, the initials of whoever has it, you included, except in the Inbox, M44) and at most one `action`; a task completed for the user waits ticked, with Confirm (D71, M45); `onPress` opens it; `selectable` (M81): a long press starts selecting, then a tap picks it (a round check, the row tinted). Search's row uses `TaskMeta` and `TaskMarks` |
 | `CheckCircle`, `useTaskCheck`, `useTaskSaving`, `easeNextLayout` | A task's round checkbox (M75, option A): a tap eases the list and moves the task at once (`moveTask`); while it saves the circle is a spinner and the whole row takes no taps (`useTaskSaving`), then the check pops back. Used by `TaskRow`, Home's rows, Completed rows, search and Task detail (`size` 28): every place a task is completed or reopened |
 | `TaskOrigin` | Where a task comes from in a meta line: its list, or "From Olga" for a task seen only as its assignee (D70) |
-| `TaskListPicker` | The lists the user can see, Inbox first, the chosen one checked; a tap picks (Quick add, task detail); skeleton rows while `loading` |
+| `TaskListPicker` | The List page (M111): a search, Recent (the last 3 picked, `useRecentLists` on the device), then All lists, Personal first, then private, shared and team lists, each saying what it is (Private, Shared, Team · name); the chosen one checked; a tap picks (Quick add, task detail); `note` under a narrowed set; skeleton rows while `loading` |
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail); opens with the set date checked, a date that isn't a quick choice on Custom with the wheel open; with no date the wheel starts on today and sets nothing until it turns |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |

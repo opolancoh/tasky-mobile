@@ -15,6 +15,8 @@ const peopleOf = (of: MembersOf) => `/${of.kind === 'team' ? 'teams' : 'task-lis
 export const tasksApi = {
   /** GET /task-lists: every task list the caller can see, Inbox first, with open counts. */
   taskLists: () => getAll<TaskList>('/task-lists'),
+  /** GET /task-lists?assignableTo=: the lists that person can have a task in (D109). */
+  assignableTaskLists: (userId: Id) => getAll<TaskList>('/task-lists', { assignableTo: userId }),
 
   /** GET /task-lists?archived=true: archived ones the caller can see. */
   archivedTaskLists: () => getAll<TaskList>('/task-lists', { archived: true }),

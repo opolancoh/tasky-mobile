@@ -465,7 +465,8 @@
     "clearNotes": "Remove notes",
     "on": "on",
     "toolbar": "Quick options",
-    "clearDue": "Remove due date"
+    "clearDue": "Remove due date",
+    "listsFor": "Only lists {{name}} can have it in: your private lists ({{name}} sees just this task) and shared or team lists {{name}} is in."
   },
   "dates": {
     "today": "Today",
@@ -603,7 +604,10 @@
     "stepsDone": "{{done}} of {{total}}",
     "move": "Move to list…",
     "menu": "More actions",
-    "loading": "Loading the task"
+    "loading": "Loading the task",
+    "dropAssigneeTitle": "Move to Personal?",
+    "dropAssigneeMessage": "Personal is just for you: {{name}} won’t have this task anymore.",
+    "dropAssigneeConfirm": "Move"
   },
   "repeat": {
     "never": "Never",
@@ -620,7 +624,16 @@
     "hint": "Repeats from the due date. With no due date, it starts today."
   },
   "taskLists": {
-    "inbox": "Personal"
+    "inbox": "Personal",
+    "search": "Search lists",
+    "recent": "Recent",
+    "all": "All lists",
+    "none": "No list by that name.",
+    "kind": {
+      "private": "Private",
+      "shared": "Shared",
+      "team": "Team · {{name}}"
+    }
   },
   "todayList": {
     "title": {

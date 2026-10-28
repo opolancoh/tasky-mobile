@@ -8,10 +8,10 @@ import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { useMe } from '@/data/tenancy/queries';
 import { newTaskId, useCreateTask } from '@/data/tasks/mutations';
-import { useTaskLists, useTags } from '@/data/tasks/queries';
-import { taskLimits, type UserRef } from '@/data/tasks/types';
+import { useAssignableTaskLists, useTaskLists, useTags } from '@/data/tasks/queries';
+import { emailAssignee, isEmailAssignee, taskLimits, type UserRef } from '@/data/tasks/types';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { AssigneePicker, Avatar, givesOutside, TaskListIcon, TaskListPicker, DueDatePicker, ReminderIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, givesOutside, PeoplePicker, TaskListIcon, TaskListPicker, DueDatePicker, ReminderIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -19,7 +19,7 @@ import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 
-type Page = 'form' | 'taskList' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
+type Page = 'form' | 'taskList' | 'person' | 'assignee' | 'tags' | 'due' | 'reminder' | 'notes';
 
 interface Draft {
   title: string;
@@ -32,7 +32,7 @@ interface Draft {
   reminder: ReminderChoice;
   /** Picked in the Tags page; sent as `tags` (names; new ones become the user's). The title is plain text (M31). */
   tags: string[];
-  /** Who gets it (M43, M44): any list (on a private one or the Inbox, only Me); assigned right after the task is created. */
+  /** Who gets it: picked first, then a list they can have it in (M111); assigned right after the task is created. */
   assignee?: UserRef;
 }
 
@@ -86,8 +86,17 @@ function QuickAddForm() {
   const inbox = taskLists.find((c) => c.isInbox);
   const taskList = taskLists.find((c) => c.id === draft.taskListId) ?? inbox;
   const tags = draft.tags;
-  // Assigning is on every list (M44); the Inbox and private lists offer only Me.
-  const canAssign = !!taskList;
+  // Person first (M111): 👤 lists people, then List shows only where they can have it. Opened from a list, its people;
+  // from Personal, nobody (it's just yours, D109).
+  const canAssign = !!taskList && !(startList && taskList.isInbox);
+  const assignee = draft.assignee;
+  const byEmail = !!assignee && isEmailAssignee(assignee.id);
+  const assignable = useAssignableTaskLists(!startList && assignee && !byEmail ? assignee.id : undefined);
+  // Someone without an account is in no list yet: only the user's private lists.
+  const listsFor = !assignee || startList ? taskLists
+    : byEmail ? taskLists.filter((c) => c.sharing === 'private' && !c.isInbox)
+    : assignable.data ?? [];
+  const listFits = !assignee || !!startList || listsFor.some((c) => c.id === taskList?.id);
   const titleText = draft.title.trim();
   const reminder = draft.reminder;
   const notesText = draft.notes.trim();
@@ -102,6 +111,10 @@ function QuickAddForm() {
 
   function submit() {
     if (!canAdd) return;
+    if (!listFits) {
+      openPage('taskList');
+      return;
+    }
     const chosen = draft.reminder ?? undefined;
     // At once (M100): the task shows in its lists and the sheet closes; an error comes as a toast, or Can't connect's Try again.
     create.mutate(
@@ -147,13 +160,15 @@ function QuickAddForm() {
     setPage('form');
   };
 
-  const back = { icon: 'chevron-left' as const, label: t('quickAdd.task'), onPress: () => setPage('form') };
+  // Back from List without a list they can have it in drops the person.
+  const back = { icon: 'chevron-left' as const, label: t('quickAdd.task'), onPress: () => { if (page === 'taskList' && !listFits) update({ assignee: undefined }); setPage('form'); } };
   const titles: Record<Exclude<Page, 'form'>, string> = {
     taskList: t('quickAdd.fields.taskList'),
     tags: t('quickAdd.fields.tags'),
     due: t('quickAdd.fields.dueDate'),
     reminder: t('quickAdd.fields.reminder'),
     assignee: t('quickAdd.fields.assignee'),
+    person: t('quickAdd.fields.assignee'),
     notes: t('quickAdd.fields.notes'),
   };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
@@ -165,7 +180,7 @@ function QuickAddForm() {
     { key: 'important', icon: 'flag', label: t('quickAdd.fields.important'), value: draft.isImportant ? t('quickAdd.on') : undefined, danger: true, onPress: () => update({ isImportant: !draft.isImportant }) },
     { key: 'due', icon: 'calendar', label: t('quickAdd.fields.dueDate'), value: draft.dueDate && dayText(draft.dueDate), onPress: () => openPage('due') },
     { key: 'reminder', icon: 'reminder', label: t('quickAdd.fields.reminder'), value: reminder ? reminderText(reminder) : undefined, onPress: () => openPage('reminder') },
-    ...(canAssign ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage('assignee') }] : []),
+    ...(canAssign ? [{ key: 'assignee', icon: 'user' as const, label: t('quickAdd.fields.assignee'), value: draft.assignee?.displayName, onPress: () => openPage(startList ? 'assignee' : 'person') }] : []),
     { key: 'tags', icon: 'tag', label: t('quickAdd.fields.tags'), value: tags.length ? tags.join(', ') : undefined, onPress: () => openPage('tags') },
     { key: 'notes', icon: 'align-left', label: t('quickAdd.fields.notes'), value: notesText ? notesText.slice(0, 80) : undefined, onPress: () => openPage('notes') },
   ];
@@ -228,7 +243,7 @@ function QuickAddForm() {
                 label={t('quickAdd.fields.assignee')}
                 icon={<Avatar name={draft.assignee.displayName} seed={draft.assignee.id} size={22} />}
                 value={<Text variant="bodyMedium" color="accent" numberOfLines={1}>{draft.assignee.id === userId ? t('assign.meShort') : draft.assignee.displayName}</Text>}
-                onPress={() => openPage('assignee')}
+                onPress={() => openPage(startList ? 'assignee' : 'person')}
                 onClear={() => update({ assignee: undefined })}
                 clearLabel={t('assign.unassign')}
               />
@@ -279,7 +294,26 @@ function QuickAddForm() {
         </ScrollView>
       )}
 
-      {page === 'taskList' && <TaskListPicker taskLists={taskLists} loading={taskListsQuery.isPending} selectedId={taskList?.id} onPick={(c) => pick({ taskListId: c.id, ...(c.id === taskList?.id ? {} : { assignee: undefined }) })} />}
+      {page === 'taskList' && (
+        <TaskListPicker
+          taskLists={listsFor}
+          loading={taskListsQuery.isPending || (!!assignee && !byEmail && !startList && assignable.isPending)}
+          selectedId={listFits ? taskList?.id : undefined}
+          note={assignee && !startList ? t('quickAdd.listsFor', { name: assignee.displayName.split(' ')[0] }) : undefined}
+          onPick={(c) => pick({ taskListId: c.id })}
+        />
+      )}
+
+      {page === 'person' && (
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <PeoplePicker
+            exclude={assignee && !byEmail ? [assignee.id] : []}
+            emailLabel={t('people.giveByEmail')}
+            onPickPerson={(p) => { update({ assignee: { id: p.id, displayName: p.displayName } }); setPage('taskList'); }}
+            onEmail={(email) => { update({ assignee: emailAssignee(email) }); setPage('taskList'); }}
+          />
+        </ScrollView>
+      )}
 
       {page === 'assignee' && taskList && userId && (
         <AssigneePicker taskListId={taskList.id} canGiveOutside={givesOutside(taskList, userId)} meId={userId} selected={draft.assignee ?? null} status={draft.assignee ? (draft.assignee.id === userId ? 'accepted' : 'pending') : null} onPick={(assignee) => pick({ assignee: assignee ?? undefined })} />

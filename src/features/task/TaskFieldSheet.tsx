@@ -11,7 +11,7 @@ import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { givesOutside, AssigneePicker, TaskListPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { Sheet } from '@/shared/ui';
+import { confirm, Sheet } from '@/shared/ui';
 
 import { RepeatPicker } from './components/RepeatPicker';
 import { assigneeStatus, type TaskDraft } from './taskDraft';
@@ -91,6 +91,7 @@ interface PageProps {
 }
 
 function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
+  const { t } = useTranslation();
   const taskListsQuery = useTaskLists();
   const tagsQuery = useTags();
   const userId = useSessionStore((s) => s.userId);
@@ -109,9 +110,14 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
           taskLists={taskLists}
           loading={taskListsQuery.isPending}
           selectedId={draft.taskList?.id}
-          // The Inbox is only yours: someone else who had the task loses it there (the API drops them too). Into your own
-          // private or shared list they keep it, seeing only that task (D70).
-          onPick={(c) => apply({ taskList: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(c.isInbox && draft.assignee?.id !== userId ? { assignee: null } : {}) })}
+          // Personal is only yours: whoever had the task loses it there, after asking. Into a private list of yours a task
+          // assigned to you is simply yours; anyone else keeps it, seeing only that task (D70, D109). The API drops them too.
+          onPick={async (c) => {
+            const who = draft.assignee;
+            const drop = !!who && (c.isInbox || (c.sharing === 'private' && who.id === userId));
+            if (drop && c.isInbox && who.id !== userId && !(await confirm({ title: t('taskDetail.dropAssigneeTitle'), message: t('taskDetail.dropAssigneeMessage', { name: who.displayName.split(' ')[0] }), confirmLabel: t('taskDetail.dropAssigneeConfirm'), cancelLabel: t('common.cancel'), destructive: false }))) return;
+            apply({ taskList: { id: c.id, name: c.name, color: c.color, isInbox: c.isInbox, team: c.team }, ...(drop ? { assignee: null } : {}) });
+          }}
         />
       );
     case 'assignee':

@@ -9,6 +9,9 @@ import { taskKeys } from './keys';
 
 /** Every task list the caller can see, Inbox first. */
 export const useTaskLists = () => useQuery({ queryKey: taskKeys.taskLists, queryFn: tasksApi.taskLists });
+/** The lists a person can have a task in (D109); none asked while nobody is picked. */
+export const useAssignableTaskLists = (userId: Id | undefined) =>
+  useQuery({ queryKey: taskKeys.assignable(userId ?? ''), queryFn: () => tasksApi.assignableTaskLists(userId!), enabled: !!userId });
 
 /**
  * Whom the caller can pick without an email (D89): kept a few minutes, and the last answer stays while the next loads. A

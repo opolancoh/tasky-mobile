@@ -392,8 +392,9 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       {/* The fields in groups (M98): who · when · tags, a hairline between them; no List row (the line under the title). */}
       <View {...locked}>
       <View style={{ marginTop: space.md }}>
+        {/* Assigned to (M43, M44): not on Personal, which is only yours (D109); a private list gives one task to someone else. */}
+        {(outside || !fields.taskList?.isInbox || !!fields.assignee) && (
         <View style={[styles.group, { borderTopColor: colors.line }]}>
-          {/* Assigned to (M43, M44): on every task; on a private list or the Inbox the only choice is Me. */}
           {outside ? (
             <FieldRow
               icon={(color) => <Feather name="user" size={20} color={color} />}
@@ -421,6 +422,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
             />
           )}
         </View>
+        )}
         <View style={[styles.group, { borderTopColor: colors.line }]}>
           <View {...fixed}>
             <FieldRow

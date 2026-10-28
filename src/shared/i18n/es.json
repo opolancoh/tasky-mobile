@@ -465,7 +465,8 @@
     "clearNotes": "Quitar notas",
     "on": "activado",
     "toolbar": "Opciones rápidas",
-    "clearDue": "Quitar la fecha límite"
+    "clearDue": "Quitar la fecha límite",
+    "listsFor": "Solo listas donde {{name}} puede tenerla: tus listas privadas ({{name}} ve solo esta tarea) y las compartidas o de equipo donde está {{name}}."
   },
   "dates": {
     "today": "Hoy",
@@ -603,7 +604,10 @@
     "stepsDone": "{{done}} de {{total}}",
     "move": "Mover a otra lista…",
     "menu": "Más acciones",
-    "loading": "Cargando la tarea"
+    "loading": "Cargando la tarea",
+    "dropAssigneeTitle": "¿Mover a Personal?",
+    "dropAssigneeMessage": "Personal es solo para ti: {{name}} ya no tendrá esta tarea.",
+    "dropAssigneeConfirm": "Mover"
   },
   "repeat": {
     "never": "Nunca",
@@ -620,7 +624,16 @@
     "hint": "Se repite desde la fecha límite. Sin fecha límite, empieza hoy."
   },
   "taskLists": {
-    "inbox": "Personal"
+    "inbox": "Personal",
+    "search": "Buscar listas",
+    "recent": "Recientes",
+    "all": "Todas las listas",
+    "none": "Ninguna lista con ese nombre.",
+    "kind": {
+      "private": "Privada",
+      "shared": "Compartida",
+      "team": "Equipo · {{name}}"
+    }
   },
   "todayList": {
     "title": {

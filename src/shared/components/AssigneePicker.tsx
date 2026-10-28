@@ -12,16 +12,16 @@ import { Avatar } from './Faces';
 import { PeoplePicker } from './PeoplePicker';
 
 /**
- * Whether the user may give a task in this list to someone who doesn't see it (D70, D88): it's theirs and nobody else
- * sees it (Personal or a private list). A shared list, alone or in a team, is shared whole: its tasks go to its people.
+ * Whether the user may give a task in this list to someone who doesn't see it (D70, D109): a private list of theirs,
+ * not Personal. A shared list, alone or in a team, is shared whole: its tasks go to its people.
  */
-export const givesOutside = (list: Pick<TaskList, 'owner' | 'sharing'> | undefined, meId: Id | null | undefined): boolean =>
-  !!list && list.sharing === 'private' && list.owner.id === meId;
+export const givesOutside = (list: Pick<TaskList, 'owner' | 'sharing' | 'isInbox'> | undefined, meId: Id | null | undefined): boolean =>
+  !!list && list.sharing === 'private' && !list.isInbox && list.owner.id === meId;
 
 export interface AssigneePickerProps {
   /** The list the task is in: its people are who can be picked. */
   taskListId: Id;
-  /** Personal or a private list of the user's (`givesOutside`): anyone can also be picked by email (D70, D88). */
+  /** A private list of the user's (`givesOutside`): anyone else can be picked, by name or email (D70, D109). */
   canGiveOutside?: boolean;
   /** The signed-in user, listed first as "Me". */
   meId: Id;
@@ -32,11 +32,10 @@ export interface AssigneePickerProps {
 }
 
 /**
- * Who a task is assigned to (M43, M44; Task detail and Quick add, on every list): the people who can see its list, you
- * first as "Me" (the only one on a private list or the Inbox), each with their open and late tasks (M79), the current one
- * checked with its status, and Unassign at
- * the end. On Personal and the user's private lists there is also **Only this task**: someone picked by email sees that
- * task only, not the list (D70, D88, M45, M71), found by name among the people they work with or typed as an email (M73). A tap picks and goes back.
+ * Who a task is assigned to (M43, M44, M111; Task detail, and Quick add opened from a list): on a shared or team list its
+ * people, you first as "Me", each with their open and late tasks (M79), the current one checked with its status, and
+ * Unassign at the end. On the user's private lists only **Only this task** (no Me: it's yours anyway, D109): someone else,
+ * found among the people they work with or typed as an email (M73), sees that task only (D70, M45). A tap picks and goes back.
  */
 export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selected, status, onPick }: AssigneePickerProps) {
   const { t } = useTranslation();
@@ -44,7 +43,8 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
   const members = useMembers({ kind: 'taskList', id: taskListId });
   if (members.isPending) return <ScrollView>{[60, 45, 70].map((w) => <SkeletonRow key={w} width={w} />)}</ScrollView>;
   if (members.error) return <Notice>{errorMessage(members.error)}</Notice>;
-  const people = [...(members.data ?? [])].sort((a, b) => Number(b.userId === meId) - Number(a.userId === meId));
+  // A private list's tasks are already yours: no Me there (D109).
+  const people = [...(members.data ?? [])].filter((m) => !canGiveOutside || m.userId !== meId).sort((a, b) => Number(b.userId === meId) - Number(a.userId === meId));
   // Someone already given the task from outside the list: shown under Only this task, checked.
   const outsider = selected && !people.some((m) => m.userId === selected.id) ? selected : null;
   return (
@@ -67,7 +67,7 @@ export function AssigneePicker({ taskListId, canGiveOutside = false, meId, selec
         );
       })}
       {canGiveOutside && (
-        <View style={{ marginTop: space.lg }}>
+        <View style={{ marginTop: people.length ? space.lg : 0 }}>
           <SectionLabel>{t('assign.outside')}</SectionLabel>
           {outsider && (
             <ListRow

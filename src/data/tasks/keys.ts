@@ -9,6 +9,7 @@ export const taskKeys = {
   taskLists: ['tasks', 'taskLists'] as const,
   tags: ['tasks', 'tags'] as const,
   archived: ['tasks', 'taskLists', 'archived'] as const,
+  assignable: (userId: Id) => ['tasks', 'taskLists', 'assignable', userId] as const,
   teams: ['tasks', 'teams'] as const,
   /** A team's or a task list's people and open invitations. */
   members: (kind: string, id: Id) => ['tasks', 'members', kind, id] as const,
