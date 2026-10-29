@@ -538,7 +538,8 @@
     "clearRepeat": "Remove repeat",
     "setTime": "Set time",
     "onDueDate": "On its due date",
-    "tonight": "Tonight"
+    "tonight": "Tonight",
+    "repeats": "Repeats"
   },
   "wheels": {
     "day": "Day",

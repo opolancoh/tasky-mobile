@@ -12,7 +12,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { LoadError } from '@/shared/components/LoadError';
 import { useHomeCache } from '@/shared/session/homeCacheStore';
 import { BrowseRow, BrowseRowSkeleton } from '@/shared/components/BrowseRow';
-import { MeButton } from '@/shared/components';
+import { MeButton, ReminderIcon } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { Button, fonts, Screen, Skeleton, SkeletonHeading, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
@@ -34,7 +34,7 @@ type Item =
   | { type: 'cardsSkeleton'; key: string }
   | { type: 'section'; key: string; title: string; count?: number; seeAll?: boolean }
   | { type: 'request'; key: string; request: Request }
-  | { type: 'row'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: Tone; count?: number; zero?: boolean; sub?: ReactNode; onPress(): void }
+  | { type: 'row'; key: string; label: string; icon: ComponentProps<typeof Feather>['name'] | 'reminder'; tone: Tone; count?: number; zero?: boolean; sub?: ReactNode; onPress(): void }
   | { type: 'skeletonRow'; key: string; width: number; sub: number }
   | { type: 'skeletonHead'; key: string };
 
@@ -108,7 +108,7 @@ export function TodayScreen() {
       { type: 'section', key: 's-mine', title: t('home.myStuff') },
       { type: 'row', key: 'important', label: t('home.important'), icon: 'flag', tone: 'danger', count: c.important, sub: c.important ? urgency(c.importantOverdue, c.importantToday, c.importantComingUp, t('home.soonestFirst')) : t('home.noneFlagged'), onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
       { type: 'row', key: 'personal', label: t('home.inbox'), icon: 'inbox', tone: 'accent', count: c.personal, sub: c.personal ? urgency(c.personalOverdue, c.personalToday, c.personalComingUp, t('home.justForYou')) : t('home.nothingOpen'), onPress: () => personal && navigation.navigate('TaskList', { taskListId: personal.id }) },
-      { type: 'row', key: 'reminders', label: t('home.reminders'), icon: 'bell', tone: 'warn', count: c.remindersNext7Days, sub: t(c.remindersNext7Days ? 'home.next7Days' : 'home.noneComingUp'), onPress: () => navigation.navigate('Reminders') },
+      { type: 'row', key: 'reminders', label: t('home.reminders'), icon: 'reminder', tone: 'warn', count: c.remindersNext7Days, sub: t(c.remindersNext7Days ? 'home.next7Days' : 'home.noneComingUp'), onPress: () => navigation.navigate('Reminders') },
       { type: 'section', key: 's-assignments', title: t('home.assignments') },
       { type: 'row', key: 'byMe', label: t('browse.assignedBy'), icon: 'send', tone: 'accent', count: c.assignedByMe, zero: true, sub: late(c.assignedByMeLate), onPress: () => navigation.navigate('BrowseList', { kind: 'assignedBy' }) },
       { type: 'row', key: 'toMe', label: t('browse.assigned'), icon: 'user', tone: 'accent', count: c.assignedToMe, zero: true, sub: late(c.assignedToMeLate), onPress: () => navigation.navigate('BrowseList', { kind: 'assigned' }) },
@@ -189,7 +189,7 @@ export function TodayScreen() {
         return <RequestRow request={item.request} today={today!} />;
       case 'row': {
         const [bg, fg] = tones[item.tone];
-        return <BrowseRow label={item.label} icon={<Feather name={item.icon} size={17} color={fg} />} tint={bg} count={item.count} zero={item.zero} sub={item.sub} onPress={item.onPress} />;
+        return <BrowseRow label={item.label} icon={item.icon === 'reminder' ? <ReminderIcon size={17} color={fg} /> : <Feather name={item.icon} size={17} color={fg} />} tint={bg} count={item.count} zero={item.zero} sub={item.sub} onPress={item.onPress} />;
       }
       case 'skeletonRow':
         return <BrowseRowSkeleton width={item.width} sub={item.sub} />;

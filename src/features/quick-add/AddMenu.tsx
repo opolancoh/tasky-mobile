@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
+import { ReminderIcon } from '@/shared/components';
 import { Sheet, Text, useTheme } from '@/shared/ui';
 
 interface AddMenuProps {
@@ -21,9 +22,9 @@ export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
   const hideMenu = useQuickAdd((s) => s.hideMenu);
   const show = useQuickAdd((s) => s.show);
 
-  const rows: { key: string; icon: ComponentProps<typeof Feather>['name']; run(): void }[] = [
+  const rows: { key: string; icon: ComponentProps<typeof Feather>['name'] | 'reminder'; run(): void }[] = [
     { key: 'task', icon: 'check-circle', run: () => show() },
-    { key: 'reminder', icon: 'bell', run: () => useReminderSheet.getState().show() },
+    { key: 'reminder', icon: 'reminder', run: () => useReminderSheet.getState().show() },
     { key: 'list', icon: 'list', run: onNewList },
     { key: 'team', icon: 'users', run: onNewTeam },
   ];
@@ -47,7 +48,7 @@ export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
             ]}
           >
             <View style={[styles.tile, { borderRadius: radius.sm, backgroundColor: colors.accentSoft }]}>
-              <Feather name={icon} size={18} color={colors.accent} />
+              {icon === 'reminder' ? <ReminderIcon size={18} color={colors.accent} /> : <Feather name={icon} size={18} color={colors.accent} />}
             </View>
             <View style={styles.text}>
               <Text variant="bodyMedium">{t(`quickAdd.menu.${key}`)}</Text>

@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
@@ -79,10 +80,13 @@ export function RemindersScreen() {
                 </View>
                 <View style={styles.main}>
                   <Text variant="bodyMedium" numberOfLines={1}>{r.title}</Text>
-                  <Text variant="footnote" color="ink3" numberOfLines={1}>
-                    <Text variant="footnote" style={{ color: rang ? colors.warn : colors.accent }}>{at}</Text>
-                    {where ? ` · ${where}` : ''}
-                  </Text>
+                  <View style={[styles.meta, { gap: space.xs }]}>
+                    <Text variant="footnote" color="ink3" numberOfLines={1} style={styles.shrink}>
+                      <Text variant="footnote" style={{ color: rang ? colors.warn : colors.accent }}>{at}</Text>
+                      {where ? ` · ${where}` : ''}
+                    </Text>
+                    {r.repeats && <Feather name="repeat" size={12} color={colors.ink3} accessibilityLabel={t('reminders.repeats')} />}
+                  </View>
                 </View>
               </View>
             )}
@@ -121,5 +125,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
   tile: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   main: { flex: 1, minWidth: 0, gap: 2 },
+  meta: { flexDirection: 'row', alignItems: 'center' },
+  shrink: { flexShrink: 1 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', minHeight: 56 },
 });
