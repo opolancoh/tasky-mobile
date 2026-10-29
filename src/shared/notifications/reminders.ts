@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { instantIn } from '@/core/dates/localDate';
@@ -62,7 +63,7 @@ async function sync(timeZone: string): Promise<void> {
   );
   if (!(await allowed(wanted.size > 0))) return;
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('reminders.channel'), importance: Notifications.AndroidImportance.HIGH });
+    await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('reminders.channel'), importance: AndroidImportance.HIGH });
   }
   const titles: Record<ReminderAction, string> = { done: i18n.t('reminders.done'), tenMinutes: i18n.t('reminders.tenMinutes'), oneHour: i18n.t('reminders.oneHour'), tomorrow: i18n.t('reminders.tomorrowMorning') };
   await Notifications.setNotificationCategoryAsync(REMINDER_CATEGORY, REMINDER_ACTIONS.map((id) => ({ identifier: id, buttonTitle: titles[id], options: { opensAppToForeground: true } })));
