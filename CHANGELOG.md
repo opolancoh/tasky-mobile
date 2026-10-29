@@ -2,6 +2,26 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.11.0 — 2026-10-29
+
+- release.sh: say why it stopped (the check's errors, or the failing line)
+- Fix the AndroidImportance lint error (npm run check passes)
+- Spaces: the filter field waits for everything to load (M115)
+- Reminders: repeat icon on Home › Reminders rows; alarm clock instead of a bell on Home and the +
+- Loading: generic skeletons, data actions wait for the data (M115)
+- A list or team made from the + opens over Spaces (M113)
+- Reminder form: quick choices as one-line capsules (M114)
+- Reminder form: clear Repeat and Notes, When?, Set time, quick choices as rows (M114)
+- Reminder sheet, rang and snoozed reminders, banner actions (M114)
+- The + menu: Reminder opens Quick add on its Reminder page (M113)
+- Quick add: docked Set due date / Set reminder (M112); the + asks Task, List or Team (M113)
+- List page: a grey ⓘ right after ALL LISTS (SectionLabel `info`); its popup is "Who sees each list" (M111)
+- List page: an ⓘ at All lists explains the kinds of lists; a person's narrowed set says so under the search (M111)
+- Quick add gives a task person first; one List page with Recent and Private/Shared/Team; no Assigned to on Personal (M111)
+- Comments: + Add a comment opens the comment page, as Quick add's Notes; Edit opens it too; no field docked at the bottom (M110)
+- Task detail: History from ••• on its own screen (M109); Assigned to keeps the person icon; From's face at 20
+- Task detail's skeleton rough on purpose: the top as laid out, then generic sections; FieldRowSkeleton, SkeletonSection; row preview removed (M108)
+
 ## 0.10.0 — 2026-10-26
 
 - Task detail loads as one skeleton, top to bottom, comment field docked where comments show (M108)
