@@ -333,6 +333,7 @@ function QuickAddForm() {
           onPick={(at) => pick({ reminder: at })}
           onSet={(at) => pick({ reminder: at })}
           now={now}
+          due={draft.dueDate}
         />
       )}
     </Sheet>

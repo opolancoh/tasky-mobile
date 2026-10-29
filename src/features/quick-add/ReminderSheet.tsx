@@ -155,7 +155,7 @@ function ReminderForm({ task }: { task?: Task }) {
           </View>
           {now && (
             <View style={[styles.chips, { gap: space.sm, paddingBottom: space.md }]}>
-              {quickReminders(now).map(({ id, at }) => {
+              {quickReminders(now, true).map(({ id, at }) => {
                 const on = sameReminder(at, draft.at);
                 return (
                   <Pressable
@@ -184,22 +184,25 @@ function ReminderForm({ task }: { task?: Task }) {
             icon={<Feather name="repeat" size={20} color={draft.repeat ? colors.accent : colors.ink3} />}
             value={<Text variant="bodyMedium" color={draft.repeat ? 'accent' : 'ink3'} numberOfLines={1}>{draft.repeat ? describe(draft.repeat, repeatDay) : t('repeat.never')}</Text>}
             onPress={() => openPage('repeat')}
+            onClear={draft.repeat ? () => update({ repeat: null }) : undefined}
+            clearLabel={t('reminders.clearRepeat')}
           />
           <ListRow
             label={t('quickAdd.fields.notes')}
             icon={<Feather name="align-left" size={20} color={draft.notes.trim() ? colors.accent : colors.ink3} />}
             value={<Text variant="bodyMedium" color={draft.notes.trim() ? 'ink' : 'ink3'} numberOfLines={1}>{draft.notes.trim() || t('reminders.none')}</Text>}
             onPress={() => openPage('notes')}
+            onClear={draft.notes.trim() ? () => update({ notes: '' }) : undefined}
+            clearLabel={t('quickAdd.clearNotes')}
             divider={!!task}
           />
           {task && <ListRow label={t('reminders.makeTask')} icon={<Feather name="check-circle" size={20} color={colors.accent} />} onPress={makeTask} />}
           {task && <ListRow label={t('reminders.delete')} icon={<Feather name="trash-2" size={20} color={colors.danger} />} onPress={() => void del()} divider={false} />}
-          <Text variant="footnote" color="ink3" style={{ paddingVertical: space.md }}>{t('reminders.onlyMine')}</Text>
         </ScrollView>
       )}
 
       {page === 'when' && now && (
-        <ReminderPicker value={draft.at} onChange={(at) => update({ at })} onPick={(at) => pick({ at })} onSet={(at) => pick({ at })} now={now} />
+        <ReminderPicker value={draft.at} onChange={(at) => update({ at })} onPick={(at) => pick({ at })} onSet={(at) => pick({ at })} now={now} forReminder />
       )}
 
       {page === 'repeat' && repeatDay && (

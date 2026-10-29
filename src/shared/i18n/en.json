@@ -517,7 +517,7 @@
     "edit": "Reminder",
     "reminder": "Reminder",
     "remindMe": "Remind me",
-    "pickTime": "Pick a time",
+    "pickTime": "When?",
     "placeholder": "Remind me to…",
     "inAnHour": "In 1 hour",
     "thisEvening": "This evening",
@@ -527,7 +527,6 @@
     "deleteTitle": "Delete this reminder?",
     "deleteBody": "It goes to Recently Deleted.",
     "repeatHint": "On the reminder's day and time. To repeat on another day, change Remind me. Done moves it to the next one; a missed one never piles up.",
-    "onlyMine": "Only you see it. It rings on this phone and never shows in Personal.",
     "rang": "Rang {{when}}",
     "snoozed": "Snoozed until {{time}}",
     "snooze": "Snooze",
@@ -535,7 +534,11 @@
     "oneHour": "1 hour",
     "tomorrowMorning": "Tomorrow, 9:00",
     "done": "Done",
-    "rangHeading": "Rang"
+    "rangHeading": "Rang",
+    "clearRepeat": "Remove repeat",
+    "setTime": "Set time",
+    "onDueDate": "On its due date",
+    "tonight": "Tonight"
   },
   "wheels": {
     "day": "Day",

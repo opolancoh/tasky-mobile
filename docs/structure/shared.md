@@ -124,7 +124,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
 | `RepeatPicker` | Never, then Daily, Weekdays, Weekly, Monthly, Yearly on a date (a task's due date, a reminder's date, M114); `hint` for the reminder's note. Text from `shared/hooks/useRepeatText` |
 | `SnoozePill` | Snooze on a reminder row that rang (10 min, 1 hour, Tomorrow 9:00; M114) |
-| `ReminderPicker` | Four quick choices (`onSet`, Quick add: a docked Set reminder instead of Remove, M112), a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel; nothing before the next quarter hour, M95), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `ReminderPicker` | Quick choices as rows (a task's four; a reminder's In 1 hour, This evening, Tomorrow and Set time with `forReminder`, M114) (`onSet`, Quick add: a docked Set reminder instead of Remove, M112), a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel; nothing before the next quarter hour, M95), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
 | `BrowseRow`, `BrowseRowSkeleton`, `SharedMark`, `OwnerMark` | A Spaces and Home row (M38, M105): a 30 pt tile, the name (a line under it with `sub`), an aside, the count (hidden at 0 unless `zero`), a chevron; arrows in Edit |
 | `CompletedRow` | A completed task: the filled circle reopens it, the title struck through, its list under it |

@@ -9,11 +9,10 @@ import { taskKeys } from '@/data/tasks/keys';
 import { useTaskLists, useTags } from '@/data/tasks/queries';
 import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { givesOutside, AssigneePicker, TaskListPicker, DueDatePicker, ReminderPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
+import { givesOutside, AssigneePicker, TaskListPicker, DueDatePicker, ReminderPicker, RepeatPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { confirm, Sheet } from '@/shared/ui';
 
-import { RepeatPicker } from '@/shared/components';
 import { assigneeStatus, type TaskDraft } from './taskDraft';
 import { useTaskDraft } from './taskDraftStore';
 import { useTaskSheet, type TaskField } from './taskSheetStore';
@@ -134,7 +133,7 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
     case 'due':
       return <DueDatePicker value={due ?? undefined} today={today} onPick={(date) => applyDue(date ?? null)} onChange={setDue} />;
     case 'reminder':
-      return <ReminderPicker value={reminder} onChange={setReminder} onPick={(at) => apply({ reminder: at })} onRemove={() => apply({ reminder: null })} now={now} />;
+      return <ReminderPicker value={reminder} onChange={setReminder} onPick={(at) => apply({ reminder: at })} onRemove={() => apply({ reminder: null })} now={now} due={draft.dueDate} />;
     case 'repeat':
       return (
         <RepeatPicker

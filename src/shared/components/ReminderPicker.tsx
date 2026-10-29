@@ -1,11 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { memo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { formatLocalDate, formatLocalTime } from '@/core/dates/localDate';
 import type { LocalDate, LocalTime } from '@/core/types';
-import { earliestReminder, reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
+import { earliestReminder, quickReminders, reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
 import { DateWheel, DockedAction, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
 
 interface ReminderPickerProps {
@@ -20,18 +20,24 @@ interface ReminderPickerProps {
   onSet?(value: ReminderAt): void;
   /** "Now" in the profile's time zone. */
   now: { date: LocalDate; time: LocalTime };
+  /** The Reminder sheet (M114): its own choices, "Set time" on the docked button, and no note about tasks' reminders. */
+  forReminder?: boolean;
+  /** The task's due date: On its due date is offered while it's ahead. */
+  due?: LocalDate | null;
 }
 
 /**
- * Picks the caller's reminder on a task (Quick add's Reminder page, task detail): four quick choices (`onPick`), then a custom date and time with the
+ * Picks the caller's reminder on a task (Quick add's Reminder page, task detail) or a reminder's time (M114): quick choices as a list (`onPick`; a
+ * reminder's are its chips'), then a custom date and time with the
  * shared DateWheel and TimeWheel (one open at a time), then Remove reminder or a docked Set reminder. That only the user gets it is said here, once, not on
  * the task's rows.
  */
-export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now }: ReminderPickerProps) {
+export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now, forReminder = false, due }: ReminderPickerProps) {
   const { t, i18n } = useTranslation();
   const { colors, radius, space } = useTheme();
   const locale = i18n.language;
-  const presets = reminderPresets(now);
+  // The Reminder sheet offers its own chips' choices (M114); a task's reminder, the four presets.
+  const presets = forReminder ? quickReminders(now) : reminderPresets(now, due);
   // Nothing in the past: no date before the earliest, and on that date no time before it.
   const earliest = earliestReminder(now);
   const atLeast = (at: ReminderAt): ReminderAt => (at.date < earliest.date || (at.date === earliest.date && at.time < earliest.time) ? earliest : at);
@@ -44,17 +50,19 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now }
 
   const list = (
     <ScrollView keyboardShouldPersistTaps="handled" bounces={false} style={onSet && styles.fill}>
-      <View style={[styles.grid, { gap: space.md }]}>
-        {presets.map(({ id, at }) => (
-          <PresetCard
+      {presets.map(({ id, at }, i) => {
+        const selected = sameReminder(at, value);
+        return (
+          <ListRow
             key={id}
             label={t(`reminders.${id}`)}
-            detail={id === 'laterToday' ? formatLocalTime(at.time, locale) : `${formatLocalDate(at.date, locale, { weekday: 'short' })}, ${formatLocalTime(at.time, locale)}`}
-            selected={sameReminder(at, value)}
+            value={<Text variant="body" color={selected ? 'accent' : 'ink2'}>{at.date === now.date ? formatLocalTime(at.time, locale) : `${formatLocalDate(at.date, locale, { weekday: 'short' })}, ${formatLocalTime(at.time, locale)}`}</Text>}
+            selected={selected}
             onPress={() => onPick(at)}
+            divider={i < presets.length - 1}
           />
-        ))}
-      </View>
+        );
+      })}
       <SectionLabel style={{ marginTop: space.xxl }}>{t('reminders.custom')}</SectionLabel>
       <ListRow
         label={t('reminders.date')}
@@ -89,7 +97,7 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now }
           labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }}
         />
       )}
-      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('reminders.onlyYou')}</Text>
+      {!forReminder && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('reminders.onlyYou')}</Text>}
 
       {onRemove && (
         <Pressable onPress={onRemove} accessibilityRole="button" style={[styles.remove, { marginTop: space.xxl, borderRadius: radius.md }]}>
@@ -107,43 +115,12 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now }
   return (
     <View style={styles.fill}>
       {list}
-      <DockedAction label={t('reminders.set')} detail={when} onPress={() => onSet(atLeast(shown))} />
+      <DockedAction label={t(forReminder ? 'reminders.setTime' : 'reminders.set')} detail={when} onPress={() => onSet(atLeast(shown))} />
     </View>
   );
 }
 
-const PresetCard = memo(function PresetCard({ label, detail, selected, onPress }: { label: string; detail: string; selected: boolean; onPress(): void }) {
-  const { colors, radius, space } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
-      accessibilityLabel={`${label}, ${detail}`}
-      style={({ pressed }) => [
-        styles.card,
-        {
-          padding: space.md,
-          borderRadius: radius.lg,
-          borderColor: selected ? colors.accent : colors.line,
-          backgroundColor: selected ? colors.accentSoft : pressed ? colors.surface2 : colors.surface,
-        },
-      ]}
-    >
-      <Text variant="bodyMedium" color={selected ? 'accent' : 'ink'}>
-        {label}
-      </Text>
-      <Text variant="subhead" color={selected ? 'accent' : 'ink2'}>
-        {detail}
-      </Text>
-    </Pressable>
-  );
-});
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  /** Two per row: half the width minus half the gap. */
-  card: { flexBasis: '47%', flexGrow: 1, borderWidth: 1, gap: 2 },
   remove: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 });

@@ -517,7 +517,7 @@
     "edit": "Recordatorio",
     "reminder": "Recordatorio",
     "remindMe": "Recordarme",
-    "pickTime": "Elige una hora",
+    "pickTime": "¿Cuándo?",
     "placeholder": "Recordarme…",
     "inAnHour": "En 1 hora",
     "thisEvening": "Esta tarde",
@@ -527,7 +527,6 @@
     "deleteTitle": "¿Eliminar este recordatorio?",
     "deleteBody": "Va a Eliminados recientemente.",
     "repeatHint": "El día y la hora del recordatorio. Para repetir otro día, cambia Recordarme. Hecho lo pasa al siguiente; uno perdido nunca se acumula.",
-    "onlyMine": "Solo tú lo ves. Suena en este teléfono y nunca aparece en Personal.",
     "rang": "Sonó {{when}}",
     "snoozed": "Pospuesto hasta {{time}}",
     "snooze": "Posponer",
@@ -535,7 +534,11 @@
     "oneHour": "1 hora",
     "tomorrowMorning": "Mañana, 9:00",
     "done": "Hecho",
-    "rangHeading": "Sonaron"
+    "rangHeading": "Sonaron",
+    "clearRepeat": "Quitar repetición",
+    "setTime": "Fijar hora",
+    "onDueDate": "En su fecha",
+    "tonight": "Esta noche"
   },
   "wheels": {
     "day": "Día",
