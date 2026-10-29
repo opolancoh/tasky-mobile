@@ -105,9 +105,10 @@ function Root() {
       <LinkWatcher />
       {status === 'signedIn' && (
         <>
+          {/* A list or team made from the + opens over Spaces, where it lives: back goes there, not to the tab it was made on. */}
           <AddMenu
-            onNewList={() => useBrowseSheet.getState().show({ kind: 'list' }, (id) => navigationRef.navigate('TaskList', { taskListId: id }))}
-            onNewTeam={() => useBrowseSheet.getState().show({ kind: 'team' }, (id) => navigationRef.navigate('Team', { teamId: id }))}
+            onNewList={() => useBrowseSheet.getState().show({ kind: 'list' }, (id) => { navigationRef.navigate('Tabs', { screen: 'Browse' }); navigationRef.navigate('TaskList', { taskListId: id }); })}
+            onNewTeam={() => useBrowseSheet.getState().show({ kind: 'team' }, (id) => { navigationRef.navigate('Tabs', { screen: 'Browse' }); navigationRef.navigate('Team', { teamId: id }); })}
           />
           <QuickAddSheet />
           <ReminderSheet />
