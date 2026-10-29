@@ -177,7 +177,7 @@ export function BrowseScreen() {
                 <Skeleton width="100%" height={44} radius={radius.md} />
               </View>
             )}
-            {many && !editing && (
+            {many && !editing && !loading && (
               <View style={{ marginTop: space.lg }}>
                 <SearchField value={filter} onChangeText={setFilter} placeholder={t('browse.filter')} clearLabel={t('browse.clearFilter')} />
               </View>
