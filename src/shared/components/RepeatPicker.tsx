@@ -6,7 +6,7 @@ import type { LocalDate } from '@/core/types';
 import type { Repeat, RepeatPattern } from '@/data/tasks/types';
 import { ListRow, Text, useTheme } from '@/shared/ui';
 
-import { DAYS, useRepeatText } from '../useRepeatText';
+import { DAYS, useRepeatText } from '@/shared/hooks/useRepeatText';
 
 const PATTERNS: RepeatPattern[] = ['daily', 'weekdays', 'weekly', 'monthly', 'yearly'];
 
@@ -18,10 +18,10 @@ function isPlain(repeat: Repeat | null | undefined, pattern: RepeatPattern, due:
 }
 
 /**
- * Task detail's Repeat page (M25): Never, then Daily, Weekdays, Weekly, Monthly, Yearly on the due date (today
- * when there is none). A tap applies and closes. A custom rule the task already has is listed first, checked.
+ * The Repeat page (Task detail M25, the Reminder sheet M114): Never, then Daily, Weekdays, Weekly, Monthly, Yearly on the
+ * due date (today when there is none), or on a reminder's date. A tap applies and closes. A custom rule already there is listed first, checked.
  */
-export function RepeatPicker({ value, due, onPick }: { value: Repeat | null | undefined; due: LocalDate; onPick(pattern: RepeatPattern | null): void }) {
+export function RepeatPicker({ value, due, hint, onPick }: { value: Repeat | null | undefined; due: LocalDate; hint?: string; onPick(pattern: RepeatPattern | null): void }) {
   const { t } = useTranslation();
   const { space } = useTheme();
   const { option, describe } = useRepeatText();
@@ -35,7 +35,7 @@ export function RepeatPicker({ value, due, onPick }: { value: Repeat | null | un
         <ListRow key={p} label={option(p, due)} selected={isPlain(value, p, due)} onPress={() => onPick(p)} divider={i < PATTERNS.length - 1} />
       ))}
       <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>
-        {t('repeat.hint')}
+        {hint ?? t('repeat.hint')}
       </Text>
     </ScrollView>
   );

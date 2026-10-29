@@ -153,7 +153,14 @@ export const tasksApi = {
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),
 
   /** GET /me/reminders: the caller's reminders from today on, open tasks only, soonest first (D11), for the device to schedule. */
-  myReminders: (limit: number, cursor?: string) => http().get<{ items: MyReminder[]; nextCursor: string | null }>('/me/reminders', { query: { limit, cursor } }),
+  myReminders: (limit: number, cursor?: string, occurrences?: number) =>
+    http().get<{ items: MyReminder[]; nextCursor: string | null }>('/me/reminders', { query: { limit, cursor, occurrences } }),
+
+  /** POST /tasks/{id}/reminder:snooze: the caller's reminder rings again at `until` (local), keeping its own time (D110). */
+  snooze: (taskId: Id, until: string) => http().post(`/tasks/${taskId}/reminder:snooze`, { body: { until } }),
+
+  /** POST /tasks/{id}:make-task with If-Match: a reminder becomes a task in Personal (D110). */
+  makeTask: (task: Versioned) => http().post<Task>(`/tasks/${task.id}:make-task`, { ifMatch: task.version }),
 
   /** PUT /tasks/{id}/reminder: sets the caller's reminder. */
   setReminder: (taskId: Id, date: LocalDate, time: LocalTime) => http().put(`/tasks/${taskId}/reminder`, { body: { date, time } }),

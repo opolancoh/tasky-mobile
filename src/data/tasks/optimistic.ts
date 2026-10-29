@@ -213,7 +213,7 @@ export function editRows(queryClient: QueryClient, id: Id, patch: Partial<TaskSu
 
 /** A full task as its row (TaskSummaryResponse), for the API's answer to a create (M100). */
 export const toSummary = (t: Task): TaskSummary => ({
-  id: t.id, taskList: t.taskList, title: t.title, hasNotes: !!t.notes, isImportant: t.isImportant, dueDate: t.dueDate ?? null,
+  id: t.id, kind: t.kind, taskList: t.taskList, title: t.title, hasNotes: !!t.notes, isImportant: t.isImportant, dueDate: t.dueDate ?? null,
   repeats: !!t.repeat, status: t.status, completedAt: t.completedAt ?? null, assignee: t.assignee, assignmentStatus: t.assignmentStatus ?? null,
   assignedBy: t.assignedBy, declineReason: t.declineReason, awaitsConfirmation: t.awaitsConfirmation, invitedEmail: t.invitedEmail,
   stepsDone: t.steps.filter((x) => x.isDone).length, stepsTotal: t.steps.length, tags: t.tags, version: t.version, reminder: t.reminder,
@@ -233,8 +233,10 @@ export interface NewTaskPlace {
  * itself. Undefined when the app can't tell (another assignee, `assignment`, `assignedBy`): that list waits for the refetch.
  */
 export function takesNew(filter: TaskFilter, task: TaskSummary, place: NewTaskPlace): boolean | undefined {
-  const { taskListId, teamId, mine, status, important, due, dueFrom, dueTo, tag, assignee, sort, limit, ...rest } = filter;
+  const { kind, taskListId, teamId, mine, status, important, due, dueFrom, dueTo, tag, assignee, sort, limit, ...rest } = filter;
   void sort; void limit;
+  if ((kind ?? 'task') !== task.kind) return false;   // a reminder is in no task list (D110)
+  if (task.kind === 'reminder') return undefined;   // the reminders' own lists wait for the refetch
   if (Object.keys(rest).length || (assignee && assignee !== 'none')) return undefined;
   if (status && status !== 'open') return false;
   if (taskListId && taskListId !== task.taskList?.id) return false;
@@ -298,7 +300,7 @@ function insertInList(data: unknown, task: TaskSummary, order: ReturnType<typeof
 function homeSectionOf(task: TaskSummary, today: LocalDate | undefined): 'today' | 'overdue' | undefined {
   const d = task.dueDate;
   if (!today) return undefined;
-  if (d === today || (task.reminder?.date === today && (!d || d > today))) return 'today';
+  if (d === today || (task.reminder?.date === today && (!d || d > today)) || (task.kind === 'reminder' && !!task.reminder && task.reminder.date < today)) return 'today';
   if (d && d < today) return 'overdue';
   return undefined;
 }
@@ -322,14 +324,14 @@ export async function insertTask(queryClient: QueryClient, task: TaskSummary, pl
           ...c,
           ...(section ? { [section]: c[section] + 1 } : {}),
           openTotal: c.openTotal + 1,
-          personal: c.personal + (task.taskList?.isInbox ? 1 : 0),
+          personal: c.personal + (task.taskList?.isInbox && task.kind === 'task' ? 1 : 0),
           important: c.important + (task.isImportant && place.mine ? 1 : 0),
         },
       };
     } else if (where.home) {
       const name = key[3];
       const takes = name === 'important' ? task.isImportant && place.mine
-        : name === 'inbox' ? !!task.taskList?.isInbox
+        : name === 'inbox' ? !!task.taskList?.isInbox && task.kind === 'task'
         : (name === 'today' || name === 'overdue') && homeSectionOf(task, place.today) === name;
       if (takes) next = insertInList(data, task, 'top');
     } else if (where.filter && takesNew(where.filter, task, place)) {
@@ -337,7 +339,7 @@ export async function insertTask(queryClient: QueryClient, task: TaskSummary, pl
     }
     if (next !== data) queryClient.setQueryData(key, next);
   });
-  const listId = task.taskList?.id;
+  const listId = task.kind === 'task' ? task.taskList?.id : undefined;   // a reminder isn't counted in Personal (D110)
   queryClient.setQueryData<TaskList[]>(taskKeys.taskLists, (lists) => lists?.map((c) => (c.id === listId ? { ...c, openTasks: (c.openTasks ?? 0) + 1 } : c)));
 }
 

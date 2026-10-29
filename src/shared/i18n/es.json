@@ -10,7 +10,8 @@
     "done": "Listo",
     "undo": "Deshacer",
     "none": "Sin definir",
-    "save": "Guardar"
+    "save": "Guardar",
+    "delete": "Eliminar"
   },
   "auth": {
     "signIn": {
@@ -509,9 +510,32 @@
     "remove": "Quitar recordatorio",
     "body": "Recordatorio",
     "channel": "Recordatorios",
-    "listSub": "Próximos, el más cercano primero",
-    "listEmpty": "No hay recordatorios próximos. Agrega uno a una tarea y aparecerá aquí.",
-    "set": "Poner recordatorio"
+    "listSub": "Los que sonaron, luego los próximos",
+    "listEmpty": "No hay recordatorios. Toca + › Recordatorio, o pon uno en una tarea.",
+    "set": "Poner recordatorio",
+    "new": "Nuevo recordatorio",
+    "edit": "Recordatorio",
+    "reminder": "Recordatorio",
+    "remindMe": "Recordarme",
+    "pickTime": "Elige una hora",
+    "placeholder": "Recordarme…",
+    "inAnHour": "En 1 hora",
+    "thisEvening": "Esta tarde",
+    "none": "Ninguna",
+    "makeTask": "Convertir en tarea",
+    "delete": "Eliminar recordatorio",
+    "deleteTitle": "¿Eliminar este recordatorio?",
+    "deleteBody": "Va a Eliminados recientemente.",
+    "repeatHint": "El día y la hora del recordatorio. Para repetir otro día, cambia Recordarme. Hecho lo pasa al siguiente; uno perdido nunca se acumula.",
+    "onlyMine": "Solo tú lo ves. Suena en este teléfono y nunca aparece en Personal.",
+    "rang": "Sonó {{when}}",
+    "snoozed": "Pospuesto hasta {{time}}",
+    "snooze": "Posponer",
+    "tenMinutes": "10 min",
+    "oneHour": "1 hora",
+    "tomorrowMorning": "Mañana, 9:00",
+    "done": "Hecho",
+    "rangHeading": "Sonaron"
   },
   "wheels": {
     "day": "Día",
@@ -540,7 +564,8 @@
     "sharing.already_member": "Esta persona ya puede verlo.",
     "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
     "sharing.inbox_private": "Tu lista Personal no se puede compartir.",
-    "invitation.account_closed": "La cuenta de esta persona está cerrada."
+    "invitation.account_closed": "La cuenta de esta persona está cerrada.",
+    "task.reminder_unsupported": "Un recordatorio solo tiene título, hora, notas y repetición."
   },
   "languages": {
     "en": "Inglés",

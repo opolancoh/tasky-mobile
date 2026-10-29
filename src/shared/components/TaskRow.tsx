@@ -7,6 +7,7 @@ import type { LocalDate } from '@/core/types';
 import { useConfirmTask } from '@/data/tasks/mutations';
 import type { TaskSummary } from '@/data/tasks/types';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
+import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
 import { selectable as canSelect, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
@@ -14,6 +15,8 @@ import { useSessionStore } from '@/shared/session/sessionStore';
 import { Pill, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
+import { ReminderIcon } from './ReminderIcon';
+import { SnoozePill } from './SnoozePill';
 import { TaskOrigin } from './TaskOrigin';
 import { CheckCircle } from './CheckCircle';
 import { easeNextLayout, useTaskCheck } from './useTaskCheck';
@@ -49,7 +52,7 @@ export interface TaskRowProps {
  * Ticking moves the row into Completed at once, its circle spinning until the answer, and back if the API says no (M75).
  * On hold (D91, M80): a pause icon instead of the circle (Resume, Complete, Edit the reason). Bulk actions (M81, `selectable`):
  * a long press starts selecting; while selecting, the circle is a round check, a tap picks or drops the task and the picked
- * row tints; completed tasks can't be picked.
+ * row tints; completed tasks can't be picked. A reminder (D110, M114) opens the Reminder sheet and is never picked.
  */
 export function TaskRow({ task, today, showDue = false, showTime = false, showList = true, showAssignment = false, outside = false, hideFace = false, selectable = false, action, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
@@ -62,7 +65,11 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
   const holds = useHoldActions();
   const selection = useRowSelection(task.id);
   const selecting = selectable && selection.selecting;
-  const pickable = selectable && canSelect(task);
+  const reminder = task.kind === 'reminder';
+  const pickable = selectable && canSelect(task) && !reminder;
+  const press = reminder ? () => useReminderSheet.getState().show(task.id) : onPress ? () => onPress(task) : undefined;
+  const rang = reminder && task.status === 'open' && !!today && !!task.reminder && task.reminder.date < today && !task.reminder.snoozedUntil;
+  const end = action ?? (rang ? <SnoozePill taskId={task.id} /> : undefined);
   const pick = () => useSelection.getState().toggle(task);
   const startSelecting = () => useSelection.getState().start(selection.key, task);
 
@@ -72,10 +79,10 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
 
   return (
     <Pressable
-      onPress={selecting ? (pickable ? pick : undefined) : onPress ? () => onPress(task) : undefined}
+      onPress={selecting ? (pickable ? pick : undefined) : press}
       onLongPress={!selecting && pickable ? startSelecting : undefined}
-      disabled={selecting ? !pickable : (!onPress && !pickable) || check.saving}
-      accessibilityRole={selecting ? 'checkbox' : onPress ? 'button' : undefined}
+      disabled={selecting ? !pickable : (!press && !pickable) || check.saving}
+      accessibilityRole={selecting ? 'checkbox' : press ? 'button' : undefined}
       accessibilityState={selecting ? { checked: selection.picked, disabled: !pickable } : { busy: check.saving }}
       accessibilityActions={!selecting && pickable ? [{ name: 'longpress', label: t('select.selectTasks') }] : undefined}
       onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && startSelecting()}
@@ -102,8 +109,8 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
             <View style={styles.end}>
               <Pill label={t('taskRow.confirm')} onPress={() => { easeNextLayout(); confirm.mutate(task); }} disabled={confirm.isPending || check.saving || selecting} />
             </View>
-          ) : action && !selecting ? (
-            <View style={styles.end} pointerEvents={check.saving ? 'none' : 'auto'}>{action}</View>
+          ) : end && !selecting ? (
+            <View style={styles.end} pointerEvents={check.saving ? 'none' : 'auto'}>{end}</View>
           ) : null}
         </View>
       )}
@@ -116,6 +123,8 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
  * the user sees only as its assignee, D70; off on a list's own screen, M57), when (today's reminder time on Today, else the
  * due date, red when late; on hold the "On hold · reason" chip, until when and who resumes it, never late, D91), progress
  * (steps, comments M82, repeat), then the assignment (Pending, Declined and why, outside its list D88, Completed, Invited).
+ * A reminder (D110, M114): a bell and its time ("Wed, Oct 7, 9:00 AM"), "Rang …" in amber once its day passed, or "Snoozed
+ * until …"; never its list (Personal, where it doesn't show).
  */
 export function TaskMeta({ task, today, showDue = false, showTime = false, showList = true, showAssignment = false, outside = false }: Pick<TaskRowProps, 'task' | 'today' | 'showDue' | 'showTime' | 'showList' | 'showAssignment' | 'outside'>) {
   const { t } = useTranslation();
@@ -125,10 +134,22 @@ export function TaskMeta({ task, today, showDue = false, showTime = false, showL
   const awaiting = task.awaitsConfirmation;
   const held = task.status === 'onHold';
   const overdue = !awaiting && !held && task.status !== 'completed' && !!task.dueDate && !!today && task.dueDate < today;
-  const time = showTime && !!today && task.reminder?.date === today ? task.reminder.time : null;
+  const isReminder = task.kind === 'reminder' && !!task.reminder;
+  const time = !isReminder && showTime && !!today && task.reminder?.date === today ? task.reminder.time : null;
+  const rang = isReminder && task.status === 'open' && !!today && task.reminder!.date < today;
+  const snoozed = isReminder && task.reminder!.snoozedUntil;
+  const when = isReminder ? `${task.reminder!.date === today ? '' : `${labels.day(task.reminder!.date)}, `}${labels.time(task.reminder!.time)}` : '';
   const note = (text: string, color?: 'danger' | 'success') => <Text variant="footnote" color={color ?? 'ink3'} numberOfLines={1}>{text}</Text>;
   const parts: ReactNode[] = [
-    showList && <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />,
+    showList && !isReminder && <TaskOrigin taskList={task.taskList} assignedBy={task.assignedBy} />,
+    isReminder && (
+      <View style={[styles.count, { gap: 3 }]}>
+        <ReminderIcon size={12} color={rang ? colors.warn : colors.accent} />
+        <Text variant="footnote" style={{ color: rang ? colors.warn : colors.accent, fontWeight: '600' }} numberOfLines={1}>
+          {snoozed ? t('reminders.snoozed', { time: labels.time(snoozed.slice(11, 16)) }) : rang ? t('reminders.rang', { when }) : when}
+        </Text>
+      </View>
+    ),
     held && (
       <View style={[styles.chip, { backgroundColor: colors.warnSoft }]}>
         <Text variant="caption" style={{ color: colors.warn }} numberOfLines={1}>{task.holdReason ? t('hold.chip', { reason: task.holdReason }) : t('hold.onHold')}</Text>

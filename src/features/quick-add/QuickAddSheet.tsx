@@ -70,11 +70,10 @@ function QuickAddForm() {
   const startTitle = useQuickAdd((s) => s.title);
   const startDue = useQuickAdd((s) => s.dueDate);
   const startList = useQuickAdd((s) => s.taskListId);
-  const startPage = useQuickAdd((s) => s.page);
   const [draft, setDraft] = useState<Draft>(() => ({ ...EMPTY, title: startTitle ?? '', dueDate: startDue, taskListId: startList }));
-  const [page, setPage] = useState<Page>(startPage ?? 'form');
+  const [page, setPage] = useState<Page>('form');
   // The title has the keyboard at once (M104); once a page has opened, coming back doesn't raise it again.
-  const [focusTitle, setFocusTitle] = useState(!startPage);
+  const [focusTitle, setFocusTitle] = useState(true);
   const titleInput = useRef<TextInputInstance>(null);
   const [beforePage, setBeforePage] = useState<Draft>(draft);   // the draft when a page opened: tapping outside restores it
   // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
@@ -131,7 +130,6 @@ function QuickAddForm() {
           reminderDate: chosen?.date,
           reminderTime: chosen?.time,
         },
-        withoutReminder: !draft.reminder && !!draft.dueDate,
         assignee: canAssign ? draft.assignee : undefined,
       },
     );

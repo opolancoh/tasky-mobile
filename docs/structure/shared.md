@@ -14,7 +14,7 @@ src/shared/
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts
 │   └── palettes/          One JSON file per palette; active.json names the one in use
-├── notifications/     permission.ts (the one permission, our ask sheet's state), push.ts (register the push token), NotificationAskSheet.tsx, reminders.ts (sync the phone's reminders with GET /me/reminders), useReminders.ts (ReminderSync, mounted in App)
+├── notifications/     permission.ts (the one permission, our ask sheet's state), push.ts (register the push token), NotificationAskSheet.tsx, reminders.ts (sync the phone's reminders with GET /me/reminders: snoozes, a repeating reminder's next 5 times, the banner's actions, M114), reminderActions.ts (Done and Snooze from a banner, run by PushWatcher), useReminders.ts (ReminderSync, mounted in App)
 ├── appInfo.ts             This app's version, build number (store builds), Expo Go or not, where to update (M46, M48)
 ├── errors/                Error reports (M89)
 │   ├── errorReports.ts    The reports on this phone (Zustand persisted to AsyncStorage, the newest 50), recordError, sendReports (plain fetch, the token only for the signed-in person's own; Pending on failure), sendPending
@@ -37,20 +37,22 @@ src/shared/
 ├── browseSheet/
 │   └── browseSheetStore.ts  Which Browse sheet is open (new or edited list, team, tag); useShowBrowseSheet opens it from any screen
 ├── quickAdd/
-│   └── quickAddStore.ts   Quick add open or closed; show({ title, dueDate, taskListId, onAdded }) from the tab bar +, due on a day from Calendar (M72), or on a list from its Add a task (M103)
+│   ├── quickAddStore.ts   Quick add open or closed; show({ title, dueDate, taskListId, onAdded }) from the tab bar +, due on a day from Calendar (M72), or on a list from its Add a task (M103)
+│   └── reminderSheetStore.ts  The Reminder sheet (M114): show() a new reminder, show(taskId) to edit one (any reminder row, a banner)
 ├── session/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 │   ├── pendingSignOut.ts  A sign-out made offline, kept in SecureStore and sent at launch or on coming back (M88)
 │   ├── homeCacheStore.ts  Home's last GET /home per user, on the device; cleared on sign-out (M105)
 ├── components/            Domain pieces several features use; import from '@/shared/components'
-│   ├── TaskListIcon.tsx   TaskListPicker.tsx   recentListsStore.ts   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   TaskRow.tsx   TaskOrigin.tsx
+│   ├── TaskListIcon.tsx   TaskListPicker.tsx   recentListsStore.ts   DueDatePicker.tsx   ReminderPicker.tsx   ReminderIcon.tsx   RepeatPicker.tsx   SnoozePill.tsx   TaskRow.tsx   TaskOrigin.tsx
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx   BarTitle.tsx
 │   ├── BrowseRow.tsx   CompletedRow.tsx   CompletedHeading.tsx   (rows Home and Spaces share, M105)
 │   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   ├── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
+│   ├── useRepeatText.ts   "Weekly on Monday", "Every 2 weeks on Mon, Thu" (Task detail, the Reminder sheet)
 │   ├── usePullRefresh.tsx  Pull to refresh on every list screen
 │   └── foldedListsStore.ts  The lists (and Home's views) whose Completed the user folded, per user, on the device (M63, M105)
 └── i18n/
@@ -120,6 +122,8 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `DueDatePicker` | Today, Tomorrow, Next week, a custom date on the wheel, No date (Quick add, task detail); with `onSet` (Quick add, M112) Custom is a Date row and a docked Set due date, no No date; opens with the set date checked, a date that isn't a quick choice on Custom with the wheel open; with no date the wheel starts on today and sets nothing until it turns |
 | `TagPicker` | Search or create, picked tags, all tags last used first ([M16](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `TagsRow` | A form's Tags row: the picked tags as colored chips, ✕ to clear |
+| `RepeatPicker` | Never, then Daily, Weekdays, Weekly, Monthly, Yearly on a date (a task's due date, a reminder's date, M114); `hint` for the reminder's note. Text from `shared/hooks/useRepeatText` |
+| `SnoozePill` | Snooze on a reminder row that rang (10 min, 1 hour, Tomorrow 9:00; M114) |
 | `ReminderPicker` | Four quick choices (`onSet`, Quick add: a docked Set reminder instead of Remove, M112), a custom date and time (wheels; a reminder that isn't a quick choice opens on its date wheel; nothing before the next quarter hour, M95), Remove ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
 | `BrowseRow`, `BrowseRowSkeleton`, `SharedMark`, `OwnerMark` | A Spaces and Home row (M38, M105): a 30 pt tile, the name (a line under it with `sub`), an aside, the count (hidden at 0 unless `zero`), a chevron; arrows in Edit |
@@ -131,6 +135,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | Hook | Purpose |
 |---|---|
 | `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
+| `useRepeatText()` | `option(pattern, date)`: "Weekly on Monday"; `describe(repeat, date)`: any rule, "Every 2 weeks on Mon, Thu" |
 | `usePullRefresh(...queries)` | Every list screen's `refreshControl`: a pull refetches the screen's queries (those enabled) |
 | `useFoldedLists` | Whether a list's Completed is folded (open by default), per user, on the device: a task list by id, Home's views by name (`today`, `important`, `assigned`, `assignedBy`) (M63, M105) |
 

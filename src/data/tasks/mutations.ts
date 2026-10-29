@@ -17,8 +17,6 @@ import type { Comment, CommentsPage, TaskList, CreateTaskRequest, DeletedItem, M
 export interface NewTask {
   id: Id;
   body: CreateTaskRequest;
-  /** A due date without a reminder (M19): the API's 9:00 reminder (D31) is removed right after. */
-  withoutReminder?: boolean;
   /** Assigned while adding (M43): POST /tasks takes none, so :assign follows. */
   assignee?: UserRef;
 }
@@ -44,13 +42,7 @@ export function useCreateTask() {
       const draft = draftRow(queryClient, task);
       if (draft) await insertTask(queryClient, draft.row, draft.place);
     },
-    mutationFn: async ({ id, body, withoutReminder }: NewTask) => {
-      const task = await tasksApi.createTask({ ...body, id });
-      if (!withoutReminder) return task;
-      // The task exists either way; if this fails, it keeps the 9:00 reminder, which can be removed later.
-      const removed = await tasksApi.removeReminder(task.id).then(() => true, () => false);
-      return removed ? { ...task, reminder: null } : task;
-    },
+    mutationFn: ({ id, body }: NewTask) => tasksApi.createTask({ ...body, id }),
     onSuccess: (task, { assignee }) => {
       if (!assignee) return replaceTask(queryClient, task);
       settleTask(queryClient, task);   // the row keeps its assignee until :assign answers
@@ -86,7 +78,7 @@ function assignNew(queryClient: QueryClient, task: Task, to: UserRef) {
 }
 
 /** The row a new task shows before the API answers, and what placing it needs; none until the task lists are in. */
-function draftRow(queryClient: QueryClient, { id, body, withoutReminder, assignee }: NewTask): { row: TaskSummary; place: NewTaskPlace } | undefined {
+function draftRow(queryClient: QueryClient, { id, body, assignee }: NewTask): { row: TaskSummary; place: NewTaskPlace } | undefined {
   const lists = queryClient.getQueryData<TaskList[]>(taskKeys.taskLists);
   const list = lists?.find((c) => (body.taskListId ? c.id === body.taskListId : c.isInbox));
   if (!list) return undefined;
@@ -94,16 +86,17 @@ function draftRow(queryClient: QueryClient, { id, body, withoutReminder, assigne
   const colors = queryClient.getQueryData<Tag[]>(taskKeys.tags);
   const due = body.dueDate ?? null;
   const at = (time: string) => (time.length === 5 ? `${time}:00` : time);
-  const reminder = body.reminderDate && body.reminderTime ? { date: body.reminderDate, time: at(body.reminderTime) } : due && !withoutReminder ? { date: due, time: '09:00:00' } : null;
+  const reminder = body.reminderDate && body.reminderTime ? { date: body.reminderDate, time: at(body.reminderTime) } : null;
   const byEmail = isEmailAssignee(assignee?.id);
   const row: TaskSummary = {
     id,
+    kind: body.kind ?? 'task',
     taskList: { id: list.id, name: list.name, color: list.color, isInbox: list.isInbox, team: list.team },
     title: body.title,
     hasNotes: !!body.notes,
     isImportant: !!body.isImportant,
     dueDate: due,
-    repeats: false,
+    repeats: !!body.repeat,
     status: 'open',
     completedAt: null,
     assignee: assignee && !byEmail ? assignee : null,
@@ -296,6 +289,36 @@ export function useSaveTask(taskId: Id) {
       queryClient.invalidateQueries({ queryKey: taskKeys.tags });
     },
   });
+}
+
+/**
+ * Snooze from a banner or a row (D110): the reminder rings again at `until` (local), keeping its own time. The phone's
+ * notifications follow with the next sync (any mutation).
+ */
+export function useSnoozeReminder() {
+  const refetch = useRefetchTasks();
+  return useMutation({
+    mutationFn: ({ taskId, until }: { taskId: Id; until: string }) => tasksApi.snooze(taskId, until),
+    meta: { toastError: true },
+    onSettled: refetch,
+  });
+}
+
+/** A reminder's own edit (M114): title, notes, repeat and its time in one PATCH; Make it a task. */
+export function useReminderActions() {
+  const refetch = useRefetchTasks();
+  const queryClient = useQueryClient();
+  const settle = (task?: Task) => {
+    if (task) queryClient.setQueryData(taskKeys.detail(task.id), task);
+    refetch();
+  };
+  const save = useMutation({
+    mutationFn: ({ task, body }: { task: Pick<Task, 'id' | 'version'>; body: UpdateTaskRequest }) => tasksApi.update(task, body),
+    meta: { toastError: true },
+    onSettled: settle,
+  });
+  const makeTask = useMutation({ mutationFn: (task: Pick<Task, 'id' | 'version'>) => tasksApi.makeTask(task), meta: { toastError: true }, onSettled: settle });
+  return { save, makeTask };
 }
 
 /** DELETE /tasks/{id}: the task goes to Recently Deleted; `useRestoreTask` brings it back. */

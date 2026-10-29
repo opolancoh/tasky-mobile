@@ -49,10 +49,15 @@ export interface TagChange {
   taskIds: Id[];
 }
 
+/** A task, or a reminder (D110, M114): a title, the user's reminder, notes and a repeat, kept out of every task list. */
+export type TaskKind = 'task' | 'reminder';
+
 /** POST /tasks. The title is plain text: `#name` in it is not a tag (D60, M31). */
 export interface CreateTaskRequest {
   /** A UUIDv7 the app picks, so the row it shows at once keeps its key (M100). */
   id?: Id;
+  /** `reminder`: into the Inbox with its reminder; no list, due date, Important or tags (D110). */
+  kind?: TaskKind;
   /** The task list; omitted: the caller's Inbox, created on first need (D59). */
   taskListId?: Id;
   title: string;
@@ -62,9 +67,11 @@ export interface CreateTaskRequest {
   isImportant?: boolean;
   /** Tag names (at most 10); new names become the caller's tags too. */
   tags?: string[];
-  /** The caller's reminder; both or neither. Omitted with a due date: 9:00 on the due date (D31). */
+  /** The caller's reminder; both or neither. A due date adds none (D110). */
   reminderDate?: LocalDate;
   reminderTime?: string;
+  /** A reminder's repeat, from its reminder's date (D110). */
+  repeat?: RepeatRequest;
 }
 
 // References the UI shows come as objects: id, label and what drawing them needs (D55).
@@ -116,10 +123,11 @@ export interface Repeat {
   nextDueDate?: LocalDate | null;
 }
 
-/** The caller's own reminder; time "09:00:00". */
+/** The caller's own reminder; time "09:00:00". `snoozedUntil`: local "2026-10-28T19:00:00", it rings then instead (D110). */
 export interface Reminder {
   date: LocalDate;
   time: string;
+  snoozedUntil?: string | null;
 }
 
 /** `onHold` (D91): can't go on for now, with a reason; only on shared and team lists. */
@@ -133,6 +141,7 @@ export type AssignmentStatus = 'pending' | 'accepted' | 'declined';
  */
 export interface Task {
   id: Id;
+  kind: TaskKind;
   taskList: TaskListRef | null;
   title: string;
   notes?: string | null;
@@ -173,6 +182,7 @@ export interface Task {
 /** A task in a list (TaskSummaryResponse): enough for one row. `taskList`, `declineReason`, `awaitsConfirmation`, `invitedEmail`: as on Task. */
 export interface TaskSummary {
   id: Id;
+  kind: TaskKind;
   taskList: TaskListRef | null;
   title: string;
   hasNotes: boolean;
@@ -217,6 +227,8 @@ export type DueFilter = 'overdue' | 'today' | 'upcoming' | 'none';
  * caller's own tasks (Inbox, private task lists, assigned to them). Filters combine with AND.
  */
 export interface TaskFilter {
+  /** `reminder` (D110): the user's reminders, soonest first, whole; `dueFrom`/`dueTo` bound the reminder's date. */
+  kind?: TaskKind;
   taskListId?: Id;
   teamId?: Id;
   mine?: boolean;
@@ -418,10 +430,13 @@ export interface UpdateTaskListRequest {
 export interface MyReminder {
   taskId: Id;
   taskListId: Id;
+  kind: TaskKind;
   title: string;
   dueDate?: LocalDate | null;
   date: LocalDate;
   time: string;
+  snoozedUntil?: string | null;
+  repeats: boolean;
 }
 
 /** API limits (TaskLimits.cs). */

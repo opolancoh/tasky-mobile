@@ -11,6 +11,12 @@ import { askForNotifications, readNotificationPermission } from './permission';
 const MAX = 50;
 const PREFIX = 'reminder-';
 const CHANNEL = 'reminders';
+/** A repeating reminder's next times scheduled at once (D110): it keeps ringing while the app stays closed. */
+const OCCURRENCES = 5;
+/** The banner's actions (M114): Done and three snoozes; each opens the app, which applies it (PushWatcher). */
+export const REMINDER_CATEGORY = 'reminder';
+export const REMINDER_ACTIONS = ['done', 'tenMinutes', 'oneHour', 'tomorrow'] as const;
+export type ReminderAction = (typeof REMINDER_ACTIONS)[number];
 
 /**
  * Reminders show while the app is open too, as a banner with sound. A push (D97) doesn't: with the app open the bell and
@@ -38,22 +44,28 @@ async function allowed(hasReminders: boolean): Promise<boolean> {
 
 /**
  * Makes the phone's scheduled notifications match the user's reminders (D11, 04-notifications.md): the nearest 50 from
- * GET /me/reminders, each firing at its date and time in the profile's time zone. Adds what is missing, replaces what
- * changed, removes the rest. Safe to run often.
+ * GET /me/reminders (a repeating reminder's next times too, D110), each firing at its date and time in the profile's time
+ * zone, or when it was snoozed to. Adds what is missing, replaces what changed, removes the rest. Safe to run often.
  */
 async function sync(timeZone: string): Promise<void> {
-  const { items } = await tasksApi.myReminders(MAX);
+  const { items } = await tasksApi.myReminders(MAX, undefined, OCCURRENCES);
   const now = Date.now();
   const wanted = new Map(
     items
-      .map((r) => ({ id: `${PREFIX}${r.taskId}`, taskId: r.taskId, title: r.title, at: instantIn(r.date, r.time, timeZone).getTime() }))
+      .map((r) => {
+        const [date, time] = r.snoozedUntil ? [r.snoozedUntil.slice(0, 10), r.snoozedUntil.slice(11, 16)] : [r.date, r.time];
+        return { id: `${PREFIX}${r.taskId}-${r.date}`, taskId: r.taskId, kind: r.kind, title: r.title, at: instantIn(date, time, timeZone).getTime() };
+      })
       .filter((r) => r.at > now)
+      .slice(0, MAX)
       .map((r) => [r.id, r]),
   );
   if (!(await allowed(wanted.size > 0))) return;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('reminders.channel'), importance: Notifications.AndroidImportance.HIGH });
   }
+  const titles: Record<ReminderAction, string> = { done: i18n.t('reminders.done'), tenMinutes: i18n.t('reminders.tenMinutes'), oneHour: i18n.t('reminders.oneHour'), tomorrow: i18n.t('reminders.tomorrowMorning') };
+  await Notifications.setNotificationCategoryAsync(REMINDER_CATEGORY, REMINDER_ACTIONS.map((id) => ({ identifier: id, buttonTitle: titles[id], options: { opensAppToForeground: true } })));
 
   const scheduled = (await Notifications.getAllScheduledNotificationsAsync()).filter((n) => n.identifier.startsWith(PREFIX));
   for (const n of scheduled) {
@@ -65,7 +77,7 @@ async function sync(timeZone: string): Promise<void> {
   for (const r of wanted.values()) {
     await Notifications.scheduleNotificationAsync({
       identifier: r.id,
-      content: { title: r.title, body: i18n.t('reminders.body'), data: { taskId: r.taskId, at: r.at }, sound: true },
+      content: { title: r.title, body: i18n.t('reminders.body'), data: { taskId: r.taskId, kind: r.kind, at: r.at }, sound: true, categoryIdentifier: REMINDER_CATEGORY },
       trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, channelId: Platform.OS === 'android' ? CHANNEL : undefined },
     });
   }

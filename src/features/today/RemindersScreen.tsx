@@ -12,6 +12,7 @@ import { LoadError } from '@/shared/components/LoadError';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
+import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
 
 type Item =
   | { type: 'header'; key: string }
@@ -20,9 +21,11 @@ type Item =
   | { type: 'footer'; key: string };
 
 /**
- * Home › Reminders (06-mobile.md, M105): every upcoming reminder of the user's on an open task, soonest first, under a
- * heading per day (Today, Tomorrow, then the date); no cutoff (Home counts the next 7 days). Each row: the time, the task,
- * its list; it opens the task. 20 at a time as the list scrolls (GET /me/reminders, keyset).
+ * Home › Reminders (06-mobile.md, M105, M114): one list of everything that will ring, reminders (D110) and tasks' reminders
+ * alike: first the reminders that rang on an earlier day and aren't done (Rang, in amber), then every upcoming one, soonest
+ * first, under a heading per day (Today, Tomorrow, then the date); no cutoff (Home counts the next 7 days). Each row: the
+ * time (or Snoozed until), the title, a task's list; a reminder opens the Reminder sheet, a task its Task detail. 20 at a
+ * time as the list scrolls (GET /me/reminders, keyset).
  */
 export function RemindersScreen() {
   const { t } = useTranslation();
@@ -40,9 +43,10 @@ export function RemindersScreen() {
   const items: Item[] = [{ type: 'header', key: 'header' }];
   let day = '';
   reminders.forEach((reminder) => {
-    if (reminder.date !== day) {
-      day = reminder.date;
-      items.push({ type: 'day', key: `d-${day}`, label: labels.day(day) });
+    const heading = today && reminder.date < today ? 'rang' : reminder.date;
+    if (heading !== day) {
+      day = heading;
+      items.push({ type: 'day', key: `d-${day}`, label: heading === 'rang' ? t('reminders.rangHeading') : labels.day(heading) });
     }
     items.push({ type: 'reminder', key: `r-${reminder.taskId}-${reminder.date}-${reminder.time}`, reminder });
   });
@@ -62,18 +66,21 @@ export function RemindersScreen() {
         return <Text variant="label" color="ink2" accessibilityRole="header" style={{ marginTop: space.lg, marginBottom: space.xxs }}>{item.label}</Text>;
       case 'reminder': {
         const r = item.reminder, list = lists.get(r.taskListId);
-        const where = list ? (list.isInbox ? t('browse.inbox') : list.name) : '';
+        const own = r.kind === 'reminder';
+        const where = own || !list ? '' : list.isInbox ? t('browse.inbox') : list.name;
+        const rang = !!today && r.date < today;
+        const at = r.snoozedUntil ? t('reminders.snoozed', { time: labels.time(r.snoozedUntil.slice(11, 16)) }) : rang ? `${labels.day(r.date)}, ${labels.time(r.time)}` : labels.time(r.time);
         return (
-          <Pressable onPress={() => navigation.navigate('TaskDetail', { taskId: r.taskId })} accessibilityRole="button">
+          <Pressable onPress={() => (own ? useReminderSheet.getState().show(r.taskId) : navigation.navigate('TaskDetail', { taskId: r.taskId }))} accessibilityRole="button">
             {({ pressed }) => (
               <View style={[styles.row, { gap: space.md, paddingVertical: space.sm + 2, borderBottomColor: colors.line, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-                <View style={[styles.tile, { backgroundColor: colors.warnSoft }]}>
-                  <ReminderIcon size={16} color={colors.warn} />
+                <View style={[styles.tile, { backgroundColor: rang ? colors.warnSoft : colors.accentSoft }]}>
+                  <ReminderIcon size={16} color={rang ? colors.warn : colors.accent} />
                 </View>
                 <View style={styles.main}>
                   <Text variant="bodyMedium" numberOfLines={1}>{r.title}</Text>
                   <Text variant="footnote" color="ink3" numberOfLines={1}>
-                    <Text variant="footnote" color="accent">{labels.time(r.time)}</Text>
+                    <Text variant="footnote" style={{ color: rang ? colors.warn : colors.accent }}>{at}</Text>
                     {where ? ` · ${where}` : ''}
                   </Text>
                 </View>

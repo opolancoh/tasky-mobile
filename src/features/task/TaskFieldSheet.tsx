@@ -13,7 +13,7 @@ import { givesOutside, AssigneePicker, TaskListPicker, DueDatePicker, ReminderPi
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { confirm, Sheet } from '@/shared/ui';
 
-import { RepeatPicker } from './components/RepeatPicker';
+import { RepeatPicker } from '@/shared/components';
 import { assigneeStatus, type TaskDraft } from './taskDraft';
 import { useTaskDraft } from './taskDraftStore';
 import { useTaskSheet, type TaskField } from './taskSheetStore';

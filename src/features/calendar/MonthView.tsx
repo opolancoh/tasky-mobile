@@ -9,7 +9,7 @@ import { addMonths, monthEnd, monthOf, monthStart, monthWeeks, weekStart } from 
 import { addDays } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
-import { useTaskPages } from '@/data/tasks/queries';
+import { useTaskPages, useTasks } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
@@ -51,6 +51,7 @@ type Picked = LocalDate | 'overdue';
  * from today, its overdue on top and folding), a + on each day for Quick add due that day; tapping a day in the grid scrolls to it.
  * ‹ › move a month or a week; Today shows once another day is picked or today is off screen. Only dated tasks. Every open
  * task in the range, every page (GET /tasks?dueFrom=&dueTo=): the dots need them all, and the list draws from the same data.
+ * The user's reminders (D110, M114) show on their day before its tasks, by time, with no dot (GET /tasks?kind=reminder).
  */
 export function MonthView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
@@ -81,6 +82,10 @@ export function MonthView({ today }: { today: LocalDate }) {
   const inRange = pages.data?.pages.flatMap((p) => p.items) ?? [];
   const byDay = new Map<LocalDate, TaskSummary[]>();
   inRange.forEach((task) => task.dueDate && byDay.set(task.dueDate, [...(byDay.get(task.dueDate) ?? []), task]));
+  const reminders = useTasks({ kind: 'reminder', dueFrom: from, dueTo: to });
+  const remindedOn = new Map<LocalDate, TaskSummary[]>();
+  reminders.data?.items.forEach((r) => r.reminder && remindedOn.set(r.reminder.date, [...(remindedOn.get(r.reminder.date) ?? []), r]));
+  const days = [...new Set([...byDay.keys(), ...remindedOn.keys()])].sort();
   const overIn = inRange.filter((task) => !!task.dueDate && task.dueDate < today);
   // The chip: overdue tasks outside the range ("Earlier" when the range holds today or is ahead of it).
   const outside = Math.max(0, overdue.count - overIn.length);
@@ -105,10 +110,10 @@ export function MonthView({ today }: { today: LocalDate }) {
       items.push({ type: 'overdueHead', key: 'over-head', title: t('calendar.overdue'), count: overIn.length, foldable: true });
       if (!overdueFolded) overIn.forEach((task) => items.push({ type: 'task', key: `o-${task.id}`, task, showDue: true }));
     }
-    byDay.forEach((dayTasks, date) => {
+    days.forEach((date) => {
       if (date < today) return;
       items.push({ type: 'day', key: `d-${date}`, date });
-      dayTasks.forEach((task) => items.push({ type: 'task', key: task.id, task, showDue: false }));
+      [...(remindedOn.get(date) ?? []), ...(byDay.get(date) ?? [])].forEach((task) => items.push({ type: 'task', key: task.id, task, showDue: false }));
     });
     if (items.length === 4 && !(pages.error && !pages.data)) items.push({ type: 'empty', key: 'empty' });
   }
@@ -145,7 +150,7 @@ export function MonthView({ today }: { today: LocalDate }) {
     setAnchor(day === 'overdue' ? today : day);
   };
 
-  const refreshControl = usePullRefresh(pages, overdue);
+  const refreshControl = usePullRefresh(pages, overdue, reminders);
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
   const title = week ? labels.week(from) : labels.month(anchor);
 

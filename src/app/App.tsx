@@ -20,6 +20,7 @@ import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
 import { AddMenu } from '@/features/quick-add/AddMenu';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
+import { ReminderSheet } from '@/features/quick-add/ReminderSheet';
 import { installErrorCapture } from '@/shared/errors/captureErrors';
 import { addScreenCrumb } from '@/shared/errors/breadcrumbs';
 import { ErrorBoundary } from '@/shared/errors/ErrorBoundary';
@@ -109,6 +110,7 @@ function Root() {
             onNewTeam={() => useBrowseSheet.getState().show({ kind: 'team' }, (id) => navigationRef.navigate('Team', { teamId: id }))}
           />
           <QuickAddSheet />
+          <ReminderSheet />
           <TaskFieldSheet />
           <CommentSheet />
           <BrowseSheet />

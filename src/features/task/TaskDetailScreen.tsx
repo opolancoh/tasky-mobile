@@ -32,7 +32,8 @@ import { assigneeChange, assigneeStatus, changedKeys, patchOf } from './taskDraf
 import { useDirty, useTaskDraft } from './taskDraftStore';
 import { useCommentSheet } from './commentSheetStore';
 import { useTaskSheet } from './taskSheetStore';
-import { useRepeatText } from './useRepeatText';
+import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
+import { useRepeatText } from '@/shared/hooks/useRepeatText';
 
 /**
  * Task detail (06-mobile.md, M25, M26, laid out as M98 and M106), pushed from any task row. Every edit goes into a draft (`taskDraftStore`): the
@@ -90,6 +91,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     picked.current = true;
     open(pick);
   }, [pick, ready, open]);
+
+  // A reminder (D110) is edited in the Reminder sheet (M114): a link or a push that lands here hands it over.
+  const isReminder = task?.kind === 'reminder';
+  useEffect(() => {
+    if (!isReminder) return;
+    leaving.current = true;
+    navigation.goBack();
+    useReminderSheet.getState().show(taskId);
+  }, [isReminder, navigation, taskId]);
 
   // A task that is gone (deleted elsewhere, no longer shared) closes its screen (06-mobile.md, Errors); opened from a push,
   // Activity instead, with a toast (M88).

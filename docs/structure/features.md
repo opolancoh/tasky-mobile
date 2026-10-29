@@ -32,14 +32,13 @@ src/features/
 │   ├── browseSections.ts Groups (Inbox, mine, shared with me, by team), reorder, who may do what
 │   └── components/       AddTaskButton (a list's Add a task, opens Quick add on it, M103), Faces (Avatar), MemberRow (People and See all, M96)
 ├── search/         SearchScreen.tsx  SearchRow.tsx  recentSearchesStore.ts
-├── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx (its store is shared/quickAdd)
+├── quick-add/      QuickAddSheet.tsx  QuickAddBar.tsx  NotesPage.tsx  AddMenu.tsx  ReminderSheet.tsx (new or edit a reminder, M114; stores in shared/quickAdd)
 └── task/
     ├── TaskDetailScreen.tsx  TaskFieldSheet.tsx
-    ├── components/       StepList, RepeatPicker
+    ├── components/       StepList
     ├── taskDraft.ts      The draft (TaskDraft), the PATCH for Save (patchOf), rebase after a 412
     ├── taskDraftStore.ts The draft being edited (Zustand), useDirty
     ├── taskSheetStore.ts Which field's sheet is open (the sheet is mounted in App)
-    ├── useRepeatText.ts  "Weekly on Monday", "Every 2 weeks on Mon, Thu"
     └── reminderOf.ts
 ```
 
@@ -56,7 +55,7 @@ src/features/
 | `search` | Search (fifth tab) | Built ([M40](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): `GET /search` after a short pause in typing, best match first, 20 at a time; before typing, recent searches (on the device, per user, 8; remembered when a result is opened) and tags as chips; a row bolds the found words, shows its list and Completed; the circle completes or reopens |
 | `activity` | Activity (pushed from Home's bell, M74) | Built ([M39](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): every notification, New then Earlier, paged; Mark all read; the unread count on Home's bell |
 | `me` | Me, pushed from the avatar; its settings pages | Built (M39, M41): name, time zone, language (each a page that saves; language switches the app), Appearance under This device (System, Light or Dark; Light by default; kept on the device, applies at once, M68), email, change password (new tokens for this device), signed-in devices (sign one out, or all); Sign out (asks first) |
-| `quick-add` | Quick add: the new-task form in a sheet, from the +'s menu (`AddMenu`: Task, Reminder (on its Reminder page), List, Team, M113) and a list's Add a task (for that list, without the List row, M103) | Built: title, focused with the keyboard up when it opens on the form, Return adds and closes like Add (M104); a summary of List (not when opened from a list, M103) plus a row per set field (Important, due date, reminder, tags, notes; each with ✕) and a bottom icon bar, style E, that sets them (`QuickAddBar`, Sheet `footer` slot); due date and reminder pages (quick choices, or a custom date and time set with a docked Set due date / Set reminder, M112; the form row's ✕ clears them); Notes page (`NotesPage`); the Task list, Due date, Tags and Reminder pages are the shared `TaskListPicker`, `DueDatePicker`, `TagPicker` and `ReminderPicker`; an Assign icon after Reminder, person first (M111: `PeoplePicker`, then the List page with only the lists that person can have it in, `GET /task-lists?assignableTo=`; opened from a list, that list's `AssigneePicker`; none from Personal), assigned right after creating; never waits for the lists (no task list = the user's Inbox, M31; Add shows a spinner while saving, M27); tags page with search, create and last-used order, sent as `tags`, the title as typed ([M14, M15, M16, M31](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
+| `quick-add` | Quick add: the new-task form in a sheet, from the +'s menu (`AddMenu`: Task, Reminder (the Reminder sheet, M114), List, Team, M113) and a list's Add a task (for that list, without the List row, M103) | Built: title, focused with the keyboard up when it opens on the form, Return adds and closes like Add (M104); a summary of List (not when opened from a list, M103) plus a row per set field (Important, due date, reminder, tags, notes; each with ✕) and a bottom icon bar, style E, that sets them (`QuickAddBar`, Sheet `footer` slot); due date and reminder pages (quick choices, or a custom date and time set with a docked Set due date / Set reminder, M112; the form row's ✕ clears them); Notes page (`NotesPage`); the Task list, Due date, Tags and Reminder pages are the shared `TaskListPicker`, `DueDatePicker`, `TagPicker` and `ReminderPicker`; an Assign icon after Reminder, person first (M111: `PeoplePicker`, then the List page with only the lists that person can have it in, `GET /task-lists?assignableTo=`; opened from a list, that list's `AssigneePicker`; none from Personal), assigned right after creating; never waits for the lists (no task list = the user's Inbox, M31; Add shows a spinner while saving, M27); tags page with search, create and last-used order, sent as `tags`, the title as typed ([M14, M15, M16, M31](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 
 Planned (06-mobile.md): `assignments`, transferring ownership and changing roles (`sharing`), `notifications` (the full list beyond Home's Updates), `settings`.
 

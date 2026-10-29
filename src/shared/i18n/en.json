@@ -10,7 +10,8 @@
     "done": "Done",
     "undo": "Undo",
     "none": "None",
-    "save": "Save"
+    "save": "Save",
+    "delete": "Delete"
   },
   "auth": {
     "signIn": {
@@ -509,9 +510,32 @@
     "remove": "Remove reminder",
     "body": "Reminder",
     "channel": "Reminders",
-    "listSub": "Upcoming, soonest first",
-    "listEmpty": "No reminders coming up. Add one to a task and it shows here.",
-    "set": "Set reminder"
+    "listSub": "Rang, then upcoming, soonest first",
+    "listEmpty": "No reminders. Tap + › Reminder, or set one on a task.",
+    "set": "Set reminder",
+    "new": "New reminder",
+    "edit": "Reminder",
+    "reminder": "Reminder",
+    "remindMe": "Remind me",
+    "pickTime": "Pick a time",
+    "placeholder": "Remind me to…",
+    "inAnHour": "In 1 hour",
+    "thisEvening": "This evening",
+    "none": "None",
+    "makeTask": "Make it a task",
+    "delete": "Delete reminder",
+    "deleteTitle": "Delete this reminder?",
+    "deleteBody": "It goes to Recently Deleted.",
+    "repeatHint": "On the reminder's day and time. To repeat on another day, change Remind me. Done moves it to the next one; a missed one never piles up.",
+    "onlyMine": "Only you see it. It rings on this phone and never shows in Personal.",
+    "rang": "Rang {{when}}",
+    "snoozed": "Snoozed until {{time}}",
+    "snooze": "Snooze",
+    "tenMinutes": "10 min",
+    "oneHour": "1 hour",
+    "tomorrowMorning": "Tomorrow, 9:00",
+    "done": "Done",
+    "rangHeading": "Rang"
   },
   "wheels": {
     "day": "Day",
@@ -540,7 +564,8 @@
     "sharing.already_member": "This person can already see it.",
     "sharing.outsider_team": "People from outside the company can join its lists, not its teams.",
     "sharing.inbox_private": "Your Personal list can't be shared.",
-    "invitation.account_closed": "This person's account is closed."
+    "invitation.account_closed": "This person's account is closed.",
+    "task.reminder_unsupported": "A reminder has a title, its time, notes and a repeat only."
   },
   "languages": {
     "en": "English",

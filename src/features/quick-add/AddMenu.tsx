@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
+import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
 import { Sheet, Text, useTheme } from '@/shared/ui';
 
 interface AddMenuProps {
@@ -12,7 +13,7 @@ interface AddMenuProps {
   onNewTeam(): void;
 }
 
-/** The +'s menu (M113): Task opens Quick add, Reminder Quick add's Reminder page, List and Team Spaces' sheets. */
+/** The +'s menu (M113): Task opens Quick add, Reminder the Reminder sheet (M114), List and Team Spaces' sheets. */
 export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
@@ -22,8 +23,7 @@ export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
 
   const rows: { key: string; icon: ComponentProps<typeof Feather>['name']; run(): void }[] = [
     { key: 'task', icon: 'check-circle', run: () => show() },
-    // Until a reminder is its own kind: Quick add on its Reminder page, saved as a task with that reminder.
-    { key: 'reminder', icon: 'bell', run: () => show({ page: 'reminder' }) },
+    { key: 'reminder', icon: 'bell', run: () => useReminderSheet.getState().show() },
     { key: 'list', icon: 'list', run: onNewList },
     { key: 'team', icon: 'users', run: onNewTeam },
   ];

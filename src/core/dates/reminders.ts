@@ -8,11 +8,7 @@ export interface ReminderAt {
   time: LocalTime;
 }
 
-/**
- * What the form holds: the reminder the person chose, or null for none. A due date doesn't set one
- * (M19); with a due date and no reminder the app removes the 9:00 one the API adds (D31) right after
- * creating the task.
- */
+/** What the form holds: the reminder the person chose, or null for none. A due date doesn't set one (M19, D110). */
 export type ReminderChoice = ReminderAt | null;
 
 const MORNING: LocalTime = '09:00';
@@ -44,4 +40,31 @@ export function reminderPresets(now: { date: LocalDate; time: LocalTime }): { id
     { id: 'nextWeek', at: { date: nextMonday(now.date), time: MORNING } },
   );
   return presets;
+}
+
+/** `now` plus `minutes`, rounded up to the next 5 minutes (15:07 + 60 → 16:10), past midnight onto the next day. */
+export function laterBy(now: { date: LocalDate; time: LocalTime }, minutes: number): ReminderAt {
+  const [h, m] = now.time.split(':').map(Number) as [number, number];
+  const total = Math.ceil((h * 60 + m + minutes) / 5) * 5;
+  const days = Math.floor(total / (24 * 60)), left = total % (24 * 60);
+  return { date: addDays(now.date, days), time: `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}` };
+}
+
+export type QuickReminderId = 'inAnHour' | 'thisEvening' | 'tomorrow';
+
+/** The New reminder form's chips (M114): in an hour, this evening at 18:00 (until 17:00), tomorrow at 9:00. */
+export function quickReminders(now: { date: LocalDate; time: LocalTime }): { id: QuickReminderId; at: ReminderAt }[] {
+  return [
+    { id: 'inAnHour' as const, at: laterBy(now, 60) },
+    ...(now.time < '17:00' ? [{ id: 'thisEvening' as const, at: { date: now.date, time: EVENING } }] : []),
+    { id: 'tomorrow' as const, at: { date: addDays(now.date, 1), time: MORNING } },
+  ];
+}
+
+export type SnoozeId = 'tenMinutes' | 'oneHour' | 'tomorrow';
+
+/** Snooze's choices (M114), from a banner or a row: the local "until" each one sends. */
+export function snoozeUntil(id: SnoozeId, now: { date: LocalDate; time: LocalTime }): string {
+  const at = id === 'tenMinutes' ? laterBy(now, 10) : id === 'oneHour' ? laterBy(now, 60) : { date: addDays(now.date, 1), time: MORNING };
+  return `${at.date}T${at.time}:00`;
 }

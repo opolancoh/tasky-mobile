@@ -11,9 +11,12 @@ import type { NotificationKind } from '@/data/collaboration/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { activityState, openActivityGo } from '@/shared/components/useActivityState';
+import { toastError } from '@/shared/i18n/errors';
 import { askForNotifications, readNotificationPermission, useNotificationPermission } from '@/shared/notifications/permission';
 import { pushSupported, registerPush } from '@/shared/notifications/push';
-import { isPush } from '@/shared/notifications/reminders';
+import { runReminderAction } from '@/shared/notifications/reminderActions';
+import { isPush, REMINDER_ACTIONS, type ReminderAction } from '@/shared/notifications/reminders';
+import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 
 import { navigationRef } from './LinkWatcher';
@@ -43,11 +46,18 @@ const OPENS_TASK = new Set<NotificationKind>(['commented', 'mentioned', 'taskHel
 /**
  * A tapped push opens what its Activity row opens (M58) and marks it read: a task kind at once (M88), the others from the
  * same queries (fresh); when there's nowhere to go, Activity. A task gone by then opens Activity with a toast (Task detail,
- * `fromPush`). A tapped reminder opens its task.
+ * `fromPush`). A tapped reminder opens its task, or the Reminder sheet for a reminder (D110); one of its actions (M114) runs.
  */
-async function openTapped(data: Record<string, unknown>, queryClient: QueryClient) {
+async function openTapped(data: Record<string, unknown>, queryClient: QueryClient, action?: string) {
   if (!isPush(data)) {
-    if (typeof data.taskId === 'string') whenReady((navigate) => navigate('TaskDetail', { taskId: data.taskId }));
+    if (typeof data.taskId !== 'string') return;
+    const taskId = data.taskId;
+    if (REMINDER_ACTIONS.includes(action as ReminderAction)) {
+      await runReminderAction(action as ReminderAction, taskId, queryClient).catch(toastError);
+      return;
+    }
+    if (data.kind === 'reminder') useReminderSheet.getState().show(taskId);
+    else whenReady((navigate) => navigate('TaskDetail', { taskId }));
     return;
   }
   const id = (key: string) => (typeof data[key] === 'string' ? (data[key] as Id) : null);
@@ -116,10 +126,10 @@ export function PushWatcher() {
     // Opened by tapping one while closed (or signed out: it waits for sign-in), then any tap while running.
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
-      void openTapped(response.notification.request.content.data ?? {}, queryClient);
+      void openTapped(response.notification.request.content.data ?? {}, queryClient, response.actionIdentifier);
       void Notifications.clearLastNotificationResponseAsync();
     });
-    const tapped = Notifications.addNotificationResponseReceivedListener((response) => void openTapped(response.notification.request.content.data ?? {}, queryClient));
+    const tapped = Notifications.addNotificationResponseReceivedListener((response) => void openTapped(response.notification.request.content.data ?? {}, queryClient, response.actionIdentifier));
     return () => {
       received.remove();
       tapped.remove();

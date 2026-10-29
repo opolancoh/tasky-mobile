@@ -7,7 +7,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { monthOf, weekStart } from '@/core/dates/calendar';
 import type { LocalDate } from '@/core/types';
 import { useCompleteTask } from '@/data/tasks/mutations';
-import { useTaskPages } from '@/data/tasks/queries';
+import { useTaskPages, useTasks } from '@/data/tasks/queries';
 import type { TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
@@ -39,7 +39,8 @@ type Item =
  * List, the Calendar tab's list view (M72): one scroll from today, like Things' Upcoming. Each day with tasks, and today,
  * under a large day number, then its tasks as the usual rows full width; month headings and a thin week line ("Oct 5 – 11")
  * at each new week; free days skipped. A page at a time from today (GET /tasks?dueFrom=<today>&sort=due). Overdue as a
- * chip on top; tapping it lists its tasks over the scroll, tapping again closes it. Only dated tasks.
+ * chip on top; tapping it lists its tasks over the scroll, tapping again closes it. Only dated tasks, and the user's reminders
+ * (D110, M114) on their day before its tasks, by time, as far as the tasks loaded so far reach.
  */
 export function DaysView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
@@ -51,6 +52,7 @@ export function DaysView({ today }: { today: LocalDate }) {
   const overdue = useOverdue(overdueOpen);
   const pages = useTaskPages({ dueFrom: today, sort: 'due', limit: PAGE });
   const tasks = pages.data?.pages.flatMap((p) => p.items) ?? [];
+  const reminders = useTasks({ kind: 'reminder', dueFrom: today });
 
   const items: Item[] = [{ type: 'header', key: 'header' }, { type: 'chips', key: 'chips' }];
   if (overdueOpen) {
@@ -66,9 +68,11 @@ export function DaysView({ today }: { today: LocalDate }) {
   } else {
     // Today always; then each day with tasks (soonest first, as the API sends them), a month heading and a week line as they change.
     const byDay = new Map<LocalDate, TaskSummary[]>([[today, []]]);
+    const reach = pages.hasNextPage ? tasks.at(-1)?.dueDate ?? today : undefined;
+    reminders.data?.items.forEach((r) => r.reminder && (!reach || r.reminder.date <= reach) && byDay.set(r.reminder.date, [...(byDay.get(r.reminder.date) ?? []), r]));
     tasks.forEach((task) => task.dueDate && byDay.set(task.dueDate, [...(byDay.get(task.dueDate) ?? []), task]));
     let month = '', week = weekStart(today);
-    byDay.forEach((dayTasks, date) => {
+    [...byDay.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).forEach(([date, dayTasks]) => {
       if (monthOf(date) !== month) {
         month = monthOf(date);
         items.push({ type: 'month', key: `m-${month}`, title: labels.month(date) });
@@ -84,7 +88,7 @@ export function DaysView({ today }: { today: LocalDate }) {
   }
   items.push({ type: 'footer', key: 'footer' });
 
-  const refreshControl = usePullRefresh(pages, overdue);
+  const refreshControl = usePullRefresh(pages, overdue, reminders);
   const open = (task: TaskSummary) => navigation.navigate('TaskDetail', { taskId: task.id });
 
   const renderItem = ({ item }: { item: Item }) => {
