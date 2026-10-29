@@ -5,6 +5,7 @@
 # commits since the last tag, then waits while you review and edit CHANGELOG.md in any editor. Enter commits
 # "Release x.y.z" and tags vx.y.z; n puts everything back. Everything stays local: it ends by printing how to push and publish.
 set -euo pipefail
+trap 'echo "Release stopped: a step failed (scripts/release.sh, line $LINENO). See the error above." >&2' ERR
 cd "$(dirname "$0")/.."
 
 bump=${1:-}
@@ -26,7 +27,7 @@ esac
 git rev-parse -q --verify "refs/tags/v$next" >/dev/null && { echo "v$next already exists." >&2; exit 1; }
 
 echo "Checking..."
-npm run -s check >/dev/null
+out=$(npm run -s check 2>&1) || { echo "$out" >&2; echo "npm run check failed: fix it, then run the release again." >&2; exit 1; }
 
 # What's in it: every commit since the last tag, but release commits. The first release just says so.
 last=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
