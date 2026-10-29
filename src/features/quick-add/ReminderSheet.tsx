@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { nowIn } from '@/core/dates/localDate';
+import { formatShortTime, nowIn } from '@/core/dates/localDate';
 import { quickReminders, sameReminder, type ReminderAt } from '@/core/dates/reminders';
 import { newTaskId, useCreateTask, useDeleteTask, useReminderActions } from '@/data/tasks/mutations';
 import { useTask } from '@/data/tasks/queries';
@@ -29,8 +29,8 @@ interface Draft {
 const plain = (pattern: RepeatPattern): Repeat => ({ pattern, interval: 1, mode: 'fromDueDate' });
 
 /**
- * The Reminder sheet (06-mobile.md, M114, D110): "remind me to X at Y". A title, chips for the time (In 1 hour, This
- * evening, Tomorrow), Remind me (the custom date and time, M112's docked Set), Repeat (on the reminder's day) and Notes;
+ * The Reminder sheet (06-mobile.md, M114, D110): "remind me to X at Y". A title, one-line capsules for the time (In 1
+ * hour, 6 PM or 9 PM, Tomorrow 9 AM), Remind me (the custom date and time, M112's docked Set), Repeat (on the reminder's day) and Notes;
  * nothing else. From the +'s Reminder it adds one, shown at once (M100); from a reminder's row it edits it, with Make it a
  * task and Delete.
  */
@@ -54,7 +54,7 @@ function EditReminder({ taskId }: { taskId: string }) {
 }
 
 function ReminderForm({ task }: { task?: Task }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors, radius, space, type } = useTheme();
   const open = useReminderSheet((s) => s.open);
   const hide = useReminderSheet((s) => s.hide);
@@ -154,23 +154,26 @@ function ReminderForm({ task }: { task?: Task }) {
             {draft.title.length > 0 && <ClearButton size={20} onPress={() => update({ title: '' })} accessibilityLabel={t('quickAdd.clearTitle')} style={styles.clear} />}
           </View>
           {now && (
-            <View style={[styles.chips, { gap: space.sm, paddingBottom: space.md }]}>
+            // One-line capsules (the hub's option A, no icons): "In 1 hour", "6 PM", "Tomorrow 9 AM"; the picked one solid.
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: space.xs, paddingBottom: space.md }}>
               {quickReminders(now, true).map(({ id, at }) => {
                 const on = sameReminder(at, draft.at);
+                const time = formatShortTime(at.time, i18n.language);
+                const label = id === 'inAnHour' ? t('reminders.inAnHour') : id === 'tomorrow' ? `${t('reminders.tomorrow')} ${time}` : time;
                 return (
                   <Pressable
                     key={id}
                     onPress={() => update({ at })}
                     accessibilityRole="button"
+                    accessibilityLabel={`${t(`reminders.${id}`)}, ${labels.time(at.time)}`}
                     accessibilityState={{ selected: on }}
-                    style={[styles.chip, { borderRadius: radius.md, paddingHorizontal: space.md, backgroundColor: on ? colors.accentSoft : colors.surface2 }]}
+                    style={[styles.chip, { borderRadius: radius.pill, paddingHorizontal: space.md, backgroundColor: on ? colors.accent : colors.surface2 }]}
                   >
-                    <Text variant="subhead" style={{ fontWeight: '600', color: on ? colors.accent : colors.ink }}>{t(`reminders.${id}`)}</Text>
-                    <Text variant="caption" color={on ? 'accent' : 'ink3'}>{labels.time(at.time)}</Text>
+                    <Text variant="subhead" style={{ fontWeight: '600', color: on ? colors.onAccent : colors.ink }}>{label}</Text>
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
           )}
           <View style={[styles.divider, { backgroundColor: colors.line }]} />
           <ListRow
@@ -220,7 +223,6 @@ const styles = StyleSheet.create({
   title: { flex: 1, paddingTop: 8, paddingBottom: 12, paddingHorizontal: 0 },
   titleRow: { flexDirection: 'row', alignItems: 'center' },
   clear: { marginVertical: 0 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap' },
-  chip: { paddingVertical: 7, gap: 1 },
+  chip: { paddingVertical: 7 },
   divider: { height: StyleSheet.hairlineWidth },
 });

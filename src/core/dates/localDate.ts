@@ -58,6 +58,13 @@ export function formatLocalTime(time: LocalTime, locale: string): string {
   return formatter(locale, { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, h, m)));
 }
 
+/** A time as short as the locale allows: "6 PM" for 18:00 on a 12-hour clock, else as `formatLocalTime` ("6:30 PM", "18:00"). */
+export function formatShortTime(time: LocalTime, locale: string): string {
+  const [h, m] = time.split(':').map(Number);
+  if (m !== 0 || !formatter(locale, { hour: 'numeric', timeZone: 'UTC' }).resolvedOptions().hour12) return formatLocalTime(time, locale);
+  return formatter(locale, { hour: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 1, h, 0)));
+}
+
 /**
  * Formats a UTC instant ("2026-09-20T14:14:00Z") in an IANA time zone (the profile's), e.g. options
  * { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' } → "9:14 AM GMT-5".
