@@ -58,6 +58,25 @@ export function SkeletonSection({ lines = 2, box }: { lines?: number; box?: numb
   );
 }
 
+/**
+ * Header buttons waiting for their data (M115): `count` round placeholders, each in a 44 pt button's place, so ••• and the
+ * like never act on nothing and the header doesn't jump when they arrive.
+ */
+export function SkeletonIcons({ count = 1 }: { count?: number }) {
+  return (
+    <View style={styles.icons}>
+      {Array.from({ length: count }, (_, i) => (
+        <View key={i} style={styles.icon}><Skeleton width={22} height={22} radius={11} /></View>
+      ))}
+    </View>
+  );
+}
+
+/** A section heading being loaded (M115): a short bar, never the section's name, which the screen may not have. */
+export function SkeletonHeading() {
+  return <Skeleton width={84} height={11} />;
+}
+
 /** A list row being loaded: a circle and two lines, as tall as a task row. `width` is the first line's, in percent. */
 export function SkeletonRow({ width = 70 }: { width?: number }) {
   const { space } = useTheme();
@@ -73,6 +92,8 @@ export function SkeletonRow({ width = 70 }: { width?: number }) {
 }
 
 const styles = StyleSheet.create({
+  icons: { flexDirection: 'row', alignItems: 'center', marginRight: -10 },
+  icon: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   lines: { flex: 1, paddingTop: 2 },
 });

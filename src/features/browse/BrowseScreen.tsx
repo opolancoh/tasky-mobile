@@ -10,7 +10,7 @@ import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, Text, useTheme } from '@/shared/ui';
+import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, SkeletonHeading, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
@@ -28,7 +28,8 @@ type Item =
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
-  | { type: 'skeleton'; key: string; width: number };
+  | { type: 'skeleton'; key: string; width: number }
+  | { type: 'skeletonHead'; key: string };
 
 /** Over this many lists, teams and tags, a filter field shows under the title (M38). */
 const FILTER_FROM = 25;
@@ -41,7 +42,7 @@ const FILTER_FROM = 25;
  */
 export function BrowseScreen() {
   const { t } = useTranslation();
-  const { colors, space, scheme } = useTheme();
+  const { colors, radius, space, scheme } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
   const taskLists = useTaskLists();
@@ -83,11 +84,12 @@ export function BrowseScreen() {
   const loading = taskLists.isPending || teams.isPending;
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
-  // Loading (M27, M70): the sections' headings where they will be, each row waiting as a skeleton shaped like it (tile, name, count).
+  // Loading (M27, M108, M115): rough on purpose, so it never names sections the screen may not have: three groups of rows
+  // shaped like Spaces' (tile, name, count), each under a heading-shaped bar.
   if (loading) {
-    ([['teams', 'browse.teams', [44, 56]], ['mine', 'browse.myLists', [58, 72, 46, 64]], ['shared', 'browse.sharedWithMe', [55, 40]]] as const).forEach(([key, title, widths]) => {
-      items.push({ type: 'section', key: `s-${key}`, title: t(title) });
-      widths.forEach((width) => items.push({ type: 'skeleton', key: `k-${key}-${width}`, width }));
+    [[52, 64], [58, 72, 46], [55, 40]].forEach((widths, g) => {
+      items.push({ type: 'skeletonHead', key: `kh-${g}` });
+      widths.forEach((width) => items.push({ type: 'skeleton', key: `k-${g}-${width}`, width }));
     });
   } else if (query) {
     // Filtering: flat results, by kind.
@@ -153,8 +155,10 @@ export function BrowseScreen() {
       case 'header':
         return (
           <View style={{ paddingBottom: space.sm }}>
+            {/* Edit and the filter act on what loaded (M115): until then, their shapes as skeletons. */}
             <View style={styles.bar}>
-              {all.length + tagList.length + teamList.length > 1 && !query && (
+              {loading && <View style={styles.barButton}><Skeleton width={34} height={14} /></View>}
+              {!loading && all.length + tagList.length + teamList.length > 1 && !query && (
                 <Pressable onPress={() => setEditing(!editing)} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
                   <Text variant="button" color="accent">{t(editing ? 'common.done' : 'browse.edit')}</Text>
                 </Pressable>
@@ -168,6 +172,11 @@ export function BrowseScreen() {
                   <Skeleton width={150} height={12} />
                 </View>
               )}
+            {loading && (
+              <View style={{ marginTop: space.lg }}>
+                <Skeleton width="100%" height={44} radius={radius.md} />
+              </View>
+            )}
             {many && !editing && (
               <View style={{ marginTop: space.lg }}>
                 <SearchField value={filter} onChangeText={setFilter} placeholder={t('browse.filter')} clearLabel={t('browse.clearFilter')} />
@@ -267,6 +276,8 @@ export function BrowseScreen() {
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
       case 'skeleton':
         return <BrowseRowSkeleton width={item.width} />;
+      case 'skeletonHead':
+        return <View style={[styles.section, { marginTop: space.xxl }]}><SkeletonHeading /></View>;
     }
   };
 

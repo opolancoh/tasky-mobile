@@ -7,7 +7,7 @@ import { StyleSheet, View } from 'react-native';
 import { useMemberPages, useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { MembersOf } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Notice, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { Notice, radius, Screen, SearchField, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { MemberRow } from './components/MemberRow';
@@ -59,7 +59,8 @@ export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: 
         contentContainerStyle={{ paddingBottom: space.huge }}
         ListHeaderComponent={
           <View style={{ paddingBottom: space.sm }}>
-            <SearchField value={text} onChangeText={setText} placeholder={t('browse.findMember', { name })} clearLabel={t('browse.clearFind')} busy={text.trim() !== query || (pages.isFetching && !pages.isFetchingNextPage && !pages.isPending)} busyLabel={t('people.searching')} />
+            {/* The find field waits for the first page (M115); a search on its way keeps it. */}
+            {pages.isPending && !text ? <Skeleton width="100%" height={44} radius={radius.md} /> : <SearchField value={text} onChangeText={setText} placeholder={t('browse.findMember', { name })} clearLabel={t('browse.clearFind')} busy={text.trim() !== query || (pages.isFetching && !pages.isFetchingNextPage && !pages.isPending)} busyLabel={t('people.searching')} />}
             {pages.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(pages.error)}</Notice></View>}
           </View>
         }

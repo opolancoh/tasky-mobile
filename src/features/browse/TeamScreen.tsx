@@ -10,7 +10,7 @@ import { useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { TaskList } from '@/data/tasks/types';
 import { BarTitle, useBarTitle } from '@/shared/components';
 import { LoadError } from '@/shared/components/LoadError';
-import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
@@ -56,8 +56,10 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
     navigation.setOptions({
       // Scrolled, the bar shows the team's name over "3 lists" (M94).
       headerTitle: () => <BarTitle shown={bar.shown} title={team?.name ?? ''} line={taskLists.isPending ? undefined : lists.length ? t('browse.listCount', { count: lists.length }) : t('browse.noListsYet')} />,
-      headerRight: team
-        ? () => (
+      // Its actions wait for its lists (M115).
+      headerRight: !team || taskLists.isPending
+        ? () => <SkeletonIcons count={manages ? 2 : 1} />
+        : () => (
             <View style={styles.headerRight}>
               {manages && (
                 <Pressable onPress={people} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
@@ -68,8 +70,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>
-          )
-        : undefined,
+          ),
     });
   });
 

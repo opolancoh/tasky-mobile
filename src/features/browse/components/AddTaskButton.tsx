@@ -4,17 +4,19 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { Id } from '@/core/types';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
-import { radius, Text, useTheme } from '@/shared/ui';
+import { radius, Skeleton, Text, useTheme } from '@/shared/ui';
 
 /**
  * A list's Add a task (M103, the hub's option D; replaces M62's field): docked at the bottom, a field-like capsule that
  * floats over the background with a shadow and an accent + at its start. A tap opens Quick add on this list, the same
- * sheet as the + (M14); Add there closes it and the task is in the list at once (M100).
+ * sheet as the + (M14); Add there closes it and the task is in the list at once (M100). While the list loads, its shape (M115).
  */
-export function AddTaskButton({ taskListId, listName, onAdded }: { taskListId: Id; listName: string; onAdded(): void }) {
+export function AddTaskButton({ taskListId, listName, onAdded, loading = false }: { taskListId: Id; listName: string; onAdded(): void; loading?: boolean }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const show = useQuickAdd((s) => s.show);
+
+  if (loading) return <View style={{ paddingVertical: space.sm, marginHorizontal: space.lg - space.xxl }}><Skeleton width="100%" height={44} radius={radius.pill} /></View>;
 
   return (
     <View style={{ paddingVertical: space.sm, marginHorizontal: space.lg - space.xxl }}>

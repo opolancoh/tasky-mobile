@@ -14,7 +14,7 @@ import { useHomeCache } from '@/shared/session/homeCacheStore';
 import { BrowseRow, BrowseRowSkeleton } from '@/shared/components/BrowseRow';
 import { MeButton } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { Button, fonts, Screen, Skeleton, Text, useTheme } from '@/shared/ui';
+import { Button, fonts, Screen, Skeleton, SkeletonHeading, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { ActivityBell } from './components/ActivityBell';
@@ -35,7 +35,8 @@ type Item =
   | { type: 'section'; key: string; title: string; count?: number; seeAll?: boolean }
   | { type: 'request'; key: string; request: Request }
   | { type: 'row'; key: string; label: string; icon: ComponentProps<typeof Feather>['name']; tone: Tone; count?: number; zero?: boolean; sub?: ReactNode; onPress(): void }
-  | { type: 'skeletonRow'; key: string; width: number; sub: number };
+  | { type: 'skeletonRow'; key: string; width: number; sub: number }
+  | { type: 'skeletonHead'; key: string };
 
 /**
  * Home, the first tab (06-mobile.md, M105): the date and what's next; two cards (Today, Overdue); Requests (3 rows and See
@@ -72,15 +73,15 @@ export function TodayScreen() {
     { type: 'row', key: 'archived', label: t('browse.archivedList'), icon: 'archive', tone: 'quiet', onPress: () => navigation.navigate('Archived') },
     { type: 'row', key: 'deleted', label: t('browse.recentlyDeleted'), icon: 'trash-2', tone: 'quiet', onPress: () => navigation.navigate('RecentlyDeleted') },
   ];
-  // First load (M27; later launches show the last Home kept on the device): the screen's shape with its headings, rows
-  // waiting where their numbers go; Requests only once known.
+  // First load (M27; later launches show the last Home kept on the device): the screen's shape, heading-shaped bars and
+  // rows waiting where their numbers go (M115); Requests only once known. More's links work at once: they open other screens.
   if (!data && home.isPending) {
     const rows = (key: string, widths: [number, number][]) => widths.map(([width, sub], i) => ({ type: 'skeletonRow' as const, key: `${key}-${i}`, width, sub }));
     items.push(
       { type: 'cardsSkeleton', key: 'kc' },
-      { type: 'section', key: 's-mine', title: t('home.myStuff') },
+      { type: 'skeletonHead', key: 'kh-mine' },
       ...rows('km', [[34, 44], [30, 36], [36, 28]]),
-      { type: 'section', key: 's-assignments', title: t('home.assignments') },
+      { type: 'skeletonHead', key: 'kh-assignments' },
       ...rows('ka', [[48, 20], [46, 20]]),
       ...more,
     );
@@ -163,6 +164,8 @@ export function TodayScreen() {
         return <HomeCards counts={data!.counts} today={today!} open={open} />;
       case 'cardsSkeleton':
         return <HomeCardsSkeleton />;
+      case 'skeletonHead':
+        return <View style={[styles.sectionHead, { marginTop: space.xxl }]}><SkeletonHeading /></View>;
       case 'section':
         // The heading sits on its rows: no line under it (M105).
         return (

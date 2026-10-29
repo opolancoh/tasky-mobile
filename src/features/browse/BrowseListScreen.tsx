@@ -16,7 +16,7 @@ import { Avatar, BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
-import { chooseAction, ColorDot, Notice, Screen, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { chooseAction, ColorDot, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
@@ -186,7 +186,10 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       gestureEnabled: true,
       headerLeft: undefined,
       headerTitle: () => <BarTitle shown={bar.shown} title={title} line={barLine} />,
-      headerRight: menu
+      // ••• acts on the tasks (Select, sort, group): its shape until they load (M115).
+      headerRight: menu && pages.isPending
+        ? () => <SkeletonIcons />
+        : menu
         ? () => (
             <Pressable onPress={menu} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
               <Feather name="more-horizontal" size={22} color={colors.accent} />
@@ -274,6 +277,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
             {kind === 'team' && team ? <Text variant="label" color="ink3">{team.name}</Text> : null}
             <Text variant="title" accessibilityRole="header" style={kind === 'tag' && tag?.color ? { color: tag.color } : undefined}>{title}</Text>
             <Text variant="subhead" color="ink2">{counted ? `${t(kind === 'completed' ? 'browse.taskCount' : 'browse.openCount', { count })} · ${ordered || given ? view : sub}` : sub}</Text>
+            {scoped && !person && pages.isPending && !show && <Skeleton width="100%" height={34} radius={17} style={{ marginTop: space.md }} />}
             {scoped && !person && (!!loaded.length || !!show) && (
               <View style={{ marginTop: space.md }}>
                 <FilterStrip<Show>

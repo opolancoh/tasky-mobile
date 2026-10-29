@@ -21,7 +21,7 @@ import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, SkeletonIcons, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
 
 import { AnswerBar } from './components/AnswerBar';
 import { CommentThread } from './components/CommentThread';
@@ -164,6 +164,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     return (
       <Screen scroll edges={['bottom']} contentStyle={{ paddingBottom: space.huge }}>
         {query.error ? (!missing && <LoadError error={query.error} onRetry={() => void query.refetch()} />) : <TaskDetailSkeleton />}
+        {!query.error && <LoadingHeader />}
       </Screen>
     );
   }
@@ -508,6 +509,15 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
 
     </Screen>
   );
+}
+
+/** While the task loads, ••• as its shape (M115): the header doesn't jump when it arrives. */
+function LoadingHeader() {
+  const navigation = useNavigation();
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerRight: () => <SkeletonIcons /> });
+  }, [navigation]);
+  return null;
 }
 
 /** Sets the header once the task is loaded (its menu needs the task); nothing while an assignment waits for an answer (M35). */

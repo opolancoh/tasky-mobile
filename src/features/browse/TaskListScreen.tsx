@@ -16,7 +16,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { ColorDot, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
@@ -102,8 +102,10 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
       gestureEnabled: true,
       headerLeft: undefined,
       headerTitle: () => <BarTitle shown={bar.shown} title={name} line={tasks.data ? t('browse.openShort', { count: tasks.data.total ?? tasks.data.items.length }) : undefined} />,
-      headerRight: taskList
-        ? () => (
+      // The list's actions wait for its tasks (M115): Select and the sort act on them.
+      headerRight: !taskList || tasks.isPending
+        ? () => <SkeletonIcons count={2} />
+        : () => (
             <View style={styles.headerRight}>
               {canInvite(taskList, team) && (
                 <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
@@ -114,8 +116,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>
-          )
-        : undefined,
+          ),
     });
   });
 
@@ -159,6 +160,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
               {taskList?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={taskList?.color} size={14} />}
               <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.fill}>{taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''}</Text>
             </View>
+            {(!taskList || tasks.isPending) && <Skeleton width={140} height={12} style={{ marginTop: space.xs }} />}
             {taskList && !tasks.isPending && (
               <View style={[styles.line, { gap: space.xs }]}>
                 <Text variant="subhead" color="ink3">{openTotal ? t('browse.openShort', { count: openTotal }) : t('browse.noTasksYet')}</Text>
@@ -234,7 +236,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: space.lg }}
       />
-      {selecting ? <SelectionBar /> : <AddTaskButton taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} />}
+      {selecting ? <SelectionBar /> : <AddTaskButton taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} loading={!taskList || tasks.isPending} />}
     </Screen>
   );
 }
