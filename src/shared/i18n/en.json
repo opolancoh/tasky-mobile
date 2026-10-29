@@ -466,7 +466,16 @@
     "on": "on",
     "toolbar": "Quick options",
     "clearDue": "Remove due date",
-    "listsFor": "Lists {{name}} can have it in"
+    "listsFor": "Lists {{name}} can have it in",
+    "menu": {
+      "title": "What do you want to add?",
+      "task": "Task",
+      "taskBody": "Something to do",
+      "list": "List",
+      "listBody": "A group of tasks",
+      "team": "Team",
+      "teamBody": "People who share tasks and lists"
+    }
   },
   "dates": {
     "today": "Today",
@@ -487,7 +496,7 @@
   },
   "reminders": {
     "title": "Reminder",
-    "onlyYou": "Only you get this reminder, even on a shared task.",
+    "onlyYou": "Only you get it. A due date doesn't set a reminder; they are chosen separately.",
     "laterToday": "Later today",
     "tomorrow": "Tomorrow",
     "thisWeekend": "This weekend",
@@ -499,7 +508,8 @@
     "body": "Reminder",
     "channel": "Reminders",
     "listSub": "Upcoming, soonest first",
-    "listEmpty": "No reminders coming up. Add one to a task and it shows here."
+    "listEmpty": "No reminders coming up. Add one to a task and it shows here.",
+    "set": "Set reminder"
   },
   "wheels": {
     "day": "Day",
@@ -539,7 +549,10 @@
     "tomorrow": "Tomorrow",
     "nextWeek": "Next week",
     "none": "No date",
-    "custom": "Pick a date"
+    "custom": "Pick a date",
+    "customSection": "Custom",
+    "date": "Date",
+    "set": "Set due date"
   },
   "taskDetail": {
     "fields": {

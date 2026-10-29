@@ -18,6 +18,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { UpdateRequiredScreen } from '@/features/auth/UpdateRequiredScreen';
 import { BrowseSheet } from '@/features/browse/BrowseSheet';
+import { AddMenu } from '@/features/quick-add/AddMenu';
 import { QuickAddSheet } from '@/features/quick-add/QuickAddSheet';
 import { installErrorCapture } from '@/shared/errors/captureErrors';
 import { addScreenCrumb } from '@/shared/errors/breadcrumbs';
@@ -29,6 +30,7 @@ import { NetworkLogAccess } from '@/shared/network/NetworkLogAccess';
 import { NotificationAskSheet } from '@/shared/notifications/NotificationAskSheet';
 import { ReminderSync } from '@/shared/notifications/useReminders';
 import { SessionProvider, useSession } from '@/shared/session/SessionProvider';
+import { useBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { ActionSheetHost, fonts, ReasonSheetHost, ThemeProvider, ToastHost, useAppearanceHydrated, useTheme } from '@/shared/ui';
 
@@ -102,6 +104,10 @@ function Root() {
       <LinkWatcher />
       {status === 'signedIn' && (
         <>
+          <AddMenu
+            onNewList={() => useBrowseSheet.getState().show({ kind: 'list' }, (id) => navigationRef.navigate('TaskList', { taskListId: id }))}
+            onNewTeam={() => useBrowseSheet.getState().show({ kind: 'team' }, (id) => navigationRef.navigate('Team', { teamId: id }))}
+          />
           <QuickAddSheet />
           <TaskFieldSheet />
           <CommentSheet />

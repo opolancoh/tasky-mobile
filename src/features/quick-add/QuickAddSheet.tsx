@@ -324,7 +324,7 @@ function QuickAddForm() {
       {page === 'tags' && <TagPicker tags={sortedTags} loading={tagsQuery.isPending} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
-        <DueDatePicker value={draft.dueDate} today={today} onPick={(dueDate) => pick({ dueDate })} onChange={(dueDate) => update({ dueDate })} />
+        <DueDatePicker value={draft.dueDate} today={today} onPick={(dueDate) => pick({ dueDate })} onChange={(dueDate) => update({ dueDate })} onSet={(dueDate) => pick({ dueDate })} />
       )}
 
       {page === 'reminder' && now && (
@@ -332,7 +332,7 @@ function QuickAddForm() {
           value={reminder}
           onChange={(at) => update({ reminder: at })}
           onPick={(at) => pick({ reminder: at })}
-          onRemove={() => pick({ reminder: null })}
+          onSet={(at) => pick({ reminder: at })}
           now={now}
         />
       )}

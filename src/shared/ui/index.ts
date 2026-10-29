@@ -5,6 +5,7 @@ export { ActionSheetHost, chooseAction, type ActionChoice } from './ActionSheet'
 export { confirm, inform, type ConfirmOptions } from './confirm';
 export { askReason, ReasonSheetHost, type AskReasonOptions } from './ReasonSheet';
 export { DateWheel, type DateWheelProps } from './DateWheel';
+export { DockedAction, type DockedActionProps } from './DockedAction';
 export { ListRow, type ListRowProps } from './ListRow';
 export { Logo } from './Logo';
 export { Notice } from './Notice';

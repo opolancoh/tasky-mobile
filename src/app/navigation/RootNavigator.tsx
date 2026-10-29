@@ -52,7 +52,7 @@ import { AddTabScreen, addTabOptions, tab, tabScreenOptions } from './tabs';
 /** A tab route's key in tabs.*: the routes keep their names; Today is shown as Home (M65), Browse as Spaces (M70). */
 const tabKey = (route: string) => (route === 'Today' ? 'home' : route === 'Browse' ? 'spaces' : route.toLowerCase());
 
-/** The signed-in home: stock bottom tabs with a + in the middle that opens Quick add (M11). */
+/** The signed-in home: stock bottom tabs with a + in the middle that asks what to add, then opens it (M11, M113). */
 const Tabs = createBottomTabNavigator({
   screenOptions: tabScreenOptions,
   screens: {
@@ -65,8 +65,8 @@ const Tabs = createBottomTabNavigator({
       options: addTabOptions,
       listeners: {
         tabPress: (e) => {
-          e.preventDefault();   // stay on the current tab; the sheet opens over it
-          useQuickAdd.getState().show();
+          e.preventDefault();   // stay on the current tab; the menu opens over it
+          useQuickAdd.getState().showMenu();
         },
       },
     },

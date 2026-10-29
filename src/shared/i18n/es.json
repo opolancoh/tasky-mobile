@@ -466,7 +466,16 @@
     "on": "activado",
     "toolbar": "Opciones rápidas",
     "clearDue": "Quitar la fecha límite",
-    "listsFor": "Listas donde {{name}} puede tenerla"
+    "listsFor": "Listas donde {{name}} puede tenerla",
+    "menu": {
+      "title": "¿Qué quieres agregar?",
+      "task": "Tarea",
+      "taskBody": "Algo por hacer",
+      "list": "Lista",
+      "listBody": "Un grupo de tareas",
+      "team": "Equipo",
+      "teamBody": "Personas que comparten tareas y listas"
+    }
   },
   "dates": {
     "today": "Hoy",
@@ -487,7 +496,7 @@
   },
   "reminders": {
     "title": "Recordatorio",
-    "onlyYou": "Solo tú recibes este recordatorio, también en una tarea compartida.",
+    "onlyYou": "Solo tú lo recibes. Una fecha límite no pone un recordatorio; se eligen por separado.",
     "laterToday": "Hoy más tarde",
     "tomorrow": "Mañana",
     "thisWeekend": "Este fin de semana",
@@ -499,7 +508,8 @@
     "body": "Recordatorio",
     "channel": "Recordatorios",
     "listSub": "Próximos, el más cercano primero",
-    "listEmpty": "No hay recordatorios próximos. Agrega uno a una tarea y aparecerá aquí."
+    "listEmpty": "No hay recordatorios próximos. Agrega uno a una tarea y aparecerá aquí.",
+    "set": "Poner recordatorio"
   },
   "wheels": {
     "day": "Día",
@@ -539,7 +549,10 @@
     "tomorrow": "Mañana",
     "nextWeek": "La próxima semana",
     "none": "Sin fecha",
-    "custom": "Elegir una fecha"
+    "custom": "Elegir una fecha",
+    "customSection": "Personalizado",
+    "date": "Fecha",
+    "set": "Poner fecha límite"
   },
   "taskDetail": {
     "fields": {

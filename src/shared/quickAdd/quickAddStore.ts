@@ -15,19 +15,26 @@ export interface QuickAddStart {
 
 interface QuickAddState extends QuickAddStart {
   open: boolean;
+  /** The +'s menu, Task · List · Team, before the form (M113). */
+  menu: boolean;
+  showMenu(): void;
+  hideMenu(): void;
   session: number;
   show(start?: QuickAddStart): void;
   hide(): void;
 }
 
 /**
- * Whether Quick add is open. The + in the tab bar calls `show()`; the sheet is mounted once, in App. `session` changes
+ * Whether Quick add is open. The + in the tab bar opens its menu (`showMenu()`), whose Task calls `show()`; the sheet is mounted once, in App. `session` changes
  * on every `show()`, so the form starts fresh each time (it's the form's React key), with what `start` gives: a title,
  * a due date, a list.
  */
 export const useQuickAdd = create<QuickAddState>()((set) => ({
   open: false,
+  menu: false,
+  showMenu: () => set({ menu: true }),
+  hideMenu: () => set({ menu: false }),
   session: 0,
-  show: ({ title, dueDate, taskListId, onAdded } = {}) => set((s) => ({ open: true, session: s.session + 1, title, dueDate, taskListId, onAdded })),
+  show: ({ title, dueDate, taskListId, onAdded } = {}) => set((s) => ({ open: true, menu: false, session: s.session + 1, title, dueDate, taskListId, onAdded })),
   hide: () => set({ open: false }),
 }));

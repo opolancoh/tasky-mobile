@@ -31,7 +31,7 @@ Providers, outermost first:
 
 Before rendering, `installErrorCapture()` sets the global error handler and the unhandled-rejection tracker (M89). Navigation's `onReady`/`onStateChange` add each screen to the error reports' breadcrumbs.
 
-`Root` loads the Figtree fonts, keeps the splash up until the fonts are loaded and the session is checked, builds React Navigation's theme from the palette, and renders `Navigation`. While signed in it also mounts the Quick add sheet once, above every screen.
+`Root` loads the Figtree fonts, keeps the splash up until the fonts are loaded and the session is checked, builds React Navigation's theme from the palette, and renders `Navigation`. While signed in it also mounts the +'s menu (`AddMenu`, given New list and New team, which go to what was created) and the Quick add sheet once, above every screen.
 
 ## config.ts
 
@@ -69,7 +69,7 @@ Created once at startup:
 
 Params carry ids only; route types come from the config (`RootStackParamList`), so `navigation.navigate(...)` is type-checked.
 
-**tabs.tsx:** the bottom tabs: Home · Spaces · + · Calendar · Search (routes Today and Browse, M65, M70; [M11](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M39](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M74](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). Activity is a pushed screen, opened from Home's bell (`ActivityBell`, with the unread count). The + is a stand-in `Add` tab that opens Quick add (`useQuickAdd().show()`) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
+**tabs.tsx:** the bottom tabs: Home · Spaces · + · Calendar · Search (routes Today and Browse, M65, M70; [M11](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M39](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M74](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). Activity is a pushed screen, opened from Home's bell (`ActivityBell`, with the unread count). The + is a stand-in `Add` tab that opens its menu (`useQuickAdd().showMenu()`: Task, List, Team, M113) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
 
 ---
 

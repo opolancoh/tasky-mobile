@@ -6,7 +6,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { formatLocalDate, formatLocalTime } from '@/core/dates/localDate';
 import type { LocalDate, LocalTime } from '@/core/types';
 import { earliestReminder, reminderPresets, sameReminder, type ReminderAt } from '@/core/dates/reminders';
-import { DateWheel, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
+import { DateWheel, DockedAction, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
 
 interface ReminderPickerProps {
   /** The current reminder, or null for none; changes are reported as they happen. */
@@ -14,17 +14,20 @@ interface ReminderPickerProps {
   onChange(value: ReminderAt): void;
   /** A quick choice: sets it and returns to the form (like Due date's quick choices). */
   onPick(value: ReminderAt): void;
-  onRemove(): void;
+  /** Remove reminder at the end; left out where the caller's field clears it (Quick add). */
+  onRemove?(): void;
+  /** Given, a docked Set reminder sets the date and time shown (M112). */
+  onSet?(value: ReminderAt): void;
   /** "Now" in the profile's time zone. */
   now: { date: LocalDate; time: LocalTime };
 }
 
 /**
  * Picks the caller's reminder on a task (Quick add's Reminder page, task detail): four quick choices (`onPick`), then a custom date and time with the
- * shared DateWheel and TimeWheel (one open at a time), and Remove reminder. That only the user gets it is said here, once, not on
+ * shared DateWheel and TimeWheel (one open at a time), then Remove reminder or a docked Set reminder. That only the user gets it is said here, once, not on
  * the task's rows.
  */
-export function ReminderPicker({ value, onChange, onPick, onRemove, now }: ReminderPickerProps) {
+export function ReminderPicker({ value, onChange, onPick, onRemove, onSet, now }: ReminderPickerProps) {
   const { t, i18n } = useTranslation();
   const { colors, radius, space } = useTheme();
   const locale = i18n.language;
@@ -39,8 +42,8 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
   const valueColor = value ? 'accent' : 'ink2';
   const toggle = (which: 'date' | 'time') => setOpen((o) => (o === which ? null : which));
 
-  return (
-    <ScrollView keyboardShouldPersistTaps="handled" bounces={false}>
+  const list = (
+    <ScrollView keyboardShouldPersistTaps="handled" bounces={false} style={onSet && styles.fill}>
       <View style={[styles.grid, { gap: space.md }]}>
         {presets.map(({ id, at }) => (
           <PresetCard
@@ -52,8 +55,6 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
           />
         ))}
       </View>
-      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('reminders.onlyYou')}</Text>
-
       <SectionLabel style={{ marginTop: space.xxl }}>{t('reminders.custom')}</SectionLabel>
       <ListRow
         label={t('reminders.date')}
@@ -88,15 +89,26 @@ export function ReminderPicker({ value, onChange, onPick, onRemove, now }: Remin
           labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }}
         />
       )}
+      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('reminders.onlyYou')}</Text>
 
-      <Pressable onPress={onRemove} accessibilityRole="button" style={[styles.remove, { marginTop: space.xxl, borderRadius: radius.md }]}>
-        {({ pressed }) => (
-          <Text variant="bodyMedium" color="danger" style={{ opacity: pressed ? 0.6 : 1 }}>
-            {t('reminders.remove')}
-          </Text>
-        )}
-      </Pressable>
+      {onRemove && (
+        <Pressable onPress={onRemove} accessibilityRole="button" style={[styles.remove, { marginTop: space.xxl, borderRadius: radius.md }]}>
+          {({ pressed }) => (
+            <Text variant="bodyMedium" color="danger" style={{ opacity: pressed ? 0.6 : 1 }}>
+              {t('reminders.remove')}
+            </Text>
+          )}
+        </Pressable>
+      )}
     </ScrollView>
+  );
+  if (!onSet) return list;
+  const when = `${formatLocalDate(shown.date, locale, { weekday: 'short', month: 'short', day: 'numeric' })}, ${formatLocalTime(shown.time, locale)}`;
+  return (
+    <View style={styles.fill}>
+      {list}
+      <DockedAction label={t('reminders.set')} detail={when} onPress={() => onSet(atLeast(shown))} />
+    </View>
   );
 }
 
@@ -129,6 +141,7 @@ const PresetCard = memo(function PresetCard({ label, detail, selected, onPress }
 });
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   /** Two per row: half the width minus half the gap. */
   card: { flexBasis: '47%', flexGrow: 1, borderWidth: 1, gap: 2 },
