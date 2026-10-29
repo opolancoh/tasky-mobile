@@ -471,6 +471,8 @@
       "title": "¿Qué quieres agregar?",
       "task": "Tarea",
       "taskBody": "Algo por hacer",
+      "reminder": "Recordatorio",
+      "reminderBody": "Te avisa en una fecha y hora",
       "list": "Lista",
       "listBody": "Un grupo de tareas",
       "team": "Equipo",

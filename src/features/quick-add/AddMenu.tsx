@@ -12,7 +12,7 @@ interface AddMenuProps {
   onNewTeam(): void;
 }
 
-/** The +'s menu (M113): Task opens Quick add, List and Team Spaces' sheets; Reminder joins once it is its own kind. */
+/** The +'s menu (M113): Task opens Quick add, Reminder Quick add's Reminder page, List and Team Spaces' sheets. */
 export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
@@ -22,6 +22,8 @@ export function AddMenu({ onNewList, onNewTeam }: AddMenuProps) {
 
   const rows: { key: string; icon: ComponentProps<typeof Feather>['name']; run(): void }[] = [
     { key: 'task', icon: 'check-circle', run: () => show() },
+    // Until a reminder is its own kind: Quick add on its Reminder page, saved as a task with that reminder.
+    { key: 'reminder', icon: 'bell', run: () => show({ page: 'reminder' }) },
     { key: 'list', icon: 'list', run: onNewList },
     { key: 'team', icon: 'users', run: onNewTeam },
   ];

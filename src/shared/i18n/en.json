@@ -471,6 +471,8 @@
       "title": "What do you want to add?",
       "task": "Task",
       "taskBody": "Something to do",
+      "reminder": "Reminder",
+      "reminderBody": "Reminds you at a date and time",
       "list": "List",
       "listBody": "A group of tasks",
       "team": "Team",

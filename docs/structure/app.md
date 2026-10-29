@@ -69,7 +69,7 @@ Created once at startup:
 
 Params carry ids only; route types come from the config (`RootStackParamList`), so `navigation.navigate(...)` is type-checked.
 
-**tabs.tsx:** the bottom tabs: Home · Spaces · + · Calendar · Search (routes Today and Browse, M65, M70; [M11](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M39](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M74](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). Activity is a pushed screen, opened from Home's bell (`ActivityBell`, with the unread count). The + is a stand-in `Add` tab that opens its menu (`useQuickAdd().showMenu()`: Task, List, Team, M113) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
+**tabs.tsx:** the bottom tabs: Home · Spaces · + · Calendar · Search (routes Today and Browse, M65, M70; [M11](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M39](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions), [M74](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). Activity is a pushed screen, opened from Home's bell (`ActivityBell`, with the unread count). The + is a stand-in `Add` tab that opens its menu (`useQuickAdd().showMenu()`: Task, Reminder, List, Team, M113) instead of switching tabs; `addButtonStyle` picks the filled circle or the plain outlined +.
 
 ---
 
