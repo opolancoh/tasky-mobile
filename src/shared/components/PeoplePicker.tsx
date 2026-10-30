@@ -35,7 +35,7 @@ export interface PeoplePickerProps {
 /**
  * Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most
  * (GET /people); typing searches names, colleagues in a company under Your company. A typed email is searched too: someone you
- * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search is on its way (M73). The typed text lives here
+ * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search request is out (M73, M121). The typed text lives here
  * (docs/performance.md); a pick or an email sent clears it.
  */
 export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, onEmail, busy = false, keepsKeyboard = false }: PeoplePickerProps) {
@@ -55,7 +55,8 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
   // An email is searched too: someone you know with that address shows above Invite by email (D104). The API leaves out `exclude`.
   const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)), within);   // an emailed assignee isn't a user id
   // Searching: from a keystroke until its results are in (the wait before asking, then the request); the last results stay meanwhile.
-  const searching = text.trim() !== query || (people.isFetching && !people.isPending);
+  // As every search field: the ring only while a request is out, not through the pause after typing.
+  const searching = people.isFetching && !people.isPending;
   const email = text.trim().toLowerCase();
   const typedEmail = isEmail(email);
   const found = people.data ?? [];

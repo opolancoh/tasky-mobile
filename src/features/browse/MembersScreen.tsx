@@ -59,7 +59,7 @@ export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: 
         ListHeaderComponent={
           <View style={{ paddingBottom: space.sm }}>
             {/* The find field waits for the first page (M115); a search on its way keeps it. */}
-            {pages.isPending && !text ? <Skeleton width="100%" height={44} radius={radius.md} /> : <SearchField value={text} onChangeText={setText} placeholder={t('browse.findMember', { name })} clearLabel={t('browse.clearFind')} busy={text.trim() !== query || (pages.isFetching && !pages.isFetchingNextPage && !pages.isPending)} busyLabel={t('people.searching')} />}
+            {pages.isPending && !text ? <Skeleton width="100%" height={44} radius={radius.md} /> : <SearchField value={text} onChangeText={setText} placeholder={t('browse.findMember', { name })} clearLabel={t('browse.clearFind')} busy={pages.isFetching && !pages.isFetchingNextPage && !pages.isPending} busyLabel={t('people.searching')} />}
             {pages.error && <View style={{ marginTop: space.md }}><Notice>{errorMessage(pages.error)}</Notice></View>}
           </View>
         }

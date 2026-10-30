@@ -7,8 +7,8 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { todayIn } from '@/core/dates/localDate';
 import { SEARCH_DELAY } from '@/core/text/searchDelay';
-import { useSearch, useTags, useTaskLists } from '@/data/tasks/queries';
-import type { SearchMatch, Tag, TaskList, TaskSummary } from '@/data/tasks/types';
+import { useSearch, useTags, useTaskLists, useTeams } from '@/data/tasks/queries';
+import type { SearchMatch, Tag, TaskList, TaskSummary, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { TaskListIcon } from '@/shared/components';
 import { LoadError } from '@/shared/components/LoadError';
@@ -29,13 +29,14 @@ type Item =
   | { type: 'tags'; key: string }
   | { type: 'hint'; key: string; text: string }
   | { type: 'list'; key: string; list: TaskList }
+  | { type: 'team'; key: string; team: Team }
   | { type: 'tag'; key: string; tag: Tag }
   | { type: 'task'; key: string; task: TaskSummary; match?: SearchMatch }
   | { type: 'doneHeader'; key: string; count: number }
   | { type: 'footer'; key: string };
 
 /**
- * Search, the last tab (M39, M40, M74, M121): Lists and Tags whose names match (from Spaces' data on the device), then Tasks
+ * Search, the last tab (M39, M40, M74, M121): Lists, Teams and Tags whose names match (from Spaces' data on the device), then Tasks
  * by the words in their titles, notes, tags, steps and comments, in everything the user can see (GET /search, D115), best
  * match first, 20 at a time; completed ones in a folded Completed section. `#` lists the user's tags instead. Before typing:
  * the last searches and the user's tags. A task row shows the title with the words found in bold and, when they aren't
@@ -57,6 +58,7 @@ export function SearchScreen() {
   const refreshControl = usePullRefresh(results);
   const tags = useTags().data ?? [];
   const lists = useTaskLists().data;
+  const teams = useTeams().data;
   const recent = useRecentSearches((s) => (me ? s.byUser[me.id] : undefined)) ?? NO_RECENT;
   const remember = useRecentSearches((s) => s.remember);
   const forget = useRecentSearches((s) => s.forget);
@@ -107,6 +109,9 @@ export function SearchScreen() {
     const named = selecting ? [] : (lists ?? []).filter((l) => !l.isInbox && !l.isArchived && matchesAll(l.name, words));
     if (named.length) items.push({ type: 'label', key: 'l-lists', title: t('search.lists') });
     named.forEach((list) => items.push({ type: 'list', key: `l-${list.id}`, list }));
+    const teamsNamed = selecting ? [] : (teams ?? []).filter((x) => matchesAll(x.name, words));
+    if (teamsNamed.length) items.push({ type: 'label', key: 'l-teams', title: t('search.teams') });
+    teamsNamed.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team }));
     const tagged = selecting ? [] : tags.filter((g) => matchesAll(g.name, words));
     if (tagged.length) items.push({ type: 'label', key: 'l-tags', title: t('search.tags') });
     tagged.forEach((tag) => items.push({ type: 'tag', key: `g-${tag.name}`, tag }));
@@ -119,7 +124,7 @@ export function SearchScreen() {
     }
     items.push({ type: 'footer', key: 'footer' });
   }
-  const nothing = !items.some((i) => i.type === 'list' || i.type === 'tag' || i.type === 'task' || i.type === 'doneHeader');
+  const nothing = !items.some((i) => i.type === 'list' || i.type === 'team' || i.type === 'tag' || i.type === 'task' || i.type === 'doneHeader');
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -127,7 +132,7 @@ export function SearchScreen() {
         return (
           <View style={{ paddingTop: space.xl + space.lg, paddingBottom: space.xs, gap: space.md }}>
             <Text variant="largeTitle" accessibilityRole="header">{t('search.title')}</Text>
-            <SearchBox key={preset.n} initial={preset.text} query={query} onQuery={setQuery} fetching={results.isFetching && !results.isFetchingNextPage} />
+            <SearchBox key={preset.n} initial={preset.text} onQuery={setQuery} fetching={results.isFetching && !results.isFetchingNextPage} />
             {results.error && searching && !results.data && <LoadError error={results.error} onRetry={() => void results.refetch()} />}
           </View>
         );
@@ -175,6 +180,14 @@ export function SearchScreen() {
           <Pressable onPress={() => { if (me) remember(me.id, query); navigation.navigate('TaskList', { taskListId: item.list.id }); }} accessibilityRole="button" style={({ pressed }) => [styles.nav, { gap: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
             <View style={styles.navIcon}><TaskListIcon taskList={item.list} /></View>
             <View style={styles.fill}><Highlight text={item.list.name} words={words} lines={1} /></View>
+            <Feather name="chevron-right" size={18} color={colors.ink3} />
+          </Pressable>
+        );
+      case 'team':
+        return (
+          <Pressable onPress={() => { if (me) remember(me.id, query); navigation.navigate('Team', { teamId: item.team.id }); }} accessibilityRole="button" style={({ pressed }) => [styles.nav, { gap: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
+            <View style={[styles.navIcon, styles.hashIcon, { backgroundColor: colors.surface2 }]}><Text variant="caption" color="ink2">{item.team.name.slice(0, 2).toUpperCase()}</Text></View>
+            <View style={styles.fill}><Highlight text={item.team.name} words={words} lines={1} /></View>
             <Feather name="chevron-right" size={18} color={colors.ink3} />
           </Pressable>
         );
@@ -232,11 +245,11 @@ export function SearchScreen() {
 }
 
 /** The search field: the typed text lives here (docs/performance.md); the screen gets it after a short pause. */
-function SearchBox({ initial, query, onQuery, fetching }: { initial: string; query: string; onQuery(q: string): void; fetching: boolean }) {
+function SearchBox({ initial, onQuery, fetching }: { initial: string; onQuery(q: string): void; fetching: boolean }) {
   const { t } = useTranslation();
   const [text, setText] = useState(initial);
-  // Searching: from a keystroke until its results are in (the pause, then the request); the last results stay meanwhile.
-  const busy = !!text.trim() && (text.trim() !== query || fetching);
+  // The ring spins only while a request is out, not through the pause after typing; the last results stay meanwhile.
+  const busy = !!text.trim() && fetching;
   useEffect(() => {
     const timer = setTimeout(() => onQuery(text.trim()), text.trim() ? SEARCH_DELAY : 0);
     return () => clearTimeout(timer);
