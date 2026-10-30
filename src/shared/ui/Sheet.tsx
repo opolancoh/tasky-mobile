@@ -1,13 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { interpolate, useAnimatedKeyboard, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
 import { useDelayedFlag } from './useDelayedFlag';
+import { useKeyboardHeight } from './useKeyboardHeight';
 
 /** A header button: text, an icon, or both (icon first, e.g. "‹ Task"). */
 export interface SheetAction {
@@ -70,9 +71,7 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const progress = useSharedValue(0);   // 0 closed → 1 open
-  // Keyboard height as a shared value. Expo Go ships Reanimated but not react-native-keyboard-controller, which
-  // Reanimated suggests instead; this hook is the Expo Go way. Android: edge-to-edge, so no extra bar margins.
-  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true, isNavigationBarTranslucentAndroid: true });
+  const keyboard = useKeyboardHeight();
 
   useEffect(() => {
     progress.value = withTiming(visible ? 1 : 0, { duration: DURATION }, (finished) => {
@@ -97,12 +96,12 @@ function SheetPanel({ visible, onDismiss, onBackdropPress, dismissLabel, title, 
   const bottomInset = Math.max(safeBottom, gap);
   const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
   // The room under the sheet is the keyboard's height; the panel shrinks to what is left above it and its content scrolls.
-  const frameStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value }));
+  const frameStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.value }));
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: interpolate(progress.value, [0, 1], [windowHeight, 0]) }],
-    paddingBottom: hasFooter ? 0 : keyboard.height.value > 0 ? gap : bottomInset,
+    paddingBottom: hasFooter ? 0 : keyboard.value > 0 ? gap : bottomInset,
   }));
-  const footerStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.value > 0 ? 0 : safeBottom }));
+  const footerStyle = useAnimatedStyle(() => ({ paddingBottom: keyboard.value > 0 ? 0 : safeBottom }));
   const hasHeader = !!(title || left || right);
 
   return (

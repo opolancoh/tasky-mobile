@@ -10,6 +10,7 @@ src/shared/
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
 │   ├── ClearButton  SectionLabel  Segmented  ColorDot  SearchField  Toast  confirm  ActionSheet  Skeleton  Pill  TextButton
 │   ├── useDelayedFlag.ts  The 300 ms before a busy control shows its spinner (M56)
+│   ├── useKeyboardHeight.ts  The keyboard's height as a shared value, following every frame change, any keyboard (M120); Sheet and Screen use it
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
 │   ├── theme.tsx          ThemeProvider, useTheme()
 │   ├── tokens.ts          Spacing, radius, type scale, fonts

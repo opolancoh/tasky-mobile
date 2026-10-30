@@ -1,9 +1,10 @@
 import type { ReactNode, Ref } from 'react';
 import { ScrollView, StyleSheet, View, type ScrollViewInstance, type ViewStyle } from 'react-native';
-import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from './theme';
+import { useKeyboardHeight } from './useKeyboardHeight';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -47,9 +48,9 @@ export function Screen({ children, scroll = false, edges = ['top', 'bottom'], co
  */
 function KeyboardRoom({ children, bottomPadded }: { children: ReactNode; bottomPadded: boolean }) {
   const insets = useSafeAreaInsets();
-  const keyboard = useAnimatedKeyboard({ isStatusBarTranslucentAndroid: true, isNavigationBarTranslucentAndroid: true });
+  const keyboard = useKeyboardHeight();
   const padded = bottomPadded ? insets.bottom : 0;
-  const room = useAnimatedStyle(() => ({ paddingBottom: Math.max(keyboard.height.value - padded, 0) }));
+  const room = useAnimatedStyle(() => ({ paddingBottom: Math.max(keyboard.value - padded, 0) }));
   return <Animated.View style={[styles.root, room]}>{children}</Animated.View>;
 }
 
