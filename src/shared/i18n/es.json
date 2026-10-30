@@ -237,6 +237,8 @@
     "inviteListHint": "Reciben un correo y ven esta lista al unirse. Las invitaciones duran 14 días.",
     "invited": "Invitación enviada a {{email}}",
     "invitedAgain": "Invitación enviada de nuevo a {{email}}",
+    "sending": "Enviando…",
+    "inviteFailed": "No se pudo invitar a {{name}}: {{reason}}",
     "seeAllPeople": "Ver los {{count}}",
     "findMember": "Buscar a alguien en {{name}}",
     "clearFind": "Borrar",
@@ -344,7 +346,6 @@
     "openShort_one": "{{count}} abierta",
     "openShort_other": "{{count}} abiertas",
     "noTasksYet": "Aún no hay tareas",
-    "addPeople": "Añadir personas",
     "onlyYouWith": "Solo tú · {{names}} tienen tareas",
     "important": "Importantes",
     "order": {

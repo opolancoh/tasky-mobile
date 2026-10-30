@@ -404,6 +404,10 @@ export interface OpenInvitation {
   email: string;
   expiresAt: string;
   invitedBy?: Id | null;
+  /** Whom it's for, when the email has an account: Invited shows their name. */
+  invitee?: UserRef | null;
+  /** App-only: on its way (M116); a new one's `id` is its Idempotency-Key until the API answers. */
+  sending?: boolean;
 }
 
 /** Whose people: a team's or a task list's. */

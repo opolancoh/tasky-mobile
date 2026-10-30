@@ -62,8 +62,8 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
         : () => (
             <View style={styles.headerRight}>
               {manages && (
-                <Pressable onPress={people} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
-                  <Feather name="user-plus" size={21} color={colors.accent} />
+                <Pressable onPress={people} accessibilityRole="button" accessibilityLabel={t('browse.peopleTitle')} style={styles.more}>
+                  <Feather name="users" size={21} color={colors.accent} />
                 </Pressable>
               )}
               <Pressable onPress={() => teamMenu(team, () => navigation.goBack(), true)} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>

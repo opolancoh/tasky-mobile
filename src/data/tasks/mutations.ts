@@ -23,6 +23,8 @@ export interface NewTask {
 
 /** A new task's id: a UUIDv7 picked before the API has it, so its row keeps its key (M100). */
 export const newTaskId = () => http().newId();
+/** An Idempotency-Key the caller keeps across tries (an invitation sent again after an error, M116). */
+export const newIdempotencyKey = () => http().newId();
 
 /**
  * Creates a task at once (M100): its row goes into every cached list that takes it (`insertTask`) before the POST, its
@@ -457,24 +459,41 @@ export function useTransferTeam() {
   });
 }
 
-/** Invite an email to a team or task list, or revoke an open invitation: the open list refetches. */
+/** An invitation being sent (M116): to an email, or to someone picked from GET /people. `key` is its Idempotency-Key. */
+export type NewInvitation = { key: string } & ({ email: string; person?: never } | { person: UserRef; email?: never });
+
+/** The open invitation a new one replaces (the API sends it again), if any. */
+export const sameInvitation = (open: readonly OpenInvitation[] | undefined, v: NewInvitation) =>
+  open?.find((x) => (v.person ? x.invitee?.id === v.person.id : x.email.toLowerCase() === v.email.toLowerCase()));
+
 /**
- * Invite by email (M56). `again`: that email already had an open invitation, which the API replaced (a new email goes
- * out). The new invitation joins the open ones at once, in place of the old one, even if the screen has closed.
+ * Invites at once (M116, as M100): the row joins Invited before the POST, sending, or an open one for that email or person
+ * turns sending; the API's answer replaces it. Invites go one at a time (`scope`); an error takes the row back out.
+ * The open invitations refetch once none is on its way.
  */
-export function useInvite(of: MembersOf) {
+export function useSendInvitation(of: MembersOf) {
   const queryClient = useQueryClient();
   const key = taskKeys.openInvitations(of.kind, of.id);
-  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  const mutationKey = [...key, 'sending'];
+  const set = (change: (open: OpenInvitation[]) => OpenInvitation[]) => queryClient.setQueryData<OpenInvitation[]>(key, (open) => change(open ?? []));
   return useMutation({
+    mutationKey,
+    scope: { id: `invite-${of.kind}-${of.id}` },
     meta: { asksNotifications: always },
-    mutationFn: async (email: string) => {
-      const again = !!queryClient.getQueryData<OpenInvitation[]>(key)?.some((x) => same(x.email, email));
-      return { invitation: await tasksApi.invite(of, email), again };
+    onMutate: async (v: NewInvitation) => {
+      await queryClient.cancelQueries({ queryKey: key, exact: true });
+      const previous = sameInvitation(queryClient.getQueryData<OpenInvitation[]>(key), v);
+      if (previous) set((open) => open.map((x) => (x.id === previous.id ? { ...x, sending: true } : x)));
+      else set((open) => [...open, { id: v.key, email: v.email ?? '', invitee: v.person ?? null, expiresAt: '', sending: true }]);
+      return { id: previous?.id ?? v.key, previous };
     },
-    onSuccess: ({ invitation }) =>
-      queryClient.setQueryData<OpenInvitation[]>(key, (open) => [...(open ?? []).filter((x) => !same(x.email, invitation.email)), invitation]),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: key }),
+    mutationFn: (v: NewInvitation) => (v.person ? tasksApi.inviteUser(of, v.person.id, v.key) : tasksApi.invite(of, v.email, v.key)),
+    onSuccess: (invitation, _v, context) => set((open) => open.map((x) => (x.id === context.id ? invitation : x))),
+    onError: (_error, _v, context) =>
+      context && set((open) => (context.previous ? open.map((x) => (x.id === context.id ? context.previous! : x)) : open.filter((x) => x.id !== context.id))),
+    onSettled: () => {
+      if (queryClient.isMutating({ mutationKey }) <= 1) queryClient.invalidateQueries({ queryKey: key, exact: true });
+    },
   });
 }
 

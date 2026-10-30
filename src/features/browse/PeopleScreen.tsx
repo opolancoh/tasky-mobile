@@ -3,18 +3,20 @@ import { useNavigation, type StaticScreenProps } from '@react-navigation/native'
 import * as Clipboard from 'expo-clipboard';
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Share, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { AccessibilityInfo, Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
-import { useInvite, useInviteLinkActions, useInvitePeople, useRemoveMember, useRevokeInvitation } from '@/data/tasks/mutations';
+import { isApiError } from '@/core/http/problem';
+import { newIdempotencyKey, sameInvitation, useInviteLinkActions, useInvitePeople, useRemoveMember, useRevokeInvitation, useSendInvitation } from '@/data/tasks/mutations';
 import { useInviteLink, useTaskLists, useMembersPreview, useOpenInvitations, useTasks, useTeams } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation, Person, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { PeoplePicker } from '@/shared/components';
+import { Avatar, PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, confirm, ListRow, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, confirm, ListRow, Notice, Screen, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite, canLeave } from './browseSections';
@@ -39,7 +41,7 @@ type Item =
  */
 export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { colors, space } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
@@ -108,24 +110,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
         return <MemberRow of={of} team={team} member={item.member} />;
       case 'more':
         return <ListRow label={t('browse.seeAllPeople', { count: item.total })} onPress={() => navigation.navigate('Members', { ...of, name })} divider={false} />;
-      case 'invitation': {
-        const v = item.invitation;
-        const expires = me ? formatInstant(v.expiresAt, i18n.language, me.timeZone, { month: 'short', day: 'numeric' }) : '';
-        return (
-          <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
-            <View style={[styles.mail, { backgroundColor: colors.surface2 }]}>
-              <Feather name="mail" size={14} color={colors.ink2} />
-            </View>
-            <View style={styles.fill}>
-              <Text variant="body" numberOfLines={1}>{v.email}</Text>
-              <Text variant="footnote" color="ink3">{t('browse.expires', { date: expires })}</Text>
-            </View>
-            <Pressable onPress={() => revoke.mutate(v.id)} disabled={revoke.isPending} accessibilityRole="button" style={styles.send}>
-              <Text variant="label" color="ink2">{t('browse.revoke')}</Text>
-            </Pressable>
-          </View>
-        );
-      }
+      case 'invitation':
+        return <InvitationRow invitation={item.invitation} onRevoke={() => revoke.mutate(item.invitation.id)} revoking={revoke.isPending} />;
       case 'leave':
         return (
           <Pressable onPress={leave} disabled={remove.isPending} accessibilityRole="button" style={[styles.leave, { gap: space.sm, marginTop: space.xxl }]}>
@@ -155,16 +141,20 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
 }
 
 /**
- * Invite (M56, M73): find someone the user works with, or a colleague (GET /people, D89), or type an email for someone new.
- * Saving shows busy at once; errors show under it, until the next pick. The first invitation of a private list with tasks
- * given outside it asks about those people first (D88, M71).
+ * Invite (M56, M73, M116): find someone the user works with, or a colleague (GET /people, D89), or type an email for
+ * someone new. A pick or an email sent clears the field and joins Invited at once, sending; the keyboard stays up for the
+ * next. An error shows under the field with the email back in it (if still empty; otherwise a toast), and sending that
+ * email again reuses its Idempotency-Key. Someone already in it reads as a hint. The first invitation of a private list
+ * with tasks given outside it asks about those people first (D88, M71).
  */
 function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] }) {
   const { t } = useTranslation();
   const { space } = useTheme();
-  const invite = useInvite(of);
+  const send = useSendInvitation(of);
   const invitePeople = useInvitePeople(of);
-  const error = invite.error ?? invitePeople.error;
+  const open = useOpenInvitations(of, true).data;
+  const [problem, setProblem] = useState<{ message: string; hint: boolean } | null>(null);
+  const [failed, setFailed] = useState<{ email: string; key: string } | null>(null);
 
   /** People with a task given from this list (D88): invite them too (true), keep them (false), or cancel (null). */
   const askAboutOutsiders = async (): Promise<boolean | null> => {
@@ -182,39 +172,75 @@ function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] })
     if (yes && ids.length) invitePeople.mutate(ids);
   };
 
-  const byEmail = async (email: string) => {
-    if (invite.isPending) return;
-    invite.reset();
-    invitePeople.reset();
+  const invite = async (to: { email: string } | { person: Person }, restore: () => boolean) => {
+    const target = 'person' in to ? { person: { id: to.person.id, displayName: to.person.displayName } } : { email: to.email };
+    const name = 'person' in to ? to.person.displayName : to.email;
+    const previous = sameInvitation(open, { key: '', ...target });
+    if (previous?.sending) return;
+    setProblem(null);
     const yes = await askAboutOutsiders();
-    if (yes === null) return;
-    invite.mutate(email, {
-      onSuccess: ({ again }) => {
-        useToast.getState().show({ message: t(again ? 'browse.invitedAgain' : 'browse.invited', { email }) });
-        alsoThem(yes);
-      },
-    });
-  };
-  const byPerson = async (person: Person) => {
-    if (invitePeople.isPending) return;
-    invite.reset();
-    invitePeople.reset();
-    const yes = await askAboutOutsiders();
-    if (yes === null) return;
-    invitePeople.mutate([person.id], {
-      onSuccess: () => {
-        useToast.getState().show({ message: t('browse.invited', { email: person.displayName }) });
-        alsoThem(yes, person.id);
-      },
-    });
+    if (yes === null) return void restore();
+    const key = 'email' in target && failed && failed.email === target.email ? failed.key : newIdempotencyKey();
+    try {
+      await send.mutateAsync({ key, ...target });
+      setFailed(null);
+      if (previous) useToast.getState().show({ message: t('browse.invitedAgain', { email: name }) });
+      else AccessibilityInfo.announceForAccessibility(t('browse.invited', { email: name }));
+      alsoThem(yes, 'person' in to ? to.person.id : null);
+    } catch (error) {
+      const hint = isApiError(error) && error.code === 'sharing.already_member';
+      if ('person' in to) return setProblem({ message: hint ? errorMessage(error) : t('browse.inviteFailed', { name, reason: errorMessage(error) }), hint });
+      if (hint) return setProblem({ message: errorMessage(error), hint });
+      setFailed({ email: to.email, key });
+      if (restore()) setProblem({ message: errorMessage(error), hint });
+      else toastError(error);
+    }
   };
   return (
     <View style={{ marginTop: space.lg, gap: space.xs }}>
-      <PeoplePicker within={of} emailLabel={t('people.inviteByEmail')} onPickPerson={byPerson} onEmail={byEmail} busy={invite.isPending || invitePeople.isPending} />
-      {error && (
-        <Text variant="footnote" color="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">
-          {errorMessage(error)}
+      <PeoplePicker
+        within={of}
+        emailLabel={t('people.inviteByEmail')}
+        onPickPerson={(person, restore) => invite({ person }, restore)}
+        onEmail={(email, restore) => invite({ email }, restore)}
+        keepsKeyboard
+      />
+      {problem && (
+        <Text variant="footnote" color={problem.hint ? 'ink2' : 'danger'} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {problem.message}
         </Text>
+      )}
+    </View>
+  );
+}
+
+/** An open invitation (M56): the person's name when the email has an account, else the email; while sending, a ring after 300 ms (M116) in place of Revoke. */
+function InvitationRow({ invitation, onRevoke, revoking }: { invitation: OpenInvitation; onRevoke: () => void; revoking: boolean }) {
+  const { t, i18n } = useTranslation();
+  const { colors, space } = useTheme();
+  const me = useMe().data;
+  const ring = useDelayedFlag(!!invitation.sending);
+  const v = invitation;
+  const expires = me && !v.sending ? formatInstant(v.expiresAt, i18n.language, me.timeZone, { month: 'short', day: 'numeric' }) : '';
+  return (
+    <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]} accessibilityState={{ busy: !!v.sending }}>
+      {v.invitee ? (
+        <Avatar name={v.invitee.displayName} seed={v.invitee.id} size={30} />
+      ) : (
+        <View style={[styles.mail, { backgroundColor: colors.surface2 }]}>
+          <Feather name="mail" size={14} color={colors.ink2} />
+        </View>
+      )}
+      <View style={styles.fill}>
+        <Text variant="body" numberOfLines={1}>{v.invitee?.displayName ?? v.email}</Text>
+        <Text variant="footnote" color="ink3">{v.sending ? t('browse.sending') : t('browse.expires', { date: expires })}</Text>
+      </View>
+      {v.sending ? (
+        <View style={styles.send}>{ring && <Spinner size={16} accessibilityLabel={t('browse.sending')} />}</View>
+      ) : (
+        <Pressable onPress={onRevoke} disabled={revoking} accessibilityRole="button" style={styles.send}>
+          <Text variant="label" color="ink2">{t('browse.revoke')}</Text>
+        </Pressable>
       )}
     </View>
   );

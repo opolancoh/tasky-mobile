@@ -108,8 +108,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
         : () => (
             <View style={styles.headerRight}>
               {canInvite(taskList, team) && (
-                <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" accessibilityLabel={t('browse.addPeople')} style={styles.more}>
-                  <Feather name="user-plus" size={21} color={colors.accent} />
+                <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" accessibilityLabel={t('browse.peopleTitle')} style={styles.more}>
+                  <Feather name="users" size={21} color={colors.accent} />
                 </Pressable>
               )}
               <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), () => start())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>

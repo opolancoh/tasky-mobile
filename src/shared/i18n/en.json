@@ -237,6 +237,8 @@
     "inviteListHint": "They get an email and see this list once they join. Invitations last 14 days.",
     "invited": "Invitation sent to {{email}}",
     "invitedAgain": "Invitation sent again to {{email}}",
+    "sending": "Sending…",
+    "inviteFailed": "Couldn't invite {{name}}: {{reason}}",
     "seeAllPeople": "See all {{count}}",
     "findMember": "Find someone in {{name}}",
     "clearFind": "Clear",
@@ -344,7 +346,6 @@
     "openShort_one": "{{count}} open",
     "openShort_other": "{{count}} open",
     "noTasksYet": "No tasks yet",
-    "addPeople": "Add people",
     "onlyYouWith": "Only you · {{names}} have tasks",
     "important": "Important",
     "order": {

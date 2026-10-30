@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput, View } from 'react-native';
 
@@ -24,22 +24,30 @@ export interface PeoplePickerProps {
   within?: MembersOf;
   /** The last row's label for a typed email: "Invite by email" or "Give it by email". */
   emailLabel: string;
-  onPickPerson(person: Person): void;
-  onEmail(email: string): void;
+  /** The field clears on a pick; `restore` puts the text back if it's still empty (a cancel or an error), and says if it did. */
+  onPickPerson(person: Person, restore: () => boolean): void;
+  onEmail(email: string, restore: () => boolean): void;
   /** While the pick saves. */
   busy?: boolean;
+  /** Return sends the typed email and the keyboard stays up for the next one (People › Invite, M116). */
+  keepsKeyboard?: boolean;
 }
 
 /**
  * Finding someone instead of typing an email (M73, D89): a search field; empty, the people the user works with most
  * (GET /people); typing searches names, colleagues in a company under Your company. A typed email is searched too: someone you
  * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search is on its way (M73). The typed text lives here
- * (docs/performance.md); a pick clears it.
+ * (docs/performance.md); a pick or an email sent clears it.
  */
-export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, onEmail, busy = false }: PeoplePickerProps) {
+export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, onEmail, busy = false, keepsKeyboard = false }: PeoplePickerProps) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const [text, setText] = useState('');
+  const latest = useRef('');
+  const change = (value: string) => {
+    latest.current = value;
+    setText(value);
+  };
   const [query, setQuery] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setQuery(text.trim()), SEARCH_DELAY);
@@ -55,9 +63,18 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
   const known = found.filter((p) => !p.colleague || p.via);
   const colleagues = found.filter((p) => p.colleague && !p.via);
 
+  const restoring = (typed: string) => () => {
+    if (latest.current) return false;
+    change(typed);
+    return true;
+  };
   const pick = (person: Person) => {
-    setText('');
-    onPickPerson(person);
+    change('');
+    onPickPerson(person, restoring(text));
+  };
+  const sendEmail = () => {
+    change('');
+    onEmail(email, restoring(text));
   };
   const row = (p: Person, last: boolean) => (
     <ListRow
@@ -72,7 +89,7 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
   );
 
   const emailRow = (
-    <ListRow label={emailLabel} detail={shortenEmail(email, EMAIL_MAX)} icon={<Feather name="mail" size={18} color={colors.accent} />} onPress={() => onEmail(email)} chevron={false} busy={busy} divider={false} accessibilityLabel={`${emailLabel}, ${email}`} />
+    <ListRow label={emailLabel} detail={shortenEmail(email, EMAIL_MAX)} icon={<Feather name="mail" size={18} color={colors.accent} />} onPress={sendEmail} chevron={false} busy={busy} divider={false} accessibilityLabel={`${emailLabel}, ${email}`} />
   );
 
   return (
@@ -81,15 +98,16 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
         <Feather name="search" size={16} color={colors.ink3} />
         <TextInput
           value={text}
-          onChangeText={setText}
+          onChangeText={change}
           placeholder={t('people.search')}
           placeholderTextColor={colors.ink3}
           selectionColor={colors.accent}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          returnKeyType="done"
-          onSubmitEditing={() => typedEmail && !busy && onEmail(email)}
+          returnKeyType={keepsKeyboard ? 'send' : 'done'}
+          submitBehavior={keepsKeyboard ? 'submit' : 'blurAndSubmit'}
+          onSubmitEditing={() => typedEmail && !busy && sendEmail()}
           accessibilityLabel={t('people.search')}
           style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
         />
