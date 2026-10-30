@@ -3,7 +3,7 @@ import { useToast } from '@/shared/ui';
 
 import i18n from '@/shared/i18n/i18n';
 
-import { showErrorDetails, useErrorDetails } from './errorDetails';
+import { detailsAllowed, showErrorDetails } from './errorDetails';
 
 /** What Try again repeats: the last action or refresh that couldn't reach Azignia. */
 let lastRetry: (() => void) | null = null;
@@ -31,6 +31,6 @@ export function showCantConnect(retry: (() => void) | null = lastRetry, error?: 
     message: i18n.t('connection.cantConnect'),
     icon: 'cloud-off',
     action: retry ? { label: i18n.t('common.retry'), onPress: retry } : undefined,
-    onPress: error && useErrorDetails.getState().allowed ? () => void showErrorDetails(error) : undefined,
+    onPress: error && detailsAllowed() ? () => void showErrorDetails(error) : undefined,
   });
 }

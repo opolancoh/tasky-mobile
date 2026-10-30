@@ -3,14 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { isApiError } from '@/core/http/problem';
-import { copyErrorDetails, detailRows, useErrorDetails } from '@/shared/network/errorDetails';
+import { copyErrorDetails, detailRows, useDetailsAllowed } from '@/shared/network/errorDetails';
 import { Text, TextButton, useTheme } from '@/shared/ui';
 
 /** Details under a failure to reach Azignia (M119), for support and admin: a quiet link that opens what failed, and Copy. */
 export function ErrorDetails({ error }: { error: unknown }) {
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
-  const allowed = useErrorDetails((s) => s.allowed);
+  const allowed = useDetailsAllowed();
   const [open, setOpen] = useState(false);
   if (!allowed || !isApiError(error)) return null;
 

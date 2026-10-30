@@ -32,6 +32,12 @@ export const useErrorDetails = create<ErrorDetailsState>()(
 
 export const setErrorDetailsAllowed = (allowed: boolean) => useErrorDetails.setState({ allowed });
 
+// Everyone while testing (M119); before the stores, only support and admin (pending-decisions.md, Apps).
+const EVERYONE_WHILE_TESTING = true;
+
+export const detailsAllowed = () => EVERYONE_WHILE_TESTING || useErrorDetails.getState().allowed;
+export const useDetailsAllowed = () => useErrorDetails((s) => EVERYONE_WHILE_TESTING || s.allowed);
+
 export function rememberConnectionError(error: unknown) {
   if (isApiError(error)) useErrorDetails.setState({ last: error });
 }
