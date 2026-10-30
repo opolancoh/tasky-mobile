@@ -112,7 +112,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
                   <Feather name="users" size={21} color={colors.accent} />
                 </Pressable>
               )}
-              <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), () => start())} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
+              <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), pickable.length ? () => start() : undefined)} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
             </View>

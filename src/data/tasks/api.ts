@@ -7,7 +7,7 @@ import type {
 } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
-type Versioned = { id: Id; version: number };
+export type Versioned = { id: Id; version: number };
 
 /** A team's or a task list's address: /teams/{id} or /task-lists/{id}. */
 const peopleOf = (of: MembersOf) => `/${of.kind === 'team' ? 'teams' : 'task-lists'}/${of.id}`;
@@ -144,6 +144,8 @@ export const tasksApi = {
   remove: (task: Versioned) => http().delete(`/tasks/${task.id}`, { ifMatch: task.version }),
 
   /** POST /tasks/{id}:restore with the deleted task's version. */
+  /** POST /task-lists/{id}/completed:clear (D112): its completed tasks to Recently Deleted, with their new versions. */
+  clearCompleted: (taskListId: Id) => http().post<{ items: Versioned[] }>(`/task-lists/${taskListId}/completed:clear`),
   restore: (item: Versioned) => http().post<Task>(`/tasks/${item.id}:restore`, { ifMatch: item.version }),
 
   /** GET /search?q= (D32, D61): tasks, open and completed, in everything the caller can see; best match first, keyset-paged. */

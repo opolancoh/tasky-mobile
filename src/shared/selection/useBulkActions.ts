@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { pool } from '@/core/async/pool';
 import { todayIn } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
@@ -15,19 +16,8 @@ import { confirm, useToast } from '@/shared/ui';
 
 import { pickedTasks, useSelection, type BulkVerb } from './selectionStore';
 
-/** Requests at a time (M81). */
-const AT_ONCE = 4;
 /** Over this many tasks the bar shows "Moving 7 of 23". */
 const SHOW_PROGRESS = 10;
-
-/** Runs `work` on every item, `AT_ONCE` at a time. */
-async function pool<T>(items: T[], work: (item: T) => Promise<void>) {
-  let next = 0;
-  const lane = async () => {
-    while (next < items.length) await work(items[next++]);
-  };
-  await Promise.all(Array.from({ length: Math.min(AT_ONCE, items.length) }, lane));
-}
 
 interface Done {
   task: TaskSummary;

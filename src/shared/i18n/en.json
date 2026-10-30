@@ -281,6 +281,7 @@
     "deletedLine": "{{what}} · deleted {{date}} · until {{until}}",
     "restore": "Restore",
     "restored": "Restored {{name}}",
+    "clear": { "title_one": "Delete {{count}} completed task?", "title_other": "Delete {{count}} completed tasks?", "body_one": "It goes to Recently Deleted for 30 days.", "body_other": "They go to Recently Deleted for 30 days.", "confirm": "Delete", "done_one": "Deleted {{count}} completed task", "done_other": "Deleted {{count}} completed tasks" },
     "menu": {
       "title": "More",
       "sort": "Sort",
@@ -289,6 +290,7 @@
       "people": "People",
       "peopleInvite": "People and invitations",
       "archive": "Archive list",
+      "deleteCompleted": "Delete completed tasks",
       "deleteList": "Delete list",
       "leaveList": "Leave list",
       "newListIn": "New list in {{name}}",

@@ -9,6 +9,8 @@ src/core/
 ├── types.ts              Id, LocalDate, IsoDateTime, Version
 ├── ids.ts                uuidv7: ids that sort by creation, as the API's (Idempotency-Key, a new task's id, M100)
 ├── links.ts              parseJoinLink: a team's invite link or an invitation email's, as a link or a pasted code (D95)
+├── async/
+│   └── pool.ts           pool: work on many tasks 4 requests at a time (bulk actions M81, Delete completed tasks' Undo M118)
 ├── http/
 │   ├── client.ts         fetch with the API's rules
 │   ├── httpLog.ts        HttpLogger (each request with its headers, response or error with headers and raw body), masking, the development terminal log

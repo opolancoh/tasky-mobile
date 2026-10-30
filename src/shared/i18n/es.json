@@ -281,6 +281,7 @@
     "deletedLine": "{{what}} · eliminado el {{date}} · hasta el {{until}}",
     "restore": "Restaurar",
     "restored": "Restauraste {{name}}",
+    "clear": { "title_one": "¿Eliminar {{count}} tarea completada?", "title_other": "¿Eliminar {{count}} tareas completadas?", "body_one": "Queda en Eliminado recientemente 30 días.", "body_other": "Quedan en Eliminado recientemente 30 días.", "confirm": "Eliminar", "done_one": "{{count}} tarea completada eliminada", "done_other": "{{count}} tareas completadas eliminadas" },
     "menu": {
       "title": "Más",
       "sort": "Ordenar",
@@ -289,6 +290,7 @@
       "people": "Personas",
       "peopleInvite": "Personas e invitaciones",
       "archive": "Archivar lista",
+      "deleteCompleted": "Eliminar tareas completadas",
       "deleteList": "Eliminar lista",
       "leaveList": "Salir de la lista",
       "newListIn": "Nueva lista en {{name}}",

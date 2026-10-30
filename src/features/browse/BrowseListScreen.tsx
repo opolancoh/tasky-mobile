@@ -179,7 +179,9 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       navigation.setOptions({ headerBackVisible: false, gestureEnabled: false, headerLeft: () => <SelectionCancel />, headerTitle: () => <SelectionTitle />, headerRight: () => <SelectionAll tasks={tasks.filter(selectable)} paged={pages.hasNextPage} /> });
       return;
     }
-    const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), () => start()) : undefined) : selects ? () => selectMenu(title, () => start(), viewRow) : undefined;
+    // Select tasks only with open tasks to select; ••• goes when nothing else is in it.
+    const onSelect = tasks.some(selectable) ? () => start() : undefined;
+    const menu = kind === 'tag' ? (tag ? () => tagMenu(tag, () => navigation.goBack(), onSelect) : undefined) : selects && (onSelect || viewRow) ? () => selectMenu(title, onSelect, viewRow) : undefined;
     navigation.setOptions({
       headerBackVisible: true,
       headerBackTitle: backTitle,   // from a team: the team screen has no title of its own

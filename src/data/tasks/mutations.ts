@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type InfiniteData, type QueryClient } from '@tanstack/react-query';
 
+import { pool } from '@/core/async/pool';
 import { todayIn } from '@/core/dates/localDate';
 import { isApiError } from '@/core/http/problem';
 import type { Id } from '@/core/types';
@@ -7,7 +8,7 @@ import { http } from '@/data/http';
 import { tenancyKeys } from '@/data/tenancy/keys';
 import type { Me } from '@/data/tenancy/types';
 
-import { tasksApi } from './api';
+import { tasksApi, type Versioned } from './api';
 import { taskKeys } from './keys';
 import { insertTask, moveTask, removeTask, replaceTask, settleTask, type Move, type NewTaskPlace } from './optimistic';
 import { assignTarget, isEmailAssignee } from './types';
@@ -359,6 +360,23 @@ function useRefetchBrowse() {
     queryClient.invalidateQueries({ queryKey: taskKeys.tags });
     queryClient.invalidateQueries({ queryKey: taskKeys.views });
   };
+}
+
+/**
+ * Delete completed tasks (M118, D112): a list's completed tasks to Recently Deleted in one request; `undo` restores each,
+ * 4 at a time. Both refetch the lists after.
+ */
+export function useClearCompleted() {
+  const refetch = useRefetchBrowse();
+  const clear = useMutation({
+    mutationFn: (taskListId: Id) => tasksApi.clearCompleted(taskListId),
+    onSettled: refetch,
+  });
+  const undo = useMutation({
+    mutationFn: (items: Versioned[]) => pool(items, async (item) => void (await tasksApi.restore(item))),
+    onSettled: refetch,
+  });
+  return { clear, undo };
 }
 
 export const useCreateTaskList = () => useMutation({ mutationFn: tasksApi.createTaskList, onSettled: useRefetchBrowse() });
