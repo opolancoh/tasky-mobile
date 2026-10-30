@@ -2,6 +2,14 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.12.0 — 2026-10-30
+
+- M120: follow any keyboard to its full height
+- M119: error details for everyone while testing
+- M119: error details for support and admin when Azignia can't be reached
+- M117, M118: Select tasks only with something to select; Delete completed tasks
+- M116: an invitation shows at once; People's bar button is users
+
 ## 0.11.0 — 2026-10-29
 
 - release.sh: say why it stopped (the check's errors, or the failing line)
