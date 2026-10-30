@@ -17,7 +17,7 @@ export const taskKeys = {
   /** People to pick (GET /people) for a query. */
   people: (q: string, exclude: readonly string[], within?: string) => ['tasks', 'people', q, [...exclude].sort().join(','), within ?? ''] as const,
   /** Search results for a query: views too, so completing a task refetches them. */
-  search: (q: string) => ['tasks', 'views', 'search', q] as const,
+  search: (q: string, status: string) => ['tasks', 'views', 'search', q, status] as const,
   /** Recently Deleted: changes with every delete and restore. */
   deleted: ['tasks', 'views', 'deleted'] as const,
   /** Every task list (views and filtered lists): invalidated together after any task change. */

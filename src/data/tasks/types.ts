@@ -213,6 +213,27 @@ export interface TaskSummary {
   droppedBy?: UserRef | null;
 }
 
+/** GET /search's two sections (D115): open (on hold included) or completed. */
+export type SearchStatus = 'open' | 'completed';
+
+/** Where a result's words were found when not all in its title (D115); `text`: the step, or a piece of the notes or comment. */
+export interface SearchMatch {
+  in: 'tag' | 'step' | 'notes' | 'comment';
+  text?: string;
+}
+
+export interface SearchResult {
+  task: TaskSummary;
+  match?: SearchMatch;
+}
+
+/** A page of results; `total` (every match) on the first page only. */
+export interface SearchPage {
+  items: SearchResult[];
+  nextCursor: string | null;
+  total: number | null;
+}
+
 /** GET /tasks (D51, D52): a keyset page; `total` on the first page only. */
 export interface TaskPage {
   items: TaskSummary[];

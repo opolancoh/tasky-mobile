@@ -23,6 +23,7 @@ src/core/
 │   └── reminders.ts      A reminder (date + time), the quick presets
 ├── text/
 │   ├── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)
+│   ├── searchDelay.ts    SEARCH_DELAY: every search field waits 400 ms after the last keystroke
 │   └── shorten.ts        shortenEmail: a long email cut in the middle, keeping its domain
 └── validation/
     ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled

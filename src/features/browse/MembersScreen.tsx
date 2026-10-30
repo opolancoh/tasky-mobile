@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { SEARCH_DELAY } from '@/core/text/searchDelay';
 import { useMemberPages, useTaskLists, useTeams } from '@/data/tasks/queries';
 import type { MembersOf } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -12,8 +13,6 @@ import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { MemberRow } from './components/MemberRow';
 
-/** Typing waits this long before it asks the API. */
-const SEARCH_DELAY = 250;
 
 /**
  * Everyone in a team or list (D105, the hub's *Members on demand*, A), from People's See all: a name search on top,

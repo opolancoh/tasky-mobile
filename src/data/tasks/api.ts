@@ -1,10 +1,7 @@
 import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http, type Page } from '../http';
-import type {
-  Comment, CommentsPage, HistoryPage, InviteLink, LinkPreview, TaskList, CreateTaskListRequest, CreateTaskRequest, DeletedItem, Home, HomeSection, Member, MembersOf, MyInvitation, Person, MyReminder, OpenInvitation, Step, Tag, TagChange, Task, TaskFilter, TaskPage, TaskSummary, Team, TeamRole,
-  UpdateTaskListRequest, UpdateTaskRequest,
-} from './types';
+import type { Comment, CommentsPage, CreateTaskListRequest, CreateTaskRequest, DeletedItem, HistoryPage, Home, HomeSection, InviteLink, LinkPreview, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Person, SearchPage, SearchStatus, Step, Tag, TagChange, Task, TaskFilter, TaskList, TaskPage, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 export type Versioned = { id: Id; version: number };
@@ -148,8 +145,8 @@ export const tasksApi = {
   clearCompleted: (taskListId: Id) => http().post<{ items: Versioned[] }>(`/task-lists/${taskListId}/completed:clear`),
   restore: (item: Versioned) => http().post<Task>(`/tasks/${item.id}:restore`, { ifMatch: item.version }),
 
-  /** GET /search?q= (D32, D61): tasks, open and completed, in everything the caller can see; best match first, keyset-paged. */
-  search: (q: string, limit: number, cursor?: string, signal?: AbortSignal) => http().get<{ items: TaskSummary[]; nextCursor: string | null }>('/search', { query: { q, limit, cursor }, signal }),
+  /** GET /search?q= (D32, D61, D115): open (on hold included) or completed tasks in everything the caller can see, by the words in titles, notes, tags, steps and comments; best match first, keyset-paged; `total` on the first page. */
+  search: (q: string, status: SearchStatus, limit: number, cursor?: string, signal?: AbortSignal) => http().get<SearchPage>('/search', { query: { q, status, limit, cursor }, signal }),
 
   /** GET /recently-deleted: everything the caller could see, newest first (D54). */
   recentlyDeleted: (limit: number) => http().get<{ items: DeletedItem[] }>('/recently-deleted', { query: { limit } }),

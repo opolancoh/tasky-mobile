@@ -6,14 +6,13 @@ import { StyleSheet, TextInput, View } from 'react-native';
 import { shortenEmail } from '@/core/text/shorten';
 import type { Id } from '@/core/types';
 import { isEmail } from '@/core/validation/rules';
+import { SEARCH_DELAY } from '@/core/text/searchDelay';
 import { usePeople } from '@/data/tasks/queries';
 import { isEmailAssignee, type MembersOf, type Person } from '@/data/tasks/types';
 import { ListRow, SectionLabel, SkeletonRow, Spinner, Text, useTheme } from '@/shared/ui';
 
 import { Avatar } from './Faces';
 
-/** Typing waits this long before it asks the API (M73). */
-const SEARCH_DELAY = 250;
 /** About two lines of the row's detail; a longer email is cut in the middle, keeping its domain. */
 const EMAIL_MAX = 60;
 

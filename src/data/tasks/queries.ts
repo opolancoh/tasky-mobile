@@ -2,7 +2,7 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 
 import type { Id } from '@/core/types';
 
-import type { HomeSection, MembersOf, TaskFilter } from './types';
+import type { HomeSection, MembersOf, SearchStatus, TaskFilter } from './types';
 
 import { tasksApi } from './api';
 import { taskKeys } from './keys';
@@ -146,11 +146,11 @@ export const useHistory = (taskId: Id) =>
 /** Recently Deleted (D54): the first 50, newest first. */
 export const useRecentlyDeleted = () => useQuery({ queryKey: taskKeys.deleted, queryFn: () => tasksApi.recentlyDeleted(50) });
 
-/** Search (M40): a page of 20 at a time, best match first; `enabled` once there is a word to look for. The last results stay while the next query loads; one typed past is cancelled. */
-export const useSearch = (q: string) =>
+/** Search (M40, D115): open or completed matches, a page of 20 at a time, best match first; `enabled` once there is a word to look for. The last results stay while the next query loads; one typed past is cancelled. */
+export const useSearch = (q: string, status: SearchStatus) =>
   useInfiniteQuery({
-    queryKey: taskKeys.search(q),
-    queryFn: ({ pageParam, signal }) => tasksApi.search(q, 20, pageParam, signal),
+    queryKey: taskKeys.search(q, status),
+    queryFn: ({ pageParam, signal }) => tasksApi.search(q, status, 20, pageParam, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: keepPreviousData,
