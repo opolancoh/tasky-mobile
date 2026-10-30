@@ -1305,6 +1305,7 @@
     "viewReport": "Ver informe",
     "hideReport": "Ocultar informe"
   },
+  "errorDetails": {"title": "Detalles", "hide": "Ocultar detalles", "copy": "Copiar detalles", "copied": "Detalles copiados", "problem": "Problema", "request": "Solicitud", "status": "Estado", "api": "API", "trace": "Traza", "when": "Cuándo", "app": "App", "network": "Sin conexión", "timeout": "Sin respuesta a tiempo", "server": "Error del servidor", "http": "HTTP {{status}}"},
   "connection": {
     "cantConnect": "No se puede conectar con Azignia",
     "check": "Revisa tu conexión e inténtalo de nuevo."

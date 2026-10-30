@@ -8,6 +8,7 @@ import { identityApi } from '@/data/identity/api';
 import type { ChangePasswordRequest, LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
 import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
+import { rememberConnectionError } from '@/shared/network/errorDetails';
 import { getInstallId, pushSupported, unregisterPush } from '@/shared/notifications/push';
 import { clearReminders } from '@/shared/notifications/reminders';
 
@@ -61,6 +62,7 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
     } catch (e) {
       if (useSessionStore.getState().status === 'signedOut') return;   // the token manager already ended it
       if (sessionRefused(e)) await tokens.clear();
+      else rememberConnectionError(e);
       setStatus(sessionRefused(e) ? 'signedOut' : 'unreachable');
     }
   }, [tokens, loadAccount]);

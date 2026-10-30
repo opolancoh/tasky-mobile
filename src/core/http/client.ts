@@ -141,6 +141,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
           await sleep(backoff(attempt));
           continue;
         }
+        error.request = `${method} ${path}`;
         throw error;
       }
 
@@ -168,6 +169,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
         await sleep(error.retryAfter ? error.retryAfter * 1000 : backoff(attempt));
         continue;
       }
+      error.request = `${method} ${path}`;
       throw error;
     }
   }

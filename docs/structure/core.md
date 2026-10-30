@@ -14,7 +14,7 @@ src/core/
 ├── http/
 │   ├── client.ts         fetch with the API's rules
 │   ├── httpLog.ts        HttpLogger (each request with its headers, response or error with headers and raw body), masking, the development terminal log
-│   └── problem.ts        Problem documents → ApiError
+│   └── problem.ts        Problem documents → ApiError (with the failed call and when, for error details, M119)
 ├── auth/
 │   └── tokens.ts         Access and refresh tokens, one refresh at a time
 ├── dates/

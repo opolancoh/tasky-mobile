@@ -32,7 +32,7 @@ export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
       if (!isConnectionError(error) || query.state.data === undefined) return;
-      showCantConnect(() => void queryClient.refetchQueries({ queryKey: query.queryKey, exact: true }));
+      showCantConnect(() => void queryClient.refetchQueries({ queryKey: query.queryKey, exact: true }), error);
     },
   }),
   defaultOptions: {

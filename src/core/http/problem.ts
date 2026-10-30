@@ -19,6 +19,11 @@ export class ApiError extends Error {
     this.name = 'ApiError';
   }
 
+  /** The call that failed ("GET /me"), set by the HTTP client. */
+  request?: string;
+  /** When it failed, ISO 8601. */
+  readonly at = new Date().toISOString();
+
   get isNetwork(): boolean {
     return this.status === 0;
   }

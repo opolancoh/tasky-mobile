@@ -24,8 +24,9 @@ src/shared/
 │   └── reportText.ts      A report as text, for Share and Copy
 ├── network/
 │   ├── networkLog.ts      The Network log: the last 100 API calls while recording (networkRecorder feeds it), M53
-│   ├── cantConnect.ts     Can't connect's capsule (showCantConnect, once per failure) and what its Try again repeats (M90)
-│   └── NetworkLogAccess.tsx  Mounted in App: records only while /me has a platform role
+│   ├── cantConnect.ts     Can't connect's capsule (showCantConnect, once per failure) and what its Try again repeats (M90); its message opens the details for support and admin
+│   ├── errorDetails.ts    Error details (M119): who may see them (a platform role, kept on the device), the last failure at launch, the lines and Copy
+│   └── NetworkLogAccess.tsx  Mounted in App: records, and allows error details, only while /me has a platform role
 ├── links/
 │   └── pendingLinkStore.ts  A join link kept until someone is signed in; an invitation's email for sign-up (D95)
 ├── selection/             Bulk actions (M81)
@@ -49,6 +50,7 @@ src/shared/
 │   ├── UpdateRow.tsx   useActivityState.ts   Faces.tsx (Avatar)   MeButton.tsx   BarTitle.tsx
 │   ├── BrowseRow.tsx   CompletedRow.tsx   CompletedHeading.tsx   (rows Home and Spaces share, M105)
 │   ├── LoadError.tsx      A screen whose first load failed: the Can't connect page, or the error in a Notice, with Try again (M90)
+│   ├── ErrorDetails.tsx   Details under a failure, for support and admin (M119): opens what failed, Copy details
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   ├── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text

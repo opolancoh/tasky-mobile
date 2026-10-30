@@ -6,9 +6,11 @@ import { isConnectionError } from '@/core/http/problem';
 import { errorMessage } from '@/shared/i18n/errors';
 import { Notice, Text, TextButton, useTheme } from '@/shared/ui';
 
+import { ErrorDetails } from './ErrorDetails';
+
 /**
  * A screen whose first load failed, in place of its content. Couldn't reach Azignia: the Can't connect page (M90), the
- * icon, the message and Try again. Any other error: its message in a Notice with Try again.
+ * icon, the message and Try again. Any other error: its message in a Notice with Try again. Details for support and admin (M119).
  */
 export function LoadError({ error, onRetry }: { error: unknown; onRetry(): void }) {
   const { t } = useTranslation();
@@ -19,6 +21,7 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry(): void 
       <View style={{ gap: space.sm, marginTop: space.md, alignItems: 'flex-start' }}>
         <Notice>{errorMessage(error)}</Notice>
         <TextButton label={t('common.retry')} onPress={onRetry} />
+        <ErrorDetails error={error} />
       </View>
     );
   }
@@ -32,6 +35,7 @@ export function LoadError({ error, onRetry }: { error: unknown; onRetry(): void 
       <View style={{ marginTop: space.sm }}>
         <TextButton label={t('common.retry')} onPress={onRetry} />
       </View>
+      <ErrorDetails error={error} />
     </View>
   );
 }

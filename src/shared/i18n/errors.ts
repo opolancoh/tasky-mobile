@@ -25,4 +25,4 @@ export function fieldErrors(error: unknown): Record<string, string> {
 }
 
 /** An error from an action with no form to show it in (a row's or a menu's), as a toast (M56); Can't connect as its capsule (M90). */
-export const toastError = (error: unknown) => (isConnectionError(error) ? showCantConnect() : useToast.getState().show({ message: errorMessage(error) }));
+export const toastError = (error: unknown) => (isConnectionError(error) ? showCantConnect(undefined, error) : useToast.getState().show({ message: errorMessage(error) }));

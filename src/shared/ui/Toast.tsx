@@ -14,6 +14,8 @@ export interface ToastMessage {
   action?: { label: string; onPress(): void };
   /** Left of the message; the toast becomes a capsule (Can't connect, M90). */
   icon?: ComponentProps<typeof Feather>['name'];
+  /** A tap on the message (Can't connect's details for support and admin, M119). */
+  onPress?(): void;
 }
 
 interface ToastState {
@@ -65,7 +67,11 @@ export function ToastHost() {
         ]}
       >
         {current.icon && <Feather name={current.icon} size={17} color={colors.toastInk} />}
-        <Text variant="callout" style={[current.icon ? styles.capsuleMessage : styles.message, { color: colors.toastInk }]}>
+        <Text
+          variant="callout"
+          onPress={current.onPress && (() => { current.onPress!(); hide(); })}
+          style={[current.icon ? styles.capsuleMessage : styles.message, { color: colors.toastInk }]}
+        >
           {current.message}
         </Text>
         {current.action && (
