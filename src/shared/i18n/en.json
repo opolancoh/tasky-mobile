@@ -452,6 +452,9 @@
     "searching": "Searching"
   },
   "quickAdd": {
+    "added": "Added to {{where}}",
+    "addedReminder": "Reminder {{when}}",
+    "view": "View",
     "add": "Add a task",
     "title": "New task",
     "cancel": "Cancel",
@@ -508,6 +511,7 @@
     "noMatch": "No tags match."
   },
   "reminders": {
+    "added": "Added to Reminders; it rings at that time",
     "title": "Reminder",
     "onlyYou": "Only you get it. A due date doesn't set a reminder; they are chosen separately.",
     "inPast": "Reminders can’t be in the past. Pick from {{when}}.",

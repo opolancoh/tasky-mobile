@@ -110,7 +110,7 @@ function Root() {
             onNewList={() => useBrowseSheet.getState().show({ kind: 'list' }, (id) => { navigationRef.navigate('Tabs', { screen: 'Browse' }); navigationRef.navigate('TaskList', { taskListId: id }); })}
             onNewTeam={() => useBrowseSheet.getState().show({ kind: 'team' }, (id) => { navigationRef.navigate('Tabs', { screen: 'Browse' }); navigationRef.navigate('Team', { teamId: id }); })}
           />
-          <QuickAddSheet />
+          <QuickAddSheet onOpenTask={(taskId) => navigationRef.navigate('TaskDetail', { taskId })} />
           <ReminderSheet />
           <TaskFieldSheet />
           <CommentSheet />

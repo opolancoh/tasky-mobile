@@ -14,7 +14,7 @@ import { DatePicker, ReminderIcon, RepeatPicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useRepeatText } from '@/shared/hooks/useRepeatText';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
-import { ClearButton, confirm, ListRow, Sheet, SkeletonRow, Text, useTheme, warnHaptic, type SheetProps } from '@/shared/ui';
+import { ClearButton, confirm, ListRow, Sheet, SkeletonRow, Text, useTheme, useToast, warnHaptic, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 
@@ -100,6 +100,7 @@ function ReminderForm({ task }: { task?: Task }) {
     const repeat = draft.repeat ? { pattern: draft.repeat.pattern, interval: draft.repeat.interval, daysOfWeek: draft.repeat.daysOfWeek ?? undefined, dayOfMonth: draft.repeat.dayOfMonth ?? undefined, mode: draft.repeat.mode } : undefined;
     if (!task) {
       create.mutate({ id: newTaskId(), body: { kind: 'reminder', title, notes: draft.notes.trim() || undefined, reminderDate: draft.at.date, reminderTime: draft.at.time, repeat } });
+      useToast.getState().show({ message: t('reminders.added') });
     } else {
       const moved = !sameReminder(draft.at, start.at);
       actions.save.mutate({

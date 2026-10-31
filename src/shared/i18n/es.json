@@ -452,6 +452,9 @@
     "searching": "Buscando"
   },
   "quickAdd": {
+    "added": "Añadida a {{where}}",
+    "addedReminder": "Recordatorio {{when}}",
+    "view": "Ver",
     "add": "Añadir una tarea",
     "title": "Nueva tarea",
     "cancel": "Cancelar",
@@ -508,6 +511,7 @@
     "noMatch": "Ninguna etiqueta coincide."
   },
   "reminders": {
+    "added": "Añadido a Recordatorios; suena a esa hora",
     "title": "Recordatorio",
     "onlyYou": "Solo tú lo recibes. Una fecha límite no pone un recordatorio; se eligen por separado.",
     "inPast": "Los recordatorios no pueden quedar en el pasado. Elige desde {{when}}.",

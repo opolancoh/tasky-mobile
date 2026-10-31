@@ -14,7 +14,7 @@ import { emailAssignee, isEmailAssignee, taskLimits, type UserRef } from '@/data
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { AssigneePicker, Avatar, givesOutside, PeoplePicker, TaskListIcon, TaskListPicker, DatePicker, ReminderIcon, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps, warnHaptic } from '@/shared/ui';
+import { ClearButton, ListRow, Sheet, Text, useTheme, useToast, warnHaptic, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
@@ -48,12 +48,12 @@ const INBOX = { isInbox: true, color: '' };
  * The form is a summary (Task list, then a row per set field, each with ✕) with a bottom icon bar (M18)
  * that sets them. The pickers, Reminder and Notes are pages inside the same sheet. Add closes the sheet at once and the task shows in its lists (M100), saved by POST /tasks.
  */
-export function QuickAddSheet() {
+export function QuickAddSheet({ onOpenTask }: { onOpenTask(taskId: string): void }) {
   const session = useQuickAdd((s) => s.session);
-  return <QuickAddForm key={session} />;   // a new form (empty draft, no old error) every time it opens
+  return <QuickAddForm key={session} onOpenTask={onOpenTask} />;   // a new form (empty draft, no old error) every time it opens
 }
 
-function QuickAddForm() {
+function QuickAddForm({ onOpenTask }: { onOpenTask(taskId: string): void }) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const open = useQuickAdd((s) => s.open);
@@ -123,10 +123,11 @@ function QuickAddForm() {
       return;
     }
     const chosen = draft.reminder ?? undefined;
+    const id = newTaskId();
     // At once (M100): the task shows in its lists and the sheet closes; an error comes as a toast, or Can't connect's Try again.
     create.mutate(
       {
-        id: newTaskId(),
+        id,
         body: {
           taskListId: taskList?.id,
           title: titleText,
@@ -143,6 +144,15 @@ function QuickAddForm() {
     if (userId) useRecentTags.getState().used(userId, tags);
     hide();
     useQuickAdd.getState().onAdded?.();
+    // Where it went and what it has (M125); an error replaces it.
+    const where = [
+      !taskList || taskList.isInbox ? t('browse.inbox') : taskList.name,
+      draft.dueDate && dayText(draft.dueDate),
+      draft.isImportant && t('quickAdd.fields.important'),
+      chosen && t('quickAdd.addedReminder', { when: reminderText(chosen) }),
+      ...tags.map((n) => `#${n}`),
+    ].filter(Boolean).join(' · ');
+    useToast.getState().show({ message: t('quickAdd.added', { where }), action: { label: t('quickAdd.view'), onPress: () => onOpenTask(id) } });
   }
 
   const toggleTag = (name: string) => update({ tags: draft.tags.includes(name) ? draft.tags.filter((n) => n !== name) : [...draft.tags, name] });
