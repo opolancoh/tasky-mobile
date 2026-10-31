@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { todayIn } from '@/core/dates/localDate';
-import type { Id, LocalDate } from '@/core/types';
+import type { Id } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { useTaskLists } from '@/data/tasks/queries';
 import type { Member, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, DueDatePicker, TaskListPicker } from '@/shared/components';
+import { Avatar, DatePicker, TaskListPicker } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ListRow, Notice, SectionLabel, Sheet, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -18,8 +18,8 @@ import { pickedTasks, useSelection, type BulkSheetPage } from './selectionStore'
 import { useBulkActions } from './useBulkActions';
 
 /**
- * The selection bar's pickers (M81), one sheet at the app root: **Date** (the usual picker; one date for all, No date
- * clears), **Move** (the user's lists), **Assign** (only people in every selected task's list, then Unassign; those in
+ * The selection bar's pickers (M81), one sheet at the app root: **Date** (the usual picker; one date for all, Remove due
+ * date clears), **Move** (the user's lists), **Assign** (only people in every selected task's list, then Unassign; those in
  * some lists but not all are shown greyed). Each opening starts from the tasks picked then.
  */
 export function BulkSheet() {
@@ -38,7 +38,6 @@ function Pages({ page, open }: { page: BulkSheetPage; open: boolean }) {
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
   const bulk = useBulkActions();
-  const [due, setDue] = useState<LocalDate | undefined>(undefined);
   const hide = () => useSelection.setState({ sheet: null });
   const count = tasks.length;
   const title = { date: t('select.dateFor', { count }), move: t('select.moveTo', { count }), assign: t('select.assignTasks', { count }) }[page];
@@ -49,9 +48,8 @@ function Pages({ page, open }: { page: BulkSheetPage; open: boolean }) {
       dismissLabel={t('common.close')}
       title={title}
       left={{ label: t('common.cancel'), onPress: hide }}
-      right={page === 'date' && due ? { label: t('common.done'), emphasis: true, onPress: () => bulk.setDate(due) } : undefined}
     >
-      {page === 'date' && today && <DueDatePicker value={due} today={today} onPick={(d) => bulk.setDate(d ?? null)} onChange={setDue} />}
+      {page === 'date' && today && <DatePicker kind="due" today={today} value={null} onPick={bulk.setDate} onSet={bulk.setDate} clear={{ label: t('dueDate.remove'), onPress: () => bulk.setDate(null) }} />}
       {page === 'move' && <MovePage tasks={tasks} onPick={bulk.move} />}
       {page === 'assign' && me && <AssignPage tasks={tasks} meId={me.id} onPick={bulk.assign} />}
     </Sheet>

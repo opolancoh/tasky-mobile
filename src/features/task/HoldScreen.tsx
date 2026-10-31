@@ -8,7 +8,7 @@ import type { Id, LocalDate } from '@/core/types';
 import { useHoldTask, useResumeTask } from '@/data/tasks/mutations';
 import { useMembers, useTask } from '@/data/tasks/queries';
 import { useMe } from '@/data/tenancy/queries';
-import { DueDatePicker } from '@/shared/components';
+import { DatePicker } from '@/shared/components';
 import { HOLD_REASONS } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useHeaderSave } from '@/shared/hooks/useHeaderSave';
@@ -63,6 +63,7 @@ export function HoldScreen({ route }: StaticScreenProps<{ taskId: Id; mode: 'hol
   if (!task || !today) return <Screen edges={['bottom']}><SkeletonRow width={60} /></Screen>;
 
   if (mode === 'resume') {
+    const resumeOn = (dueDate: LocalDate) => resume.mutate({ task, dueDate }, { onSuccess: () => done(t('hold.resumed', { title: task.title })) });
     return (
       <Screen edges={['bottom']}>
         <View style={{ gap: space.xs, paddingBottom: space.md }}>
@@ -70,8 +71,7 @@ export function HoldScreen({ route }: StaticScreenProps<{ taskId: Id; mode: 'hol
           <Text variant="title" accessibilityRole="header">{t('hold.newDate')}</Text>
         </View>
         {resume.error && <Notice>{errorMessage(resume.error)}</Notice>}
-        <DueDatePicker value={task.dueDate ?? undefined} today={today} onChange={() => undefined}
-          onPick={(date) => resume.mutate({ task, dueDate: date }, { onSuccess: () => done(t('hold.resumed', { title: task.title })) })} />
+        <DatePicker kind="due" today={today} value={task.dueDate ?? null} onPick={resumeOn} onSet={resumeOn} />
       </Screen>
     );
   }
@@ -93,7 +93,10 @@ export function HoldScreen({ route }: StaticScreenProps<{ taskId: Id; mode: 'hol
         <View>
           <SectionLabel>{t('hold.options')}</SectionLabel>
           <ListRow label={t('hold.until')} value={untilDate ? labels.day(untilDate) : t('hold.none')} onPress={() => setPicking((p) => !p)} />
-          {picking && <DueDatePicker value={untilDate ?? undefined} today={today} onChange={setUntil} onPick={(date) => { setUntil(date ?? null); setPicking(false); }} />}
+          {picking && (
+            <DatePicker kind="due" today={today} value={untilDate} onChange={setUntil} onPick={(date) => { setUntil(date); setPicking(false); }}
+              clear={{ label: t('hold.noUntil'), onPress: () => { setUntil(null); setPicking(false); } }} />
+          )}
           <ListRow label={t('hold.resumer')} value={resumer ? resumerName : t('hold.anyone')} onPress={pickResumer} divider={false} />
           <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('hold.optionsHint')}</Text>
         </View>

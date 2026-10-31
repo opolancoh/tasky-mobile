@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
-import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Platform, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
+import { memo, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { Platform, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollViewInstance } from 'react-native';
+import Animated, { Extrapolation, interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 import { Text } from './Text';
 import { useTheme } from './theme';
@@ -15,8 +16,7 @@ export interface WheelColumnProps {
   labels: readonly string[];
   /** The selected row. */
   index: number;
-  /** Returns false when the value stays as it was (e.g. a date before the earliest): the wheel goes back to `index`. */
-  onChange(index: number): void | false;
+  onChange(index: number): void;
   /** Read by screen readers, e.g. "Hour". */
   accessibilityLabel: string;
   width?: number;
@@ -25,14 +25,14 @@ export interface WheelColumnProps {
 }
 
 /**
- * One column of a wheel picker. It snaps to rows; rows fade and shrink away from the middle with
- * native-driver animations, so scrolling doesn't re-render. `onChange` fires once the wheel settles.
- * Screen readers get an adjustable control: swipe up or down to change the value.
- * The selection band is drawn by the picker that holds the columns (TimeWheel, DateWheel).
+ * One column of a wheel picker. It snaps to rows; `onChange` fires once the wheel settles. Rows are the body size
+ * (M122): the one in the band is semibold, the others fade away from it. Scrolling runs on the UI thread (Reanimated),
+ * with no re-render. Screen readers get an adjustable control: swipe up or down to change the value.
  */
 export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, accessibilityLabel, width, align = 'center' }: WheelColumnProps) {
+  const { colors } = useTheme();
   const scrollRef = useRef<ScrollViewInstance>(null);
-  const [scrollY] = useState(() => new Animated.Value(index * WHEEL_ROW));
+  const scrollY = useSharedValue(index * WHEEL_ROW);
   const settled = useRef(index);   // the index the wheel rests on; avoids echoing a change back
   const max = labels.length - 1;
 
@@ -50,14 +50,15 @@ export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, 
       if (next === settled.current) return;
       settled.current = next;
       Haptics.selectionAsync().catch(() => undefined);
-      if (onChange(next) !== false) return;
-      // Nothing changed, so no new index will come: go back to the one shown.
-      settled.current = Math.min(index, max);
-      scrollRef.current?.scrollTo({ y: settled.current * WHEEL_ROW, animated: true });
+      onChange(next);
     },
-    [index, max, onChange],
+    [max, onChange],
   );
 
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+  const selectedStyle = useAnimatedStyle(() => ({ transform: [{ translateY: -scrollY.value }] }));
   const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => settle(e.nativeEvent.contentOffset.y);
   const step = (by: number) => {
     const next = Math.max(0, Math.min(max, settled.current + by));
@@ -85,7 +86,7 @@ export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, 
         onLayout={Platform.OS === 'android' ? () => scrollRef.current?.scrollTo({ y: settled.current * WHEEL_ROW, animated: false }) : undefined}
         contentContainerStyle={styles.content}
         scrollEventThrottle={16}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        onScroll={onScroll}
         onMomentumScrollEnd={onScrollEnd}
         onScrollEndDrag={(e) => {
           // A slow drag ends without momentum: settle here. With momentum, onMomentumScrollEnd does.
@@ -96,45 +97,44 @@ export const WheelColumn = memo(function WheelColumn({ labels, index, onChange, 
           <WheelRow key={i} label={label} position={i} scrollY={scrollY} align={align} />
         ))}
       </Animated.ScrollView>
+      {/* The band: the same labels in semibold, moved with the wheel and cut to the middle row, over the faded ones. */}
+      <View pointerEvents="none" style={[styles.band, { backgroundColor: colors.surface2 }]}>
+        <Animated.View style={selectedStyle}>
+          {labels.map((label, i) => (
+            <View key={i} style={styles.row}>
+              <Text variant="headline" style={[styles.label, { textAlign: align }]} numberOfLines={1}>{label}</Text>
+            </View>
+          ))}
+        </Animated.View>
+      </View>
     </View>
   );
 });
 
-const ORIGIN = { left: 'left center', center: 'center', right: 'right center' } as const;
-
-/** Columns side by side over one selection band: the frame every wheel picker uses. */
+/** Columns side by side; each draws its part of the band, and the frame rounds its ends. */
 export function WheelFrame({ children }: { children: ReactNode }) {
-  const { colors, radius } = useTheme();
-  return (
-    <View style={styles.frame}>
-      <View pointerEvents="none" style={[styles.band, { backgroundColor: colors.surface2, borderRadius: radius.md }]} />
-      {children}
-    </View>
-  );
+  const { radius } = useTheme();
+  return <View style={[styles.frame, { borderRadius: radius.md }]}>{children}</View>;
 }
 
-const WheelRow = memo(function WheelRow({ label, position, scrollY, align }: { label: string; position: number; scrollY: Animated.Value; align: 'left' | 'center' | 'right' }) {
-  const { type } = useTheme();
+const WheelRow = memo(function WheelRow({ label, position, scrollY, align }: { label: string; position: number; scrollY: SharedValue<number>; align: 'left' | 'center' | 'right' }) {
   const at = position * WHEEL_ROW;
-  const inputRange = [at - 2 * WHEEL_ROW, at - WHEEL_ROW, at, at + WHEEL_ROW, at + 2 * WHEEL_ROW];
-  const opacity = scrollY.interpolate({ inputRange, outputRange: [0.25, 0.55, 1, 0.55, 0.25], extrapolate: 'clamp' });
-  const scale = scrollY.interpolate({ inputRange, outputRange: [0.86, 0.93, 1.06, 0.93, 0.86], extrapolate: 'clamp' });
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [at - 2 * WHEEL_ROW, at - WHEEL_ROW, at + WHEEL_ROW, at + 2 * WHEEL_ROW], [0.4, 1, 1, 0.4], Extrapolation.CLAMP),
+  }));
   return (
-    // Scale from the aligned edge, so left- or right-aligned labels don't drift sideways as they grow.
-    <Animated.View style={[styles.row, { opacity, transform: [{ scale }], transformOrigin: ORIGIN[align] }]} importantForAccessibility="no-hide-descendants">
-      <Text style={[type.title, styles.label, { textAlign: align, fontSize: 21, lineHeight: 26 }]} numberOfLines={1}>
-        {label}
-      </Text>
+    <Animated.View style={[styles.row, style]} importantForAccessibility="no-hide-descendants">
+      <Text variant="body" color="ink2" style={[styles.label, { textAlign: align }]} numberOfLines={1}>{label}</Text>
     </Animated.View>
   );
 });
 
 const styles = StyleSheet.create({
-  frame: { flexDirection: 'row', height: WHEEL_ROW * WHEEL_ROWS },
-  band: { position: 'absolute', left: 0, right: 0, top: PAD, height: WHEEL_ROW },
+  frame: { flexDirection: 'row', height: WHEEL_ROW * WHEEL_ROWS, overflow: 'hidden' },
+  band: { position: 'absolute', left: 0, right: 0, top: PAD, height: WHEEL_ROW, overflow: 'hidden' },
   column: { height: WHEEL_ROW * WHEEL_ROWS },
   flex: { flex: 1 },
   content: { paddingVertical: PAD },
   row: { height: WHEEL_ROW, justifyContent: 'center', paddingHorizontal: 8 },
-  label: { fontVariant: ['tabular-nums'] },
+  label: { fontSize: 17, fontVariant: ['tabular-nums'] },
 });

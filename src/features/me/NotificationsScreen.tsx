@@ -13,7 +13,7 @@ import { Button, ListRow, Notice, Screen, SectionLabel, SkeletonRow, Text, TimeW
 
 /**
  * Me › Notifications (D97, the hub's Push notifications, A): reminders on this phone (M42), a push switch per group and
- * quiet hours (a switch and two times, in the profile's time zone), saved for the account at once. With notifications
+ * quiet hours (a switch and two times, in the profile's time zone, each saved with Set time), saved for the account at once. With notifications
  * off in the phone, a note with Turn on in Settings, and the switches wait.
  */
 export function NotificationsScreen() {
@@ -23,6 +23,7 @@ export function NotificationsScreen() {
   const settings = useNotificationSettings().data;
   const update = useUpdateNotificationSettings();
   const [editing, setEditing] = useState<'quietFrom' | 'quietTo' | null>(null);
+  const [picked, setPicked] = useState<LocalTime | null>(null);   // the wheel's time, saved with Set time (M122)
   const off = permission === 'denied';
 
   const toggle = (value: boolean, onChange: (v: boolean) => void, label: string, disabled = off) => (
@@ -39,9 +40,12 @@ export function NotificationsScreen() {
   const set = (change: Partial<NotificationSettings>) => update.mutate(change);
   const timeRow = (key: 'quietFrom' | 'quietTo', value: LocalTime, last: boolean) => (
     <View key={key}>
-      <ListRow label={t(`push.${key}`)} value={formatLocalTime(value, i18n.language)} onPress={() => setEditing(editing === key ? null : key)} divider={!last || editing === key} chevron={false} />
+      <ListRow label={t(`push.${key}`)} value={formatLocalTime(value, i18n.language)} onPress={() => { setPicked(null); setEditing(editing === key ? null : key); }} divider={!last || editing === key} chevron={false} />
       {editing === key && (
-        <TimeWheel value={value} onChange={(v) => set({ [key]: v })} locale={i18n.language} labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }} />
+        <View style={{ gap: space.md, paddingBottom: space.md }}>
+          <TimeWheel value={picked ?? value} onChange={setPicked} locale={i18n.language} labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }} />
+          <Button title={t('wheels.setTime')} disabled={!picked || picked === value} onPress={() => { if (picked) set({ [key]: picked }); setEditing(null); }} />
+        </View>
       )}
     </View>
   );

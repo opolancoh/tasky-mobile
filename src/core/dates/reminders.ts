@@ -15,10 +15,10 @@ const MORNING: LocalTime = '09:00';
 const EVENING: LocalTime = '18:00';
 const NIGHT: LocalTime = '21:00';
 
-/** The first quarter hour after `now` (15:10 → 15:15, 15:15 → 15:30; tomorrow 00:00 late at night): the earliest reminder the pickers offer. */
+/** The first 5 minutes after `now` (15:47 → 15:50, 15:50 → 15:55; tomorrow 00:00 late at night): the earliest reminder the pickers offer (M122). */
 export function earliestReminder(now: { date: LocalDate; time: LocalTime }): ReminderAt {
   const [h, m] = now.time.split(':').map(Number) as [number, number];
-  const next = (Math.floor((h * 60 + m) / 15) + 1) * 15;
+  const next = (Math.floor((h * 60 + m) / 5) + 1) * 5;
   if (next >= 24 * 60) return { date: addDays(now.date, 1), time: '00:00' };
   return { date: now.date, time: `${String(Math.floor(next / 60)).padStart(2, '0')}:${String(next % 60).padStart(2, '0')}` };
 }

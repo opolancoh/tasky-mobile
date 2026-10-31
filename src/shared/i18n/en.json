@@ -509,12 +509,11 @@
   "reminders": {
     "title": "Reminder",
     "onlyYou": "Only you get it. A due date doesn't set a reminder; they are chosen separately.",
+    "inPast": "Reminders can’t be in the past. Pick from {{when}}.",
     "laterToday": "Later today",
     "tomorrow": "Tomorrow",
     "thisWeekend": "This weekend",
     "nextWeek": "Next week",
-    "custom": "Custom",
-    "date": "Date",
     "time": "Time",
     "remove": "Remove reminder",
     "body": "Reminder",
@@ -556,7 +555,8 @@
     "year": "Year",
     "hour": "Hour",
     "minute": "Minute",
-    "period": "AM or PM"
+    "period": "AM or PM",
+    "setTime": "Set time"
   },
   "errors": {
     "auth.invalid_credentials": "The email or password is incorrect.",
@@ -588,11 +588,10 @@
     "today": "Today",
     "tomorrow": "Tomorrow",
     "nextWeek": "Next week",
-    "none": "No date",
-    "custom": "Pick a date",
     "customSection": "Custom",
     "date": "Date",
-    "set": "Set due date"
+    "set": "Set due date",
+    "remove": "Remove due date"
   },
   "taskDetail": {
     "fields": {
@@ -1012,6 +1011,7 @@
     "whyHint": "What’s stopping it",
     "options": "Optional",
     "until": "Until",
+    "noUntil": "No end date",
     "none": "None",
     "resumer": "Can resume it",
     "anyone": "Anyone in the list",

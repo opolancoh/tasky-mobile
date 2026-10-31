@@ -509,12 +509,11 @@
   "reminders": {
     "title": "Recordatorio",
     "onlyYou": "Solo tú lo recibes. Una fecha límite no pone un recordatorio; se eligen por separado.",
+    "inPast": "Los recordatorios no pueden quedar en el pasado. Elige desde {{when}}.",
     "laterToday": "Hoy más tarde",
     "tomorrow": "Mañana",
     "thisWeekend": "Este fin de semana",
     "nextWeek": "La próxima semana",
-    "custom": "Personalizado",
-    "date": "Fecha",
     "time": "Hora",
     "remove": "Quitar recordatorio",
     "body": "Recordatorio",
@@ -556,7 +555,8 @@
     "year": "Año",
     "hour": "Hora",
     "minute": "Minuto",
-    "period": "a. m. o p. m."
+    "period": "a. m. o p. m.",
+    "setTime": "Fijar hora"
   },
   "errors": {
     "auth.invalid_credentials": "El correo o la contraseña no son correctos.",
@@ -588,11 +588,10 @@
     "today": "Hoy",
     "tomorrow": "Mañana",
     "nextWeek": "La próxima semana",
-    "none": "Sin fecha",
-    "custom": "Elegir una fecha",
     "customSection": "Personalizado",
     "date": "Fecha",
-    "set": "Poner fecha límite"
+    "set": "Poner fecha límite",
+    "remove": "Quitar fecha límite"
   },
   "taskDetail": {
     "fields": {
@@ -1012,6 +1011,7 @@
     "whyHint": "Qué la detiene",
     "options": "Opcional",
     "until": "Hasta",
+    "noUntil": "Sin fecha de fin",
     "none": "Ninguna",
     "resumer": "Puede reanudarla",
     "anyone": "Cualquiera en la lista",

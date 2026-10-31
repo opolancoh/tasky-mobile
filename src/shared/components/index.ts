@@ -1,7 +1,6 @@
 export { TaskListIcon } from './TaskListIcon';
 export { TaskListPicker } from './TaskListPicker';
-export { DueDatePicker } from './DueDatePicker';
-export { ReminderPicker } from './ReminderPicker';
+export { DatePicker } from './DatePicker';
 export { ReminderIcon } from './ReminderIcon';
 export { TagPicker } from './tags/TagPicker';
 export { TagsRow } from './tags/TagsRow';

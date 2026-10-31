@@ -65,7 +65,7 @@ Due dates are dates, not moments (`"2026-09-28"`). `todayIn(timeZone)` gives tod
 
 ## dates/reminders.ts
 
-`ReminderAt` (local date and time), `sameReminder`, and `reminderPresets(now)`: Later today 18:00 (until 17:00), Tomorrow, This weekend, Next week, all 9:00 ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). `earliestReminder(now)`: the next quarter hour, the earliest the pickers offer ([M95](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
+`ReminderAt` (local date and time), `sameReminder`, and `reminderPresets(now)`: Later today 18:00 (until 17:00), Tomorrow, This weekend, Next week, all 9:00 ([M15](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)). `earliestReminder(now)`: the next 5 minutes, the earliest the pickers offer ([M95, M122](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)).
 
 ## validation/
 

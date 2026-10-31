@@ -3,13 +3,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { nowIn } from '@/core/dates/localDate';
-import type { ReminderAt } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
 import { taskKeys } from '@/data/tasks/keys';
 import { useTaskLists, useTags } from '@/data/tasks/queries';
 import type { RepeatPattern, Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { givesOutside, AssigneePicker, TaskListPicker, DueDatePicker, ReminderPicker, RepeatPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
+import { givesOutside, AssigneePicker, TaskListPicker, DatePicker, RepeatPicker, sortByRecent, TagPicker, useRecentTags, type TagItem } from '@/shared/components';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { confirm, Sheet } from '@/shared/ui';
 
@@ -21,8 +20,8 @@ const NO_NAMES: string[] = [];
 
 /**
  * Task detail's field pages (M25, M26), one sheet over the screen: Task list, Due date, Reminder, Repeat, Tags. They
- * change the draft, which Save sends: a quick choice applies and closes, the wheels and tag changes apply with Done,
- * Cancel or a tap outside drops them (M21). Mounted once in App; `useTaskSheet` says which field.
+ * change the draft, which Save sends: a quick choice applies and closes, the wheels apply with the docked Set (M122) and
+ * tag changes with Done; Cancel or a tap outside drops them (M21). Mounted once in App; `useTaskSheet` says which field.
  */
 export function TaskFieldSheet() {
   const session = useTaskSheet((s) => s.session);
@@ -42,9 +41,7 @@ function FieldSheet() {
   const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
   if (!now && me) setNow(nowIn(me.timeZone));
 
-  // What a page changes before Done (the wheels, the tag list).
-  const [due, setDue] = useState<LocalDate | null>(draft.dueDate);
-  const [reminder, setReminder] = useState<ReminderAt | null>(draft.reminder);
+  // What the tag list changes before Done (the date pickers keep theirs until Set, M122).
   const [tags, setTags] = useState<TagItem[]>(draft.tags);
 
   const apply = (changes: Partial<TaskDraft>) => {
@@ -55,8 +52,6 @@ function FieldSheet() {
   const applyDue = (dueDate: LocalDate | null) => apply({ dueDate, ...(dueDate ? {} : { repeat: null }) });
 
   const done: Partial<Record<TaskField, () => void>> = {
-    due: () => applyDue(due),
-    reminder: () => apply({ reminder }),
     tags: () => apply({ tags }),
   };
   const onDone = done[field];
@@ -69,7 +64,7 @@ function FieldSheet() {
   return (
     <Sheet visible={open} onDismiss={hide} dismissLabel={t('common.close')} {...header}>
       {now && (
-        <Page field={field} draft={draft} now={now} due={due} setDue={setDue} reminder={reminder} setReminder={setReminder} tags={tags} setTags={setTags} apply={apply} applyDue={applyDue} />
+        <Page field={field} draft={draft} now={now} tags={tags} setTags={setTags} apply={apply} applyDue={applyDue} />
       )}
     </Sheet>
   );
@@ -79,17 +74,13 @@ interface PageProps {
   field: TaskField;
   draft: TaskDraft;
   now: { date: LocalDate; time: string };
-  due: LocalDate | null;
-  setDue(date: LocalDate): void;
-  reminder: ReminderAt | null;
-  setReminder(at: ReminderAt): void;
   tags: TagItem[];
   setTags(change: (tags: TagItem[]) => TagItem[]): void;
   apply(changes: Partial<TaskDraft>): void;
   applyDue(date: LocalDate | null): void;
 }
 
-function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, setTags, apply, applyDue }: PageProps) {
+function Page({ field, draft, now, tags, setTags, apply, applyDue }: PageProps) {
   const { t } = useTranslation();
   const taskListsQuery = useTaskLists();
   const tagsQuery = useTags();
@@ -131,9 +122,9 @@ function Page({ field, draft, now, due, setDue, reminder, setReminder, tags, set
         />
       ) : null;
     case 'due':
-      return <DueDatePicker value={due ?? undefined} today={today} onPick={(date) => applyDue(date ?? null)} onChange={setDue} />;
+      return <DatePicker kind="due" today={today} value={draft.dueDate} onPick={applyDue} onSet={applyDue} />;
     case 'reminder':
-      return <ReminderPicker value={reminder} onChange={setReminder} onPick={(at) => apply({ reminder: at })} onRemove={() => apply({ reminder: null })} now={now} due={draft.dueDate} />;
+      return <DatePicker kind="reminder" now={now} due={draft.dueDate} value={draft.reminder} onPick={(reminder) => apply({ reminder })} onSet={(reminder) => apply({ reminder })} />;
     case 'repeat':
       return (
         <RepeatPicker

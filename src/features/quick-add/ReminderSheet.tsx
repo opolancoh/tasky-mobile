@@ -9,7 +9,7 @@ import { newTaskId, useCreateTask, useDeleteTask, useReminderActions } from '@/d
 import { useTask } from '@/data/tasks/queries';
 import { taskLimits, type Repeat, type RepeatPattern, type Task } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { ReminderIcon, ReminderPicker, RepeatPicker } from '@/shared/components';
+import { DatePicker, ReminderIcon, RepeatPicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useRepeatText } from '@/shared/hooks/useRepeatText';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
@@ -205,7 +205,7 @@ function ReminderForm({ task }: { task?: Task }) {
       )}
 
       {page === 'when' && now && (
-        <ReminderPicker value={draft.at} onChange={(at) => update({ at })} onPick={(at) => pick({ at })} onSet={(at) => pick({ at })} now={now} forReminder />
+        <DatePicker kind="reminder" now={now} forReminder value={draft.at} onPick={(at) => pick({ at })} onSet={(at) => pick({ at })} />
       )}
 
       {page === 'repeat' && repeatDay && (

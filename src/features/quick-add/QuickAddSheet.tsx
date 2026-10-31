@@ -11,7 +11,7 @@ import { newTaskId, useCreateTask } from '@/data/tasks/mutations';
 import { useAssignableTaskLists, useTaskLists, useTags } from '@/data/tasks/queries';
 import { emailAssignee, isEmailAssignee, taskLimits, type UserRef } from '@/data/tasks/types';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { AssigneePicker, Avatar, givesOutside, PeoplePicker, TaskListIcon, TaskListPicker, DueDatePicker, ReminderIcon, ReminderPicker, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
+import { AssigneePicker, Avatar, givesOutside, PeoplePicker, TaskListIcon, TaskListPicker, DatePicker, ReminderIcon, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
 
@@ -323,18 +323,11 @@ function QuickAddForm() {
       {page === 'tags' && <TagPicker tags={sortedTags} loading={tagsQuery.isPending} selected={tagItems} onToggle={toggleTag} />}
 
       {page === 'due' && today && (
-        <DueDatePicker value={draft.dueDate} today={today} onPick={(dueDate) => pick({ dueDate })} onChange={(dueDate) => update({ dueDate })} onSet={(dueDate) => pick({ dueDate })} />
+        <DatePicker kind="due" today={today} value={draft.dueDate ?? null} onPick={(dueDate) => pick({ dueDate })} onSet={(dueDate) => pick({ dueDate })} />
       )}
 
       {page === 'reminder' && now && (
-        <ReminderPicker
-          value={reminder}
-          onChange={(at) => update({ reminder: at })}
-          onPick={(at) => pick({ reminder: at })}
-          onSet={(at) => pick({ reminder: at })}
-          now={now}
-          due={draft.dueDate}
-        />
+        <DatePicker kind="reminder" now={now} due={draft.dueDate} value={reminder} onPick={(at) => pick({ reminder: at })} onSet={(at) => pick({ reminder: at })} />
       )}
     </Sheet>
   );

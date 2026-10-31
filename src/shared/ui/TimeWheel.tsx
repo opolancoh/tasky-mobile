@@ -8,48 +8,44 @@ export interface TimeWheelProps {
   /** 24-hour "HH:mm", e.g. "09:00". */
   value: LocalTime;
   onChange(value: LocalTime): void;
-  /** The earliest time that can be picked: turning before it picks it. */
-  min?: LocalTime;
   /** Decides 12-hour with AM/PM ("en") or 24-hour ("es"), and the AM/PM words. */
   locale: string;
-  /** Minutes between rows: 15 gives 00, 15, 30, 45. A value between steps (09:10) gets its own row while the wheel is open. */
-  minuteStep?: number;
   /** For screen readers. */
   labels: { hour: string; minute: string; period: string };
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+/** Minutes between rows (M122). A value between steps (09:12) gets its own row while the wheel is open. */
+const STEP = 5;
 
 /**
  * A time picker: hour, minute, and AM/PM when the locale uses it. The value is always 24-hour
  * "HH:mm" (the API's TimeOnly); only the display follows the locale.
  */
-export function TimeWheel({ value, onChange, min, locale, minuteStep = 15, labels }: TimeWheelProps) {
+export function TimeWheel({ value, onChange, locale, labels }: TimeWheelProps) {
   const [h, m] = value.split(':').map(Number) as [number, number];
   const twelve = useMemo(() => uses12HourCached(locale), [locale]);
 
   const hourLabels = useMemo(() => (twelve ? ['12', ...Array.from({ length: 11 }, (_, i) => String(i + 1))] : Array.from({ length: 24 }, (_, i) => pad(i))), [twelve]);
-  const [offStep] = useState(() => (m % minuteStep ? m : null));   // the opening value's own minute, kept so rows don't shift
+  const [offStep] = useState(() => (m % STEP ? m : null));   // the opening value's own minute, kept so rows don't shift
   const minutes = useMemo(() => {
-    const steps = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => i * minuteStep);
+    const steps = Array.from({ length: 60 / STEP }, (_, i) => i * STEP);
     return offStep === null ? steps : [...steps, offStep].sort((a, b) => a - b);
-  }, [minuteStep, offStep]);
+  }, [offStep]);
   const minuteLabels = useMemo(() => minutes.map(pad), [minutes]);
   const periodLabels = useMemo(() => dayPeriods(locale), [locale]);
 
   const hourIndex = twelve ? h % 12 : h;
   const exact = minutes.indexOf(m);
-  const minuteIndex = exact >= 0 ? exact : minutes.indexOf(Math.min(Math.round(m / minuteStep) * minuteStep, minutes[minutes.length - 1]!));
+  const minuteIndex = exact >= 0 ? exact : minutes.indexOf(Math.min(Math.round(m / STEP) * STEP, minutes[minutes.length - 1]!));
   const pm = h >= 12;
 
   const emit = useCallback(
     (hour: number, minute: number) => {
       const picked: LocalTime = `${pad(hour)}:${pad(minute)}`;
-      const next = min && picked < min ? min : picked;
-      if (next === value) return false;   // before `min` while on it already: the column goes back
-      onChange(next);
+      if (picked !== value) onChange(picked);
     },
-    [onChange, min, value],
+    [onChange, value],
   );
   const onHour = useCallback((i: number) => emit(twelve ? (i % 12) + (pm ? 12 : 0) : i, m), [emit, twelve, pm, m]);
   const onMinute = useCallback((i: number) => emit(h, minutes[i]!), [emit, h, minutes]);
