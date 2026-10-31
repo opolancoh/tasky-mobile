@@ -31,6 +31,7 @@ export function SignUpScreen() {
 
   const [displayName, setDisplayName] = useState('');
   const [nameLeft, setNameLeft] = useState(false);
+  const [tried, setTried] = useState(false);   // Create account was tapped: unmet rules turn red (M123)
   const email = useEmailField(usePendingLink.getState().email ?? '');   // from an invitation email's link (D95)
   const [password, setPassword] = useState('');
   const timeZone = deviceTimeZone();
@@ -53,6 +54,7 @@ export function SignUpScreen() {
   function submit() {
     if (!complete) {
       setNameLeft(true);
+      setTried(true);
       email.reveal();
       return;
     }
@@ -120,7 +122,7 @@ export function SignUpScreen() {
             clearServerError();
           }}
           error={serverFields.password}
-          footer={<RuleCheck met={isPassword(password)} label={t('auth.signUp.passwordHint')} />}
+          footer={<RuleCheck met={isPassword(password)} missed={tried} label={t('auth.signUp.passwordHint')} />}
           secureToggle={{ show: t('common.show'), hide: t('common.hide') }}
           autoCapitalize="none"
           autoComplete="new-password"
@@ -143,7 +145,7 @@ export function SignUpScreen() {
         <Notice tone="info">{t('auth.signUp.invited')}</Notice>
 
         <View style={{ marginTop: space.xs, marginBottom: space.xl }}>
-          <Button title={t('auth.signUp.submit')} onPress={submit} disabled={!complete} loading={mutation.isPending} />
+          <Button title={t('auth.signUp.submit')} onPress={submit} loading={mutation.isPending} />
         </View>
       </View>
     </Screen>

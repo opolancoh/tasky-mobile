@@ -44,7 +44,7 @@ export function NotificationsScreen() {
       {editing === key && (
         <View style={{ gap: space.md, paddingBottom: space.md }}>
           <TimeWheel value={picked ?? value} onChange={setPicked} locale={i18n.language} labels={{ hour: t('wheels.hour'), minute: t('wheels.minute'), period: t('wheels.period') }} />
-          <Button title={t('wheels.setTime')} disabled={!picked || picked === value} onPress={() => { if (picked) set({ [key]: picked }); setEditing(null); }} />
+          <Button title={t('wheels.setTime')} onPress={() => { if (picked && picked !== value) set({ [key]: picked }); setEditing(null); }} />
         </View>
       )}
     </View>

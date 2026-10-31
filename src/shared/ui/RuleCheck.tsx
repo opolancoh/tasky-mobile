@@ -6,11 +6,11 @@ import { useTheme } from './theme';
 
 /**
  * A rule the input must meet, checked as the person types (HIG: validate passwords before they leave
- * the field). Gray with an empty circle until met, then green with a check.
+ * the field). Gray with an empty circle until met, then green with a check; red once a tap on submit finds it unmet (`missed`, M123).
  */
-export function RuleCheck({ met, label }: { met: boolean; label: string }) {
+export function RuleCheck({ met, label, missed = false }: { met: boolean; label: string; missed?: boolean }) {
   const { colors, space } = useTheme();
-  const color = met ? colors.success : colors.ink3;
+  const color = met ? colors.success : missed ? colors.danger : colors.ink3;
   return (
     <View style={[styles.row, { gap: space.xs + 2 }]} accessibilityLiveRegion="polite" accessibilityState={{ checked: met }}>
       <View style={[styles.dot, { borderColor: color, backgroundColor: met ? color : 'transparent' }]}>

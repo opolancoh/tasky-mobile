@@ -76,7 +76,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `Button` | `primary` (one per screen) or `link`; 44 pt minimum touch target; `loading` while saving (M56) |
 | `TextField` | Label above, error or footer below, optional Show/Hide for passwords |
 | `Notice` | A message above a form: error or info |
-| `RuleCheck` | A rule that turns green as you type (password length) |
+| `RuleCheck` | A rule that turns green as you type (password length), red when submit finds it unmet (`missed`, M123) |
 | `Logo` | The Azignia mark and name |
 | `Screen` | Every screen's root: background, safe areas, side padding, optional scrolling (`scrollRef` to scroll it, e.g. to an error at the top), which ends right above the keyboard on the UI thread; `footer` (with `scroll`): docked under the content, above the keyboard (Task detail's comment field, M82) |
 | `Sheet` | The large size by default ([M28](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)): its top just below the status bar, never resized by typing or filtering; `size="fit"` only for Quick add's form (M29). A bottom sheet over the whole app: optional title, left and right actions (text, an icon, or both), an optional `footer` kept above the keyboard; dismissed by tapping outside (`onBackdropPress`) or Android's back. An overlay, not a native Modal: mount it at the app root, after the navigator. Animates and follows the keyboard on the UI thread (Reanimated, `useAnimatedKeyboard`). A header action can be `busy` (a small spinner after 300 ms, M27, M56) |

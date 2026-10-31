@@ -63,7 +63,7 @@ export function ForgotPasswordScreen({ route }: StaticScreenProps<{ email?: stri
           returnKeyType="send"
           onSubmitEditing={submit}
         />
-        <Button title={t('auth.forgot.submit')} onPress={submit} disabled={!email.valid} loading={mutation.isPending} />
+        <Button title={t('auth.forgot.submit')} onPress={submit} loading={mutation.isPending} />
         <Notice tone="info">{t('auth.forgot.note')}</Notice>
       </View>
     </Screen>

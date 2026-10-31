@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -79,12 +80,17 @@ function ReminderForm({ task }: { task?: Task }) {
   const labels = useDateLabels(now?.date);
 
   const title = draft.title.trim();
-  const canSave = title.length > 0 && !!draft.at;
+  const [noTime, setNoTime] = useState(false);   // Add was tapped with no time: When? says so (M123)
   const when = (at: ReminderAt) => `${labels.day(at.date)}, ${labels.time(at.time)}`;
   const repeatDay = draft.at?.date ?? now?.date;
 
   function submit() {
-    if (!canSave || !draft.at) return;
+    if (!title) return;
+    if (!draft.at) {
+      setNoTime(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
+      return;
+    }
     const repeat = draft.repeat ? { pattern: draft.repeat.pattern, interval: draft.repeat.interval, daysOfWeek: draft.repeat.daysOfWeek ?? undefined, dayOfMonth: draft.repeat.dayOfMonth ?? undefined, mode: draft.repeat.mode } : undefined;
     if (!task) {
       create.mutate({ id: newTaskId(), body: { kind: 'reminder', title, notes: draft.notes.trim() || undefined, reminderDate: draft.at.date, reminderTime: draft.at.time, repeat } });
@@ -128,7 +134,7 @@ function ReminderForm({ task }: { task?: Task }) {
   const titles: Record<Exclude<Page, 'form'>, string> = { when: t('reminders.remindMe'), repeat: t('taskDetail.fields.repeat'), notes: t('quickAdd.fields.notes') };
   const header: Pick<SheetProps, 'title' | 'left' | 'right'> =
     page === 'form'
-      ? { title: t(task ? 'reminders.edit' : 'reminders.new'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t(task ? 'common.save' : 'quickAdd.submit'), emphasis: true, disabled: !canSave, onPress: submit } }
+      ? { title: t(task ? 'reminders.edit' : 'reminders.new'), left: { label: t('quickAdd.cancel'), onPress: hide }, right: { label: t(task ? 'common.save' : 'quickAdd.submit'), emphasis: true, disabled: !title, onPress: submit } }
       : { title: titles[page], left: { icon: 'chevron-left', label: t('reminders.reminder'), onPress: () => setPage('form') } };
 
   return (
@@ -179,9 +185,13 @@ function ReminderForm({ task }: { task?: Task }) {
           <ListRow
             label={t('reminders.remindMe')}
             icon={<ReminderIcon color={draft.at ? colors.accent : colors.ink3} />}
-            value={<Text variant="bodyMedium" color={draft.at ? 'accent' : 'ink3'}>{draft.at ? when(draft.at) : t('reminders.pickTime')}</Text>}
+            value={<Text variant="bodyMedium" color={draft.at ? 'accent' : noTime ? 'danger' : 'ink3'}>{draft.at ? when(draft.at) : t('reminders.pickTime')}</Text>}
             onPress={() => openPage('when')}
+            divider={!(noTime && !draft.at)}
           />
+          {noTime && !draft.at && (
+            <Text variant="footnote" color="danger" accessibilityLiveRegion="polite" style={{ marginBottom: space.sm }}>{t('reminders.needsTime')}</Text>
+          )}
           <ListRow
             label={t('taskDetail.fields.repeat')}
             icon={<Feather name="repeat" size={20} color={draft.repeat ? colors.accent : colors.ink3} />}

@@ -19,9 +19,10 @@ export function JoinPasteScreen() {
   const [left, setLeft] = useState(false);
   const link = parseJoinLink(text);
 
-  const next = () => link && navigation.dispatch(StackActions.replace('JoinLink', link));
+  // Next stays enabled: a tap without a link says why (M123).
+  const next = () => (link ? navigation.dispatch(StackActions.replace('JoinLink', link)) : setLeft(true));
   useLayoutEffect(() => {
-    navigation.setOptions({ headerRight: () => <TextButton label={t('join.next')} onPress={next} disabled={!link} /> });
+    navigation.setOptions({ headerRight: () => <TextButton label={t('join.next')} onPress={next} /> });
   });
 
   return (
@@ -38,7 +39,7 @@ export function JoinPasteScreen() {
           autoCorrect={false}
           returnKeyType="go"
           onSubmitEditing={next}
-          error={left && text.trim() && !link ? t('join.notALink') : undefined}
+          error={left && !link ? t(text.trim() ? 'join.notALink' : 'join.linkRequired') : undefined}
         />
         <View style={{ alignItems: 'flex-start' }}>
           <Button variant="link" title={t('join.pasteFromClipboard')} onPress={async () => setText(await Clipboard.getStringAsync())} />

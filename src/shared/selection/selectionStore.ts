@@ -51,8 +51,12 @@ export const useSelection = create<SelectionState>()((set) => ({
   end: () => set({ scope: null, picked: {}, sheet: null }),
 }));
 
-/** Open and on-hold tasks can be selected (M81); completed ones, and those waiting for the user's Confirm, can't. */
-export const selectable = (task: TaskSummary) => (task.status === 'open' || task.status === 'onHold') && !task.awaitsConfirmation;
+/** Open and on-hold tasks can be selected (M81); reminders, completed ones, and those waiting for the user's Confirm, can't. */
+export const selectable = (task: TaskSummary) => task.kind !== 'reminder' && (task.status === 'open' || task.status === 'onHold') && !task.awaitsConfirmation;
+
+/** Why a row can't be picked, said in a toast when it's tapped while selecting (M123). */
+export const notSelectableKey = (task: TaskSummary) =>
+  task.kind === 'reminder' ? 'select.cant.reminder' : task.awaitsConfirmation ? 'select.cant.confirm' : 'select.cant.completed';
 
 /** The picked tasks, as an array (outside render: the bar's actions). */
 export const pickedTasks = () => Object.values(useSelection.getState().picked);

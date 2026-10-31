@@ -8,8 +8,8 @@ import type { SearchMatch, TaskSummary } from '@/data/tasks/types';
 import { CheckCircle, TaskMarks, TaskMeta, useTaskCheck } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
-import { selectable, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
-import { fonts, Text, useTheme } from '@/shared/ui';
+import { notSelectableKey, selectable, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
+import { fonts, Text, useTheme, useToast } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
 const fold = (s: string) => s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
@@ -55,9 +55,9 @@ export function SearchRow({ task, match, words, today, onPress }: { task: TaskSu
   const startSelecting = () => useSelection.getState().start(selection.key, task);
   return (
     <Pressable
-      onPress={selecting ? () => useSelection.getState().toggle(task) : onPress}
+      onPress={selecting ? () => (pickable ? useSelection.getState().toggle(task) : useToast.getState().show({ message: t(notSelectableKey(task)) })) : onPress}
       onLongPress={!selecting && pickable ? startSelecting : undefined}
-      disabled={selecting ? !pickable : saving}
+      disabled={selecting ? false : saving}
       accessibilityRole={selecting ? 'checkbox' : 'button'}
       accessibilityState={selecting ? { checked: selection.picked } : { busy: saving }}
       accessibilityActions={!selecting && pickable ? [{ name: 'longpress', label: t('select.selectTasks') }] : undefined}

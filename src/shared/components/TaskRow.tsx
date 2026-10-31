@@ -10,9 +10,9 @@ import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
-import { selectable as canSelect, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
+import { selectable as canSelect, notSelectableKey, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { Pill, Text, useTheme } from '@/shared/ui';
+import { Pill, Text, useTheme, useToast } from '@/shared/ui';
 
 import { Avatar } from './Faces';
 import { ReminderIcon } from './ReminderIcon';
@@ -66,7 +66,7 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
   const selection = useRowSelection(task.id);
   const selecting = selectable && selection.selecting;
   const reminder = task.kind === 'reminder';
-  const pickable = selectable && canSelect(task) && !reminder;
+  const pickable = selectable && canSelect(task);
   const press = reminder ? () => useReminderSheet.getState().show(task.id) : onPress ? () => onPress(task) : undefined;
   const rang = reminder && task.status === 'open' && !!today && !!task.reminder && task.reminder.date < today && !task.reminder.snoozedUntil;
   const end = action ?? (rang ? <SnoozePill taskId={task.id} /> : undefined);
@@ -79,9 +79,9 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
 
   return (
     <Pressable
-      onPress={selecting ? (pickable ? pick : undefined) : press}
+      onPress={selecting ? (pickable ? pick : () => useToast.getState().show({ message: t(notSelectableKey(task)) })) : press}
       onLongPress={!selecting && pickable ? startSelecting : undefined}
-      disabled={selecting ? !pickable : (!press && !pickable) || check.saving}
+      disabled={selecting ? false : (!press && !pickable) || check.saving}
       accessibilityRole={selecting ? 'checkbox' : press ? 'button' : undefined}
       accessibilityState={selecting ? { checked: selection.picked, disabled: !pickable } : { busy: check.saving }}
       accessibilityActions={!selecting && pickable ? [{ name: 'longpress', label: t('select.selectTasks') }] : undefined}
