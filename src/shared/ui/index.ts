@@ -22,6 +22,7 @@ export { Text, type TextProps } from './Text';
 export { TextButton, type TextButtonProps } from './TextButton';
 export { TimeWheel, type TimeWheelProps } from './TimeWheel';
 export { ToastHost, useToast, type ToastMessage } from './Toast';
+export { warnHaptic } from './warnHaptic';
 export { WheelColumn, WheelFrame, WHEEL_ROW, type WheelColumnProps } from './WheelColumn';
 export { TextField, type TextFieldProps } from './TextField';
 export { BUSY_DELAY_MS, useDelayedFlag } from './useDelayedFlag';

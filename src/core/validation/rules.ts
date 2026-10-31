@@ -21,5 +21,8 @@ export const isHexColor = (value: string): boolean => /^#[0-9A-Fa-f]{6}$/.test(v
 /** Digits only, of the code length. */
 export const isCode = (value: string): boolean => new RegExp(`^\\d{${limits.codeLength}}$`).test(value);
 
+/** At least one letter, digit or symbol (an emoji counts; "..." doesn't). API: `[Readable]`. */
+export const isReadable = (value: string): boolean => /[\p{L}\p{Nd}\p{So}]/u.test(value);
+
 /** Not empty after trimming. */
 export const isFilled = (value: string): boolean => value.trim().length > 0;

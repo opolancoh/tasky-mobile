@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { limits } from '@/core/validation/limits';
+import { isReadable } from '@/core/validation/rules';
 import { newTagName, stripInvalidTagChars, TAG_NAME_MAX } from '@/core/validation/tags';
 import { tasksApi } from '@/data/tasks/api';
 import { useCreateTaskList, useCreateTeam, useRenameTag, useRenameTeam, useSaveTag, useUpdateTaskList } from '@/data/tasks/mutations';
@@ -11,7 +12,7 @@ import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { SortMode } from '@/data/tasks/types';
 import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast } from '@/shared/ui';
+import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast, warnHaptic } from '@/shared/ui';
 
 import { SORT_MODES } from './browseSections';
 import { useBrowseSheet, type BrowseSheetTarget } from '@/shared/browseSheet/browseSheetStore';
@@ -63,6 +64,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   const isNew = target.kind === 'list' ? !target.id : target.kind === 'team' ? !target.id : false;
   const inbox = !!list?.isInbox;
   const trimmed = name.trim();
+  const [unreadable, setUnreadable] = useState(false);   // shown until the name has a letter, number or emoji (M124)
   const tagName = target.kind === 'tag' ? newTagName(name) : undefined;
   const dirty = name !== initial.name || color !== initial.color || sort !== initial.sort;
   const valid = target.kind === 'tag' ? !!tagName : inbox || trimmed.length > 0;
@@ -78,6 +80,11 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
 
   const save = async () => {
     if (!valid || busy) return;
+    if (target.kind !== 'tag' && !inbox && !isReadable(trimmed)) {
+      setUnreadable(true);
+      warnHaptic();
+      return;
+    }
     if (target.kind === 'list') {
       if (list) {
         updateList.mutate(
@@ -145,6 +152,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
             autoCapitalize={target.kind === 'tag' ? 'none' : 'sentences'}
             autoCorrect={target.kind !== 'tag'}
             hint={target.kind === 'tag' ? t('browse.sheet.tagHint') : target.kind === 'team' ? t('browse.sheet.teamHint') : undefined}
+            error={unreadable && !isReadable(trimmed) ? t('common.unreadable') : undefined}
           />
         )}
         {target.kind !== 'team' && !inbox && <Swatches value={color} onChange={setColor} allowNone={target.kind === 'tag'} />}

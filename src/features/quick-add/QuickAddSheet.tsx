@@ -6,6 +6,7 @@ import { Keyboard, ScrollView, StyleSheet, TextInput, View, type TextInputInstan
 import { nowIn } from '@/core/dates/localDate';
 import type { ReminderChoice } from '@/core/dates/reminders';
 import type { LocalDate } from '@/core/types';
+import { isReadable } from '@/core/validation/rules';
 import { useMe } from '@/data/tenancy/queries';
 import { newTaskId, useCreateTask } from '@/data/tasks/mutations';
 import { useAssignableTaskLists, useTaskLists, useTags } from '@/data/tasks/queries';
@@ -13,7 +14,7 @@ import { emailAssignee, isEmailAssignee, taskLimits, type UserRef } from '@/data
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { AssigneePicker, Avatar, givesOutside, PeoplePicker, TaskListIcon, TaskListPicker, DatePicker, ReminderIcon, sortByRecent, TagPicker, TagsRow, useRecentTags, type TagItem } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps } from '@/shared/ui';
+import { ClearButton, ListRow, Sheet, Text, useTheme, type SheetProps, warnHaptic } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 import { QuickAddBar, type BarItem } from './QuickAddBar';
@@ -75,6 +76,7 @@ function QuickAddForm() {
   // The title has the keyboard at once (M104); once a page has opened, coming back doesn't raise it again.
   const [focusTitle, setFocusTitle] = useState(true);
   const titleInput = useRef<TextInputInstance>(null);
+  const [unreadable, setUnreadable] = useState(false);   // shown until the title has a letter, number or emoji (M124)
   const [beforePage, setBeforePage] = useState<Draft>(draft);   // the draft when a page opened: tapping outside restores it
   // "Now" for this Quick add, in the profile's zone; set once the profile is in, so a page never stays blank.
   const [now, setNow] = useState(() => (me ? nowIn(me.timeZone) : null));
@@ -111,6 +113,11 @@ function QuickAddForm() {
 
   function submit() {
     if (!canAdd) return;
+    if (!isReadable(titleText)) {
+      setUnreadable(true);
+      warnHaptic();
+      return;
+    }
     if (!listFits) {
       openPage('taskList');
       return;
@@ -224,6 +231,7 @@ function QuickAddForm() {
               />
             )}
           </View>
+          {unreadable && !isReadable(titleText) && <Text variant="footnote" color="danger" accessibilityLiveRegion="polite" style={{ marginBottom: space.sm }}>{t('common.unreadable')}</Text>}
 
           <View style={[styles.divider, { backgroundColor: colors.line, marginHorizontal: -space.lg }]} />
 

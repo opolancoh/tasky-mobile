@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, usePreventRemove, type StaticScreenProps } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Keyboard, Pressable, StyleSheet, TextInput, View, type ScrollViewInstance } from 'react-native';
@@ -10,6 +10,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { formatInstant, todayIn } from '@/core/dates/localDate';
 import { isApiError } from '@/core/http/problem';
 import type { Id } from '@/core/types';
+import { isReadable } from '@/core/validation/rules';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
 import { restoreTask, useChangeTask, useDeleteTask, useSaveTask, type TaskChange } from '@/data/tasks/mutations';
@@ -21,7 +22,7 @@ import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, SkeletonIcons, space, Text, TextButton, useTheme, useToast } from '@/shared/ui';
+import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, SkeletonIcons, space, Text, TextButton, useTheme, useToast, warnHaptic } from '@/shared/ui';
 
 import { AnswerBar } from './components/AnswerBar';
 import { CommentThread } from './components/CommentThread';
@@ -72,6 +73,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
   const scroller = useRef<ScrollViewInstance>(null);
+  const [unreadable, setUnreadable] = useState(false);   // Save was tapped on a title with no letter, number or emoji (M124)
   const leaving = useRef(false);   // set when the screen closes on purpose (after Save or Delete): no discard prompt
   // The fields the rows show; the title, notes and steps read their own slices (docs/performance.md, rule 2).
   const fields = useTaskDraft(
@@ -136,6 +138,11 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
   /** Save (M59): the keyboard closes, fields lock while it saves; success goes back with a toast, an error stays. */
   const saveAndLeave = async () => {
     Keyboard.dismiss();
+    if (!isReadable(useTaskDraft.getState().draft?.title ?? '')) {
+      setUnreadable(true);
+      warnHaptic();
+      return scroller.current?.scrollTo({ y: 0, animated: true });
+    }
     if (!(await saveDraft())) return scroller.current?.scrollTo({ y: 0, animated: true });   // the error is at the top
     leaving.current = true;
     navigation.goBack();
@@ -334,7 +341,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
         ) : (
           <CheckCircle checked={completed} saving={toggling} onPress={toggleComplete} size={28} style={styles.checkSpot} label={t(completed ? 'taskDetail.reopen' : 'taskDetail.complete')} />
         )}
-        <TitleField completed={completed} editable={!outside} />
+        <TitleField completed={completed} editable={!outside} unreadable={unreadable} />
         <Pressable
           onPress={() => edit({ isImportant: !fields.isImportant })}
           disabled={outside}
@@ -553,28 +560,31 @@ function HeaderActions({ pending, onSave, onMenu }: { pending: boolean; onSave()
 const TITLE_SIZE = 22;
 
 /** The title, edited in place in the draft; only this field redraws while typing. */
-function TitleField({ completed, editable }: { completed: boolean; editable: boolean }) {
+function TitleField({ completed, editable, unreadable }: { completed: boolean; editable: boolean; unreadable: boolean }) {
   const { t } = useTranslation();
   const { colors, type } = useTheme();
   const title = useTaskDraft((s) => s.draft?.title ?? '');
   const edit = useTaskDraft((s) => s.edit);
   return (
-    <TextInput
-      value={title}
-      onChangeText={(text) => edit({ title: text.replace(/\n/g, ' ') })}
-      editable={editable}
-      multiline
-      submitBehavior="blurAndSubmit"
-      returnKeyType="done"
-      maxLength={taskLimits.titleMax}
-      selectionColor={colors.accent}
-      accessibilityLabel={t('taskDetail.title')}
-      style={[
-        styles.title,
-        { fontFamily: type.title.fontFamily, fontSize: TITLE_SIZE, letterSpacing: type.title.letterSpacing, color: completed ? colors.ink3 : colors.heading },
-        completed && styles.struck,
-      ]}
-    />
+    <View style={styles.titleBox}>
+      <TextInput
+        value={title}
+        onChangeText={(text) => edit({ title: text.replace(/\n/g, ' ') })}
+        editable={editable}
+        multiline
+        submitBehavior="blurAndSubmit"
+        returnKeyType="done"
+        maxLength={taskLimits.titleMax}
+        selectionColor={colors.accent}
+        accessibilityLabel={t('taskDetail.title')}
+        style={[
+          styles.title,
+          { fontFamily: type.title.fontFamily, fontSize: TITLE_SIZE, letterSpacing: type.title.letterSpacing, color: completed ? colors.ink3 : colors.heading },
+          completed && styles.struck,
+        ]}
+      />
+      {unreadable && !isReadable(title) && <Text variant="footnote" color="danger" accessibilityLiveRegion="polite" style={{ marginBottom: space.sm }}>{t('common.unreadable')}</Text>}
+    </View>
   );
 }
 
@@ -608,7 +618,8 @@ const styles = StyleSheet.create({
   banner: { borderRadius: 12, borderBottomWidth: 0 },
   checkSpot: { marginTop: 4 },
   /** No lineHeight on a TextInput (it clips descenders on iOS). */
-  title: { flex: 1, padding: 0, paddingTop: 2 },
+  titleBox: { flex: 1 },
+  title: { padding: 0, paddingTop: 2 },
   struck: { textDecorationLine: 'line-through' },
   flag: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginTop: -6, marginRight: -12 },
   doneNote: { flexDirection: 'row', alignItems: 'center', marginLeft: 40 },

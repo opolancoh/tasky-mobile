@@ -1,11 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { formatShortTime, nowIn } from '@/core/dates/localDate';
 import { quickReminders, sameReminder, type ReminderAt } from '@/core/dates/reminders';
+import { isReadable } from '@/core/validation/rules';
 import { newTaskId, useCreateTask, useDeleteTask, useReminderActions } from '@/data/tasks/mutations';
 import { useTask } from '@/data/tasks/queries';
 import { taskLimits, type Repeat, type RepeatPattern, type Task } from '@/data/tasks/types';
@@ -14,7 +14,7 @@ import { DatePicker, ReminderIcon, RepeatPicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useRepeatText } from '@/shared/hooks/useRepeatText';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
-import { ClearButton, confirm, ListRow, Sheet, SkeletonRow, Text, useTheme, type SheetProps } from '@/shared/ui';
+import { ClearButton, confirm, ListRow, Sheet, SkeletonRow, Text, useTheme, warnHaptic, type SheetProps } from '@/shared/ui';
 
 import { NotesPage } from './NotesPage';
 
@@ -80,15 +80,21 @@ function ReminderForm({ task }: { task?: Task }) {
   const labels = useDateLabels(now?.date);
 
   const title = draft.title.trim();
-  const [noTime, setNoTime] = useState(false);   // Add was tapped with no time: When? says so (M123)
+  const [noTime, setNoTime] = useState(false);
+  const [unreadable, setUnreadable] = useState(false);   // shown until the title has a letter, number or emoji (M124)   // Add was tapped with no time: When? says so (M123)
   const when = (at: ReminderAt) => `${labels.day(at.date)}, ${labels.time(at.time)}`;
   const repeatDay = draft.at?.date ?? now?.date;
 
   function submit() {
     if (!title) return;
+    if (!isReadable(title)) {
+      setUnreadable(true);
+      warnHaptic();
+      return;
+    }
     if (!draft.at) {
       setNoTime(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
+      warnHaptic();
       return;
     }
     const repeat = draft.repeat ? { pattern: draft.repeat.pattern, interval: draft.repeat.interval, daysOfWeek: draft.repeat.daysOfWeek ?? undefined, dayOfMonth: draft.repeat.dayOfMonth ?? undefined, mode: draft.repeat.mode } : undefined;
@@ -159,6 +165,7 @@ function ReminderForm({ task }: { task?: Task }) {
             />
             {draft.title.length > 0 && <ClearButton size={20} onPress={() => update({ title: '' })} accessibilityLabel={t('quickAdd.clearTitle')} style={styles.clear} />}
           </View>
+          {unreadable && !isReadable(title) && <Text variant="footnote" color="danger" accessibilityLiveRegion="polite" style={{ marginBottom: space.sm }}>{t('common.unreadable')}</Text>}
           {now && (
             // One-line capsules (the hub's option A, no icons): "In 1 hour", "6 PM", "Tomorrow 9 AM"; the picked one solid.
             <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: space.xs, paddingBottom: space.md }}>

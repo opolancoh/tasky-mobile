@@ -1,5 +1,6 @@
 {
   "common": {
+    "unreadable": "Add a letter, number or emoji.",
     "show": "Show",
     "hide": "Hide",
     "retry": "Try again",

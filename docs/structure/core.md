@@ -26,7 +26,7 @@ src/core/
 │   ├── searchDelay.ts    SEARCH_DELAY: every search field waits 400 ms after the last keystroke
 │   └── shorten.ts        shortenEmail: a long email cut in the middle, keeping its domain
 └── validation/
-    ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isFilled
+    ├── rules.ts          isEmail, isPassword, isCode, isHexColor, isReadable, isFilled
     ├── limits.ts         The API's field limits
     └── tags.ts           The API's tag name rule (titles are plain text, M31)
 ```

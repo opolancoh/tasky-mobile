@@ -1,5 +1,4 @@
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +8,7 @@ import { addDays, formatLocalDate, formatLocalTime, nextMonday } from '@/core/da
 import { earliestReminder, quickReminders, reminderPresets, type ReminderAt } from '@/core/dates/reminders';
 import type { LocalDate, LocalTime } from '@/core/types';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
-import { DateWheel, DockedAction, ListRow, SectionLabel, Text, TimeWheel, useTheme } from '@/shared/ui';
+import { DateWheel, DockedAction, ListRow, SectionLabel, Text, TimeWheel, useTheme, warnHaptic } from '@/shared/ui';
 
 /** A date, and a time for a reminder. */
 interface When {
@@ -75,7 +74,7 @@ export function DatePicker(props: DatePickerProps) {
   const set = () => {
     if (earliest && (shown.date < earliest.date || (shown.date === earliest.date && shown.time! < earliest.time))) {
       setTooEarly(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => undefined);
+      warnHaptic();
       return;
     }
     onSet!(shown);
