@@ -9,9 +9,11 @@ import { isEmail } from '@/core/validation/rules';
 export function useEmailField(initial = '') {
   const [value, setValue] = useState(initial);
   const [left, setLeft] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const trimmed = value.trim();
   const valid = isEmail(trimmed);
-  const errorKey = !left || valid ? undefined : trimmed ? 'emailInvalid' : 'emailRequired';
+  // Leaving an empty field says nothing (M126): "Enter your email" waits for the submit.
+  const errorKey = valid ? undefined : trimmed ? (left || revealed ? 'emailInvalid' : undefined) : revealed ? 'emailRequired' : undefined;
 
   return {
     value,
@@ -22,6 +24,6 @@ export function useEmailField(initial = '') {
     onChangeText: setValue,
     onBlur: () => setLeft(true),
     /** Shows the error now, e.g. when the keyboard's Go is pressed on an incomplete form. */
-    reveal: () => setLeft(true),
+    reveal: () => setRevealed(true),
   };
 }
