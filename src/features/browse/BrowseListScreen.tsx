@@ -36,7 +36,7 @@ const ALL_GROUPS: AllTasksGroup[] = ['date', 'list', 'person'];
 type Show = 'mine' | 'unassigned' | 'overdue' | 'week' | 'onHold';
 const SHOWS: Show[] = ['mine', 'unassigned', 'overdue', 'week', 'onHold'];
 type DateGroup = 'overdue' | 'today' | 'week' | 'later' | 'none';
-const ORDERS: ImportantOrder[] = ['due', 'list', 'created'];
+const ORDERS: ImportantOrder[] = ['created', 'due', 'list'];
 const GROUPS: AssignedByGroup[] = ['person', 'status'];
 
 /** Assigned by me's status groups (M71): what needs the user first. */
@@ -92,7 +92,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const scoped = kind === 'all' || kind === 'team';
   const scope = kind === 'team' ? (id ?? '') : 'all';
   const userId = me?.id ?? '';
-  const order = useImportantOrder((s) => s.byUser[userId]) ?? 'due';
+  const order = useImportantOrder((s) => s.byUser[userId]) ?? 'created';
   const setOrder = useImportantOrder((s) => s.set);
   const byList = ordered && order === 'list';
   const group = useAssignedByGroup((s) => s.byUser[userId] ?? 'person');

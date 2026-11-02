@@ -101,7 +101,7 @@
     "allDoneCount": "Las {{count}} hechas",
     "since": "Desde {{date}}",
     "nothingLate": "Nada atrasado",
-    "soonestFirst": "Las más próximas primero",
+    "flaggedByYou": "Marcadas por ti",
     "noneFlagged": "Ninguna marcada",
     "justForYou": "Solo para ti",
     "nothingOpen": "Nada pendiente",

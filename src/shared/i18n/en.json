@@ -101,7 +101,7 @@
     "allDoneCount": "All {{count}} done",
     "since": "Since {{date}}",
     "nothingLate": "Nothing late",
-    "soonestFirst": "Soonest first",
+    "flaggedByYou": "Flagged by you",
     "noneFlagged": "None flagged",
     "justForYou": "Just for you",
     "nothingOpen": "Nothing open",

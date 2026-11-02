@@ -106,7 +106,7 @@ export function TodayScreen() {
     }
     items.push(
       { type: 'section', key: 's-mine', title: t('home.myStuff') },
-      { type: 'row', key: 'important', label: t('home.important'), icon: 'flag', tone: 'danger', count: c.important, sub: c.important ? urgency(c.importantOverdue, c.importantToday, c.importantComingUp, t('home.soonestFirst')) : t('home.noneFlagged'), onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
+      { type: 'row', key: 'important', label: t('home.important'), icon: 'flag', tone: 'danger', count: c.important, sub: c.important ? urgency(c.importantOverdue, c.importantToday, c.importantComingUp, t('home.flaggedByYou')) : t('home.noneFlagged'), onPress: () => navigation.navigate('BrowseList', { kind: 'important' }) },
       { type: 'row', key: 'personal', label: t('home.inbox'), icon: 'inbox', tone: 'accent', count: c.personal, sub: c.personal ? urgency(c.personalOverdue, c.personalToday, c.personalComingUp, t('home.justForYou')) : t('home.nothingOpen'), onPress: () => personal && navigation.navigate('TaskList', { taskListId: personal.id }) },
       { type: 'row', key: 'reminders', label: t('home.reminders'), icon: 'reminder', tone: 'warn', count: c.remindersNext7Days, sub: t(c.remindersNext7Days ? 'home.next7Days' : 'home.noneComingUp'), onPress: () => navigation.navigate('Reminders') },
       { type: 'section', key: 's-assignments', title: t('home.assignments') },
