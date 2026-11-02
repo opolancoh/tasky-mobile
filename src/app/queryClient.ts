@@ -5,7 +5,7 @@ import { isApiError, isConnectionError } from '@/core/http/problem';
 import { toastError } from '@/shared/i18n/errors';
 import { setConnectionRetry, showCantConnect } from '@/shared/network/cantConnect';
 
-/** Refetch what's on screen when the app comes back to the foreground. */
+/** Refetch what's on screen when the app comes back to the foreground, if older than 5 minutes (staleTime). */
 AppState.addEventListener('change', (state) => {
   if (Platform.OS !== 'web') focusManager.setFocused(state === 'active');
 });
@@ -37,7 +37,8 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      // The app's own writes update the cache; others' changes show within 5 minutes or on pull to refresh.
+      staleTime: 5 * 60_000,
       // The HTTP client already retries network errors and 5xx; a 4xx won't change on retry.
       retry: (count, error) => count < 1 && !(isApiError(error) && error.status >= 400 && error.status < 500),
     },
