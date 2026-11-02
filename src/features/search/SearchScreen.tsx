@@ -186,7 +186,7 @@ export function SearchScreen() {
       case 'team':
         return (
           <Pressable onPress={() => { if (me) remember(me.id, query); navigation.navigate('Team', { teamId: item.team.id }); }} accessibilityRole="button" style={({ pressed }) => [styles.nav, { gap: space.md, backgroundColor: pressed ? colors.surface2 : 'transparent' }]}>
-            <View style={[styles.navIcon, styles.hashIcon, { backgroundColor: colors.surface2 }]}><Text variant="caption" color="ink2">{item.team.name.slice(0, 2).toUpperCase()}</Text></View>
+            <View style={[styles.navIcon, styles.hashIcon, { backgroundColor: colors.surface2 }]}><Feather name="users" size={16} color={colors.ink2} /></View>
             <View style={styles.fill}><Highlight text={item.team.name} words={words} lines={1} /></View>
             <Feather name="chevron-right" size={18} color={colors.ink3} />
           </Pressable>
