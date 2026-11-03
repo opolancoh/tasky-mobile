@@ -2,6 +2,27 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.13.0 — 2026-11-03
+
+- Titles start at the same height on Spaces, Calendar and Search; Search's placeholder names teams and tasks first
+- Calendar: no List view; Month | Week icons on the title's row, no line above it (M140)
+- Spaces: ••• on the title's row with Arrange; teams with the people icon (M139)
+- Selection bar in desktop's order and words (Important, Due), Tag in More, room between labels; list header skeleton with one icon (M138)
+- A picked row's tint rounded and wider; task lists reach past the screen padding (M137)
+- Completed tasks grey, the accent check left to picking (M136)
+- Comments on every task; lists say Private, Shared or Team with Share or People; no counts on Spaces rows; Clear completed, Edit list, Edit multiple tasks, Newest first; desktop's icons via LineIcon
+- Important newest first by default (M127)
+- Refetch on foreground only after 5 minutes
+- Search: teams found show the team icon, not initials
+- Docs: point to Azignia Design, not the old hub
+- M126: the logo is the app icon's disk; an empty email waits for the submit
+- Quick add says where the task went, with View (M125)
+- A title needs a letter, number or emoji (M124)
+- Actions stay enabled and say what's wrong on tap (M123)
+- One DatePicker for every date; wheels on Reanimated, 5-minute steps (M122)
+- M121: Teams in Search; every search ring only while a request is out
+- M121: Search shows Lists, Tags, Tasks and a folded Completed; # lists tags; one 400 ms search delay
+
 ## 0.12.0 — 2026-10-30
 
 - M120: follow any keyboard to its full height
