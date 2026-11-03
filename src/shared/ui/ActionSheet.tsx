@@ -1,16 +1,17 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { create } from 'zustand';
 
+import { LineIcon, type LineIconName } from './LineIcon';
 import { Sheet } from './Sheet';
 import { Text } from './Text';
 import { useTheme } from './theme';
 
 export interface ActionChoice {
   label: string;
-  /** A Feather name, or `{ community }` for one Feather lacks (sort). */
-  icon?: ComponentProps<typeof Feather>['name'] | { community: ComponentProps<typeof MaterialCommunityIcons>['name'] };
+  /** A Feather name, or `{ line }` for one Feather lacks, drawn as desktop's (Sort, Edit multiple tasks, Clear completed). */
+  icon?: ComponentProps<typeof Feather>['name'] | { line: LineIconName };
   /** Gray, after the label: the current value (Sort · Manual). */
   value?: string;
   /** A check at the end: the current choice in a list of options. */
@@ -70,7 +71,7 @@ export function ActionSheetHost() {
               <View style={styles.icon}>
                 {typeof a.icon === 'string'
                   ? <Feather name={a.icon} size={20} color={a.destructive ? colors.danger : colors.ink2} />
-                  : <MaterialCommunityIcons name={a.icon.community} size={22} color={colors.ink2} />}
+                  : <LineIcon name={a.icon.line} color={a.destructive ? colors.danger : colors.ink2} />}
               </View>
             )}
             <Text variant="body" color={a.destructive ? 'danger' : 'ink'} style={styles.label}>{a.label}</Text>

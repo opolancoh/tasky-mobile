@@ -69,8 +69,8 @@ export function BrowseRow({ label, icon, tint, count, zero, sub, aside, onPress,
   );
 }
 
-/** A row being loaded (M27, M70): the tile, the name (`width`, in percent), the line under it on Home's rows (`sub`), a short count. */
-export function BrowseRowSkeleton({ width, sub }: { width: number; sub?: number }) {
+/** A row being loaded (M27, M70): the tile, the name (`width`, in percent), the line under it on Home's rows (`sub`), a short count (not on Spaces', M129). */
+export function BrowseRowSkeleton({ width, sub, count = true }: { width: number; sub?: number; count?: boolean }) {
   const { space } = useTheme();
   return (
     <View style={[styles.row, { gap: space.md }]}>
@@ -79,7 +79,7 @@ export function BrowseRowSkeleton({ width, sub }: { width: number; sub?: number 
         <Skeleton width={`${width}%`} height={14} />
         {sub !== undefined && <Skeleton width={`${sub}%`} height={10} />}
       </View>
-      <Skeleton width={18} height={12} />
+      {count && <Skeleton width={18} height={12} />}
     </View>
   );
 }

@@ -38,7 +38,6 @@ export interface TaskList {
 export interface Tag {
   name: string;
   color: string | null;
-  openTasks: number;
   isOwn: boolean;
 }
 

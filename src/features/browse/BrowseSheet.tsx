@@ -161,7 +161,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
         {target.kind === 'list' && isNew && (
           <>
             <SectionLabel>{t('browse.sheet.sortBy')}</SectionLabel>
-            {SORT_MODES.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} detail={s === 'manual' ? t('browse.sort.manualHint') : undefined} selected={sort === s} onPress={() => setSort(s)} divider={i < SORT_MODES.length - 1} />)}
+            {SORT_MODES.map((s, i) => <ListRow key={s} label={t(`browse.sort.${s}`)} selected={sort === s} onPress={() => setSort(s)} divider={i < SORT_MODES.length - 1} />)}
           </>
         )}
       </ScrollView>

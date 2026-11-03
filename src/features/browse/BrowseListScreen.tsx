@@ -171,7 +171,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     const i = await chooseAction({ title: t('browse.assignedByGroup.label'), actions: GROUPS.map((g) => ({ label: t(`browse.assignedByGroup.${g}`), selected: g === group })), cancelLabel: t('common.cancel') });
     if (i !== null && userId) setGroup(userId, GROUPS[i]);
   };
-  const viewRow = ordered ? { label: t('browse.menu.sort'), icon: { community: 'swap-vertical' as const }, value: t(`browse.order.${order}`), more: true, run: chooseOrder }
+  const viewRow = ordered ? { label: t('browse.menu.sort'), icon: { line: 'arrowUpDown' as const }, value: t(`browse.order.${order}`), more: true, run: chooseOrder }
     : given ? { label: t('browse.assignedByGroup.label'), icon: 'layers' as const, value: t(`browse.assignedByGroup.${group}`), more: true, run: chooseGiven }
     : undefined;
   useLayoutEffect(() => {

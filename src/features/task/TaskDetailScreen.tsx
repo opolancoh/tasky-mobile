@@ -47,9 +47,8 @@ import { useRepeatText } from '@/shared/hooks/useRepeatText';
  * turns it into the usual screen.
  * Someone who sees the task only as its assignee (D70, M45) gets "From Olga" instead of the list, the title, date,
  * Important, repeat and tags read only, and Give it back instead of Delete. A task its assignee completed for the user
- * shows Confirm (D71). Comments (D92, M82, M110): a thread at the end, "+ Add a comment" under it opening the comment page, on a task someone else
- * sees (a shared or team list, or given to someone) or one that has comments; `commentId` (from Activity) tints that one.
- * History is a screen of its own, from ••• on the same tasks (M109).
+ * shows Confirm (D71). Comments (D92, M82, M110), on every task (M128): a thread at the end, "+ Add a comment" under it
+ * opening the comment page; `commentId` (from Activity) tints that one. History is a screen of its own, from ••• (M109).
  */
 export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; commentId?: Id; fromPush?: boolean; pick?: 'assignee' }>) {
   const { taskId, commentId, fromPush, pick } = route.params;
@@ -282,16 +281,14 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
     });
   };
   // Comments (D92, M82): when someone else sees the task, or it already has some (the history stays); History in ••• the same (M109).
-  const givenTo = !!task.assignee && task.assignee.id !== me.id && !isEmailAssignee(task.assignee.id);
   const commentCount = task.commentCount ?? 0;
-  const comments = sharedList || givenTo || outside || commentCount > 0;
   // The ••• menu (M107): only what the caller may do; a sheet from the bottom, as a list's •••.
   const openMenu = async () => {
     const actions = [
       held ? { key: 'resume', label: t('hold.resume'), icon: 'play' as const }
         : !completed && holds.canHold(task) ? { key: 'hold', label: t('hold.put'), icon: 'pause-circle' as const } : null,
       !outside ? { key: 'move', label: t('taskDetail.move'), icon: 'folder' as const } : null,
-      comments ? { key: 'history', label: t('history.title'), icon: 'clock' as const } : null,
+      { key: 'history', label: t('history.title'), icon: 'clock' as const },
       outside ? { key: 'back', label: t('taskDetail.giveBack'), icon: 'corner-up-left' as const, destructive: true }
         : { key: 'delete', label: t('taskDetail.delete'), icon: 'trash-2' as const, destructive: true },
     ].filter((a) => !!a);
@@ -489,8 +486,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       </View>
       </View>
 
-      {comments && (
-        <View {...locked}>
+      <View {...locked}>
         <CommentThread
           taskId={taskId}
           count={commentCount}
@@ -499,8 +495,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
           onEdit={writeComment}
           onAdd={waiting ? undefined : () => writeComment()}
         />
-        </View>
-      )}
+      </View>
 
       <View style={{ marginTop: space.xxl, gap: space.xxs }}>
         {/* The latest first (M98): Updated, then Created. */}

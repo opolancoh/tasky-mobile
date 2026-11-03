@@ -8,7 +8,7 @@ What several features use: the design system, the session and translations.
 src/shared/
 ├── ui/                    The design system; import from '@/shared/ui'
 │   ├── Text  Button  TextField  Notice  RuleCheck  Logo  Screen  Sheet  ListRow
-│   ├── ClearButton  SectionLabel  Segmented  ColorDot  SearchField  Toast  confirm  ActionSheet  Skeleton  Pill  TextButton
+│   ├── ClearButton  SectionLabel  Segmented  ColorDot  SearchField  Toast  confirm  ActionSheet  LineIcon  Skeleton  Pill  TextButton
 │   ├── useDelayedFlag.ts  The 300 ms before a busy control shows its spinner (M56)
 │   ├── useKeyboardHeight.ts  The keyboard's height as a shared value, following every frame change, any keyboard (M120); Sheet and Screen use it
 │   ├── WheelColumn  DateWheel  TimeWheel   Wheel pickers
@@ -55,6 +55,7 @@ src/shared/
 │   └── tags/                TagPicker  TagsRow  tagItems.ts (TagItem, sortByRecent)  recentTagsStore.ts
 ├── hooks/
 │   ├── useDateLabels.ts   "Today", "Tomorrow", "Wed, Oct 7"; reminder text
+│   ├── useListKind.ts     a list's kind: Private, Shared or Team · Family
 │   ├── useRepeatText.ts   "Weekly on Monday", "Every 2 weeks on Mon, Thu" (Task detail, the Reminder sheet)
 │   ├── usePullRefresh.tsx  Pull to refresh on every list screen
 │   └── foldedListsStore.ts  The lists (and Home's views) whose Completed the user folded, per user, on the device (M63, M105)
@@ -96,6 +97,7 @@ Knows nothing about tasks; takes variants, not colors (`<Button variant="primary
 | `SectionLabel` | Small upper-case heading over a group of rows ("ALL TAGS", "CUSTOM"); `action`: one icon at its right (a section's Share, M91); `info`: a grey ⓘ right after the words that explains the section (the List page's kinds of lists, M111) |
 | `Segmented` | A segmented control: equal segments on a grey track, the chosen one raised (`options`, `value`, `onChange`); unused since M94 moved Important's order and Assigned by me's switch into ••• |
 | `ColorDot` | A list or tag color swatch; ink3 when none. `faint(color, scheme)`: the same color faint, for a tile behind a dot or "#" (Browse rows) |
+| `LineIcon` | `<LineIcon name color size? />`: an icon Feather lacks, drawn with desktop's Lucide paths (react-native-svg) so both apps match: `listChecks` (Edit multiple tasks), `arrowUpDown` (Sort), `circleCheck` (Clear completed). An action's `icon: { line }` uses it |
 | `SearchField` | A rounded search box with ✕; takes its placeholder and clear label as props; `busy` spins a ring in place of the magnifier |
 | `DockedAction` | A sheet page's one action docked under its scrolling content: a hairline, then a full-width accent button with the label and what it applies on a second line (Set due date, Set reminder; M112) |
 | `DateWheel` | Day, month name, year (that order in every language); keeps the day inside shorter months; any date (M122); a past value shows with its own year; value `"2026-09-30"` |
@@ -137,6 +139,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | Hook | Purpose |
 |---|---|
 | `useDateLabels(today)` | `day(date)`: "Today", "Tomorrow" or "Wed, Oct 7"; `reminder(at)`: "Wed, 9:00 AM"; `time("09:00")`: "9:00 AM", in the app's language |
+| `useListKind()` | `(list)` → "Private", "Shared" or "Team · Family" (nothing for Personal): the List picker and a list's top line (M130) |
 | `useRepeatText()` | `option(pattern, date)`: "Weekly on Monday"; `describe(repeat, date)`: any rule, "Every 2 weeks on Mon, Thu" |
 | `usePullRefresh(...queries)` | Every list screen's `refreshControl`: a pull refetches the screen's queries (those enabled) |
 | `useFoldedLists` | Whether a list's Completed is folded (open by default), per user, on the device: a task list by id, Home's views by name (`today`, `important`, `assigned`, `assignedBy`) (M63, M105) |

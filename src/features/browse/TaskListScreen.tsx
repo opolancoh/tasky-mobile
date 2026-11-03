@@ -24,6 +24,7 @@ import { canInvite } from './browseSections';
 import { AddTaskButton } from './components/AddTaskButton';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
+import { useListKind } from '@/shared/hooks/useListKind';
 
 type Item =
   | { type: 'header'; key: string }
@@ -38,12 +39,10 @@ type Item =
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. Add a task, docked at the bottom, empty
  * list or full, opens Quick add on this list (M103). The top (M64): the title,
- * then one line, "3 open · Shared with Luis" (only the count on a private list); add people beside ••• for those who
- * invite, and ••• opens the list's menu as a sheet. After the open tasks,
+ * then one line, "3 open · Shared · People" (Private · Share for its owner, Team · Family · People; M130, M131): the
+ * action opens People; ••• opens the list's menu as a sheet. After the open tasks,
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
- * list on the device, its tasks fetched only while open, newest first, paged (D54). Who is in it (M44): "Shared with
- * Luis", "Family · 3 people", or on a private list "Only you · Ana and Luis have tasks" once tasks went to people outside
- * it (D70, M45); a tap opens People. Tasks on hold (D91, M80) wait in their own section between the open tasks and
+ * list on the device, its tasks fetched only while open, newest first, paged (D54). Tasks on hold (D91, M80) wait in their own section between the open tasks and
  * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
  * Selecting (M81): a long press on a task or ••• › Select tasks; the top bar becomes Cancel · "3 selected" · All, the
  * selection bar takes Add a task's place, and Completed folds away meanwhile. Scrolled, the bar shows the name over
@@ -69,6 +68,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const done = useTaskPages({ taskListId, status: 'completed', limit: 20 }, showDone);   // nothing fetched while folded
   const shared = !!taskList && taskList.sharing !== 'private';
   const members = useMembers({ kind: 'taskList', id: taskListId }, shared);
+  const listKind = useListKind();
   const refreshControl = usePullRefresh(tasks, held, done, members, taskLists);
   const complete = useCompleteTask();
   const reopen = useReopenTask();
@@ -107,11 +107,6 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
         ? () => <SkeletonIcons count={2} />
         : () => (
             <View style={styles.headerRight}>
-              {canInvite(taskList, team) && (
-                <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" accessibilityLabel={t('browse.peopleTitle')} style={styles.more}>
-                  <Feather name="users" size={21} color={colors.accent} />
-                </Pressable>
-              )}
               <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), pickable.length ? () => start() : undefined)} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>
                 <Feather name="more-horizontal" size={22} color={colors.accent} />
               </Pressable>
@@ -138,18 +133,9 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const doneTotal = done.data?.pages[0]?.total ?? doneCount;
   const openTotal = tasks.data?.total ?? rows.length;
   const people = members.data ?? [];
-  const others = people.filter((m) => m.userId !== me?.id).map((m) => m.displayName.split(' ')[0]);
-  const count = t('browse.people', { count: people.length });
-  // People with tasks here who aren't in it (D70): named on a private list's line.
+  // People with tasks here who aren't in it (D70).
   const outsideOf = (r: TaskSummary) => !!r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id);
-  const outsiders = [...new Set(rows.filter(outsideOf).map((r) => r.assignee!.displayName.split(' ')[0]))];
-  // Who is in it (M44): nothing on Personal or a private list, unless tasks went to people outside it (D70, D88).
-  const who = !taskList ? null
-    : !shared ? (outsiders.length ? t('browse.onlyYouWith', { names: outsiders.join(', ') }) : null)
-    : !members.data ? null
-    : taskList.team ? `${taskList.team.name} · ${count}`
-    : taskList.owner.id === me?.id ? t('browse.sharedWith', { names: others.join(', ') })
-    : `${t('browse.ownersList', { name: taskList.owner.displayName.split(' ')[0] })} · ${count}`;
+  const kind = taskList && listKind(taskList);
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
@@ -164,11 +150,17 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
             {taskList && !tasks.isPending && (
               <View style={[styles.line, { gap: space.xs }]}>
                 <Text variant="subhead" color="ink3">{openTotal ? t('browse.openShort', { count: openTotal }) : t('browse.noTasksYet')}</Text>
-                {who && (
+                {kind && (
+                  <>
+                    <Text variant="subhead" color="ink3">·</Text>
+                    <Feather name={shared ? 'users' : 'lock'} size={14} color={colors.ink2} />
+                    <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{kind}</Text>
+                  </>
+                )}
+                {kind && (shared || canInvite(taskList, team)) && (
                   <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
                     <Text variant="subhead" color="ink3">·</Text>
-                    <Feather name="users" size={14} color={colors.ink2} />
-                    <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{who}</Text>
+                    <Text variant="subhead" color="accent">{t(shared ? 'browse.peopleTitle' : 'browse.shareShort')}</Text>
                   </Pressable>
                 )}
               </View>

@@ -255,12 +255,12 @@ export function takesNew(filter: TaskFilter, task: TaskSummary, place: NewTaskPl
   return true;
 }
 
-/** Where a new task goes among `items` in a list's order: on top (Manual, Newest, D85), or by due date, flag or title. */
+/** Where a new task goes among `items` in a list's order: on top (Newest first, D85, D122), or by due date, flag or title, first among ties. */
 function placeOf(items: TaskSummary[], task: TaskSummary, order: 'top' | 'due' | 'important' | 'title'): number {
   const after = (x: TaskSummary) => {
-    if (order === 'due') return !task.dueDate ? false : !x.dueDate || x.dueDate > task.dueDate;
+    if (order === 'due') return !task.dueDate ? !x.dueDate : !x.dueDate || x.dueDate >= task.dueDate;
     if (order === 'important') return task.isImportant || !x.isImportant;
-    if (order === 'title') return collator.compare(x.title, task.title) > 0;
+    if (order === 'title') return collator.compare(x.title, task.title) >= 0;
     return true;
   };
   const i = items.findIndex(after);

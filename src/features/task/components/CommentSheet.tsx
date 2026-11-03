@@ -89,7 +89,7 @@ function CommentPage() {
         ref={input}
         value={text}
         onChangeText={change}
-        placeholder={t('comments.placeholder')}
+        placeholder={t(people.length ? 'comments.placeholder' : 'comments.add')}
         placeholderTextColor={colors.ink3}
         selectionColor={colors.accent}
         accessibilityLabel={t('comments.add')}

@@ -6,6 +6,7 @@ import type { Id } from '@/core/types';
 import type { TaskList } from '@/data/tasks/types';
 import { useSessionStore } from '@/shared/session/sessionStore';
 import { inform, ListRow, SearchField, SectionLabel, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { useListKind } from '@/shared/hooks/useListKind';
 
 import { useRecentLists } from './recentListsStore';
 import { TaskListIcon } from './TaskListIcon';
@@ -25,6 +26,7 @@ export function TaskListPicker({ taskLists, loading, selectedId, note, onPick }:
   const userId = useSessionStore((s) => s.userId);
   const recentIds = useRecentLists((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_IDS;
   const [text, setText] = useState('');
+  const kind = useListKind();
   if (loading) return <ScrollView>{[60, 45, 70, 50].map((w) => <SkeletonRow key={w} width={w} />)}</ScrollView>;
 
   const q = text.trim().toLowerCase();
@@ -34,10 +36,6 @@ export function TaskListPicker({ taskLists, loading, selectedId, note, onPick }:
     .map((c, i) => ({ c, i }))
     .sort((a, b) => Number(b.c.isInbox) - Number(a.c.isInbox) || KIND_ORDER[a.c.sharing] - KIND_ORDER[b.c.sharing] || a.i - b.i)
     .map(({ c }) => c);
-  const kind = (c: TaskList) => c.isInbox ? undefined
-    : c.sharing === 'private' ? t('taskLists.kind.private')
-    : c.sharing === 'shared' ? t('taskLists.kind.shared')
-    : t('taskLists.kind.team', { name: c.team?.name ?? '' });
   const pick = (c: TaskList) => {
     if (userId) useRecentLists.getState().used(userId, c.id);
     onPick(c);

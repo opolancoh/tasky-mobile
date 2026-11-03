@@ -212,8 +212,7 @@
     "completedToast": "Completed “{{title}}”",
     "listAllDone": "All done",
     "sort": {
-      "manual": "Manual",
-      "manualHint": "New tasks on top",
+      "manual": "Newest first",
       "dueDate": "Due date",
       "important": "Important first",
       "alphabetical": "Title (A–Z)"
@@ -221,6 +220,7 @@
     "reopen": "Reopen {{title}}",
     "allTasks": "All tasks",
     "teamGone": "You’re no longer in this team.",
+    "shareShort": "Share",
     "peopleTitle": "People",
     "you": "{{name}} (you)",
     "role": {
@@ -282,16 +282,16 @@
     "deletedLine": "{{what}} · deleted {{date}} · until {{until}}",
     "restore": "Restore",
     "restored": "Restored {{name}}",
-    "clear": { "title_one": "Delete {{count}} completed task?", "title_other": "Delete {{count}} completed tasks?", "body_one": "It goes to Recently Deleted for 30 days.", "body_other": "They go to Recently Deleted for 30 days.", "confirm": "Delete", "done_one": "Deleted {{count}} completed task", "done_other": "Deleted {{count}} completed tasks" },
+    "clear": { "title_one": "Clear {{count}} completed task?", "title_other": "Clear {{count}} completed tasks?", "body_one": "You'll find it in Recently Deleted for 30 days.", "body_other": "You'll find them in Recently Deleted for 30 days.", "confirm": "Clear", "done_one": "Cleared {{count}} completed task", "done_other": "Cleared {{count}} completed tasks" },
     "menu": {
       "title": "More",
       "sort": "Sort",
-      "editList": "Edit",
+      "editList": "Edit list",
       "share": "Share list",
       "people": "People",
       "peopleInvite": "People and invitations",
       "archive": "Archive list",
-      "deleteCompleted": "Delete completed tasks",
+      "clearCompleted": "Clear completed",
       "deleteList": "Delete list",
       "leaveList": "Leave list",
       "newListIn": "New list in {{name}}",
@@ -349,7 +349,6 @@
     "openShort_one": "{{count}} open",
     "openShort_other": "{{count}} open",
     "noTasksYet": "No tasks yet",
-    "onlyYouWith": "Only you · {{names}} have tasks",
     "important": "Important",
     "order": {
       "label": "Order",
@@ -1027,6 +1026,7 @@
   },
   "select": {
     "selectTasks": "Select tasks",
+    "editMultiple": "Edit multiple tasks",
     "cant": { "reminder": "Reminders can’t be selected", "confirm": "Confirm or decline this task first", "completed": "Completed tasks can’t be selected" },
     "selected_one": "{{count}} selected",
     "selected_other": "{{count}} selected",

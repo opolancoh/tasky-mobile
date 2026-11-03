@@ -13,7 +13,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, SkeletonHeading, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
-import { groupTaskLists, moveInOrder, openInTeam } from './browseSections';
+import { groupTaskLists, moveInOrder } from './browseSections';
 import { useShowBrowseSheet } from '@/shared/browseSheet/browseSheetStore';
 import { BrowseRow, BrowseRowSkeleton, OwnerMark, SharedMark } from '@/shared/components/BrowseRow';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
@@ -24,7 +24,7 @@ type Item =
   | { type: 'header'; key: string }
   | { type: 'section'; key: string; title: string; add?: { label: string; onPress(): void }; fold?: { section: SpacesSection; folded: boolean; count: number } }
   | { type: 'list'; key: string; taskList: TaskList; group?: Group; index: number; size: number; flat?: boolean }
-  | { type: 'team'; key: string; team: Team; count: number; index?: number; size?: number }
+  | { type: 'team'; key: string; team: Team; index?: number; size?: number }
   | { type: 'tag'; key: string; tag: Tag; index: number; size: number }
   | { type: 'action'; key: string; label: string; body: string; icon: ComponentProps<typeof Feather>['name']; onPress(): void }
   | { type: 'hint'; key: string; text: string }
@@ -36,8 +36,8 @@ const FILTER_FROM = 25;
 
 /**
  * Spaces, the second tab (06-mobile.md, M38, M70, M105; the route keeps the name Browse): the user's lists, teams and tags.
- * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Personal,
- * Important, Assigned to me and by me, All tasks and More live on Home (M105). Every count opens its list. Edit reorders
+ * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Rows have no
+ * counts (M129): the views' counts are on Home (M105). Edit reorders
  * lists inside their section and tags (arrows); a long press opens a row's menu (what the role allows).
  */
 export function BrowseScreen() {
@@ -85,7 +85,7 @@ export function BrowseScreen() {
   const lists = (group: Group, cs: TaskList[]) => cs.forEach((taskList, index) => items.push({ type: 'list', key: `l-${taskList.id}`, taskList, group, index, size: cs.length }));
 
   // Loading (M27, M108, M115): rough on purpose, so it never names sections the screen may not have: three groups of rows
-  // shaped like Spaces' (tile, name, count), each under a heading-shaped bar.
+  // shaped like Spaces' (tile, name), each under a heading-shaped bar.
   if (loading) {
     [[52, 64], [58, 72, 46], [55, 40]].forEach((widths, g) => {
       items.push({ type: 'skeletonHead', key: `kh-${g}` });
@@ -97,7 +97,7 @@ export function BrowseScreen() {
     const ts = teamList.filter((x) => x.name.toLowerCase().includes(query));
     const gs = tagList.filter((x) => x.name.includes(query));
     if (ls.length) items.push({ type: 'section', key: 's-fl', title: t('browse.lists') }, ...ls.map((taskList, index) => ({ type: 'list' as const, key: `l-${taskList.id}`, taskList, index, size: ls.length, flat: true })));
-    if (ts.length) items.push({ type: 'section', key: 's-ft', title: t('browse.teams') }, ...ts.map((team) => ({ type: 'team' as const, key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })));
+    if (ts.length) items.push({ type: 'section', key: 's-ft', title: t('browse.teams') }, ...ts.map((team) => ({ type: 'team' as const, key: `t-${team.id}`, team})));
     if (gs.length) items.push({ type: 'section', key: 's-fg', title: t('browse.tags') }, ...gs.map((tag, index) => ({ type: 'tag' as const, key: `g-${tag.name}`, tag, index, size: gs.length })));
     if (!ls.length && !ts.length && !gs.length) items.push({ type: 'hint', key: 'none', text: t('browse.noMatch', { query: filter.trim() }) });
   } else {
@@ -110,11 +110,11 @@ export function BrowseScreen() {
     if (editing) {
       if (teamList.length) {
         items.push({ type: 'section', key: 's-teams', title: t('browse.teams') });
-        teamList.forEach((team, index) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id), index, size: teamList.length }));
+        teamList.forEach((team, index) => items.push({ type: 'team', key: `t-${team.id}`, team, index, size: teamList.length }));
       }
     } else {
       items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
-      if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team, count: openInTeam(groups, team.id) })); }
+      if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team})); }
       else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
       // Links into the app (D95, M84): an invite link someone sent, pasted.
       if (!teamList.length || isOpen('teams')) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
@@ -225,7 +225,6 @@ export function BrowseScreen() {
             label={c.isInbox ? t('browse.inbox') : c.name}
             icon={c.isInbox ? tile('inbox', colors.accent) : <ColorDot color={c.color} size={10} />}
             tint={c.isInbox ? undefined : faint(c.color, scheme)}
-            count={c.openTasks ?? 0}
             aside={aside}
             onPress={() => open(c)}
             onLongPress={() => listMenu(c)}
@@ -239,7 +238,6 @@ export function BrowseScreen() {
             label={item.team.name}
             icon={<Text variant="caption" color="ink2">{item.team.name.slice(0, 2).toUpperCase()}</Text>}
             tint={colors.surface2}
-            count={item.count}
             onPress={() => navigation.navigate('Team', { teamId: item.team.id })}
             onLongPress={() => teamMenu(item.team)}
             move={editing && !query && item.index !== undefined ? { up: item.index > 0 ? () => move('teams', item.team.id, -1) : undefined, down: item.index < item.size! - 1 ? () => move('teams', item.team.id, 1) : undefined } : undefined}
@@ -252,7 +250,6 @@ export function BrowseScreen() {
             label={item.tag.name}
             icon={<Text variant="headline" style={{ color }}>#</Text>}
             tint={faint(color, scheme)}
-            count={item.tag.openTasks}
             onPress={() => navigation.navigate('BrowseList', { kind: 'tag', id: item.tag.name })}
             onLongPress={() => tagMenu(item.tag)}
             move={editing && !query ? { up: item.index > 0 ? () => move('tags', item.tag.name, -1) : undefined, down: item.index < item.size - 1 ? () => move('tags', item.tag.name, 1) : undefined } : undefined}
@@ -275,7 +272,7 @@ export function BrowseScreen() {
       case 'hint':
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
       case 'skeleton':
-        return <BrowseRowSkeleton width={item.width} />;
+        return <BrowseRowSkeleton width={item.width} count={false} />;
       case 'skeletonHead':
         return <View style={[styles.section, { marginTop: space.xxl }]}><SkeletonHeading /></View>;
     }

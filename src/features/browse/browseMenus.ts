@@ -59,10 +59,10 @@ export function useBrowseMenus() {
   };
 
   const listMenu = (c: TaskList, onGone?: () => void, onSelect?: () => void) => {
-    const sort: Item = { label: t('browse.menu.sort'), icon: { community: 'swap-vertical' }, value: t(`browse.sort.${c.sortMode}`), more: true, run: () => chooseSort(c) };
-    const select: Item | false = !!onSelect && { label: t('select.selectTasks'), icon: 'check-circle', run: onSelect };
+    const sort: Item = { label: t('browse.menu.sort'), icon: { line: 'arrowUpDown' }, value: t(`browse.sort.${c.sortMode}`), more: true, run: () => chooseSort(c) };
+    const select: Item | false = !!onSelect && { label: t('select.editMultiple'), icon: { line: 'listChecks' }, run: onSelect };
     const done = c.completedTasks ?? 0;
-    const clearDone: Item | false = done > 0 && { label: t('browse.menu.deleteCompleted'), icon: 'check-square', destructive: true, run: () => askClear(c, done) };
+    const clearDone: Item | false = done > 0 && { label: t('browse.menu.clearCompleted'), icon: { line: 'circleCheck' }, destructive: true, run: () => askClear(c, done) };
     if (c.isInbox) return open(t('browse.inbox'), [select, sort, clearDone], cancel);
     const team = c.team ? teams.find((x) => x.id === c.team!.id) : undefined;
     const leave = canLeave(c, team, me?.id);
@@ -71,7 +71,6 @@ export function useBrowseMenus() {
       { label: t('browse.menu.editList'), icon: 'edit-2', run: () => showSheet({ kind: 'list', id: c.id }) },
       sort,
       { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
-      clearDone,
       canManage(c) && {
         label: t('browse.menu.archive'),
         icon: 'archive',
@@ -83,6 +82,7 @@ export function useBrowseMenus() {
           onError: toastError,
         }),
       },
+      clearDone,
       canManage(c) && {
         label: t('browse.menu.deleteList'),
         icon: 'trash-2',
@@ -134,7 +134,7 @@ export function useBrowseMenus() {
 
   const tagMenu = (tag: Tag, onGone?: () => void, onSelect?: () => void) =>
     open(`#${tag.name}`, [
-      !!onSelect && { label: t('select.selectTasks'), icon: 'check-circle', run: onSelect },
+      !!onSelect && { label: t('select.editMultiple'), icon: { line: 'listChecks' }, run: onSelect },
       { label: t('browse.menu.editTag'), icon: 'edit-2', run: () => showSheet({ kind: 'tag', name: tag.name }) },
       {
         label: t('browse.menu.deleteTag'),
@@ -147,9 +147,9 @@ export function useBrowseMenus() {
       },
     ], cancel);
 
-  /** ••• on a task list that isn't a list (All tasks, Important, Assigned…, M81): Select tasks (with open tasks); `view`, how it's shown (Important's Sort, Assigned by me's Group by, M94). */
+  /** ••• on a task list that isn't a list (All tasks, Important, Assigned…, M81): Edit multiple tasks (with open tasks, M134); `view`, how it's shown (Important's Sort, Assigned by me's Group by, M94). */
   const selectMenu = (title: string, onSelect: (() => void) | undefined, view?: Item) =>
-    open(title, [!!onSelect && { label: t('select.selectTasks'), icon: 'check-circle', run: onSelect }, view ?? false], cancel);
+    open(title, [!!onSelect && { label: t('select.editMultiple'), icon: { line: 'listChecks' }, run: onSelect }, view ?? false], cancel);
 
   return { listMenu, teamMenu, tagMenu, selectMenu };
 }

@@ -212,8 +212,7 @@
     "completedToast": "Completada «{{title}}»",
     "listAllDone": "Todo listo",
     "sort": {
-      "manual": "Manual",
-      "manualHint": "Las tareas nuevas, arriba",
+      "manual": "Más recientes primero",
       "dueDate": "Fecha de vencimiento",
       "important": "Importantes primero",
       "alphabetical": "Título (A–Z)"
@@ -221,6 +220,7 @@
     "reopen": "Reabrir {{title}}",
     "allTasks": "Todas las tareas",
     "teamGone": "Ya no estás en este equipo.",
+    "shareShort": "Compartir",
     "peopleTitle": "Personas",
     "you": "{{name}} (tú)",
     "role": {
@@ -282,16 +282,16 @@
     "deletedLine": "{{what}} · eliminado el {{date}} · hasta el {{until}}",
     "restore": "Restaurar",
     "restored": "Restauraste {{name}}",
-    "clear": { "title_one": "¿Eliminar {{count}} tarea completada?", "title_other": "¿Eliminar {{count}} tareas completadas?", "body_one": "Queda en Eliminado recientemente 30 días.", "body_other": "Quedan en Eliminado recientemente 30 días.", "confirm": "Eliminar", "done_one": "{{count}} tarea completada eliminada", "done_other": "{{count}} tareas completadas eliminadas" },
+    "clear": { "title_one": "¿Limpiar {{count}} tarea completada?", "title_other": "¿Limpiar {{count}} tareas completadas?", "body_one": "La encontrarás en Eliminado recientemente 30 días.", "body_other": "Las encontrarás en Eliminado recientemente 30 días.", "confirm": "Limpiar", "done_one": "Se limpió {{count}} tarea completada", "done_other": "Se limpiaron {{count}} tareas completadas" },
     "menu": {
       "title": "Más",
       "sort": "Ordenar",
-      "editList": "Editar",
+      "editList": "Editar lista",
       "share": "Compartir lista",
       "people": "Personas",
       "peopleInvite": "Personas e invitaciones",
       "archive": "Archivar lista",
-      "deleteCompleted": "Eliminar tareas completadas",
+      "clearCompleted": "Limpiar completadas",
       "deleteList": "Eliminar lista",
       "leaveList": "Salir de la lista",
       "newListIn": "Nueva lista en {{name}}",
@@ -349,7 +349,6 @@
     "openShort_one": "{{count}} abierta",
     "openShort_other": "{{count}} abiertas",
     "noTasksYet": "Aún no hay tareas",
-    "onlyYouWith": "Solo tú · {{names}} tienen tareas",
     "important": "Importantes",
     "order": {
       "label": "Orden",
@@ -1027,6 +1026,7 @@
   },
   "select": {
     "selectTasks": "Seleccionar tareas",
+    "editMultiple": "Editar varias tareas",
     "cant": { "reminder": "Los recordatorios no se pueden seleccionar", "confirm": "Primero confirma o rechaza esta tarea", "completed": "Las tareas completadas no se pueden seleccionar" },
     "selected_one": "{{count}} seleccionada",
     "selected_other": "{{count}} seleccionadas",
