@@ -13,6 +13,7 @@ import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
 import { Button, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
+import { useRowBleed } from '@/shared/components/TaskRow';
 
 import { CalendarHeader } from './components/CalendarHeader';
 import { DayHeading } from './components/DayHeading';
@@ -45,6 +46,7 @@ type Item =
 export function DaysView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
@@ -136,6 +138,7 @@ export function DaysView({ today }: { today: LocalDate }) {
 
   return (
     <FlashList
+      {...bleed}
       data={items}
       renderItem={renderItem}
       keyExtractor={(item) => item.key}

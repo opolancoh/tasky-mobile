@@ -25,6 +25,7 @@ import { AddTaskButton } from './components/AddTaskButton';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 import { useListKind } from '@/shared/hooks/useListKind';
+import { useRowBleed } from '@/shared/components/TaskRow';
 
 type Item =
   | { type: 'header'; key: string }
@@ -52,6 +53,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const { taskListId, backTitle } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
@@ -215,6 +217,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        style={bleed.style}
         refreshControl={refreshControl}
         ref={list}
         data={items}
@@ -226,7 +229,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
         onEndReached={() => showDone && done.hasNextPage && !done.isFetchingNextPage && done.fetchNextPage()}
         onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: space.lg }}
+        contentContainerStyle={{ ...bleed.contentContainerStyle, paddingBottom: space.lg }}
       />
       {selecting ? <SelectionBar /> : <AddTaskButton taskListId={taskListId} listName={taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''} onAdded={added} loading={!taskList || tasks.isPending} />}
     </Screen>

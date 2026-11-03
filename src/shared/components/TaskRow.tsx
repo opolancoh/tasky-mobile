@@ -12,7 +12,7 @@ import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
 import { selectable as canSelect, notSelectableKey, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { Pill, Text, useTheme, useToast } from '@/shared/ui';
+import { Pill, radius, Text, useTheme, useToast } from '@/shared/ui';
 
 import { Avatar } from './Faces';
 import { ReminderIcon } from './ReminderIcon';
@@ -54,6 +54,12 @@ export interface TaskRowProps {
  * a long press starts selecting; while selecting, the circle is a round check, a tap picks or drops the task and the picked
  * row tints; completed tasks can't be picked. A reminder (D110, M114) opens the Reminder sheet and is never picked.
  */
+/** For a list of task rows: it reaches past the screen's padding so a row's tint can too (a list clips what's outside it). */
+export function useRowBleed() {
+  const { space } = useTheme();
+  return { style: { marginHorizontal: -space.sm }, contentContainerStyle: { paddingHorizontal: space.sm } };
+}
+
 export function TaskRow({ task, today, showDue = false, showTime = false, showList = true, showAssignment = false, outside = false, hideFace = false, selectable = false, action, onComplete, onPress }: TaskRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
@@ -88,7 +94,7 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
       onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && startSelecting()}
     >
       {({ pressed }) => (
-        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: selection.picked && selecting ? colors.accentSoft : pressed ? colors.surface2 : 'transparent', opacity: selecting && !pickable ? 0.4 : 1 }]}>
+        <View style={[styles.row, styles.tint, { gap: space.md, paddingVertical: space.md, marginHorizontal: -space.sm, paddingHorizontal: space.sm, backgroundColor: selection.picked && selecting ? colors.accentSoft : pressed ? colors.surface2 : 'transparent', opacity: selecting && !pickable ? 0.4 : 1 }]}>
           {selecting && pickable ? (
             <SelectCheck picked={selection.picked} />
           ) : held ? (
@@ -215,6 +221,8 @@ export function TaskMarks({ task, hideFace = false }: { task: TaskSummary; hideF
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start' },
+  // The picked or pressed tint reaches into the margin, rounded, so the circle has room and each row reads apart.
+  tint: { borderRadius: radius.md },
   main: { flex: 1, minWidth: 0, gap: 3 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
   end: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center' },

@@ -16,6 +16,7 @@ import { TaskRow } from '@/shared/components';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
 import { chooseAction, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
+import { useRowBleed } from '@/shared/components/TaskRow';
 
 import { useCalendarView } from './calendarViewStore';
 import { CalendarHeader } from './components/CalendarHeader';
@@ -56,6 +57,7 @@ type Picked = LocalDate | 'overdue';
 export function MonthView({ today }: { today: LocalDate }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const labels = useCalendarLabels(today);
   const complete = useCompleteTask();
@@ -233,6 +235,7 @@ export function MonthView({ today }: { today: LocalDate }) {
 
   return (
     <FlashList
+      {...bleed}
       ref={list}
       data={items}
       renderItem={renderItem}

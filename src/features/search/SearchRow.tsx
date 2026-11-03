@@ -9,7 +9,7 @@ import { CheckCircle, TaskMarks, TaskMeta, useTaskCheck } from '@/shared/compone
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { SelectCheck } from '@/shared/selection/SelectCheck';
 import { notSelectableKey, selectable, useRowSelection, useSelection } from '@/shared/selection/selectionStore';
-import { fonts, Text, useTheme, useToast } from '@/shared/ui';
+import { fonts, radius, Text, useTheme, useToast } from '@/shared/ui';
 
 /** Lower case without accents, so "Café" matches "cafe" (the API ignores both). */
 const fold = (s: string) => s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase();
@@ -64,7 +64,7 @@ export function SearchRow({ task, match, words, today, onPress }: { task: TaskSu
       onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && startSelecting()}
     >
       {({ pressed }) => (
-        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, backgroundColor: selecting && selection.picked ? colors.accentSoft : pressed ? colors.surface2 : 'transparent' }]}>
+        <View style={[styles.row, { gap: space.md, paddingVertical: space.md, marginHorizontal: -space.sm, paddingHorizontal: space.sm, borderRadius: radius.md, backgroundColor: selecting && selection.picked ? colors.accentSoft : pressed ? colors.surface2 : 'transparent' }]}>
           {selecting ? (
             <SelectCheck picked={selection.picked} />
           ) : held ? (

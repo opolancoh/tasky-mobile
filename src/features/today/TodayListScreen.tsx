@@ -16,6 +16,7 @@ import { LoadError } from '@/shared/components/LoadError';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 import { Pill, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { useRowBleed } from '@/shared/components/TaskRow';
 
 import { AskRow, FollowUpRow, HoldRow, InvitationRow } from './components/StreamRows';
 import type { TodayListSection } from './todaySections';
@@ -44,6 +45,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   const { section } = route.params;
   const { t } = useTranslation();
   const { colors, radius, space } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const complete = useCompleteTask();
   const update = useUpdateTask();
@@ -172,6 +174,7 @@ export function TodayListScreen({ route }: StaticScreenProps<{ section: TodayLis
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        {...bleed}
         data={items}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}

@@ -16,6 +16,7 @@ import { SelectionBar, SelectionTopBar } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { faint, Screen, SearchField, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
+import { useRowBleed } from '@/shared/components/TaskRow';
 
 import { useRecentSearches } from './recentSearchesStore';
 import { Highlight, matchesAll, SearchRow, searchWords } from './SearchRow';
@@ -47,6 +48,7 @@ type Item =
 export function SearchScreen() {
   const { t } = useTranslation();
   const { colors, space, scheme } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
@@ -225,6 +227,7 @@ export function SearchScreen() {
     <Screen edges={['top']} contentStyle={styles.fill}>
       {selecting && <SelectionTopBar tasks={tasks} paged={results.hasNextPage} />}
       <FlashList
+        {...bleed}
         refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}

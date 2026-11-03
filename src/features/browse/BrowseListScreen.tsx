@@ -25,6 +25,7 @@ import { useBrowseMenus } from './browseMenus';
 import { CompletedHeading } from '@/shared/components/CompletedHeading';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
+import { useRowBleed } from '@/shared/components/TaskRow';
 import { FilterStrip } from './components/FilterStrip';
 import { useImportantOrder, type ImportantOrder } from './importantOrderStore';
 
@@ -79,6 +80,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const { kind, id, person, personName, backTitle } = route.params;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
+  const bleed = useRowBleed();
   const navigation = useNavigation();
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
@@ -340,6 +342,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   return (
     <Screen edges={['bottom']} contentStyle={styles.fill}>
       <FlashList
+        {...bleed}
         refreshControl={refreshControl}
         data={items}
         renderItem={renderItem}
