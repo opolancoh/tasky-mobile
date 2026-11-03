@@ -10,7 +10,7 @@ import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, faint, Notice, Screen, SearchField, Skeleton, SkeletonHeading, Text, useTheme } from '@/shared/ui';
+import { chooseAction, ColorDot, faint, Notice, Screen, SearchField, Skeleton, SkeletonHeading, SkeletonIcons, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder } from './browseSections';
@@ -37,7 +37,7 @@ const FILTER_FROM = 25;
 /**
  * Spaces, the second tab (06-mobile.md, M38, M70, M105; the route keeps the name Browse): the user's lists, teams and tags.
  * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Rows have no
- * counts (M129): the views' counts are on Home (M105). Edit reorders
+ * counts (M129): the views' counts are on Home (M105). Arrange (M139) reorders
  * lists inside their section and tags (arrows); a long press opens a row's menu (what the role allows).
  */
 export function BrowseScreen() {
@@ -105,7 +105,7 @@ export function BrowseScreen() {
     const fold = (section: SpacesSection, count: number) => (editing ? undefined : { section, folded: !!folded[section], count });
     const isOpen = (section: SpacesSection) => editing || !folded[section];
 
-    // Teams first (M105), then My lists, Shared with me and Tags. Edit reorders them too (D108), with no add or join rows.
+    // Teams first (M105), then My lists, Shared with me and Tags. Arrange reorders them too (D108), with no add or join rows.
     const newTeam = () => showSheet({ kind: 'team' });
     if (editing) {
       if (teamList.length) {
@@ -150,21 +150,30 @@ export function BrowseScreen() {
     : [teamList.length && t('browse.teamCount', { count: teamList.length }), ownLists && t('browse.listCount', { count: ownLists }), tagList.length && t('browse.tagCount', { count: tagList.length })]
         .filter(Boolean).join(' · ') || t('browse.summaryEmpty');
 
+  const spacesMenu = async () => {
+    const i = await chooseAction({ title: t('browse.title'), actions: [{ label: t('browse.arrange'), icon: { line: 'arrowUpDown' } }], cancelLabel: t('common.cancel') });
+    if (i === 0) setEditing(true);
+  };
+
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
       case 'header':
         return (
           <View style={{ paddingBottom: space.sm }}>
-            {/* Edit and the filter act on what loaded (M115): until then, their shapes as skeletons. */}
-            <View style={styles.bar}>
-              {loading && <View style={styles.barButton}><Skeleton width={34} height={14} /></View>}
-              {!loading && all.length + tagList.length + teamList.length > 1 && !query && (
-                <Pressable onPress={() => setEditing(!editing)} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
-                  <Text variant="button" color="accent">{t(editing ? 'common.done' : 'browse.edit')}</Text>
+            {/* Arrange and the filter act on what loaded (M115): until then, their shapes as skeletons. Spaces' ••• (Arrange for now) sits on the title's row (M139). */}
+            <View style={[styles.bar, { marginTop: space.lg }]}>
+              <Text variant="largeTitle" accessibilityRole="header">{t('browse.title')}</Text>
+              {loading && <SkeletonIcons count={1} />}
+              {!loading && all.length + tagList.length + teamList.length > 1 && !query && (editing ? (
+                <Pressable onPress={() => setEditing(false)} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
+                  <Text variant="button" color="accent">{t('common.done')}</Text>
                 </Pressable>
-              )}
+              ) : (
+                <Pressable onPress={() => void spacesMenu()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.barButton}>
+                  <Feather name="more-horizontal" size={22} color={colors.accent} />
+                </Pressable>
+              ))}
             </View>
-            <Text variant="largeTitle" accessibilityRole="header">{t('browse.title')}</Text>
             {editing ? <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{t('browse.editHint')}</Text>
               : summary ? <Text variant="subhead" color="ink2" style={{ marginTop: space.xs }}>{summary}</Text>
               : (
@@ -236,7 +245,7 @@ export function BrowseScreen() {
         return (
           <BrowseRow
             label={item.team.name}
-            icon={<Text variant="caption" color="ink2">{item.team.name.slice(0, 2).toUpperCase()}</Text>}
+            icon={<Feather name="users" size={16} color={colors.ink2} />}
             tint={colors.surface2}
             onPress={() => navigation.navigate('Team', { teamId: item.team.id })}
             onLongPress={() => teamMenu(item.team)}
@@ -296,7 +305,7 @@ export function BrowseScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  bar: { flexDirection: 'row', justifyContent: 'flex-end', minHeight: 44 },
+  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   barButton: { minHeight: 44, justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   // Section names in capitals, as on Home (M105).

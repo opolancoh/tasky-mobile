@@ -170,7 +170,7 @@
   },
   "browse": {
     "title": "Espacios",
-    "edit": "Editar",
+    "arrange": "Organizar",
     "editHint": "Usa las flechas para cambiar el orden de tus equipos, listas y etiquetas.",
     "filter": "Filtrar listas, equipos y etiquetas",
     "clearFilter": "Borrar filtro",

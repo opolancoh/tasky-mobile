@@ -170,7 +170,7 @@
   },
   "browse": {
     "title": "Spaces",
-    "edit": "Edit",
+    "arrange": "Arrange",
     "editHint": "Use the arrows to change your order of teams, lists and tags.",
     "filter": "Filter lists, teams and tags",
     "clearFilter": "Clear filter",
