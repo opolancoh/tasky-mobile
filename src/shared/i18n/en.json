@@ -431,7 +431,7 @@
   },
   "search": {
     "title": "Search",
-    "placeholder": "Lists, tags and tasks",
+    "placeholder": "Tasks, lists, teams and tags",
     "clearField": "Clear search",
     "recent": "Recent",
     "clear": "Clear",

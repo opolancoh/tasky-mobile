@@ -132,7 +132,7 @@ export function SearchScreen() {
     switch (item.type) {
       case 'header':
         return (
-          <View style={{ paddingTop: space.xl + space.lg, paddingBottom: space.xs, gap: space.md }}>
+          <View style={{ paddingTop: space.lg, paddingBottom: space.xs, gap: space.md }}>
             <Text variant="largeTitle" accessibilityRole="header">{t('search.title')}</Text>
             <SearchBox key={preset.n} initial={preset.text} onQuery={setQuery} fetching={results.isFetching && !results.isFetchingNextPage} />
             {results.error && searching && !results.data && <LoadError error={results.error} onRetry={() => void results.refetch()} />}

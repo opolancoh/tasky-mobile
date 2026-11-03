@@ -431,7 +431,7 @@
   },
   "search": {
     "title": "Buscar",
-    "placeholder": "Listas, etiquetas y tareas",
+    "placeholder": "Tareas, listas, equipos y etiquetas",
     "clearField": "Borrar búsqueda",
     "recent": "Recientes",
     "clear": "Borrar",

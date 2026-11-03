@@ -306,7 +306,8 @@ export function BrowseScreen() {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  barButton: { minHeight: 44, justifyContent: 'center' },
+  // As tall as the title, so it sits where Calendar's and Search's do; hitSlop keeps the tap target.
+  barButton: { minHeight: 38, justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center', minHeight: 32 },
   // Section names in capitals, as on Home (M105).
   caps: { textTransform: 'uppercase', letterSpacing: 0.4 },
