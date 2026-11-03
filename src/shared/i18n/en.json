@@ -790,17 +790,10 @@
   },
   "calendar": {
     "title": "Calendar",
-    "eyebrow": "Every list you can see",
     "overdueCount_one": "{{count}} overdue",
     "overdueCount_other": "{{count}} overdue",
-    "view": {
-      "label": "View",
-      "list": "List",
-      "calendar": "Calendar"
-    },
     "mode": {
       "title": "Show",
-      "open": "{{title}}, change to month or week",
       "month": "Month",
       "week": "Week"
     },
@@ -819,8 +812,6 @@
     "dayTomorrow": "Tomorrow · {{date}}",
     "dayTasks_one": "{{date}}, {{count}} task",
     "dayTasks_other": "{{date}}, {{count}} tasks",
-    "nothingToday": "Nothing due today.",
-    "showMore": "Show more",
     "week": {
       "same": "{{month}} {{start}} – {{end}}",
       "across": "{{start}} – {{end}}"

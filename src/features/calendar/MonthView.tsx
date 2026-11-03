@@ -14,11 +14,11 @@ import type { TaskSummary } from '@/data/tasks/types';
 import { LoadError } from '@/shared/components/LoadError';
 import { TaskRow } from '@/shared/components';
 import { useQuickAdd } from '@/shared/quickAdd/quickAddStore';
-import { chooseAction, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 import { useRowBleed } from '@/shared/components/TaskRow';
 
-import { useCalendarView } from './calendarViewStore';
+import { useCalendarView, type CalendarMode } from './calendarViewStore';
 import { CalendarHeader } from './components/CalendarHeader';
 import { DayHeading } from './components/DayHeading';
 import { MonthGrid } from './components/MonthGrid';
@@ -46,9 +46,9 @@ type Item =
 type Picked = LocalDate | 'overdue';
 
 /**
- * Calendar, the Calendar tab's calendar view (M72, M99): a month (or a week, from the title's menu) with dots in the tasks'
+ * Calendar, the Calendar tab's calendar view (M72, M99): a month (or a week, Month | Week by the title, M140) with dots in the tasks'
  * list colors. The line under "Calendar" counts the range on screen and its overdue tasks; a chip holds the overdue ones
- * outside it ("Earlier"). Under the grid, every day of the range with tasks as the List view draws it (the current month
+ * outside it ("Earlier"). Under the grid, every day of the range with tasks (the current month
  * from today, its overdue on top and folding), a + on each day for Quick add due that day; tapping a day in the grid scrolls to it.
  * ‹ › move a month or a week; Today shows once another day is picked or today is off screen. Only dated tasks. Every open
  * task in the range, every page (GET /tasks?dueFrom=&dueTo=): the dots need them all, and the list draws from the same data.
@@ -138,17 +138,8 @@ export function MonthView({ today }: { today: LocalDate }) {
   };
   const toggleOverdue = () => setDay(day === 'overdue' ? landOn(from, to) : 'overdue');
   const goToday = () => pick(today);
-  const chooseMode = async () => {
-    const i = await chooseAction({
-      title: t('calendar.mode.title'),
-      actions: [
-        { label: t('calendar.mode.month'), icon: 'calendar', selected: !week },
-        { label: t('calendar.mode.week'), icon: 'columns', selected: week },
-      ],
-      cancelLabel: t('common.cancel'),
-    });
-    if (i === null) return;
-    setMode(i === 1 ? 'week' : 'month');
+  const changeMode = (mode: CalendarMode) => {
+    setMode(mode);
     setAnchor(day === 'overdue' ? today : day);
   };
 
@@ -159,14 +150,11 @@ export function MonthView({ today }: { today: LocalDate }) {
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
       case 'header':
-        return <CalendarHeader count={pages.data ? inRange.length : undefined} overdue={overIn.length} />;
+        return <CalendarHeader count={pages.data ? inRange.length : undefined} overdue={overIn.length} mode={week ? 'week' : 'month'} onMode={changeMode} />;
       case 'nav':
         return (
           <View style={[styles.nav, { gap: space.xs, marginTop: space.md, marginBottom: space.sm }]}>
-            <Pressable onPress={chooseMode} accessibilityRole="button" accessibilityLabel={t('calendar.mode.open', { title })} hitSlop={6} style={[styles.title, { gap: space.xxs }]}>
-              <Text variant="headline" numberOfLines={1}>{title}</Text>
-              <Feather name="chevron-down" size={16} color={colors.accent} />
-            </Pressable>
+            <Text variant="headline" numberOfLines={1} style={styles.title}>{title}</Text>
             <View style={styles.fill} />
             {showToday && (
               <Pressable onPress={goToday} accessibilityRole="button" style={({ pressed }) => [styles.today, { backgroundColor: colors.accentSoft, paddingHorizontal: space.md, marginRight: space.xs, opacity: pressed ? 0.7 : 1 }]}>
