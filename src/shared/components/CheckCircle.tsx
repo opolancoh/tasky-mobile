@@ -42,7 +42,7 @@ export function CheckCircle({ checked, saving, onPress, label, size = 22, style 
         accessibilityState={{ checked }}
         accessibilityLabel={label}
         hitSlop={11}
-        style={[styles.circle, { width: size, height: size, borderRadius: size / 2, borderColor: checked ? colors.accent : colors.ink3, backgroundColor: checked ? colors.accent : 'transparent' }]}
+        style={[styles.circle, { width: size, height: size, borderRadius: size / 2, borderColor: colors.ink3, backgroundColor: checked ? colors.ink3 : 'transparent' }]}
       >
         {checked && <Feather name="check" size={Math.round(size * 0.6)} color={colors.onAccent} />}
       </Pressable>
