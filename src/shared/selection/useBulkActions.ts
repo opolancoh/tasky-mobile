@@ -5,6 +5,7 @@ import { pool } from '@/core/async/pool';
 import { todayIn } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
+import { useTags } from '@/data/tasks/queries';
 import { taskKeys } from '@/data/tasks/keys';
 import { cachedTask, editRows, settleTask, type RowsWhere } from '@/data/tasks/optimistic';
 import type { Task, TaskList, TaskSummary, UserRef } from '@/data/tasks/types';
@@ -42,6 +43,7 @@ export function useBulkActions() {
   const me = useMe().data;
   const today = me ? todayIn(me.timeZone) : undefined;
   const labels = useDateLabels(today);
+  const tags = useTags().data ?? [];
   const cancelLabel = t('common.cancel');
 
   const refetch = (tasks: TaskSummary[]) => {
@@ -154,6 +156,16 @@ export function useBulkActions() {
     report(r, (count) => t('select.done.move', { count, name }), (d) => (d.saved && d.task.taskList ? tasksApi.move(d.saved, d.task.taskList.id) : Promise.resolve()));
   };
 
+  /** One tag on the tasks that lack it (as desktop's, E50); a task already at its 10 tags fails alone. */
+  const tag = async (name: string) => {
+    const tasks = pickedTasks().filter((x) => !x.tags.some((g) => g.name === name));
+    if (!tasks.length) return useSelection.getState().end();
+    const color = tags.find((g) => g.name === name)?.color ?? null;
+    const r = await run('tag', tasks, (x) => tasksApi.addTag(x.id, name).then(() => undefined), (x) => ({ tags: [...x.tags, { name, color }] }));
+    queryClient.invalidateQueries({ queryKey: taskKeys.tags });   // a new tag joins Spaces
+    report(r, (count) => t('select.done.tag', { count, name }), (d) => tasksApi.removeTag(d.task.id, name));
+  };
+
   /** Flag is Important; Unflag when all are flagged. */
   const flag = async () => {
     const picked = pickedTasks();
@@ -193,5 +205,5 @@ export function useBulkActions() {
     });
   };
 
-  return { complete, setDate, assign, move, flag, hold, remove };
+  return { complete, setDate, assign, move, tag, flag, hold, remove };
 }

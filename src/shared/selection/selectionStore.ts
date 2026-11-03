@@ -7,10 +7,10 @@ import type { Id } from '@/core/types';
 import type { TaskSummary } from '@/data/tasks/types';
 
 /** What a batch does, for "Moving 7 of 23" (M81). */
-export type BulkVerb = 'complete' | 'date' | 'assign' | 'move' | 'flag' | 'hold' | 'delete';
+export type BulkVerb = 'complete' | 'date' | 'assign' | 'move' | 'tag' | 'flag' | 'hold' | 'delete';
 
 /** The selection bar's pickers (M81): one sheet at the app root, over the list. */
-export type BulkSheetPage = 'date' | 'assign' | 'move';
+export type BulkSheetPage = 'date' | 'assign' | 'move' | 'tag';
 
 interface SelectionState {
   /** The screen selecting (its route key), or null: rows elsewhere never show the checks. */

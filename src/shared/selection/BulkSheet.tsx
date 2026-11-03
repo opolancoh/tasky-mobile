@@ -7,10 +7,10 @@ import { todayIn } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { tasksApi } from '@/data/tasks/api';
 import { taskKeys } from '@/data/tasks/keys';
-import { useTaskLists } from '@/data/tasks/queries';
+import { useTags, useTaskLists } from '@/data/tasks/queries';
 import type { Member, TaskSummary } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
-import { Avatar, DatePicker, TaskListPicker } from '@/shared/components';
+import { Avatar, DatePicker, sortByRecent, TagPicker, TaskListPicker, useRecentTags } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { ListRow, Notice, SectionLabel, Sheet, SkeletonRow, Text, useTheme } from '@/shared/ui';
 
@@ -20,7 +20,7 @@ import { useBulkActions } from './useBulkActions';
 /**
  * The selection bar's pickers (M81), one sheet at the app root: **Date** (the usual picker; one date for all, Remove due
  * date clears), **Move** (the user's lists), **Assign** (only people in every selected task's list, then Unassign; those in
- * some lists but not all are shown greyed). Each opening starts from the tasks picked then.
+ * some lists but not all are shown greyed), **Tag** (the tag picker; one tag on all). Each opening starts from the tasks picked then.
  */
 export function BulkSheet() {
   const sheet = useSelection((s) => s.sheet);
@@ -40,7 +40,7 @@ function Pages({ page, open }: { page: BulkSheetPage; open: boolean }) {
   const bulk = useBulkActions();
   const hide = () => useSelection.setState({ sheet: null });
   const count = tasks.length;
-  const title = { date: t('select.dateFor', { count }), move: t('select.moveTo', { count }), assign: t('select.assignTasks', { count }) }[page];
+  const title = { date: t('select.dateFor', { count }), move: t('select.moveTo', { count }), assign: t('select.assignTasks', { count }), tag: t('select.tagFor', { count }) }[page];
   return (
     <Sheet
       visible={open}
@@ -52,8 +52,19 @@ function Pages({ page, open }: { page: BulkSheetPage; open: boolean }) {
       {page === 'date' && today && <DatePicker kind="due" today={today} value={null} onPick={bulk.setDate} onSet={bulk.setDate} clear={{ label: t('dueDate.remove'), onPress: () => bulk.setDate(null) }} />}
       {page === 'move' && <MovePage tasks={tasks} onPick={bulk.move} />}
       {page === 'assign' && me && <AssignPage tasks={tasks} meId={me.id} onPick={bulk.assign} />}
+      {page === 'tag' && <TagPage onPick={bulk.tag} />}
     </Sheet>
   );
+}
+
+const NO_NAMES: string[] = [];
+
+/** The tag picker, recent first, a new name allowed; a tap puts that tag on every picked task. */
+function TagPage({ onPick }: { onPick(name: string): void }) {
+  const query = useTags();
+  const userId = useMe().data?.id;
+  const recent = useRecentTags((s) => (userId ? s.byUser[userId] : undefined)) ?? NO_NAMES;
+  return <TagPicker tags={sortByRecent(query.data ?? [], recent)} loading={query.isPending} selected={[]} onToggle={onPick} />;
 }
 
 function MovePage({ tasks, onPick }: { tasks: TaskSummary[]; onPick: Parameters<typeof TaskListPicker>[0]['onPick'] }) {

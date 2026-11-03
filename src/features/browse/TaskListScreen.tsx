@@ -106,7 +106,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
       headerTitle: () => <BarTitle shown={bar.shown} title={name} line={tasks.data ? t('browse.openShort', { count: tasks.data.total ?? tasks.data.items.length }) : undefined} />,
       // The list's actions wait for its tasks (M115): Select and the sort act on them.
       headerRight: !taskList || tasks.isPending
-        ? () => <SkeletonIcons count={2} />
+        ? () => <SkeletonIcons count={1} />
         : () => (
             <View style={styles.headerRight}>
               <Pressable onPress={() => listMenu(taskList, () => navigation.goBack(), pickable.length ? () => start() : undefined)} accessibilityRole="button" accessibilityLabel={t('browse.menu.title')} style={styles.more}>

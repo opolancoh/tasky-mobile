@@ -9,14 +9,14 @@ import type { TaskSummary } from '@/data/tasks/types';
 import { HOLD_REASONS } from '@/shared/hold/useHoldActions';
 import { chooseAction, Text, useTheme } from '@/shared/ui';
 
-import { pickedTasks, useSelection } from './selectionStore';
+import { pickedTasks, useSelection, type BulkSheetPage } from './selectionStore';
 import { useBulkActions } from './useBulkActions';
 
 type IconName = ComponentProps<typeof Feather>['name'];
 
 /**
  * The selection bar (M81, the hub's Bulk actions, A): where the tab bar or the add field was, six labelled icons:
- * Complete, Date, Assign, Move, Flag (Unflag when all are flagged), More (Put on hold, Delete). Over 10 tasks a batch
+ * Complete, Important (Not important when all are), Due, Assign, Move, More (Tag, Put on hold, Delete), in desktop's order (E51). Over 10 tasks a batch
  * shows "Moving 7 of 23" with a thin line instead. `insetBottom`: on a tab screen, which has no bottom safe area of its own.
  */
 export function SelectionBar({ insetBottom = false }: { insetBottom?: boolean }) {
@@ -29,7 +29,7 @@ export function SelectionBar({ insetBottom = false }: { insetBottom?: boolean })
   const running = useSelection((s) => s.running);
   const progress = useSelection((s) => s.progress);
   const bulk = useBulkActions();
-  const show = (sheet: 'date' | 'assign' | 'move') => useSelection.setState({ sheet });
+  const show = (sheet: BulkSheetPage) => useSelection.setState({ sheet });
 
   const holdMenu = async (tasks: TaskSummary[]) => {
     const reasons = HOLD_REASONS.map((r) => t(`hold.reason.${r}`));
@@ -52,19 +52,20 @@ export function SelectionBar({ insetBottom = false }: { insetBottom?: boolean })
     const tasks = pickedTasks();
     const i = await chooseAction({
       title: t('select.tasks', { count: tasks.length }),
-      actions: [{ label: t('hold.put'), icon: 'pause-circle' }, { label: t('select.deleteAction'), icon: 'trash-2', destructive: true }],
+      actions: [{ label: t('select.tag'), icon: 'tag' }, { label: t('hold.put'), icon: 'pause-circle' }, { label: t('select.deleteAction'), icon: 'trash-2', destructive: true }],
       cancelLabel: t('common.cancel'),
     });
-    if (i === 0) holdMenu(tasks);
-    if (i === 1) bulk.remove();
+    if (i === 0) show('tag');
+    if (i === 1) holdMenu(tasks);
+    if (i === 2) bulk.remove();
   };
 
   const actions: { icon: IconName; label: string; run(): void }[] = [
     { icon: 'check-circle', label: t('select.complete'), run: bulk.complete },
+    { icon: 'flag', label: t(allFlagged ? 'select.unflag' : 'select.flag'), run: bulk.flag },
     { icon: 'calendar', label: t('select.date'), run: () => show('date') },
     { icon: 'user', label: t('select.assign'), run: () => show('assign') },
     { icon: 'folder', label: t('select.move'), run: () => show('move') },
-    { icon: 'flag', label: t(allFlagged ? 'select.unflag' : 'select.flag'), run: bulk.flag },
     { icon: 'more-horizontal', label: t('select.more'), run: more },
   ];
   const off = !count || running;
@@ -83,7 +84,7 @@ export function SelectionBar({ insetBottom = false }: { insetBottom?: boolean })
           {actions.map((a) => (
             <Pressable key={a.icon} onPress={a.run} disabled={off} accessibilityRole="button" accessibilityLabel={a.label} accessibilityState={{ disabled: off }} style={({ pressed }) => [styles.action, { opacity: pressed ? 0.6 : 1 }]}>
               <Feather name={a.icon} size={21} color={off ? colors.ink3 : colors.accent} />
-              <Text variant="caption" color={off ? 'ink3' : 'accent'} style={styles.label} numberOfLines={1}>{a.label}</Text>
+              <Text variant="caption" color={off ? 'ink3' : 'accent'} style={styles.label} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{a.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -139,8 +140,9 @@ export function SelectionTopBar({ tasks, paged }: { tasks: TaskSummary[]; paged?
 
 const styles = StyleSheet.create({
   bar: { borderTopWidth: StyleSheet.hairlineWidth },
-  actions: { flexDirection: 'row', minHeight: 56 },
-  action: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 6 },
+  actions: { flexDirection: 'row', minHeight: 56, paddingHorizontal: 4 },
+  // Room between labels: a long one (Important) shrinks to fit rather than touch its neighbour.
+  action: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, paddingVertical: 6, paddingHorizontal: 4 },
   label: { fontSize: 11 },
   progress: { minHeight: 56, alignItems: 'center', justifyContent: 'center' },
   tabular: { fontVariant: ['tabular-nums'] },
