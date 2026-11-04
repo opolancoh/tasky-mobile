@@ -11,11 +11,9 @@ export interface BrowseRowProps {
   icon: ReactNode;
   /** The tile's fill, e.g. the list's color, faint. */
   tint?: string;
-  /** Open count; shown only above zero (or at zero with `zero`), and omitted for rows without one (Completed). */
+  /** Open count; shown only above zero, and omitted for rows without one (Completed). */
   count?: number;
-  /** Show the count at 0 too (Home's Assignments, M105). */
-  zero?: boolean;
-  /** A line under the name (Home's rows, M105): what it holds, or a red “2 late”. */
+  /** A line under the name (Home's rows, M105): what it holds, why it's empty, or a red “2 late”. */
   sub?: ReactNode;
   /** What tells this row apart: a people icon (a list the user shares), the owner's name (shared with them). */
   aside?: ReactNode;
@@ -27,7 +25,7 @@ export interface BrowseRowProps {
 }
 
 /** A Spaces and Home row (M38, M105): tile, name (a line under it), aside, open count (hidden at 0), chevron. 48 pt tall. Long press opens its menu. */
-export function BrowseRow({ label, icon, tint, count, zero, sub, aside, onPress, onLongPress, move }: BrowseRowProps) {
+export function BrowseRow({ label, icon, tint, count, sub, aside, onPress, onLongPress, move }: BrowseRowProps) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   return (
@@ -59,7 +57,7 @@ export function BrowseRow({ label, icon, tint, count, zero, sub, aside, onPress,
             </View>
           ) : (
             <>
-              {(!!count || (zero && count === 0)) && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
+              {!!count && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
               <Feather name="chevron-right" size={18} color={colors.ink3} />
             </>
           )}
