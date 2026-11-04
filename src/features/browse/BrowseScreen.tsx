@@ -116,8 +116,8 @@ export function BrowseScreen() {
       items.push({ type: 'section', key: 's-teams', title: t('browse.teams'), add: teamList.length && !folded.teams ? { label: t('browse.newTeam'), onPress: newTeam } : undefined, fold: teamList.length ? fold('teams', teamList.length) : undefined });
       if (teamList.length) { if (isOpen('teams')) teamList.forEach((team) => items.push({ type: 'team', key: `t-${team.id}`, team})); }
       else items.push({ type: 'action', key: 'a-team', label: t('browse.newTeam'), body: t('browse.newTeamBody'), icon: 'users', onPress: newTeam });
-      // Links into the app (D95, M84): an invite link someone sent, pasted.
-      if (!teamList.length || isOpen('teams')) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
+      // An invite link someone sent, pasted (D95, M84): a row only while there's no team, else in ••• (M143).
+      if (!teamList.length) items.push({ type: 'action', key: 'a-join', label: t('join.fromSpaces'), body: t('join.fromSpacesBody'), icon: 'link-2', onPress: () => navigation.navigate('JoinPaste') });
     }
     // Someone invited without an Inbox yet (D59): Start your own lists, which opens New list.
     if (!groups.inbox) {
@@ -150,9 +150,13 @@ export function BrowseScreen() {
     : [teamList.length && t('browse.teamCount', { count: teamList.length }), ownLists && t('browse.listCount', { count: ownLists }), tagList.length && t('browse.tagCount', { count: tagList.length })]
         .filter(Boolean).join(' · ') || t('browse.summaryEmpty');
 
+  const canArrange = all.length + tagList.length + teamList.length > 1;
   const spacesMenu = async () => {
-    const i = await chooseAction({ title: t('browse.title'), actions: [{ label: t('browse.arrange'), icon: { line: 'arrowUpDown' } }], cancelLabel: t('common.cancel') });
-    if (i === 0) setEditing(true);
+    const arrange = { label: t('browse.arrange'), icon: { line: 'arrowUpDown' as const }, run: () => setEditing(true) };
+    const join = { label: t('join.fromSpaces'), icon: 'link-2' as const, run: () => navigation.navigate('JoinPaste') };
+    const actions = canArrange ? [arrange, join] : [join];
+    const i = await chooseAction({ title: t('browse.title'), actions, cancelLabel: t('common.cancel') });
+    if (i !== null) actions[i].run();
   };
 
   const renderItem = ({ item }: { item: Item }) => {
@@ -160,11 +164,11 @@ export function BrowseScreen() {
       case 'header':
         return (
           <View style={{ paddingBottom: space.sm }}>
-            {/* Arrange and the filter act on what loaded (M115): until then, their shapes as skeletons. Spaces' ••• (Arrange for now) sits on the title's row (M139). */}
+            {/* Arrange and the filter act on what loaded (M115): until then, their shapes as skeletons. Spaces' ••• (Arrange, Join with a link) sits on the title's row (M139, M143). */}
             <View style={[styles.bar, { marginTop: space.lg }]}>
               <Text variant="largeTitle" accessibilityRole="header">{t('browse.title')}</Text>
               {loading && <SkeletonIcons count={1} />}
-              {!loading && all.length + tagList.length + teamList.length > 1 && !query && (editing ? (
+              {!loading && (canArrange || teamList.length > 0) && !query && (editing ? (
                 <Pressable onPress={() => setEditing(false)} hitSlop={8} accessibilityRole="button" style={styles.barButton}>
                   <Text variant="button" color="accent">{t('common.done')}</Text>
                 </Pressable>
