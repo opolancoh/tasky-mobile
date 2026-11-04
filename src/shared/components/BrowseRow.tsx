@@ -49,15 +49,22 @@ export function BrowseRow({ label, icon, tint, count, sub, aside, onPress, onLon
           ) : (
             <Text variant="body" numberOfLines={1} style={styles.label}>{label}</Text>
           )}
-          {aside}
           {move ? (
-            <View style={styles.arrows}>
-              <Arrow name="chevron-up" onPress={move.up} label={t('browse.moveUp')} />
-              <Arrow name="chevron-down" onPress={move.down} label={t('browse.moveDown')} />
-            </View>
+            <>
+              {aside}
+              <View style={styles.arrows}>
+                <Arrow name="chevron-up" onPress={move.up} label={t('browse.moveUp')} />
+                <Arrow name="chevron-down" onPress={move.down} label={t('browse.moveDown')} />
+              </View>
+            </>
           ) : (
             <>
-              {!!count && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
+              {(!!aside || !!count) && (
+                <View style={[styles.end, { gap: space.sm }]}>
+                  {aside}
+                  {!!count && <Text variant="callout" color="ink3" style={styles.count}>{count}</Text>}
+                </View>
+              )}
               <Feather name="chevron-right" size={18} color={colors.ink3} />
             </>
           )}
@@ -110,6 +117,7 @@ const styles = StyleSheet.create({
   count: { fontVariant: ['tabular-nums'] },
   owner: { maxWidth: '35%' },
   shared: { opacity: 0.55 },
+  end: { flexDirection: 'row', alignItems: 'center' },
   arrows: { flexDirection: 'row' },
   arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });
