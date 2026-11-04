@@ -15,7 +15,7 @@ export interface BrowseRowProps {
   count?: number;
   /** A line under the name (Home's rows, M105): what it holds, why it's empty, or a red “2 late”. */
   sub?: ReactNode;
-  /** What tells this row apart: a people icon (a list the user shares), the owner's name (shared with them). */
+  /** What tells this row apart: a people icon (a shared list), a team's name. */
   aside?: ReactNode;
   onPress?(): void;
   /** The row's menu (M38). */
@@ -67,7 +67,7 @@ export function BrowseRow({ label, icon, tint, count, sub, aside, onPress, onLon
   );
 }
 
-/** A row being loaded (M27, M70): the tile, the name (`width`, in percent), the line under it on Home's rows (`sub`), a short count (not on Spaces', M129). */
+/** A row being loaded (M27, M70): the tile, the name (`width`, in percent), the line under it on Home's rows (`sub`), a short count (`count`). */
 export function BrowseRowSkeleton({ width, sub, count = true }: { width: number; sub?: number; count?: boolean }) {
   const { space } = useTheme();
   return (
@@ -91,11 +91,11 @@ function Arrow({ name, onPress, label }: { name: ComponentProps<typeof Feather>[
   );
 }
 
-/** The aside for a list the user shares with others. */
+/** The aside for a shared list, the user's or someone else's (M142): a faint people icon. */
 export function SharedMark() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  return <Feather name="users" size={14} color={colors.ink3} accessibilityLabel={t('browse.shared')} />;
+  return <Feather name="users" size={14} color={colors.ink3} style={styles.shared} accessibilityLabel={t('browse.shared')} />;
 }
 
 /** The aside for someone else's list: their first name. */
@@ -109,6 +109,7 @@ const styles = StyleSheet.create({
   label: { flex: 1, minWidth: 0 },
   count: { fontVariant: ['tabular-nums'] },
   owner: { maxWidth: '35%' },
+  shared: { opacity: 0.55 },
   arrows: { flexDirection: 'row' },
   arrow: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

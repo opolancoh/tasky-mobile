@@ -36,8 +36,8 @@ const FILTER_FROM = 25;
 
 /**
  * Spaces, the second tab (06-mobile.md, M38, M70, M105; the route keeps the name Browse): the user's lists, teams and tags.
- * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Rows have no
- * counts (M129): the views' counts are on Home (M105). Arrange (M139) reorders
+ * Teams, My lists, Shared with me (a row each, A–Z) and Tags, each folding from its heading (kept on the device). Lists show
+ * their open count, shared ones a faint people mark before it (M142); teams and tags have none. Arrange (M139) reorders
  * lists inside their section and tags (arrows); a long press opens a row's menu (what the role allows).
  */
 export function BrowseScreen() {
@@ -227,7 +227,7 @@ export function BrowseScreen() {
         const c = item.taskList, group = editing ? item.group : undefined;
         const aside = c.isInbox ? null
           : c.owner.id === me?.id && c.sharing === 'shared' ? <SharedMark />
-          : !c.team || !teamList.some((x) => x.id === c.team!.id) ? (c.owner.id !== me?.id ? <OwnerMark name={c.owner.displayName} /> : null)
+          : !c.team || !teamList.some((x) => x.id === c.team!.id) ? (c.owner.id !== me?.id ? <SharedMark /> : null)
           : item.flat ? <OwnerMark name={c.team.name} /> : null;
         return (
           <BrowseRow
@@ -235,6 +235,7 @@ export function BrowseScreen() {
             icon={c.isInbox ? tile('inbox', colors.accent) : <ColorDot color={c.color} size={10} />}
             tint={c.isInbox ? undefined : faint(c.color, scheme)}
             aside={aside}
+            count={c.openTasks}
             onPress={() => open(c)}
             onLongPress={() => listMenu(c)}
             move={group ? { up: item.index > 0 ? () => move(group, c.id, -1) : undefined, down: item.index < item.size - 1 ? () => move(group, c.id, 1) : undefined } : undefined}
@@ -281,7 +282,7 @@ export function BrowseScreen() {
       case 'hint':
         return <Text variant="footnote" color="ink3" style={{ paddingVertical: space.xs }}>{item.text}</Text>;
       case 'skeleton':
-        return <BrowseRowSkeleton width={item.width} count={false} />;
+        return <BrowseRowSkeleton width={item.width} />;
       case 'skeletonHead':
         return <View style={[styles.section, { marginTop: space.xxl }]}><SkeletonHeading /></View>;
     }
