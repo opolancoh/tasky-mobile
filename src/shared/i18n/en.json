@@ -173,6 +173,21 @@
     "comments_other": "{{count}} comments"
   },
   "browse": {
+    "teamPage": {
+      "seeAll": "See all",
+      "attention": "Needs attention",
+      "nothingAttention": "Nothing late or without someone",
+      "late": "Late",
+      "lateSub": "Past their date",
+      "onTime": "All on time",
+      "thisWeek": "This week",
+      "thisWeekSub": "Due in the next 7 days",
+      "unassigned": "Unassigned",
+      "unassignedSub": "Nobody has them",
+      "yours": "Yours",
+      "yoursSub": "Assigned to you",
+      "noneHere": "None here"
+    },
     "title": "Spaces",
     "arrange": "Arrange",
     "editHint": "Use the arrows to change your order of teams, lists and tags.",
@@ -380,7 +395,6 @@
     },
     "loading": "Loading your lists",
     "noListsYet": "No lists yet",
-    "onlyYouHere": "Only you",
     "invitePeople": "Invite people",
     "teamEmptyBody": "Lists made here are shared with everyone in {{name}}.",
     "teamEmptyAlone": "Lists made here are shared with everyone in {{name}}. Invite people to do them together.",

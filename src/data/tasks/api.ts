@@ -1,7 +1,7 @@
 import type { Id, LocalDate, LocalTime } from '@/core/types';
 
 import { getAll, http, type Page } from '../http';
-import type { Comment, CommentsPage, CreateTaskListRequest, CreateTaskRequest, DeletedItem, HistoryPage, Home, HomeSection, InviteLink, LinkPreview, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Person, SearchPage, SearchStatus, Step, Tag, TagChange, Task, TaskFilter, TaskList, TaskPage, Team, TeamRole, UpdateTaskListRequest, UpdateTaskRequest } from './types';
+import type { Comment, CommentsPage, CreateTaskListRequest, CreateTaskRequest, DeletedItem, HistoryPage, Home, HomeSection, InviteLink, LinkPreview, Member, MembersOf, MyInvitation, MyReminder, OpenInvitation, Person, SearchPage, SearchStatus, Step, Tag, TagChange, Task, TaskFilter, TaskList, TaskPage, Team, TeamRole, TeamSummary, UpdateTaskListRequest, UpdateTaskRequest } from './types';
 
 /** What a write needs from a task: its id and the version last read (If-Match). */
 export type Versioned = { id: Id; version: number };
@@ -40,6 +40,7 @@ export const tasksApi = {
 
   /** GET /teams: the caller's teams, with their role. */
   teams: () => getAll<Team>('/teams'),
+  teamSummary: (teamId: Id) => http().get<TeamSummary>(`/teams/${teamId}/summary`),
 
   /** POST /teams: the caller is its owner (201). */
   createTeam: (name: string) => http().post<Team>('/teams', { body: { name } }),

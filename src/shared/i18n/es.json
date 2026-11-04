@@ -173,6 +173,21 @@
     "comments_other": "{{count}} comentarios"
   },
   "browse": {
+    "teamPage": {
+      "seeAll": "Ver todo",
+      "attention": "Requiere atención",
+      "nothingAttention": "Nada atrasado ni sin responsable",
+      "late": "Atrasadas",
+      "lateSub": "Pasaron su fecha",
+      "onTime": "Todo a tiempo",
+      "thisWeek": "Esta semana",
+      "thisWeekSub": "Vencen en los próximos 7 días",
+      "unassigned": "Sin asignar",
+      "unassignedSub": "Nadie las tiene",
+      "yours": "Tuyas",
+      "yoursSub": "Asignadas a ti",
+      "noneHere": "No hay ninguna"
+    },
     "title": "Espacios",
     "arrange": "Organizar",
     "editHint": "Usa las flechas para cambiar el orden de tus equipos, listas y etiquetas.",
@@ -380,7 +395,6 @@
     },
     "loading": "Cargando tus listas",
     "noListsYet": "Aún no hay listas",
-    "onlyYouHere": "Solo tú",
     "invitePeople": "Invitar personas",
     "teamEmptyBody": "Las listas que crees aquí se comparten con todos en {{name}}.",
     "teamEmptyAlone": "Las listas que crees aquí se comparten con todos en {{name}}. Invita a personas para hacerlas juntos.",

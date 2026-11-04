@@ -330,6 +330,15 @@ export interface MyInvitation {
 export type HomeSection = 'to-answer' | 'follow-up' | 'overdue' | 'today' | 'done-today' | 'important' | 'inbox' | 'holds';
 
 /** GET /home's numbers (D107): one aggregate over the open tasks the caller can see. Late: due before today. */
+/** A team's page (GET /teams/{id}/summary, D123): its open tasks and how many are late, due this week, with nobody, the user's. */
+export interface TeamSummary {
+  open: number;
+  late: number;
+  thisWeek: number;
+  unassigned: number;
+  yours: number;
+}
+
 export interface HomeCounts {
   /** Due today, or the caller's reminder today and not due before. */
   today: number;

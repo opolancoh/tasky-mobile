@@ -92,6 +92,7 @@ export const useArchivedTaskLists = () => useQuery({ queryKey: taskKeys.archived
 
 /** The caller's teams and their role (GET /teams). */
 export const useTeams = () => useQuery({ queryKey: taskKeys.teams, queryFn: tasksApi.teams });
+export const useTeamSummary = (teamId: Id) => useQuery({ queryKey: taskKeys.teamSummary(teamId), queryFn: () => tasksApi.teamSummary(teamId) });
 
 /** A team's or a task list's people. */
 export const useMembers = (of: MembersOf, enabled = true) => useQuery({ queryKey: taskKeys.members(of.kind, of.id), queryFn: () => tasksApi.members(of), enabled });

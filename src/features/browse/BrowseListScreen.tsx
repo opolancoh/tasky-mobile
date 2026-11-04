@@ -28,6 +28,7 @@ import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
 import { useRowBleed } from '@/shared/components/TaskRow';
 import { FilterStrip } from './components/FilterStrip';
 import { useImportantOrder, type ImportantOrder } from './importantOrderStore';
+import { teamShowFilter, type TeamShow } from './teamShow';
 
 /** The task lists Spaces opens that aren't a task list (M38, M70). `id`: the tag's name or the team's id. */
 export type BrowseListKind = 'all' | 'important' | 'assigned' | 'assignedBy' | 'completed' | 'tag' | 'team';
@@ -75,9 +76,11 @@ type Item =
  * Scrolling (M94): once the title is under the bar, the bar shows it over the count and how the list is shown ("16 open ·
  * Soonest"); Important's Sort and Assigned by me's Group by are in •••, kept on the device; group headings stay on top.
  */
-export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string; backTitle?: string }>) {
+export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseListKind; id?: string; person?: Id; personName?: string; card?: TeamShow; backTitle?: string }>) {
   // `person`: one person's tasks in a team (M79, from People), by date, no filter row; `personName` absent for the user.
-  const { kind, id, person, personName, backTitle } = route.params;
+  // `card`: a team card's tasks (M144), the same way.
+  const { kind, id, person, personName, card, backTitle } = route.params;
+  const narrowed = !!person || !!card;
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const bleed = useRowBleed();
@@ -101,7 +104,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
   const setGroup = useAssignedByGroup((s) => s.set);
   const given = kind === 'assignedBy';
   const chosen = useAllTasksGroup((s) => s.byUser[userId]?.[scope]) ?? defaultGroup(scope);
-  const groupBy: AllTasksGroup = person ? 'date' : chosen;
+  const groupBy: AllTasksGroup = narrowed ? 'date' : chosen;
   const setGroupBy = useAllTasksGroup((s) => s.set);
   const [show, setShow] = useState<Show | null>(null);
   const [folded, setFolded] = useState<Record<string, boolean>>({});
@@ -127,7 +130,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     assignedBy: { assignedBy: 'me' as const },
     completed: { status: 'completed' as const },
     tag: { tag: id },
-    team: { teamId: id as Id, sort: 'due' as const, ...shown, ...(person ? { assignee: person } : {}) },
+    team: { teamId: id as Id, sort: 'due' as const, ...shown, ...(person ? { assignee: person } : {}), ...(card && today ? teamShowFilter(card, today) : {}) },
   }[kind];
   const pages = useTaskPages({ ...filter, limit: whole ? WHOLE_PAGE : PAGE });
   // Completed at the end (M105): its count from a one-task page; its rows only while open and once the open ones are all in.
@@ -156,11 +159,11 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
     if (whole && pages.hasNextPage && !pages.isFetchingNextPage) pages.fetchNextPage();
   }, [whole, pages]);
 
-  const title = person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
+  const title = card ? t(`browse.teamPage.${card}`) : person ? (personName ? t('browse.personTasks', { name: personName }) : t('browse.yourTasks')) : kind === 'tag' ? `#${id}` : kind === 'team' || kind === 'all' ? t('browse.allTasks') : t(`browse.${kind}`);
   // How the list is shown, after its count (M94): Important's order, Assigned by me's group, All tasks' group and filter.
   const view = ordered ? t(`browse.order.${order}`)
     : given ? t(`browse.assignedByGroup.${group}`)
-    : scoped && !person ? [t(`browse.groupBy.${groupBy}`), show && t(`browse.show.${show}`)].filter(Boolean).join(' · ')
+    : scoped && !narrowed ? [t(`browse.groupBy.${groupBy}`), show && t(`browse.show.${show}`)].filter(Boolean).join(' · ')
     : '';
   const counted = count !== undefined && count !== null;
   const barLine = counted ? [t(kind === 'completed' ? 'browse.taskCount' : 'browse.openShort', { count }), view].filter(Boolean).join(' · ') : view;
@@ -281,8 +284,8 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
             {kind === 'team' && team ? <Text variant="label" color="ink3">{team.name}</Text> : null}
             <Text variant="title" accessibilityRole="header" style={kind === 'tag' && tag?.color ? { color: tag.color } : undefined}>{title}</Text>
             <Text variant="subhead" color="ink2">{counted ? `${t(kind === 'completed' ? 'browse.taskCount' : 'browse.openCount', { count })} · ${ordered || given ? view : sub}` : sub}</Text>
-            {scoped && !person && pages.isPending && !show && <Skeleton width="100%" height={34} radius={17} style={{ marginTop: space.md }} />}
-            {scoped && !person && (!!loaded.length || !!show) && (
+            {scoped && !narrowed && pages.isPending && !show && <Skeleton width="100%" height={34} radius={17} style={{ marginTop: space.md }} />}
+            {scoped && !narrowed && (!!loaded.length || !!show) && (
               <View style={{ marginTop: space.md }}>
                 <FilterStrip<Show>
                   groupLabel={t(`browse.groupBy.${groupBy}`)}

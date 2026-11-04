@@ -28,6 +28,8 @@ export const taskKeys = {
   homeSection: (section: string) => ['tasks', 'views', 'home', section] as const,
   /** The caller's upcoming reminders, by day (Home › Reminders, M105): a view, so a task change refetches it. */
   myReminders: ['tasks', 'views', 'myReminders'] as const,
+  /** A team's counts (D123): a view, so a task change refetches them. */
+  teamSummary: (teamId: Id) => ['tasks', 'views', 'teamSummary', teamId] as const,
   /** A team's invite link (D95). */
   inviteLink: (teamId: Id) => ['tasks', 'members', 'team', teamId, 'link'] as const,
   /** What a link opens (D95): `kind` 'team' (an invite link's code) or 'invitation' (an email's token). */
