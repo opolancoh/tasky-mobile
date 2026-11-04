@@ -7,12 +7,12 @@ import type { PaletteColors } from './palettes';
 
 export type Colors = PaletteColors;
 
-/** Colors a user can give a task list or tag: user data, the same in every palette. The API stores any hex; the Inbox default is #4A90E2. */
+/** Colors a user can give a task list or tag: user data, the same in every palette. The API stores any hex, or none (D124). */
 // eslint-disable-next-line no-restricted-syntax -- user data colors, not the palette
-export const taskListColors = ['#4A90E2', '#0B6BCB', '#1089B4', '#0F9E99', '#12A07A', '#7BB32E', '#E0A11B', '#E0772F', '#E8404C', '#D9508A', '#8A5CD6', '#4F5BD5', '#5F6B7A'] as const;
+export const listColors = ['#4A90E2', '#0B6BCB', '#1089B4', '#0F9E99', '#12A07A', '#7BB32E', '#E0A11B', '#E0772F', '#E8404C', '#D9508A', '#8A5CD6', '#4F5BD5', '#5F6B7A'] as const;
 
 /** A list's color, or the first one when it has none (D124). */
-export const listColor = (color?: string | null): string => color || taskListColors[0];
+export const listColor = (color?: string | null): string => color || listColors[0];
 
 /** 4-point grid. */
 export const space = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32, huge: 48 } as const;

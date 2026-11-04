@@ -12,7 +12,7 @@ import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { SortMode } from '@/data/tasks/types';
 import { taskLimits } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { taskListColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast, warnHaptic } from '@/shared/ui';
+import { listColors, confirm, ListRow, Notice, SectionLabel, Sheet, Text, TextField, useTheme, useToast, warnHaptic } from '@/shared/ui';
 
 import { SORT_MODES } from './browseSections';
 import { useBrowseSheet, type BrowseSheetTarget } from '@/shared/browseSheet/browseSheetStore';
@@ -169,15 +169,15 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
 }
 
 /**
- * The color swatches (user data, taskListColors) after No color: lists and tags may have none (D124). A color set
+ * The color swatches (user data, listColors) after No color: lists and tags may have none (D124). A color set
  * elsewhere (an import, another app) that isn't a swatch still shows, picked, as one more.
  */
 function Swatches({ value, onChange }: { value: string | null; onChange(color: string | null): void }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const known = value ? taskListColors.find((c) => c.toLowerCase() === value.toLowerCase()) : undefined;
+  const known = value ? listColors.find((c) => c.toLowerCase() === value.toLowerCase()) : undefined;
   const picked = known ?? value;
-  const options: (string | null)[] = [null, ...taskListColors, ...(value && !known ? [value] : [])];
+  const options: (string | null)[] = [null, ...listColors, ...(value && !known ? [value] : [])];
   return (
     <>
       <SectionLabel>{t('browse.sheet.color')}</SectionLabel>
