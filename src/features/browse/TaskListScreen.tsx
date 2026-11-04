@@ -16,7 +16,7 @@ import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
 import { useSessionStore } from '@/shared/session/sessionStore';
-import { ColorDot, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { ColorDot, listColor, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
@@ -145,7 +145,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
         return (
           <View style={{ paddingBottom: space.md, gap: space.xxs }}>
             <View style={[styles.title, { gap: space.sm }]}>
-              {taskList?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={taskList?.color} size={14} />}
+              {taskList?.isInbox ? <Feather name="inbox" size={22} color={colors.accent} /> : <ColorDot color={taskList ? listColor(taskList.color) : undefined} size={14} />}
               <Text variant="title" accessibilityRole="header" numberOfLines={2} style={styles.fill}>{taskList ? (taskList.isInbox ? t('browse.inbox') : taskList.name) : ''}</Text>
             </View>
             {(!taskList || tasks.isPending) && <Skeleton width={140} height={12} style={{ marginTop: space.xs }} />}

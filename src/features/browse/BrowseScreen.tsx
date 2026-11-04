@@ -10,7 +10,7 @@ import { useTaskLists, useTags, useTeams } from '@/data/tasks/queries';
 import type { TaskList, Tag, Team } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
-import { chooseAction, ColorDot, faint, Notice, Screen, SearchField, Skeleton, SkeletonHeading, SkeletonIcons, Text, useTheme } from '@/shared/ui';
+import { chooseAction, ColorDot, faint, listColor, Notice, Screen, SearchField, Skeleton, SkeletonHeading, SkeletonIcons, Text, useTheme } from '@/shared/ui';
 
 import { useBrowseMenus } from './browseMenus';
 import { groupTaskLists, moveInOrder } from './browseSections';
@@ -236,8 +236,8 @@ export function BrowseScreen() {
         return (
           <BrowseRow
             label={c.isInbox ? t('browse.inbox') : c.name}
-            icon={c.isInbox ? tile('inbox', colors.accent) : <ColorDot color={c.color} size={10} />}
-            tint={c.isInbox ? undefined : faint(c.color, scheme)}
+            icon={c.isInbox ? tile('inbox', colors.accent) : <ColorDot color={listColor(c.color)} size={10} />}
+            tint={c.isInbox ? undefined : faint(listColor(c.color), scheme)}
             aside={aside}
             count={c.openTasks}
             onPress={() => open(c)}

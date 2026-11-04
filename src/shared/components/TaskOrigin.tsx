@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { TaskListRef, UserRef } from '@/data/tasks/types';
-import { ColorDot, Text, useTheme } from '@/shared/ui';
+import { ColorDot, listColor, Text, useTheme } from '@/shared/ui';
 
 /**
  * Where a task comes from, in a row's meta line: its list (color dot and name; "Inbox"), or, for a task the user sees only
@@ -14,7 +14,7 @@ export function TaskOrigin({ taskList, assignedBy }: { taskList: TaskListRef | n
   const { colors, space } = useTheme();
   return (
     <View style={[styles.row, { gap: space.xs }]}>
-      {taskList ? <ColorDot color={taskList.color} size={8} /> : <Feather name="user" size={11} color={colors.ink3} />}
+      {taskList ? <ColorDot color={listColor(taskList.color)} size={8} /> : <Feather name="user" size={11} color={colors.ink3} />}
       <Text variant="footnote" color="ink3" numberOfLines={1} style={styles.shrink}>
         {taskList
           ? taskList.isInbox ? t('browse.inbox') : taskList.name

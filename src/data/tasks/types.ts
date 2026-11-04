@@ -12,8 +12,8 @@ export type TaskListRole = 'owner' | 'admin' | 'member';
 export interface TaskList {
   id: Id;
   name: string;
-  /** "#4A90E2": user data, not a palette color. */
-  color: string;
+  /** "#4A90E2": user data, not a palette color; null: none picked (drawn in the first list color, D124). */
+  color: string | null;
   icon: string | null;
   isInbox: boolean;
   sortMode: SortMode;
@@ -90,8 +90,8 @@ export interface TeamRef {
 export interface TaskListRef {
   id: Id;
   name: string;
-  /** "#4A90E2": user data, not a palette color. */
-  color: string;
+  /** "#4A90E2": user data, not a palette color; null: none picked (drawn in the first list color, D124). */
+  color: string | null;
   isInbox: boolean;
   team?: TeamRef | null;
 }
@@ -445,7 +445,8 @@ export type MembersOf = { kind: 'team' | 'taskList'; id: Id };
 /** POST /task-lists: private, or in a team the caller is in. */
 export interface CreateTaskListRequest {
   name: string;
-  color: string;
+  /** Omitted or null: no color (D124). */
+  color?: string | null;
   teamId?: Id;
   /** Omitted: manual (D106). */
   sortMode?: SortMode;
@@ -454,7 +455,8 @@ export interface CreateTaskListRequest {
 /** PATCH /task-lists/{id}: only what is sent changes. */
 export interface UpdateTaskListRequest {
   name?: string;
-  color?: string;
+  /** null clears it (D124). */
+  color?: string | null;
   sortMode?: SortMode;
   showCompleted?: boolean;
 }

@@ -16,7 +16,7 @@ import { Avatar, BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { errorMessage } from '@/shared/i18n/errors';
 import { SelectionAll, SelectionBar, SelectionCancel, SelectionTitle } from '@/shared/selection/SelectionBar';
 import { selectable, useSelectionScope } from '@/shared/selection/selectionStore';
-import { chooseAction, ColorDot, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { chooseAction, ColorDot, listColor, Notice, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { defaultGroup, useAllTasksGroup, type AllTasksGroup } from './allTasksGroupStore';
@@ -246,7 +246,7 @@ export function BrowseListScreen({ route }: StaticScreenProps<{ kind: BrowseList
       .sort(([a], [b]) => (rank.get(a) ?? Infinity) - (rank.get(b) ?? Infinity))
       .forEach(([k, ts]) => {
         const ref = ts[0].taskList;
-        items.push({ type: 'group', key: `g-${k}`, name: ref?.isInbox ? t('browse.inbox') : (ref?.name ?? ''), color: ref?.color ?? colors.ink3, count: ts.length });
+        items.push({ type: 'group', key: `g-${k}`, name: ref?.isInbox ? t('browse.inbox') : (ref?.name ?? ''), color: ref ? listColor(ref.color) : colors.ink3, count: ts.length });
         push(`g-${k}`, ts);
       });
   } else if (given && !pages.hasNextPage) {

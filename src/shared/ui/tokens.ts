@@ -11,6 +11,9 @@ export type Colors = PaletteColors;
 // eslint-disable-next-line no-restricted-syntax -- user data colors, not the palette
 export const taskListColors = ['#4A90E2', '#1089B4', '#12A07A', '#7BB32E', '#E0A11B', '#E0772F', '#E8404C', '#D9508A', '#8A5CD6', '#5F6B7A'] as const;
 
+/** A list's color, or the first one when it has none (D124). */
+export const listColor = (color?: string | null): string => color || taskListColors[0];
+
 /** 4-point grid. */
 export const space = { xxs: 2, xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32, huge: 48 } as const;
 

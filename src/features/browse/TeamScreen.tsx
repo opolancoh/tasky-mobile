@@ -14,7 +14,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { StatCard, StatGrid, StatGridSkeleton } from '@/shared/components/StatCard';
 import { LoadError } from '@/shared/components/LoadError';
-import { ColorDot, faint, Pill, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { ColorDot, faint, listColor, Pill, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
@@ -176,7 +176,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
         );
       case 'list': {
         const c = item.list;
-        return <BrowseRow label={c.name} icon={<ColorDot color={c.color} size={10} />} tint={faint(c.color, scheme)} count={c.openTasks ?? 0}
+        return <BrowseRow label={c.name} icon={<ColorDot color={listColor(c.color)} size={10} />} tint={faint(listColor(c.color), scheme)} count={c.openTasks ?? 0}
           onPress={() => navigation.navigate('TaskList', { taskListId: c.id, backTitle: team?.name })} onLongPress={() => listMenu(c)} />;
       }
       case 'empty':

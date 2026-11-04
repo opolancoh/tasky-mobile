@@ -40,10 +40,9 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   const list = target.kind === 'list' && target.id ? taskLists.find((c) => c.id === target.id) : undefined;
   const team = target.kind === 'team' && target.id ? teams.find((x) => x.id === target.id) : undefined;
   const tag = target.kind === 'tag' ? tags.find((x) => x.name === target.name) : undefined;
-  const used = new Set(taskLists.map((c) => c.color));
   const [initial] = useState(() => ({
     name: list?.name ?? team?.name ?? tag?.name ?? '',
-    color: list?.color ?? tag?.color ?? (target.kind === 'list' ? (taskListColors.find((c) => !used.has(c)) ?? taskListColors[0]) : null),
+    color: list?.color ?? tag?.color ?? null,   // a new list starts with no color (D124)
     sort: list?.sortMode ?? ('manual' as SortMode),
   }));
   const [name, setName] = useState(initial.name);
@@ -88,11 +87,11 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
     if (target.kind === 'list') {
       if (list) {
         updateList.mutate(
-          { taskList: list, body: { ...(inbox || trimmed === list.name ? {} : { name: trimmed }), ...(inbox || color === list.color ? {} : { color: color! }), ...(sort === list.sortMode ? {} : { sortMode: sort }) } },
+          { taskList: list, body: { ...(inbox || trimmed === list.name ? {} : { name: trimmed }), ...(inbox || color === list.color ? {} : { color }), ...(sort === list.sortMode ? {} : { sortMode: sort }) } },
           { onSuccess: () => done(t('browse.saved')) },
         );
       } else {
-        createList.mutate({ name: trimmed, color: color!, teamId, sortMode: sort }, {
+        createList.mutate({ name: trimmed, color, teamId, sortMode: sort }, {
           onSuccess: (created) => { done(t('browse.created', { name: trimmed })); onCreated?.(created.id); },
         });
       }
@@ -155,7 +154,7 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
             error={unreadable && !isReadable(trimmed) ? t('common.unreadable') : undefined}
           />
         )}
-        {target.kind !== 'team' && !inbox && <Swatches value={color} onChange={setColor} allowNone={target.kind === 'tag'} />}
+        {target.kind !== 'team' && !inbox && <Swatches value={color} onChange={setColor} />}
         {list && !inbox && list.sharing !== 'private' && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.sameForAll')}</Text>}
         {newIn && <Text variant="footnote" color="ink3" style={styles.gap}>{t('browse.sheet.teamListHint', { name: newIn.name })}</Text>}
         {target.kind === 'list' && isNew && (
@@ -169,20 +168,25 @@ function Editor({ target }: { target: BrowseSheetTarget }) {
   );
 }
 
-/** The color swatches (user data, taskListColors); tags may have none (gray). */
-function Swatches({ value, onChange, allowNone }: { value: string | null; onChange(color: string | null): void; allowNone: boolean }) {
+/**
+ * The color swatches (user data, taskListColors) after No color: lists and tags may have none (D124). A color set
+ * elsewhere (an import, another app) that isn't a swatch still shows, picked, as one more.
+ */
+function Swatches({ value, onChange }: { value: string | null; onChange(color: string | null): void }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
-  const options: (string | null)[] = allowNone ? [null, ...taskListColors] : [...taskListColors];
+  const known = value ? taskListColors.find((c) => c.toLowerCase() === value.toLowerCase()) : undefined;
+  const picked = known ?? value;
+  const options: (string | null)[] = [null, ...taskListColors, ...(value && !known ? [value] : [])];
   return (
     <>
       <SectionLabel>{t('browse.sheet.color')}</SectionLabel>
       <View style={[styles.swatches, { gap: space.xs }]} accessibilityRole="radiogroup">
         {options.map((c) => {
-          const on = c === value;
+          const on = c === picked;
           return (
             <Pressable key={c ?? 'none'} onPress={() => onChange(c)} accessibilityRole="radio" accessibilityState={{ selected: on }} accessibilityLabel={c ?? t('browse.sheet.noColor')} style={styles.swatch}>
-              <View style={[styles.ring, { borderColor: on ? colors.ink : 'transparent' }]}>
+              <View style={[styles.ring, { borderColor: on ? (c ?? colors.tagDefault) : 'transparent' }]}>
                 <View style={[styles.dot, { backgroundColor: c ?? colors.tagDefault }]}>{!c && <Feather name="slash" size={16} color={colors.surface} />}</View>
               </View>
             </Pressable>

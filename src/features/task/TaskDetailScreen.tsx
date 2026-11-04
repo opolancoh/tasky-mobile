@@ -22,7 +22,7 @@ import { Avatar, askDecline, CheckCircle, ReminderIcon, TagsRow } from '@/shared
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage } from '@/shared/i18n/errors';
-import { Button, chooseAction, ColorDot, confirm, Notice, Pill, Screen, SkeletonIcons, space, Text, TextButton, useTheme, useToast, warnHaptic } from '@/shared/ui';
+import { Button, chooseAction, ColorDot, confirm, listColor, Notice, Pill, Screen, SkeletonIcons, space, Text, TextButton, useTheme, useToast, warnHaptic } from '@/shared/ui';
 
 import { AnswerBar } from './components/AnswerBar';
 import { CommentThread } from './components/CommentThread';
@@ -354,7 +354,7 @@ export function TaskDetailScreen({ route }: StaticScreenProps<{ taskId: Id; comm
       {/* Where it is (M98): the list and who sees it, under the title; a tap moves it. Seen only as its assignee: who gave it. */}
       {fields.taskList ? (
         <Pressable onPress={() => open('taskList')} hitSlop={8} accessibilityRole="button" accessibilityLabel={`${t('taskDetail.fields.taskList')}: ${where}`} style={[styles.where, { gap: space.xs }]}>
-          {fields.taskList.isInbox ? <Feather name="inbox" size={14} color={colors.ink3} /> : <ColorDot color={fields.taskList.color} size={9} />}
+          {fields.taskList.isInbox ? <Feather name="inbox" size={14} color={colors.ink3} /> : <ColorDot color={listColor(fields.taskList.color)} size={9} />}
           <Text variant="footnote" color="ink2" numberOfLines={1} style={styles.fill}>{where}</Text>
         </Pressable>
       ) : (

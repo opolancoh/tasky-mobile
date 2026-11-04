@@ -6,7 +6,7 @@ import { useArchiveTaskList } from '@/data/tasks/mutations';
 import { useArchivedTaskLists } from '@/data/tasks/queries';
 import type { TaskList } from '@/data/tasks/types';
 import { errorMessage } from '@/shared/i18n/errors';
-import { ColorDot, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
+import { ColorDot, listColor, Notice, Screen, SkeletonRow, Text, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canManage } from './browseSections';
@@ -37,7 +37,7 @@ export function ArchivedScreen() {
         const c = item.taskList;
         return (
           <View style={[styles.row, { gap: space.md, borderBottomColor: colors.line }]}>
-            <ColorDot color={c.color} size={12} />
+            <ColorDot color={listColor(c.color)} size={12} />
             <View style={styles.fill}>
               <Text variant="body" numberOfLines={1}>{c.name}</Text>
               <Text variant="footnote" color="ink3">{t('browse.openCount', { count: c.openTasks ?? 0 })}</Text>

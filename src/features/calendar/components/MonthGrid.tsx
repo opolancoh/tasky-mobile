@@ -5,7 +5,7 @@ import { dayOfMonth, monthOf } from '@/core/dates/calendar';
 import { addDays, formatLocalDate } from '@/core/dates/localDate';
 import type { LocalDate } from '@/core/types';
 import type { TaskSummary } from '@/data/tasks/types';
-import { fonts, radius, Text, useTheme } from '@/shared/ui';
+import { fonts, listColor, radius, Text, useTheme } from '@/shared/ui';
 
 /** A Monday, to read the weekdays' letters from (M, T, W… in the app's language). */
 const A_MONDAY = '2024-01-01';
@@ -67,7 +67,7 @@ export function MonthGrid({ weeks, month, today, picked, byDay, onPick }: MonthG
                 </View>
                 <View style={[styles.dots, past && styles.faded]}>
                   {tasks.slice(0, 3).map((task) => (
-                    <View key={task.id} style={[styles.dot, { backgroundColor: task.taskList?.isInbox ? colors.accent : task.taskList?.color || colors.ink3 }]} />
+                    <View key={task.id} style={[styles.dot, { backgroundColor: task.taskList?.isInbox ? colors.accent : task.taskList ? listColor(task.taskList.color) : colors.ink3 }]} />
                   ))}
                   {tasks.length > 3 && <Text variant="caption" color="ink3" style={styles.more}>+</Text>}
                 </View>
