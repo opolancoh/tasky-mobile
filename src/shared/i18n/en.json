@@ -173,6 +173,16 @@
     "comments_other": "{{count}} comments"
   },
   "browse": {
+    "peoplePage": {
+      "invite": "Invite",
+      "inviteTitle": "Invite to {{name}}",
+      "inTeam": "In the team",
+      "onList": "On the list",
+      "acrossTeam": "across the team"
+    },
+    "ownerLeavesTitle": "You own {{name}}",
+    "ownerLeavesBody": "To leave it, make someone else the owner first. You can do that in People.",
+    "openPeople": "Open People",
     "teamPage": {
       "seeAll": "See all",
       "attention": "Needs attention",
@@ -248,11 +258,6 @@
       "member": "Member",
       "guest": "Guest"
     },
-    "peopleCanInvite": "You can invite and remove people.",
-    "peopleTeamOwner": "You can invite people. Tap someone to see their tasks; long press to change their role, make them the owner or remove them.",
-    "peopleTeamAdmin": "You can invite people. Tap someone to see their tasks; long press a member to remove them.",
-    "peopleTeamOnly": "Tap someone to see their tasks. The team’s owner and admins invite people.",
-    "peopleOwnerOnly": "Only the owner invites people.",
     "inviteTeamHint": "They get an email and see every list in the team once they join. Invitations last 14 days.",
     "inviteListHint": "They get an email and see this list once they join. Invitations last 14 days.",
     "invited": "Invitation sent to {{email}}",

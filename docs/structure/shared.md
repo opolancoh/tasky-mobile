@@ -132,6 +132,7 @@ May use `data` types and `shared/ui`; knows tasks, tags, lists.
 | `SnoozePill` | Snooze on a reminder row that rang (10 min, 1 hour, Tomorrow 9:00; M114) |
 | `sortByRecent`, `useRecentTags` | Tags in last-used order; the last 10 used, per user, on this device |
 | `BrowseRow`, `BrowseRowSkeleton`, `SharedMark`, `OwnerMark` | A Spaces and Home row (M38, M105): a 30 pt tile, the name (a line under it with `sub`), an aside, the count (hidden at 0), a chevron; arrows in Edit |
+| `CountPill` (`shared/ui`) | A section's count in a small grey pill (M144): a team's Needs attention and Lists, People's sections |
 | `StatCard`, `StatGrid`, `StatGridSkeleton` | A card on Home and a team's screen (M105, M144): the count or a check, an icon, a name and one line, grey at 0; two by two in `StatGrid` |
 | `CompletedRow` | A completed task: the filled circle reopens it, the title struck through, its list under it |
 | `CompletedHeading` | A list's Completed heading: a tap folds or unfolds it, its count beside it (M63, M105) |

@@ -173,6 +173,16 @@
     "comments_other": "{{count}} comentarios"
   },
   "browse": {
+    "peoplePage": {
+      "invite": "Invitar",
+      "inviteTitle": "Invitar a {{name}}",
+      "inTeam": "En el equipo",
+      "onList": "En la lista",
+      "acrossTeam": "en el equipo"
+    },
+    "ownerLeavesTitle": "Eres el propietario de {{name}}",
+    "ownerLeavesBody": "Para salir, primero haz propietario a otra persona. Puedes hacerlo en Personas.",
+    "openPeople": "Abrir Personas",
     "teamPage": {
       "seeAll": "Ver todo",
       "attention": "Requiere atención",
@@ -248,11 +258,6 @@
       "member": "Miembro",
       "guest": "Invitado"
     },
-    "peopleCanInvite": "Puedes invitar y quitar personas.",
-    "peopleTeamOwner": "Puedes invitar personas. Toca a alguien para ver sus tareas; mantén pulsado para cambiar su rol, hacerlo propietario o quitarlo.",
-    "peopleTeamAdmin": "Puedes invitar personas. Toca a alguien para ver sus tareas; mantén pulsado a un miembro para quitarlo.",
-    "peopleTeamOnly": "Toca a alguien para ver sus tareas. El propietario y los administradores del equipo invitan personas.",
-    "peopleOwnerOnly": "Solo el propietario invita.",
     "inviteTeamHint": "Reciben un correo y ven todas las listas del equipo al unirse. Las invitaciones duran 14 días.",
     "inviteListHint": "Reciben un correo y ven esta lista al unirse. Las invitaciones duran 14 días.",
     "invited": "Invitación enviada a {{email}}",

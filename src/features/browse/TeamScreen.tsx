@@ -14,7 +14,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { BarTitle, TaskRow, useBarTitle } from '@/shared/components';
 import { StatCard, StatGrid, StatGridSkeleton } from '@/shared/components/StatCard';
 import { LoadError } from '@/shared/components/LoadError';
-import { ColorDot, faint, listColor, Pill, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
+import { CountPill, faint, listColor, Pill, Screen, Skeleton, SkeletonIcons, SkeletonRow, Text, useTheme } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
@@ -176,7 +176,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
         );
       case 'list': {
         const c = item.list;
-        return <BrowseRow label={c.name} icon={<ColorDot color={listColor(c.color)} size={10} />} tint={faint(listColor(c.color), scheme)} count={c.openTasks ?? 0}
+        return <BrowseRow label={c.name} icon={<Feather name="list" size={17} color={listColor(c.color)} />} tint={faint(listColor(c.color), scheme)} count={c.openTasks ?? 0}
           onPress={() => navigation.navigate('TaskList', { taskListId: c.id, backTitle: team?.name })} onLongPress={() => listMenu(c)} />;
       }
       case 'empty':
@@ -213,18 +213,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   );
 }
 
-/** A section's count in a small grey pill (M144). */
-function CountPill({ count }: { count: number }) {
-  const { colors } = useTheme();
-  return (
-    <View style={[styles.pill, { backgroundColor: colors.surface2 }]}>
-      <Text variant="caption" color="ink3">{count}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  pill: { paddingHorizontal: 7, paddingVertical: 1, borderRadius: 999 },
   fill: { flex: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },

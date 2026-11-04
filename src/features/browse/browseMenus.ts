@@ -111,6 +111,21 @@ export function useBrowseMenus() {
       { label: t('browse.newList'), icon: 'plus', run: () => showSheet({ kind: 'list', teamId: team.id }) },
       !onTeam && { label: t(owner || team.role === 'admin' ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: 'users', run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
       owner && { label: t('browse.menu.renameTeam'), icon: 'edit-2', run: () => showSheet({ kind: 'team', id: team.id }) },
+      // The owner leaves only once someone else owns it (API 409): Leave says so and opens People (M146).
+      !!me && {
+        label: t('browse.menu.leaveTeam'),
+        icon: 'log-out',
+        destructive: true,
+        run: async () => {
+          if (owner) {
+            const go = await confirm({ title: t('browse.ownerLeavesTitle', { name: team.name }), message: t('browse.ownerLeavesBody'), confirmLabel: t('browse.openPeople'), cancelLabel: cancel });
+            if (go) navigation.navigate('People', { kind: 'team', id: team.id });
+            return;
+          }
+          const ok = await confirm({ title: t('browse.leaveTitle', { name: team.name }), message: t('browse.leaveTeamBody'), confirmLabel: t('browse.menu.leaveTeam'), cancelLabel: cancel });
+          if (ok) removeMember.mutate({ of: { kind: 'team', id: team.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: team.name }) }); }, onError: toastError });
+        },
+      },
       owner && {
         label: t('browse.menu.deleteTeam'),
         icon: 'trash-2',
@@ -118,15 +133,6 @@ export function useBrowseMenus() {
         run: async () => {
           const ok = await confirm({ title: t('browse.deleteTeamTitle', { name: team.name }), message: t('browse.deleteTeamBody'), confirmLabel: t('browse.menu.deleteTeam'), cancelLabel: cancel });
           if (ok) removeTeam.mutate(team, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.deleted', { name: team.name }) }); }, onError: toastError });
-        },
-      },
-      !owner && !!me && {
-        label: t('browse.menu.leaveTeam'),
-        icon: 'log-out',
-        destructive: true,
-        run: async () => {
-          const ok = await confirm({ title: t('browse.leaveTitle', { name: team.name }), message: t('browse.leaveTeamBody'), confirmLabel: t('browse.menu.leaveTeam'), cancelLabel: cancel });
-          if (ok) removeMember.mutate({ of: { kind: 'team', id: team.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: team.name }) }); }, onError: toastError });
         },
       },
     ], cancel);

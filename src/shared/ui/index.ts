@@ -18,6 +18,7 @@ export { SearchField, type SearchFieldProps } from './SearchField';
 export { Sheet, type SheetAction, type SheetProps } from './Sheet';
 export { Skeleton, SkeletonHeading, SkeletonIcons, SkeletonRow, SkeletonSection, type SkeletonProps } from './Skeleton';
 export { Spinner, type SpinnerProps } from './Spinner';
+export { CountPill } from './CountPill';
 export { Text, type TextProps } from './Text';
 export { TextButton, type TextButtonProps } from './TextButton';
 export { TimeWheel, type TimeWheelProps } from './TimeWheel';
