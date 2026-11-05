@@ -469,7 +469,7 @@ export function useChangeRole(of: MembersOf) {
 }
 
 /** An invitation being sent (M116): to an email, or to someone picked from GET /people. `key` is its Idempotency-Key. */
-export type NewInvitation = { key: string } & ({ email: string; person?: never } | { person: UserRef; email?: never });
+export type NewInvitation = { key: string; role?: TeamRole } & ({ email: string; person?: never } | { person: UserRef; email?: never });
 
 /** The open invitation a new one replaces (the API sends it again), if any. */
 export const sameInvitation = (open: readonly OpenInvitation[] | undefined, v: NewInvitation) =>
@@ -493,10 +493,10 @@ export function useSendInvitation(of: MembersOf) {
       await queryClient.cancelQueries({ queryKey: key, exact: true });
       const previous = sameInvitation(queryClient.getQueryData<OpenInvitation[]>(key), v);
       if (previous) set((open) => open.map((x) => (x.id === previous.id ? { ...x, sending: true } : x)));
-      else set((open) => [...open, { id: v.key, email: v.email ?? '', invitee: v.person ?? null, expiresAt: '', sending: true }]);
+      else set((open) => [...open, { id: v.key, email: v.email ?? '', invitee: v.person ?? null, expiresAt: '', role: v.role ?? 'member', sending: true }]);
       return { id: previous?.id ?? v.key, previous };
     },
-    mutationFn: (v: NewInvitation) => (v.person ? tasksApi.inviteUser(of, v.person.id, v.key) : tasksApi.invite(of, v.email, v.key)),
+    mutationFn: (v: NewInvitation) => (v.person ? tasksApi.inviteUser(of, v.person.id, v.role ?? 'member', v.key) : tasksApi.invite(of, v.email, v.role ?? 'member', v.key)),
     onSuccess: (invitation, _v, context) => set((open) => open.map((x) => (x.id === context.id ? invitation : x))),
     onError: (_error, _v, context) =>
       context && set((open) => (context.previous ? open.map((x) => (x.id === context.id ? context.previous! : x)) : open.filter((x) => x.id !== context.id))),
@@ -513,7 +513,7 @@ export function useSendInvitation(of: MembersOf) {
 export function useInvitePeople(of: MembersOf) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(of, userId))),
+    mutationFn: (userIds: Id[]) => Promise.all(userIds.map((userId) => tasksApi.inviteUser(of, userId, 'member'))),
     meta: { asksNotifications: always },
     onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.openInvitations(of.kind, of.id) }),
   });

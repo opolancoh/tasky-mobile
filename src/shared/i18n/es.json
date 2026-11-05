@@ -174,6 +174,10 @@
   },
   "browse": {
     "peoplePage": {
+      "joinsAs": "Se une como",
+      "means": { "owner": "Además invita y quita personas, cambia roles y puede eliminar {{name}}.", "memberTeam": "Ve y trabaja en todas las listas de {{name}}.", "memberList": "Ve y trabaja en {{name}}." },
+      "lasts": "Las invitaciones duran 14 días.",
+      "guestsNote": "¿Solo para una lista? Invítalo como invitado desde ••• › Invitados de esa lista: verá esa lista, no el resto de {{name}}.",
       "guestsTitle": "Invitados",
       "guestsLine": "Personas fuera de {{team}}, solo en esta lista",
       "noGuests": "Aún no hay invitados. Los invitados trabajan solo en esta lista, no en todo el equipo.",
@@ -788,6 +792,7 @@
     "invitationDeclined": "{{other}} rechazó tu invitación a {{subject}}"
   },
   "invitation": {
+    "joinAs": "Te unes como",
     "invitedYou": "{{name}} te invitó",
     "sharedList": "Una lista compartida",
     "team": "Un equipo",
@@ -992,7 +997,7 @@
     "lateCount_other": "{{count}} vencidas",
     "link": {
       "row": "Enlace de invitación",
-      "on": "Vence el {{date}} · cualquiera con él puede unirse",
+      "on": "Se une como miembro · vence el {{date}} · cualquiera con él puede unirse",
       "offDetail": "Apagado · crea uno para compartir en un chat",
       "title": "Enlace de invitación · vence el {{date}}",
       "share": "Compartir",

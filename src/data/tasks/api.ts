@@ -68,9 +68,9 @@ export const tasksApi = {
   openInvitations: (of: MembersOf) => getAll<OpenInvitation>(`${peopleOf(of)}/invitations`),
 
   /** POST …/invitations { email } (201). Inviting the same email again replaces the open invitation. */
-  invite: (of: MembersOf, email: string, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email }, idempotencyKey }),
+  invite: (of: MembersOf, email: string, role: TeamRole, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email, role }, idempotencyKey }),
   /** POST …/invitations { userId } (201): someone from GET /people, or with a task given from the list (D88, D89). */
-  inviteUser: (of: MembersOf, userId: Id, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId }, idempotencyKey }),
+  inviteUser: (of: MembersOf, userId: Id, role: TeamRole, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId, role }, idempotencyKey }),
   /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names (and the start of a known email); `exclude` is left out before the limit (D104). */
   people: (q: string, limit: number, exclude: readonly string[], within: MembersOf | undefined, signal?: AbortSignal) =>
     http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined, [within?.kind === 'team' ? 'teamId' : 'taskListId']: within?.id }, signal }),

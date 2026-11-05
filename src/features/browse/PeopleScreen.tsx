@@ -11,12 +11,12 @@ import type { Id } from '@/core/types';
 import { isApiError } from '@/core/http/problem';
 import { newIdempotencyKey, sameInvitation, useInviteLinkActions, useInvitePeople, useRevokeInvitation, useSendInvitation } from '@/data/tasks/mutations';
 import { useInviteLink, useMembersPreview, useOpenInvitations, useTaskLists, useTasks, useTeams, useTeamSummary } from '@/data/tasks/queries';
-import type { Member, MembersOf, OpenInvitation, Person, UserRef } from '@/data/tasks/types';
+import type { Member, MembersOf, OpenInvitation, Person, TeamRole, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, CountPill, ListRow, Notice, Screen, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, CountPill, ListRow, Notice, Screen, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite } from './browseSections';
@@ -125,7 +125,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
       case 'note':
         return <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>{t('browse.peoplePage.noGuests')}</Text>;
       case 'invitation':
-        return <InvitationRow invitation={item.invitation} onRevoke={() => revoke.mutate(item.invitation.id)} revoking={revoke.isPending} />;
+        return <InvitationRow invitation={item.invitation} guest={guests} onRevoke={() => revoke.mutate(item.invitation.id)} revoking={revoke.isPending} />;
       case 'skeleton':
         return <SkeletonRow width={50} />;
     }
@@ -164,6 +164,9 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
   const team = of.kind === 'team' ? teams.find((x) => x.id === of.id) : undefined;
   const name = of.kind === 'team' ? team?.name : taskList?.name;
   const open = useOpenInvitations(of, true);
+  // Joins as (D126); a guest of a team's list is always a guest, so no choice there.
+  const guest = !!taskList?.team;
+  const [role, setRole] = useState<TeamRole>('member');
   const privateList = !!taskList && taskList.sharing === 'private';
   const listTasks = useTasks({ taskListId: of.id, sort: 'taskList' }, privateList);
   const outsiders = privateList && !open.data?.length
@@ -183,11 +186,19 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
 
   return (
     <Screen edges={['bottom']}>
-      <InviteField of={of} outsiders={outsiders} />
+      <InviteField of={of} outsiders={outsiders} role={guest ? undefined : role} />
+      {!guest && (
+        <View style={[styles.joinsAs, { marginTop: space.lg }]}>
+          <Text variant="label" color="ink2">{t('browse.peoplePage.joinsAs')}</Text>
+          <Segmented<TeamRole> accessibilityLabel={t('browse.peoplePage.joinsAs')} options={(['member', 'owner'] as const).map((r) => ({ value: r, label: t(`browse.role.${r}`) }))} value={role} onChange={setRole} />
+        </View>
+      )}
       <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>
-        {taskList?.team ? t('browse.peoplePage.guestHint', { team: taskList.team.name }) : t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}
+        {guest ? t('browse.peoplePage.guestHint', { team: taskList?.team?.name })
+          : `${t(role === 'owner' ? 'browse.peoplePage.means.owner' : of.kind === 'team' ? 'browse.peoplePage.means.memberTeam' : 'browse.peoplePage.means.memberList', { name })} ${t('browse.peoplePage.lasts')}`}
       </Text>
       {of.kind === 'team' && team && <InviteLinkRow teamId={of.id} teamName={team.name} />}
+      {of.kind === 'team' && team && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('browse.peoplePage.guestsNote', { name: team.name })}</Text>}
     </Screen>
   );
 }
@@ -199,7 +210,7 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
  * email again reuses its Idempotency-Key. Someone already in it reads as a hint. The first invitation of a private list
  * with tasks given outside it asks about those people first (D88, M71).
  */
-function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] }) {
+function InviteField({ of, outsiders, role }: { of: MembersOf; outsiders: UserRef[]; role?: TeamRole }) {
   const { t } = useTranslation();
   const { space } = useTheme();
   const send = useSendInvitation(of);
@@ -234,7 +245,7 @@ function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] })
     if (yes === null) return void restore();
     const key = 'email' in target && failed && failed.email === target.email ? failed.key : newIdempotencyKey();
     try {
-      await send.mutateAsync({ key, ...target });
+      await send.mutateAsync({ key, role, ...target });
       setFailed(null);
       if (previous) useToast.getState().show({ message: t('browse.invitedAgain', { email: name }) });
       else AccessibilityInfo.announceForAccessibility(t('browse.invited', { email: name }));
@@ -267,7 +278,7 @@ function InviteField({ of, outsiders }: { of: MembersOf; outsiders: UserRef[] })
 }
 
 /** An open invitation (M56): the person's name when the email has an account, else the email; while sending, a ring after 300 ms (M116) in place of Revoke. */
-function InvitationRow({ invitation, onRevoke, revoking }: { invitation: OpenInvitation; onRevoke: () => void; revoking: boolean }) {
+function InvitationRow({ invitation, guest, onRevoke, revoking }: { invitation: OpenInvitation; guest: boolean; onRevoke: () => void; revoking: boolean }) {
   const { t, i18n } = useTranslation();
   const { colors, space } = useTheme();
   const me = useMe().data;
@@ -285,7 +296,7 @@ function InvitationRow({ invitation, onRevoke, revoking }: { invitation: OpenInv
       )}
       <View style={styles.fill}>
         <Text variant="body" numberOfLines={1}>{v.invitee?.displayName ?? v.email}</Text>
-        <Text variant="footnote" color="ink3">{v.sending ? t('browse.sending') : t('browse.expires', { date: expires })}</Text>
+        <Text variant="footnote" color="ink3">{`${t(guest ? 'browse.role.guest' : `browse.role.${v.role}`)} · ${v.sending ? t('browse.sending') : t('browse.expires', { date: expires })}`}</Text>
       </View>
       {v.sending ? (
         <View style={styles.send}>{ring && <Spinner size={16} accessibilityLabel={t('browse.sending')} />}</View>
@@ -300,6 +311,7 @@ function InvitationRow({ invitation, onRevoke, revoking }: { invitation: OpenInv
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  joinsAs: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   mail: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center' },

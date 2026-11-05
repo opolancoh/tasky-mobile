@@ -91,6 +91,7 @@ export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id
 
       <View style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line }}>
         {invitation.invitedBy?.displayName ? <ListRow label={t('invitation.invitedBy')} value={invitation.invitedBy.displayName} /> : null}
+        <ListRow label={t('invitation.joinAs')} value={t(`browse.role.${invitation.role}`)} />
         <ListRow label={t('invitation.people')} value={String(invitation.people)} />
         <ListRow label={t(team ? 'invitation.lists' : 'invitation.openTasks')} value={String((team ? invitation.lists : invitation.openTasks) ?? 0)} />
         <ListRow label={t('invitation.expires')} value={expires} divider={false} />

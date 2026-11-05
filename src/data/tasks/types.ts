@@ -324,6 +324,8 @@ export interface MyInvitation {
   lists?: number | null;
   /** UTC ISO-8601. */
   expiresAt: string;
+  /** What joining gives (D126); `guest`: one list of a team. */
+  role: 'owner' | 'member' | 'guest';
 }
 
 /** Home's task sections (GET /home/{section}, D67, D86). */
@@ -435,6 +437,8 @@ export interface OpenInvitation {
   invitedBy?: Id | null;
   /** Whom it's for, when the email has an account: Invited shows their name. */
   invitee?: UserRef | null;
+  /** What joining gives (D126). */
+  role: TeamRole;
   /** App-only: on its way (M116); a new one's `id` is its Idempotency-Key until the API answers. */
   sending?: boolean;
 }

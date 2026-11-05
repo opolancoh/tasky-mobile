@@ -174,6 +174,10 @@
   },
   "browse": {
     "peoplePage": {
+      "joinsAs": "Joins as",
+      "means": { "owner": "Also invites and removes people, changes roles, and can delete {{name}}.", "memberTeam": "Sees and works on every list in {{name}}.", "memberList": "Sees and works on {{name}}." },
+      "lasts": "Invitations last 14 days.",
+      "guestsNote": "Only for one list? Invite them as a guest from that list’s ••• › Guests: they see that list, not the rest of {{name}}.",
       "guestsTitle": "Guests",
       "guestsLine": "People from outside {{team}}, on this list only",
       "noGuests": "No guests yet. Guests work on this list only, not the whole team.",
@@ -788,6 +792,7 @@
     "invitationDeclined": "{{other}} declined your invitation to {{subject}}"
   },
   "invitation": {
+    "joinAs": "You join as",
     "invitedYou": "{{name}} invited you",
     "sharedList": "A shared list",
     "team": "A team",
@@ -992,7 +997,7 @@
     "lateCount_other": "{{count}} late",
     "link": {
       "row": "Invite link",
-      "on": "Expires {{date}} · anyone with it can join",
+      "on": "Joins as Member · expires {{date}} · anyone with it can join",
       "offDetail": "Off · make one to share in a chat",
       "title": "Invite link · expires {{date}}",
       "share": "Share",
