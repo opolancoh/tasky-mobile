@@ -40,7 +40,7 @@ type Item =
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. Add a task, docked at the bottom, empty
  * list or full, opens Quick add on this list (M103). The top (M64): the title,
- * then one line, "3 open · Shared · People" (Private · Share for its owner, Team · Family · People; M130, M131): the
+ * then one line, "3 open · Shared · People" (Private · Share for its owner; a team's list just "3 open", M148; M130, M131): the
  * action opens People; ••• opens the list's menu as a sheet. After the open tasks,
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
  * list on the device, its tasks fetched only while open, newest first, paged (D54). Tasks on hold (D91, M80) wait in their own section between the open tasks and
@@ -137,7 +137,8 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
   const people = members.data ?? [];
   // People with tasks here who aren't in it (D70).
   const outsideOf = (r: TaskSummary) => !!r.assignee && r.assignee.id !== me?.id && !people.some((m) => m.userId === r.assignee?.id);
-  const kind = taskList && listKind(taskList);
+  // A team the user is in says the rest on its own page, People included (M148).
+  const kind = taskList && !team && listKind(taskList);
 
   const renderItem = ({ item }: { item: Item }) => {
     switch (item.type) {
