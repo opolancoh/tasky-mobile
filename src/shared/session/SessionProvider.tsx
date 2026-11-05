@@ -7,12 +7,11 @@ import { isApiError, isConnectionError } from '@/core/http/problem';
 import { identityApi } from '@/data/identity/api';
 import type { ChangePasswordRequest, LoginRequest } from '@/data/identity/types';
 import { meQuery } from '@/data/tenancy/queries';
-import i18n, { deviceLanguage, languages } from '@/shared/i18n/i18n';
+import i18n, { languages } from '@/shared/i18n/i18n';
 import { rememberConnectionError } from '@/shared/network/errorDetails';
 import { getInstallId, pushSupported, unregisterPush } from '@/shared/notifications/push';
-import { clearReminders } from '@/shared/notifications/reminders';
 
-import { useHomeCache } from './homeCacheStore';
+import { endSessionHere } from './endSessionHere';
 import { keepPendingSignOut, retryPendingSignOut } from './pendingSignOut';
 import { useSessionStore, type SessionStatus } from './sessionStore';
 
@@ -61,11 +60,15 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
       setStatus('signedIn');
     } catch (e) {
       if (useSessionStore.getState().status === 'signedOut') return;   // the token manager already ended it
-      if (sessionRefused(e)) await tokens.clear();
-      else rememberConnectionError(e);
-      setStatus(sessionRefused(e) ? 'signedOut' : 'unreachable');
+      if (sessionRefused(e)) {
+        await tokens.clear();
+        await endSessionHere(queryClient);
+        return;
+      }
+      rememberConnectionError(e);
+      setStatus('unreachable');
     }
-  }, [tokens, loadAccount]);
+  }, [tokens, loadAccount, queryClient]);
 
   // Launch; a sign-out made offline goes out too (M88).
   useEffect(() => {
@@ -101,12 +104,7 @@ export function SessionProvider({ tokens, children }: { tokens: TokenManager; ch
       await keepPendingSignOut({ refreshToken, installId: !removed && pushSupported ? await getInstallId() : null });
     }
     await tokens.clear();
-    await clearReminders().catch(() => undefined);   // this user's reminders leave the phone (M42)
-    queryClient.clear();
-    useHomeCache.getState().clear();
-    await i18n.changeLanguage(deviceLanguage());
-    useSessionStore.getState().setUser(null);
-    useSessionStore.getState().setStatus('signedOut');
+    await endSessionHere(queryClient);
   }, [tokens, queryClient]);
 
   /** Change password (M41): the API ends the other sessions and returns new tokens for this one. */

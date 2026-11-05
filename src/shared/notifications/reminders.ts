@@ -49,6 +49,8 @@ async function allowed(hasReminders: boolean): Promise<boolean> {
  * zone, or when it was snoozed to. Adds what is missing, replaces what changed, removes the rest. Safe to run often.
  */
 async function sync(timeZone: string): Promise<void> {
+  const started = epoch;
+  const ended = () => epoch !== started;
   const { items } = await tasksApi.myReminders(MAX, undefined, OCCURRENCES);
   const now = Date.now();
   const wanted = new Map(
@@ -61,7 +63,7 @@ async function sync(timeZone: string): Promise<void> {
       .slice(0, MAX)
       .map((r) => [r.id, r]),
   );
-  if (!(await allowed(wanted.size > 0))) return;
+  if (ended() || !(await allowed(wanted.size > 0))) return;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('reminders.channel'), importance: AndroidImportance.HIGH });
   }
@@ -69,6 +71,7 @@ async function sync(timeZone: string): Promise<void> {
   await Notifications.setNotificationCategoryAsync(REMINDER_CATEGORY, REMINDER_ACTIONS.map((id) => ({ identifier: id, buttonTitle: titles[id], options: { opensAppToForeground: true } })));
 
   const scheduled = (await Notifications.getAllScheduledNotificationsAsync()).filter((n) => n.identifier.startsWith(PREFIX));
+  if (ended()) return;
   for (const n of scheduled) {
     const want = wanted.get(n.identifier);
     const same = want && n.content.data?.at === want.at && n.content.title === want.title;
@@ -76,6 +79,7 @@ async function sync(timeZone: string): Promise<void> {
     else await Notifications.cancelScheduledNotificationAsync(n.identifier);
   }
   for (const r of wanted.values()) {
+    if (ended()) return;
     await Notifications.scheduleNotificationAsync({
       identifier: r.id,
       content: { title: r.title, body: i18n.t('reminders.body'), data: { taskId: r.taskId, kind: r.kind, at: r.at }, sound: true, categoryIdentifier: REMINDER_CATEGORY },
@@ -86,6 +90,8 @@ async function sync(timeZone: string): Promise<void> {
 
 let running: Promise<void> | null = null;
 let again = false;
+/** Bumped on sign-out: a sync started before it schedules nothing more (it may already have fetched the old user's reminders). */
+let epoch = 0;
 
 /** Runs `sync` one at a time; a request while one runs runs once more after it. Failures wait for the next request. */
 export function syncReminders(timeZone: string): Promise<void> {
@@ -105,8 +111,14 @@ export function syncReminders(timeZone: string): Promise<void> {
   return running;
 }
 
-/** On sign-out: this user's reminders leave the phone. */
+/** On sign-out: this user's reminders leave the phone, scheduled and already shown. */
 export async function clearReminders(): Promise<void> {
-  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(scheduled.filter((n) => n.identifier.startsWith(PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
+  epoch++;
+  again = false;
+  await running;
+  const [scheduled, shown] = await Promise.all([Notifications.getAllScheduledNotificationsAsync(), Notifications.getPresentedNotificationsAsync()]);
+  await Promise.all([
+    ...scheduled.filter((n) => n.identifier.startsWith(PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+    ...shown.filter((n) => n.request.identifier.startsWith(PREFIX)).map((n) => Notifications.dismissNotificationAsync(n.request.identifier)),
+  ]);
 }

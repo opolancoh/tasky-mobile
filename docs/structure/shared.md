@@ -45,6 +45,7 @@ src/shared/
 │   ├── sessionStore.ts    App-wide state (Zustand); updateRequired after a 426 (M48)
 │   ├── SessionProvider.tsx  useSession(): launch, sign in, sign out, retry
 │   ├── pendingSignOut.ts  A sign-out made offline, kept in SecureStore and sent at launch or on coming back (M88)
+│   ├── endSessionHere.ts  Every way a session ends on this phone: reminders (scheduled and shown), caches, language, Sign in
 │   ├── homeCacheStore.ts  Home's last GET /home per user, on the device; cleared on sign-out (M105)
 ├── components/            Domain pieces several features use; import from '@/shared/components'
 │   ├── TaskListIcon.tsx   TaskListPicker.tsx   recentListsStore.ts   DatePicker.tsx   ReminderIcon.tsx   RepeatPicker.tsx   SnoozePill.tsx   TaskRow.tsx   TaskOrigin.tsx
@@ -160,6 +161,7 @@ Push (M85, D97). **One permission** for both (`permission.ts`, `useNotificationP
 | `sessionStore.ts` | Status (`loading`, `signedIn`, `signedOut`, `unreachable`), the current user and `updateRequired` (the API answered 426, M48). No current workspace (M31). Readable outside React ([M13](../../../azignia-docs/design/clients/apps/06-mobile.md#decisions)) |
 | `SessionProvider.tsx` | Launch, sign in, sign out, retry; `useIsSignedIn()` and friends pick the navigation group |
 | `pendingSignOut.ts` | A sign-out the API didn't hear (offline, M88): the refresh token and, if its push device wasn't removed, the install id, in SecureStore; `retryPendingSignOut()` at launch and on coming back removes the device and ends the session, then forgets it |
+| `endSessionHere.ts` | What every end of a session does on this phone (Sign out, a session refused at launch, a refresh refused): `clearReminders()` (scheduled and shown; a sync still running schedules nothing more), the query cache, Home's cache, the device's language, then Sign in. Other devices keep theirs |
 | `homeCacheStore.ts` | Home's last `GET /home` for the signed-in user, kept on the device (AsyncStorage): Home shows it at once on launch while it refreshes; cleared on sign-out or when the session ends (M105) |
 
 How they're used: [Auth](../auth/README.md).
