@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { randomUUID } from 'expo-crypto';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { create } from 'zustand';
@@ -50,7 +51,7 @@ export async function registerPush(force = false): Promise<void> {
   if (!pushSupported) return;
   if (!(await Notifications.getPermissionsAsync()).granted) return;
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('push.channel'), importance: Notifications.AndroidImportance.HIGH });
+    await Notifications.setNotificationChannelAsync(CHANNEL, { name: i18n.t('push.channel'), importance: AndroidImportance.HIGH });
   }
   const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
   const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
