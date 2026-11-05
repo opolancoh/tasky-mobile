@@ -16,7 +16,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, CountPill, ListRow, Notice, Screen, SectionLabel, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, CountPill, ListRow, Notice, Screen, SectionLabel, Segmented, Skeleton, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite } from './browseSections';
@@ -327,7 +327,9 @@ function InvitationRow({ invitation, guest, onRevoke, revoking }: { invitation: 
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
+  linkField: { flexDirection: 'row', alignItems: 'center', minHeight: 48, paddingLeft: 12, paddingRight: 6, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12 },
+  linkCopy: { flexDirection: 'row', alignItems: 'center', height: 34, paddingHorizontal: 12, borderRadius: 10 },
+  fill: { flex: 1, minWidth: 0 },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   mail: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center' },
@@ -338,9 +340,10 @@ const styles = StyleSheet.create({
 });
 
 /**
- * A team's invite link (D95, M84, D126), for its Owners: "Or share a link" with ••• (Share, New link: the old one stops at
- * once), what the link does, then a row like Invite luis@…: "Copy invite link", when it expires, a copy icon; a tap
- * copies. Off: "Make an invite link" with +, which makes one and opens Share. The address isn't shown.
+ * A team's invite link (D95, M84, M155, D126), for its Owners: "Or share a link" with ••• (Share, New link: the old one
+ * stops at once), what the link does, then the address in a read-only field with Copy beside it and when it expires under;
+ * while it loads, that shape in grey so the sheet doesn't grow. Off: "Make an invite link" with +, which makes one and
+ * opens Share.
  */
 function InviteLinkSection({ teamId, teamName }: { teamId: Id; teamName: string }) {
   const { t } = useTranslation();
@@ -377,18 +380,32 @@ function InviteLinkSection({ teamId, teamName }: { teamId: Id; teamName: string 
       <SectionLabel action={link ? { icon: 'more-horizontal', label: t('people.link.row'), onPress: more } : undefined}>{t('browse.peoplePage.linkTitle')}</SectionLabel>
       <Text variant="footnote" color="ink3" style={{ marginBottom: space.sm }}>{t('browse.peoplePage.linkAbout')}</Text>
       {state.isPending ? (
-        <SkeletonRow width={40} />
+        <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <View style={[styles.linkField, { gap: space.sm, borderColor: colors.line, backgroundColor: colors.surface2 }]}>
+            <Skeleton width="60%" height={14} />
+            <View style={styles.fill} />
+            <Skeleton width={78} height={34} radius={10} />
+          </View>
+          <Skeleton width="35%" height={10} style={{ marginTop: space.sm }} />
+        </View>
       ) : link ? (
-        <ListRow
-          label={t('people.link.copyRow')}
-          detail={t('people.link.expires', { date: labels.day(link.expiresAt.slice(0, 10)) })}
-          icon={tile}
-          accessory={<Feather name="copy" size={20} color={colors.accent} />}
-          onPress={() => void copy(link.url)}
-          chevron={false}
-          busy={renew.isPending}
-          divider={false}
-        />
+        <View>
+          <View style={[styles.linkField, { gap: space.sm, borderColor: colors.line, backgroundColor: colors.surface2 }]}>
+            <Feather name="link-2" size={16} color={colors.ink3} />
+            <Text variant="subhead" numberOfLines={1} ellipsizeMode="middle" selectable style={styles.fill}>{link.url.replace(/^https?:\/\//, '')}</Text>
+            <Pressable
+              onPress={() => void copy(link.url)}
+              disabled={renew.isPending}
+              accessibilityRole="button"
+              accessibilityLabel={t('people.link.copyRow')}
+              style={({ pressed }) => [styles.linkCopy, { gap: space.xs, backgroundColor: pressed ? colors.accentPressed : colors.accent }]}
+            >
+              <Feather name="copy" size={15} color={colors.onAccent} />
+              <Text variant="label" style={{ color: colors.onAccent }}>{t('people.link.copy')}</Text>
+            </Pressable>
+          </View>
+          <Text variant="footnote" color="ink3" style={{ marginTop: space.xs }}>{t('people.link.expires', { date: labels.day(link.expiresAt.slice(0, 10)) })}</Text>
+        </View>
       ) : (
         <ListRow
           label={t('people.link.make')}
