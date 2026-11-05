@@ -91,7 +91,7 @@ export function ListRow({ label, icon, value, detail, accessory, onPress, select
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
   top: { alignItems: 'flex-start' },
-  icon: { width: 24, alignItems: 'center' },
+  icon: { minWidth: 24, alignItems: 'center' },
   main: { flex: 1, minWidth: 0, gap: 2 },
   inline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   value: { flexShrink: 1, alignItems: 'flex-end' },

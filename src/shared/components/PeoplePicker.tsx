@@ -23,6 +23,8 @@ export interface PeoplePickerProps {
   within?: MembersOf;
   /** The last row's label for a typed email: "Invite by email" or "Give it by email". */
   emailLabel: string;
+  /** People › Invite (D126): the row says "Invite luis@…" with "They get an email to join", the mail icon and send. */
+  emailAction?(email: string): { label: string; detail: string };
   /** The field clears on a pick; `restore` puts the text back if it's still empty (a cancel or an error), and says if it did. */
   onPickPerson(person: Person, restore: () => boolean): void;
   onEmail(email: string, restore: () => boolean): void;
@@ -38,7 +40,7 @@ export interface PeoplePickerProps {
  * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search request is out (M73, M121). The typed text lives here
  * (docs/performance.md); a pick or an email sent clears it.
  */
-export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, onEmail, busy = false, keepsKeyboard = false }: PeoplePickerProps) {
+export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, onPickPerson, onEmail, busy = false, keepsKeyboard = false }: PeoplePickerProps) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const [text, setText] = useState('');
@@ -88,7 +90,20 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
     />
   );
 
-  const emailRow = (
+  const action = emailAction?.(shortenEmail(email, EMAIL_MAX));
+  const emailRow = action ? (
+    <ListRow
+      label={action.label}
+      detail={action.detail}
+      icon={<View style={[styles.mail, { backgroundColor: colors.accentSoft }]}><Feather name="mail" size={20} color={colors.accent} /></View>}
+      accessory={<Feather name="send" size={20} color={colors.accent} />}
+      onPress={sendEmail}
+      chevron={false}
+      busy={busy}
+      divider={false}
+      accessibilityLabel={action.label}
+    />
+  ) : (
     <ListRow label={emailLabel} detail={shortenEmail(email, EMAIL_MAX)} icon={<Feather name="mail" size={18} color={colors.accent} />} onPress={sendEmail} chevron={false} busy={busy} divider={false} accessibilityLabel={`${emailLabel}, ${email}`} />
   );
 
@@ -141,6 +156,7 @@ export function PeoplePicker({ exclude = [], within, emailLabel, onPickPerson, o
 }
 
 const styles = StyleSheet.create({
+  mail: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   field: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1.5 },
   input: { flex: 1, minHeight: 44, paddingVertical: 10 },
 });

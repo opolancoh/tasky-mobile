@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
 import { useLayoutEffect, useState } from 'react';
-import { AccessibilityInfo, Pressable, Share, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
@@ -16,7 +16,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, CountPill, ListRow, Notice, Screen, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, CountPill, ListRow, Notice, Pill, Screen, SectionLabel, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite } from './browseSections';
@@ -160,7 +160,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
 export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
   const { t } = useTranslation();
-  const { space } = useTheme();
+  const { colors, space } = useTheme();
   const navigation = useNavigation();
   const me = useMe().data;
   const teams = useTeams().data ?? [];
@@ -191,19 +191,31 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
 
   return (
     <Screen edges={['bottom']}>
-      <InviteField of={of} outsiders={outsiders} role={guest ? undefined : role} />
-      {!guest && (
-        <View style={[styles.joinsAs, { marginTop: space.lg }]}>
-          <Text variant="label" color="ink2">{t('browse.peoplePage.joinsAs')}</Text>
-          <Segmented<TeamRole> accessibilityLabel={t('browse.peoplePage.joinsAs')} options={(['member', 'owner'] as const).map((r) => ({ value: r, label: t(`browse.role.${r}`) }))} value={role} onChange={setRole} />
-        </View>
-      )}
-      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>
-        {guest ? t('browse.peoplePage.guestHint', { team: taskList?.team?.name })
-          : `${t(role === 'owner' ? 'browse.peoplePage.means.owner' : of.kind === 'team' ? 'browse.peoplePage.means.memberTeam' : 'browse.peoplePage.means.memberList', { name })} ${t('browse.peoplePage.lasts')}`}
-      </Text>
-      {of.kind === 'team' && team && <InviteLinkRow teamId={of.id} teamName={team.name} />}
-      {of.kind === 'team' && team && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('browse.peoplePage.guestsNote', { name: team.name })}</Text>}
+      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: space.huge }}>
+        {/* Two ways in, each under its own heading: by name or email (with the role, D126), and a team's link. */}
+        <SectionLabel style={{ marginTop: 0 }}>{t('browse.peoplePage.byEmail')}</SectionLabel>
+        {!guest && (
+          <View style={{ gap: space.sm, marginBottom: space.sm }}>
+            <Text variant="label" color="ink2">{t('browse.peoplePage.joinsAs')}</Text>
+            <Segmented<TeamRole> accessibilityLabel={t('browse.peoplePage.joinsAs')} options={(['member', 'owner'] as const).map((r) => ({ value: r, label: t(`browse.role.${r}`) }))} value={role} onChange={setRole} />
+            <Text variant="footnote" color="ink3">
+              {`${t(role === 'owner' ? 'browse.peoplePage.means.owner' : of.kind === 'team' ? 'browse.peoplePage.means.memberTeam' : 'browse.peoplePage.means.memberList', { name })} ${t('browse.peoplePage.lasts')}`}
+            </Text>
+          </View>
+        )}
+        <InviteField of={of} outsiders={outsiders} role={guest ? undefined : role} />
+        {guest && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('browse.peoplePage.guestHint', { team: taskList?.team?.name })}</Text>}
+        {of.kind === 'team' && team && (
+          <>
+            <View style={[styles.divider, { backgroundColor: colors.line, marginTop: space.xxl }]} />
+            <SectionLabel>{t('browse.peoplePage.linkTitle')}</SectionLabel>
+            <Text variant="footnote" color="ink3" style={{ marginBottom: space.md }}>{t('browse.peoplePage.linkAbout')}</Text>
+            <InviteLinkRow teamId={of.id} teamName={team.name} />
+            <View style={[styles.divider, { backgroundColor: colors.line, marginTop: space.xxl }]} />
+            <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>{t('browse.peoplePage.guestsNote', { name: team.name })}</Text>
+          </>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
@@ -269,6 +281,7 @@ function InviteField({ of, outsiders, role }: { of: MembersOf; outsiders: UserRe
       <PeoplePicker
         within={of}
         emailLabel={t('people.inviteByEmail')}
+        emailAction={(email) => ({ label: t('people.inviteEmail', { email }), detail: t('people.inviteEmailDetail') })}
         onPickPerson={(person, restore) => invite({ person }, restore)}
         onEmail={(email, restore) => invite({ email }, restore)}
         keepsKeyboard
@@ -316,17 +329,20 @@ function InvitationRow({ invitation, guest, onRevoke, revoking }: { invitation: 
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  joinsAs: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, borderBottomWidth: StyleSheet.hairlineWidth },
   mail: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   section: { flexDirection: 'row', alignItems: 'center' },
   invite: { minHeight: 44, justifyContent: 'center' },
   send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  linkOff: { flexDirection: 'row' },
+  linkCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
+  linkIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  divider: { height: StyleSheet.hairlineWidth },
 });
 
 /**
- * A team's invite link (D95, M84, the hub's A), for its Owners, under Invite by email: "Invite link · Expires
- * Oct 26" (or off); a tap opens Share, Copy, New link (the old one stops) and Turn off; off, Make a link.
+ * A team's invite link (D95, M84), for its Owners: off, Make a link (it opens Share); on, the link with
+ * "Expires Nov 12" and Copy by it, a tap opening Share, Copy, New link (the old one stops) and Turn off.
  */
 function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
   const { t } = useTranslation();
@@ -338,6 +354,10 @@ function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
   const until = link ? labels.day(link.expiresAt.slice(0, 10)) : '';
 
   const share = (url: string) => Share.share({ message: t('people.link.shareMessage', { name: teamName, url }) });
+  const copy = async (url: string) => {
+    await Clipboard.setStringAsync(url);
+    useToast.getState().show({ message: t('people.link.copied') });
+  };
   const make = () => renew.mutate(undefined, { onSuccess: (s) => s.link && share(s.link.url), onError: toastError });
   const menu = async () => {
     if (!link) return make();
@@ -349,24 +369,34 @@ function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
     ];
     const i = await chooseAction({ title: t('people.link.title', { date: until }), actions, cancelLabel: t('common.cancel') });
     if (i === 0) share(link.url);
-    if (i === 1) {
-      await Clipboard.setStringAsync(link.url);
-      useToast.getState().show({ message: t('people.link.copied') });
-    }
+    if (i === 1) await copy(link.url);
     if (i === 2) renew.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.renewed') }), onError: toastError });
     if (i === 3) turnOff.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.off') }), onError: toastError });
   };
 
+  // Off: one button makes it and opens Share. On: the link itself, Share by it, a tap for Copy, New link, Turn off.
+  if (state.isPending) return <SkeletonRow width={40} />;
+  if (!link)
+    return (
+      <View style={styles.linkOff}>
+        <Pill label={t('people.link.make')} icon={<Feather name="link-2" size={15} color={colors.accent} />} onPress={make} busy={renew.isPending} />
+      </View>
+    );
   return (
-    <View style={{ marginTop: space.md }}>
-      <ListRow
-        label={t('people.link.row')}
-        icon={<Feather name="link-2" size={20} color={colors.accent} />}
-        detail={state.isPending ? undefined : link ? t('people.link.on', { date: until }) : t('people.link.offDetail')}
-        onPress={menu}
-        busy={renew.isPending || turnOff.isPending}
-        divider={false}
-      />
-    </View>
+    <Pressable
+      onPress={menu}
+      accessibilityRole="button"
+      accessibilityHint={t('people.link.title', { date: until })}
+      style={({ pressed }) => [styles.linkCard, { gap: space.md, padding: space.md, backgroundColor: pressed ? colors.surface2 : colors.surface, borderColor: colors.line }]}
+    >
+      <View style={[styles.linkIcon, { backgroundColor: colors.accentSoft }]}>
+        <Feather name="link-2" size={18} color={colors.accent} />
+      </View>
+      <View style={styles.fill}>
+        <Text variant="body" numberOfLines={1} ellipsizeMode="middle">{link.url.replace(/^https?:\/\//, '')}</Text>
+        <Text variant="footnote" color="ink3">{t('people.link.expires', { date: until })}</Text>
+      </View>
+      <Pill label={t('people.link.copy')} onPress={() => void copy(link.url)} busy={renew.isPending || turnOff.isPending} />
+    </Pressable>
   );
 }

@@ -189,7 +189,10 @@
   },
   "browse": {
     "peoplePage": {
-      "joinsAs": "Se une como",
+      "byEmail": "Invitar por nombre o correo",
+      "linkTitle": "O comparte un enlace",
+      "linkAbout": "Envíalo en un chat: quien lo abra se une a este equipo como miembro. El enlace funciona 7 días.",
+      "joinsAs": "Invitar como",
       "means": { "owner": "Además invita y quita personas, cambia roles y puede eliminarlo.", "memberTeam": "Ve y trabaja en todas las listas de este equipo.", "memberList": "Ve y trabaja en esta lista." },
       "lasts": "Las invitaciones duran 14 días.",
       "guestsNote": "También puedes agregar invitados: personas fuera del equipo que trabajan contigo en una lista. Adminístralos en ••• › Invitados de la lista.",
@@ -1004,6 +1007,8 @@
     "company": "Tu compañía",
     "noneFound": "No encontramos a nadie. Escribe su correo para invitarlo.",
     "inviteByEmail": "Invitar por correo",
+    "inviteEmail": "Invitar a {{email}}",
+    "inviteEmailDetail": "Recibe un correo para unirse",
     "giveByEmail": "Dársela por correo",
     "searching": "Buscando",
     "openCount_one": "{{count}} abierta",
@@ -1012,8 +1017,10 @@
     "lateCount_other": "{{count}} vencidas",
     "link": {
       "row": "Enlace de invitación",
-      "on": "Se une como miembro · vence el {{date}} · cualquiera con él puede unirse",
-      "offDetail": "Apagado · comparte un enlace en un chat: quien lo abra se une como miembro. El enlace funciona 7 días.",
+      "make": "Crear un enlace",
+      "expires": "Vence el {{date}}",
+      "on": "Activo · vence el {{date}}",
+      "offDetail": "Apagado · toca para crear uno",
       "title": "Enlace de invitación · vence el {{date}}",
       "share": "Compartir",
       "copy": "Copiar",
