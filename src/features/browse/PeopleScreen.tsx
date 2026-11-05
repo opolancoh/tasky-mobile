@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { FlashList } from '@shopify/flash-list';
 import { useTranslation } from 'react-i18next';
 import { useLayoutEffect, useState } from 'react';
-import { AccessibilityInfo, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
@@ -264,8 +264,8 @@ function InviteField({ of, outsiders, role }: { of: MembersOf; outsiders: UserRe
     try {
       await send.mutateAsync({ key, role, ...target });
       setFailed(null);
-      if (previous) useToast.getState().show({ message: t('browse.invitedAgain', { email: name }) });
-      else AccessibilityInfo.announceForAccessibility(t('browse.invited', { email: name }));
+      // The sheet stays open for the next one; the toast says it went (Done shows it under Invited).
+      useToast.getState().show({ message: t(previous ? 'browse.invitedAgain' : 'browse.invited', { email: name }) });
       alsoThem(yes, 'person' in to ? to.person.id : null);
     } catch (error) {
       const hint = isApiError(error) && error.code === 'sharing.already_member';
