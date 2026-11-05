@@ -185,7 +185,10 @@
     "declinedReason": "Declined · {{reason}}",
     "outsideList": "Outside the list",
     "comments_one": "{{count}} comment",
-    "comments_other": "{{count}} comments"
+    "comments_other": "{{count}} comments",
+    "notes": "Has notes",
+    "repeats": "Repeats",
+    "reminder": "Reminder {{when}}"
   },
   "browse": {
     "peoplePage": {

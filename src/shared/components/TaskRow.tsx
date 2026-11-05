@@ -127,8 +127,9 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
 /**
  * A task's line under its title, the same in every list, parts joined by "·": where (its list, or "From Olga" for a task
  * the user sees only as its assignee, D70; off on a list's own screen, M57), when (today's reminder time on Today, else the
- * due date, red when late; on hold the "On hold · reason" chip, until when and who resumes it, never late, D91), progress
- * (steps, comments M82, repeat), then the assignment (Pending, Declined and why, outside its list D88, Completed, Invited).
+ * due date, red when late; on hold the "On hold · reason" chip, until when and who resumes it, never late, D91), the
+ * user's reminder on it (a bell and when), progress (steps, comments M82), notes, repeat, its tags in their colors (M158),
+ * then the assignment (Pending, Declined and why, outside its list D88, Completed, Invited).
  * A reminder (D110, M114): a bell and its time ("Wed, Oct 7, 9:00 AM"), "Rang …" in amber once its day passed, or "Snoozed
  * until …"; never its list (Personal, where it doesn't show).
  */
@@ -142,6 +143,7 @@ export function TaskMeta({ task, today, showDue = false, showTime = false, showL
   const overdue = !awaiting && !held && task.status !== 'completed' && !!task.dueDate && !!today && task.dueDate < today;
   const isReminder = task.kind === 'reminder' && !!task.reminder;
   const time = !isReminder && showTime && !!today && task.reminder?.date === today ? task.reminder.time : null;
+  const reminderOn = !isReminder && !time && task.status === 'open' && task.reminder ? task.reminder : null;
   const rang = isReminder && task.status === 'open' && !!today && task.reminder!.date < today;
   const snoozed = isReminder && task.reminder!.snoozedUntil;
   const when = isReminder ? `${task.reminder!.date === today ? '' : `${labels.day(task.reminder!.date)}, `}${labels.time(task.reminder!.time)}` : '';
@@ -165,6 +167,12 @@ export function TaskMeta({ task, today, showDue = false, showTime = false, showL
     held && task.resumer && note(task.resumer.id === meId ? t('hold.youResume') : t('hold.canResume', { name: task.resumer.displayName.split(' ')[0] })),
     time && <Text variant="footnote" style={{ color: colors.accent, fontWeight: '600' }}>{labels.time(time)}</Text>,
     !held && !time && task.dueDate && (showDue || overdue) && note(labels.day(task.dueDate), overdue ? 'danger' : undefined),
+    reminderOn && (
+      <View style={[styles.count, { gap: 3 }]} accessible accessibilityLabel={t('taskRow.reminder', { when: `${labels.day(reminderOn.date)}, ${labels.time(reminderOn.time)}` })}>
+        <ReminderIcon size={12} color={colors.accent} />
+        <Text variant="footnote" style={{ color: colors.accent }} numberOfLines={1}>{`${reminderOn.date === today ? '' : `${labels.day(reminderOn.date)}, `}${labels.time(reminderOn.time)}`}</Text>
+      </View>
+    ),
     task.stepsTotal > 0 && note(t('taskRow.steps', { done: task.stepsDone, total: task.stepsTotal })),
     !!task.commentCount && (
       <View style={[styles.count, { gap: 3 }]} accessible accessibilityLabel={t('taskRow.comments', { count: task.commentCount })}>
@@ -172,7 +180,13 @@ export function TaskMeta({ task, today, showDue = false, showTime = false, showL
         <Text variant="footnote" color="ink3">{task.commentCount}</Text>
       </View>
     ),
-    task.repeats && <Feather name="repeat" size={12} color={colors.ink3} />,
+    task.hasNotes && <Feather name="file-text" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.notes')} />,
+    task.repeats && <Feather name="repeat" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.repeats')} />,
+    task.tags.length > 0 && (
+      <View style={[styles.count, { gap: space.xs }]}>
+        {task.tags.map((tag) => <Text key={tag.name} variant="footnote" numberOfLines={1} style={{ color: tag.color ?? colors.tagDefault, fontWeight: '600' }}>#{tag.name}</Text>)}
+      </View>
+    ),
     showAssignment && task.assignmentStatus === 'pending' && <Text variant="footnote" style={{ color: colors.warn }}>{t('taskRow.pending')}</Text>,
     task.assignmentStatus === 'declined' && (
       <Text variant="footnote" color="danger" numberOfLines={2}>{showAssignment && task.declineReason ? t('taskRow.declinedReason', { reason: task.declineReason }) : t('taskRow.declined')}</Text>

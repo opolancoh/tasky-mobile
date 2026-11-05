@@ -185,7 +185,10 @@
     "declinedReason": "Rechazada · {{reason}}",
     "outsideList": "Fuera de la lista",
     "comments_one": "{{count}} comentario",
-    "comments_other": "{{count}} comentarios"
+    "comments_other": "{{count}} comentarios",
+    "notes": "Tiene notas",
+    "repeats": "Se repite",
+    "reminder": "Recordatorio {{when}}"
   },
   "browse": {
     "peoplePage": {
