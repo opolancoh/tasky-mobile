@@ -75,8 +75,8 @@ export const tasksApi = {
   people: (q: string, limit: number, exclude: readonly string[], within: MembersOf | undefined, signal?: AbortSignal) =>
     http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined, [within?.kind === 'team' ? 'teamId' : 'taskListId']: within?.id }, signal }),
   /** One page of a team's or list's people (D105): you, the owners, then by when they joined; `q` searches names; `total` on the first page. */
-  membersPage: (of: MembersOf, opts: { limit: number; cursor?: string; q?: string }, signal?: AbortSignal) =>
-    http().get<Page<Member> & { total?: number | null }>(`${peopleOf(of)}/members`, { query: { limit: opts.limit, cursor: opts.cursor, q: opts.q || undefined }, signal }),
+  membersPage: (of: MembersOf, opts: { limit: number; cursor?: string; q?: string; guests?: boolean }, signal?: AbortSignal) =>
+    http().get<Page<Member> & { total?: number | null }>(`${peopleOf(of)}/members`, { query: { limit: opts.limit, cursor: opts.cursor, q: opts.q || undefined, guests: opts.guests || undefined }, signal }),
 
   /** DELETE /invitations/{id}: revoke (204). */
   revokeInvitation: (id: Id) => http().delete(`/invitations/${id}`),

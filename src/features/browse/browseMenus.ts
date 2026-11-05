@@ -78,7 +78,7 @@ export function useBrowseMenus() {
       select,
       { label: t('browse.menu.editList'), icon: 'edit-2', run: () => showSheet({ kind: 'list', id: c.id }) },
       sort,
-      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
+      { label: t(c.sharing === 'private' ? 'browse.menu.share' : c.team ? 'browse.menu.guests' : canInvite(c) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
       canManage(c) && {
         label: t('browse.menu.archive'),
         icon: 'archive',

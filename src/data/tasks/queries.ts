@@ -29,14 +29,15 @@ export const usePeople = (q: string, exclude: readonly string[] = [], within?: M
 /** People's first rows (D105, the hub's *Members on demand*, A): you, the owners and a few more, with `total`. */
 export const MEMBERS_PREVIEW = 6;
 export const MEMBERS_PAGE = 30;
-export const useMembersPreview = (of: MembersOf) =>
-  useQuery({ queryKey: [...taskKeys.members(of.kind, of.id), 'preview'], queryFn: ({ signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PREVIEW }, signal) });
+/** `guests`: a team's list, its guests only (E67, M150). */
+export const useMembersPreview = (of: MembersOf, guests = false) =>
+  useQuery({ queryKey: [...taskKeys.members(of.kind, of.id), 'preview', guests], queryFn: ({ signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PREVIEW, guests }, signal) });
 
 /** Everyone in a team or list, a page at a time (See all, D105); `q` searches names on the API. Under `members`, so changes refresh it. */
-export const useMemberPages = (of: MembersOf, q: string) =>
+export const useMemberPages = (of: MembersOf, q: string, guests = false) =>
   useInfiniteQuery({
-    queryKey: [...taskKeys.members(of.kind, of.id), 'pages', q],
-    queryFn: ({ pageParam, signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PAGE, cursor: pageParam, q }, signal),
+    queryKey: [...taskKeys.members(of.kind, of.id), 'pages', q, guests],
+    queryFn: ({ pageParam, signal }) => tasksApi.membersPage(of, { limit: MEMBERS_PAGE, cursor: pageParam, q, guests }, signal),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: keepPreviousData,

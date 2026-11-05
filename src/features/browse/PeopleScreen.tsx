@@ -28,7 +28,8 @@ type Item =
   | { type: 'member'; key: string; member: Member }
   | { type: 'more'; key: string; total: number }
   | { type: 'invitation'; key: string; invitation: OpenInvitation }
-  | { type: 'skeleton'; key: string };
+  | { type: 'skeleton'; key: string }
+  | { type: 'note'; key: string };
 
 /**
  * A team's or a list's people (M38, M146, as desktop's E62): under the title a team's open and late tasks in all (GET
@@ -48,8 +49,10 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const team = of.kind === 'team' ? teams.find((x) => x.id === of.id) : taskList?.team ? teams.find((x) => x.id === taskList.team!.id) : undefined;
   const inTeam = of.kind === 'team';
   const invites = inTeam ? team?.role === 'owner' : !!taskList && canInvite(taskList);
+  // A team's list: its people are the team's, so Guests lists only people from outside on this list (M150).
+  const guests = !inTeam && !!taskList?.team;
   // The first few (D105): you, the owners, then by when they joined; everyone only from See all.
-  const members = useMembersPreview(of);
+  const members = useMembersPreview(of, !inTeam && !!taskList?.team);
   const open = useOpenInvitations(of, invites);
   const revoke = useRevokeInvitation(of);
   const summary = useTeamSummary(of.id, inTeam);
@@ -73,7 +76,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   if (members.isPending) items.push({ type: 'skeleton', key: 'k' });
   else {
     const shown = members.data?.items ?? [];
-    items.push({ type: 'section', key: 's-people', title: t(inTeam ? 'browse.peoplePage.inTeam' : 'browse.peoplePage.onList'), count: total });
+    if (guests && !total) items.push({ type: 'note', key: 'none' });
+    else items.push({ type: 'section', key: 's-people', title: t(inTeam ? 'browse.peoplePage.inTeam' : 'browse.peoplePage.onList'), count: total });
     shown.forEach((member) => items.push({ type: 'member', key: member.userId, member }));
     if (total > shown.length) items.push({ type: 'more', key: 'more', total });
   }
@@ -82,7 +86,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
     open.data.forEach((invitation) => items.push({ type: 'invitation', key: invitation.id, invitation }));
   }
 
-  const line = !inTeam ? (members.isPending ? null : <Text variant="subhead" color="ink2">{t('browse.people', { count: total })}</Text>)
+  const line = guests ? <Text variant="subhead" color="ink2">{t('browse.peoplePage.guestsLine', { team: taskList?.team?.name })}</Text>
+    : !inTeam ? (members.isPending ? null : <Text variant="subhead" color="ink2">{t('browse.people', { count: total })}</Text>)
     : summary.data ? (
       <Text variant="subhead" color="ink2">
         {t('people.openCount', { count: summary.data.open })}
@@ -97,7 +102,7 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
         return (
           <View style={{ paddingBottom: space.sm, gap: space.xxs }}>
             {name ? <Text variant="label" color="ink3">{name}</Text> : null}
-            <Text variant="largeTitle" accessibilityRole="header">{t('browse.peopleTitle')}</Text>
+            <Text variant="largeTitle" accessibilityRole="header">{t(guests ? 'browse.peoplePage.guestsTitle' : 'browse.peopleTitle')}</Text>
             {line}
             {members.error && (
               <View style={{ marginTop: space.md }}>
@@ -116,7 +121,9 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
       case 'member':
         return <MemberRow of={of} team={team} member={item.member} />;
       case 'more':
-        return <ListRow label={t('browse.seeAllPeople', { count: item.total })} onPress={() => navigation.navigate('Members', { ...of, name })} divider={false} />;
+        return <ListRow label={t('browse.seeAllPeople', { count: item.total })} onPress={() => navigation.navigate('Members', { ...of, name, guests })} divider={false} />;
+      case 'note':
+        return <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>{t('browse.peoplePage.noGuests')}</Text>;
       case 'invitation':
         return <InvitationRow invitation={item.invitation} onRevoke={() => revoke.mutate(item.invitation.id)} revoking={revoke.isPending} />;
       case 'skeleton':
@@ -177,7 +184,9 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
   return (
     <Screen edges={['bottom']}>
       <InviteField of={of} outsiders={outsiders} />
-      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}</Text>
+      <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>
+        {taskList?.team ? t('browse.peoplePage.guestHint', { team: taskList.team.name }) : t(of.kind === 'team' ? 'browse.inviteTeamHint' : 'browse.inviteListHint')}
+      </Text>
       {of.kind === 'team' && team && <InviteLinkRow teamId={of.id} teamName={team.name} />}
     </Screen>
   );

@@ -18,7 +18,7 @@ import { MemberRow } from './components/MemberRow';
  * Everyone in a team or list (D105, the hub's *Members on demand*, A), from People's See all: a name search on top,
  * searched on the API, and pages of 30 as the list nears its end. Rows as in People (`MemberRow`).
  */
-export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: string }>) {
+export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: string; guests?: boolean }>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
   const { t } = useTranslation();
   const { space } = useTheme();
@@ -33,7 +33,7 @@ export function MembersScreen({ route }: StaticScreenProps<MembersOf & { name?: 
     const timer = setTimeout(() => setQuery(text.trim()), SEARCH_DELAY);
     return () => clearTimeout(timer);
   }, [text]);
-  const pages = useMemberPages(of, query);
+  const pages = useMemberPages(of, query, route.params.guests);
   const refreshControl = usePullRefresh(pages);
   const members = pages.data?.pages.flatMap((p) => p.items) ?? [];
   const total = pages.data?.pages[0]?.total ?? members.length;
