@@ -410,8 +410,11 @@ export interface Team {
 export interface Person {
   id: Id;
   displayName: string;
+  email: string;
   via: string | null;
   colleague: boolean;
+  /** Already in the list or team being invited to (`members`, D128). */
+  member?: boolean;
 }
 
 export interface Member {

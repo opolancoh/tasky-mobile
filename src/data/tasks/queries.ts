@@ -18,12 +18,14 @@ export const useAssignableTaskLists = (userId: Id | undefined) =>
  * query the user has typed past is cancelled (the request's `signal`).
  */
 export const PEOPLE_LIMIT = 8;
-export const usePeople = (q: string, exclude: readonly string[] = [], within?: MembersOf) =>
+/** `members`: Invite's search, `within`'s people matching `q` last and flagged (D128). */
+export const usePeople = (q: string, exclude: readonly string[] = [], within?: MembersOf, members = false) =>
   useQuery({
-    queryKey: taskKeys.people(q, exclude, within && `${within.kind}:${within.id}`),
-    queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, exclude, within, signal),
+    queryKey: taskKeys.people(q, exclude, within && `${within.kind}:${within.id}`, members),
+    queryFn: ({ signal }) => tasksApi.people(q, q ? 20 : PEOPLE_LIMIT, exclude, within, members, signal),
     staleTime: 5 * 60_000,
-    placeholderData: keepPreviousData,
+    // The last search's results stay while the next loads; the people you work with (no `q`) aren't results.
+    placeholderData: (previous, query) => (query?.queryKey[2] ? previous : undefined),
   });
 
 /** People's first rows (D105, the hub's *Members on demand*, A): you, the owners and a few more, with `total`. */

@@ -71,9 +71,9 @@ export const tasksApi = {
   invite: (of: MembersOf, email: string, role: TeamRole, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { email, role }, idempotencyKey }),
   /** POST …/invitations { userId } (201): someone from GET /people, or with a task given from the list (D88, D89). */
   inviteUser: (of: MembersOf, userId: Id, role: TeamRole, idempotencyKey?: string) => http().post<OpenInvitation>(`${peopleOf(of)}/invitations`, { body: { userId, role }, idempotencyKey }),
-  /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names (and the start of a known email); `exclude` is left out before the limit (D104). */
-  people: (q: string, limit: number, exclude: readonly string[], within: MembersOf | undefined, signal?: AbortSignal) =>
-    http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined, [within?.kind === 'team' ? 'teamId' : 'taskListId']: within?.id }, signal }),
+  /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names (and the start of a known email); `exclude` is left out before the limit (D104). `members` lists `within`'s matching people last, flagged (D128). */
+  people: (q: string, limit: number, exclude: readonly string[], within: MembersOf | undefined, members: boolean, signal?: AbortSignal) =>
+    http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined, [within?.kind === 'team' ? 'teamId' : 'taskListId']: within?.id, members: members || undefined }, signal }),
   /** One page of a team's or list's people (D105): you, the owners, then by when they joined; `q` searches names; `total` on the first page. */
   membersPage: (of: MembersOf, opts: { limit: number; cursor?: string; q?: string; guests?: boolean }, signal?: AbortSignal) =>
     http().get<Page<Member> & { total?: number | null }>(`${peopleOf(of)}/members`, { query: { limit: opts.limit, cursor: opts.cursor, q: opts.q || undefined, guests: opts.guests || undefined }, signal }),

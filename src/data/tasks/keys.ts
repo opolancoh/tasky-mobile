@@ -15,7 +15,7 @@ export const taskKeys = {
   members: (kind: string, id: Id) => ['tasks', 'members', kind, id] as const,
   openInvitations: (kind: string, id: Id) => ['tasks', 'members', kind, id, 'invitations'] as const,
   /** People to pick (GET /people) for a query. */
-  people: (q: string, exclude: readonly string[], within?: string) => ['tasks', 'people', q, [...exclude].sort().join(','), within ?? ''] as const,
+  people: (q: string, exclude: readonly string[], within?: string, members = false) => ['tasks', 'people', q, [...exclude].sort().join(','), within ?? '', members] as const,
   /** Search results for a query: views too, so completing a task refetches them. */
   search: (q: string, status: string) => ['tasks', 'views', 'search', q, status] as const,
   /** Recently Deleted: changes with every delete and restore. */

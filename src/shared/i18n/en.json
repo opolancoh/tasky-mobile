@@ -1001,6 +1001,10 @@
     "response": "Response body"
   },
   "people": {
+    "alreadyIn": "Already in {{name}}",
+    "invitedAlready": "Invited · hasn’t joined yet",
+    "resend": "Resend",
+    "noMatch": "No one you know matches “{{q}}”. Type their email to invite them.",
     "search": "Name or email",
     "recent": "People you work with",
     "workWith": "People you work with",

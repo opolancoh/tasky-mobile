@@ -32,6 +32,12 @@ export interface PeoplePickerProps {
   busy?: boolean;
   /** Return sends the typed email and the keyboard stays up for the next one (People › Invite, M116). */
   keepsKeyboard?: boolean;
+  /**
+   * People › Invite (D128): rows like the email row, the email under a name (Your company for a colleague, unless another
+   * match has the same name); someone invited reads Invited with Resend, someone already in `name` is greyed; Return picks
+   * the first.
+   */
+  invite?: { name: string; invited(person: Person): boolean };
 }
 
 /**
@@ -40,7 +46,7 @@ export interface PeoplePickerProps {
  * know with that address comes first, then the email row; otherwise the email row is right under the field (D104); a small ring spins in the field while a search request is out (M73, M121). The typed text lives here
  * (docs/performance.md); a pick or an email sent clears it.
  */
-export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, onPickPerson, onEmail, busy = false, keepsKeyboard = false }: PeoplePickerProps) {
+export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, onPickPerson, onEmail, busy = false, keepsKeyboard = false, invite }: PeoplePickerProps) {
   const { t } = useTranslation();
   const { colors, space, type } = useTheme();
   const [text, setText] = useState('');
@@ -55,7 +61,7 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
     return () => clearTimeout(timer);
   }, [text]);
   // An email is searched too: someone you know with that address shows above Invite by email (D104). The API leaves out `exclude`.
-  const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)), within);   // an emailed assignee isn't a user id
+  const people = usePeople(query, exclude.filter((id) => !isEmailAssignee(id)), within, !!invite);   // an emailed assignee isn't a user id
   // Searching: from a keystroke until its results are in (the wait before asking, then the request); the last results stay meanwhile.
   // As every search field: the ring only while a request is out, not through the pause after typing.
   const searching = people.isFetching && !people.isPending;
@@ -64,6 +70,9 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
   const found = people.data ?? [];
   const known = found.filter((p) => !p.colleague || p.via);
   const colleagues = found.filter((p) => p.colleague && !p.via);
+  // Invite (D128): people to invite, then those invited, then those already in; a typed email someone has needs no row.
+  const inviteRows = invite ? [...found.filter((p) => !p.member && !invite.invited(p)), ...found.filter((p) => !p.member && invite.invited(p)), ...found.filter((p) => p.member)] : [];
+  const emailFound = found.some((p) => p.email.toLowerCase() === email);
 
   const restoring = (typed: string) => () => {
     if (latest.current) return false;
@@ -77,6 +86,30 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
   const sendEmail = () => {
     change('');
     onEmail(email, restoring(text));
+  };
+  const line = (p: Person) => (p.colleague && !found.some((o) => o.id !== p.id && o.displayName === p.displayName) ? t('people.company') : p.email);
+  const inviteRow = (p: Person, last: boolean) => {
+    const invited = !p.member && !!invite?.invited(p);
+    return (
+      <View key={p.id} style={p.member ? styles.dim : null}>
+        <ListRow
+          label={p.displayName}
+          detail={p.member ? t('people.alreadyIn', { name: invite?.name }) : invited ? t('people.invitedAlready') : shortenEmail(line(p), EMAIL_MAX)}
+          icon={<Avatar name={p.displayName} seed={p.id} size={40} />}
+          accessory={p.member ? undefined : invited ? <Text variant="button" color="accent">{t('people.resend')}</Text> : <Feather name="send" size={20} color={colors.accent} />}
+          onPress={p.member ? undefined : () => pick(p)}
+          chevron={false}
+          busy={busy}
+          divider={!last}
+        />
+      </View>
+    );
+  };
+  const firstPick = inviteRows.find((p) => !p.member);
+  const submit = () => {
+    if (busy) return;
+    if (invite && firstPick) pick(firstPick);
+    else if (typedEmail) sendEmail();
   };
   const row = (p: Person, last: boolean) => (
     <ListRow
@@ -122,7 +155,7 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
           autoCorrect={false}
           returnKeyType={keepsKeyboard ? 'send' : 'done'}
           submitBehavior={keepsKeyboard ? 'submit' : 'blurAndSubmit'}
-          onSubmitEditing={() => typedEmail && !busy && sendEmail()}
+          onSubmitEditing={submit}
           accessibilityLabel={t('people.search')}
           style={[styles.input, { fontFamily: type.body.fontFamily, fontSize: type.body.fontSize, color: colors.ink }]}
         />
@@ -130,7 +163,18 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
       </View>
       {/* A typed email: its row right under the field (M73), or under someone you know with that address (D104). */}
       {typedEmail && !found.length && emailRow}
-      {people.isPending ? (
+      {invite && !people.isPending ? (
+        <>
+          {!!inviteRows.length && (
+            <View>
+              {!query && <SectionLabel>{t('people.recent')}</SectionLabel>}
+              {inviteRows.map((p, i) => inviteRow(p, i === inviteRows.length - 1 && !(typedEmail && !emailFound)))}
+            </View>
+          )}
+          {typedEmail && !!found.length && !emailFound && emailRow}
+          {!typedEmail && !!query && !found.length && <Text variant="footnote" color="ink3" style={{ marginTop: space.sm }}>{t('people.noMatch', { q: query })}</Text>}
+        </>
+      ) : people.isPending ? (
         [60, 45].map((w) => <SkeletonRow key={w} width={w} />)
       ) : (
         <>
@@ -157,6 +201,7 @@ export function PeoplePicker({ exclude = [], within, emailLabel, emailAction, on
 
 const styles = StyleSheet.create({
   mail: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  dim: { opacity: 0.5 },
   field: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1.5 },
   input: { flex: 1, minHeight: 44, paddingVertical: 10 },
 });

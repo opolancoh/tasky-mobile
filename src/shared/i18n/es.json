@@ -1001,6 +1001,10 @@
     "response": "Cuerpo de la respuesta"
   },
   "people": {
+    "alreadyIn": "Ya está en {{name}}",
+    "invitedAlready": "Invitado · aún no se ha unido",
+    "resend": "Reenviar",
+    "noMatch": "Nadie que conozcas coincide con «{{q}}». Escribe su correo para invitarlo.",
     "search": "Nombre o correo",
     "recent": "Personas con las que trabajas",
     "workWith": "Personas con las que trabajas",

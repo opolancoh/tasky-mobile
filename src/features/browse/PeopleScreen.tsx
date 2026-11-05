@@ -203,7 +203,7 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
             </Text>
           </View>
         )}
-        <InviteField of={of} outsiders={outsiders} role={guest ? undefined : role} />
+        <InviteField of={of} name={name ?? ''} outsiders={outsiders} role={guest ? undefined : role} />
         {guest && <Text variant="footnote" color="ink3" style={{ marginTop: space.md }}>{t('browse.peoplePage.guestHint', { team: taskList?.team?.name })}</Text>}
         {of.kind === 'team' && team && (
           <>
@@ -222,10 +222,10 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
  * Invite (M56, M73, M116): find someone the user works with, or a colleague (GET /people, D89), or type an email for
  * someone new. A pick or an email sent clears the field and joins Invited at once, sending; the keyboard stays up for the
  * next. An error shows under the field with the email back in it (if still empty; otherwise a toast), and sending that
- * email again reuses its Idempotency-Key. Someone already in it reads as a hint. The first invitation of a private list
+ * email again reuses its Idempotency-Key. Someone already in it shows greyed in the results (D128), or reads as a hint. The first invitation of a private list
  * with tasks given outside it asks about those people first (D88, M71).
  */
-function InviteField({ of, outsiders, role }: { of: MembersOf; outsiders: UserRef[]; role?: TeamRole }) {
+function InviteField({ of, name: inName, outsiders, role }: { of: MembersOf; name: string; outsiders: UserRef[]; role?: TeamRole }) {
   const { t } = useTranslation();
   const { space } = useTheme();
   const send = useSendInvitation(of);
@@ -283,6 +283,7 @@ function InviteField({ of, outsiders, role }: { of: MembersOf; outsiders: UserRe
         onPickPerson={(person, restore) => invite({ person }, restore)}
         onEmail={(email, restore) => invite({ email }, restore)}
         keepsKeyboard
+        invite={{ name: inName, invited: (p) => !!open?.some((x) => x.invitee?.id === p.id || x.email.toLowerCase() === p.email.toLowerCase()) }}
       />
       {problem && (
         <Text variant="footnote" color={problem.hint ? 'ink2' : 'danger'} accessibilityRole="alert" accessibilityLiveRegion="polite">
