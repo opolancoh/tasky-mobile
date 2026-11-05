@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
+import { perfCounts } from '@/shared/perf/counters';
+
 import { useTheme } from './theme';
 
 export interface SkeletonProps {
@@ -25,8 +27,12 @@ export function Skeleton({ width, height, radius = 6, style }: SkeletonProps) {
 
   useEffect(() => {
     if (reduced) return;
+    perfCounts.skeletons++;
     x.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.ease) }), -1);
-    return () => cancelAnimation(x);
+    return () => {
+      perfCounts.skeletons--;
+      cancelAnimation(x);
+    };
   }, [reduced, x]);
 
   const band = useAnimatedStyle(() => ({ transform: [{ translateX: (x.value * 2 - 1) * size }] }));

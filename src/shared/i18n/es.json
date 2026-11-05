@@ -968,6 +968,18 @@
     "gaveYou": "{{name}} te la asignó",
     "gaveYouDue": "{{name}} te la asignó · vence {{date}}"
   },
+  "perfLog": {
+    "title": "Registro de rendimiento",
+    "record": "Grabar",
+    "recordHint": "Una línea cada 10 segundos de lo que mantiene ocupado el teléfono, los últimos 30 minutos, solo con la app abierta. En rojo: algo estaba en marcha.",
+    "recordingOn": "Grabando",
+    "share": "Compartir",
+    "clear": "Borrar",
+    "clearTitle": "¿Borrar el registro de rendimiento?",
+    "clearBody": "Se quitan las líneas grabadas.",
+    "empty": "Activa la grabación y usa la app o déjala en una pantalla.",
+    "emptyRecording": "Grabando. La primera línea aparece en 10 segundos."
+  },
   "networkLog": {
     "title": "Registro de red",
     "record": "Registrar llamadas a la API",

@@ -16,6 +16,7 @@ src/features/
 │   └── validation.ts
 ├── error-reports/  ErrorReportsScreen.tsx  ErrorReportScreen.tsx  statusTone.ts (Me › About › Error reports, everyone while testing, with Test an error, M89)
 ├── network-log/    NetworkLogScreen.tsx  NetworkLogEntryScreen.tsx  shareText.ts (Share, curl)  useSessionInfo.ts (Me › About, support and admin, M53)
+├── perf-log/       PerfLogScreen.tsx (Me › About, support and admin; temporary, to find what heats the phone)
 ├── today/          TodayScreen.tsx (Home, the first tab)  TodayListScreen.tsx (Today, Overdue, Requests)  RemindersScreen.tsx (M105)  todaySections.ts  components/HomeCards.tsx  components/RequestRows.tsx  components/ActivityBell.tsx (M74)
 │   └── components/       StreamRows (request rows, on Home and in Requests)
 ├── sharing/        InvitationScreen.tsx

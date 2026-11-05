@@ -968,6 +968,18 @@
     "gaveYou": "{{name}} gave you this",
     "gaveYouDue": "{{name}} gave you this · due {{date}}"
   },
+  "perfLog": {
+    "title": "Perf log",
+    "record": "Record",
+    "recordHint": "One line every 10 seconds of what keeps the phone busy, the last 30 minutes, only while the app is open. Red lines: something was running.",
+    "recordingOn": "Recording",
+    "share": "Share",
+    "clear": "Clear",
+    "clearTitle": "Clear the Perf log?",
+    "clearBody": "The recorded lines are removed.",
+    "empty": "Turn on recording, then use the app or leave it on a screen.",
+    "emptyRecording": "Recording. The first line appears in 10 seconds."
+  },
   "networkLog": {
     "title": "Network log",
     "record": "Record API calls",

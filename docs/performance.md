@@ -20,6 +20,7 @@ The development build in the simulator is slower than a real build, which makes 
 
 - **Perf Monitor** (Cmd+D in the simulator › Perf Monitor). If the JS frame rate drops while you type or scroll, the cause is our code; if it stays near 60 and the UI still lags, look at native code or the simulator.
 - **React DevTools Profiler** (press `j` in the Expo terminal; turn on "Highlight updates when components render"). Shows what redraws on each keystroke or tap.
+- **Perf log** (Me › About, support and admin; temporary): in a release build on a real phone, one line every 10 s with requests, retries, pushes, running shimmers and spinners, queries fetching and how late the JS thread runs. A line in red while the app sits idle is what keeps the phone busy.
 - **A release build** before calling a screen done, to tell real lag from development overhead:
 
   ```bash

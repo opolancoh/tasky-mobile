@@ -28,6 +28,9 @@ src/shared/
 │   ├── cantConnect.ts     Can't connect's capsule (showCantConnect, once per failure) and what its Try again repeats (M90); its message opens the details for support and admin
 │   ├── errorDetails.ts    Error details (M119): who may see them (a platform role, kept on the device), the last failure at launch, the lines and Copy
 │   └── NetworkLogAccess.tsx  Mounted in App: records, and allows error details, only while /me has a platform role
+├── perf/                  Temporary, to find what heats the phone; remove once found
+│   ├── counters.ts        Running shimmers and spinners, requests, retries, failures, pushes (Skeleton, Spinner, PushWatcher add to them)
+│   └── perfLog.ts         The Perf log: one sample every 10 s while recording (perfRecorder counts the API calls), the last 30 minutes
 ├── links/
 │   └── pendingLinkStore.ts  A join link kept until someone is signed in; an invitation's email for sign-up (D95)
 ├── selection/             Bulk actions (M81)

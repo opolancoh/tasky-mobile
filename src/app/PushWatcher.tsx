@@ -14,6 +14,7 @@ import { activityState, openActivityGo } from '@/shared/components/useActivitySt
 import { toastError } from '@/shared/i18n/errors';
 import { askForNotifications, readNotificationPermission, useNotificationPermission } from '@/shared/notifications/permission';
 import { pushSupported, registerPush } from '@/shared/notifications/push';
+import { perfCounts } from '@/shared/perf/counters';
 import { runReminderAction } from '@/shared/notifications/reminderActions';
 import { isPush, REMINDER_ACTIONS, type ReminderAction } from '@/shared/notifications/reminders';
 import { useReminderSheet } from '@/shared/quickAdd/reminderSheetStore';
@@ -115,6 +116,7 @@ export function PushWatcher() {
     const received = Notifications.addNotificationReceivedListener((n) => {
       const data = n.request.content.data ?? {};
       if (!isPush(data)) return;
+      perfCounts.pushes++;
       void queryClient.invalidateQueries({ queryKey: collaborationKeys.all });
       void queryClient.invalidateQueries({ queryKey: taskKeys.views });
       if (typeof data.taskId === 'string') {

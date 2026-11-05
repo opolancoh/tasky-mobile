@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
+import { perfCounts } from '@/shared/perf/counters';
+
 import { faint } from './ColorDot';
 import { useTheme } from './theme';
 
@@ -20,8 +22,12 @@ export function Spinner({ size = 22, accessibilityLabel, style }: SpinnerProps) 
   const { colors, scheme } = useTheme();
   const turn = useSharedValue(0);
   useEffect(() => {
+    perfCounts.spinners++;
     turn.value = withRepeat(withTiming(360, { duration: 800, easing: Easing.linear }), -1);
-    return () => cancelAnimation(turn);
+    return () => {
+      perfCounts.spinners--;
+      cancelAnimation(turn);
+    };
   }, [turn]);
   const spin = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value}deg` }] }));
   return (

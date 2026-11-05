@@ -27,6 +27,7 @@ import { ErrorReportsScreen } from '@/features/error-reports/ErrorReportsScreen'
 import { AboutScreen } from '@/features/me/AboutScreen';
 import { NetworkLogEntryScreen } from '@/features/network-log/NetworkLogEntryScreen';
 import { NetworkLogScreen } from '@/features/network-log/NetworkLogScreen';
+import { PerfLogScreen } from '@/features/perf-log/PerfLogScreen';
 import { ChangePasswordScreen } from '@/features/me/ChangePasswordScreen';
 import { EditNameScreen } from '@/features/me/EditNameScreen';
 import { AppearanceScreen } from '@/features/me/AppearanceScreen';
@@ -145,6 +146,8 @@ const RootStack = createNativeStackNavigator({
         // Network log, from About (support and admin).
         NetworkLog: { screen: NetworkLogScreen, options: { headerShown: true } },
         NetworkLogEntry: { screen: NetworkLogEntryScreen, options: { headerShown: true } },
+        // Perf log, from About (support and admin), temporary.
+        PerfLog: { screen: PerfLogScreen, options: { headerShown: true } },
         // Error reports, from About (everyone while testing, M89).
         ErrorReports: { screen: ErrorReportsScreen, options: { headerShown: true } },
         ErrorReport: { screen: ErrorReportScreen, options: { headerShown: true } },

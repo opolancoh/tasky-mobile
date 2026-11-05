@@ -9,6 +9,7 @@ import { useMe } from '@/data/tenancy/queries';
 import { appInfo } from '@/shared/appInfo';
 import { useErrorReports } from '@/shared/errors/errorReports';
 import { useNetworkLog } from '@/shared/network/networkLog';
+import { usePerfLog } from '@/shared/perf/perfLog';
 import { usePushToken } from '@/shared/notifications/push';
 import { ListRow, Screen, SectionLabel, Text, useTheme, useToast } from '@/shared/ui';
 
@@ -23,6 +24,7 @@ export function AboutScreen() {
   const navigation = useNavigation();
   const staff = !!useMe().data?.platformRole;
   const recording = useNetworkLog((s) => s.recording);
+  const perfRecording = usePerfLog((s) => s.recording);
   const build = appInfo.expoGo ? t('about.expoGo') : appInfo.build;
   const pushToken = usePushToken((s) => s.token);
   const pending = useErrorReports((s) => s.reports.filter((r) => r.status === 'pending' || r.status === 'new').length);
@@ -62,6 +64,11 @@ export function AboutScreen() {
             label={t('networkLog.title')}
             value={recording ? <Text variant="body" color="danger">{`● ${t('networkLog.recordingOn')}`}</Text> : undefined}
             onPress={() => navigation.navigate('NetworkLog')}
+          />
+          <ListRow
+            label={t('perfLog.title')}
+            value={perfRecording ? <Text variant="body" color="danger">{`● ${t('perfLog.recordingOn')}`}</Text> : undefined}
+            onPress={() => navigation.navigate('PerfLog')}
             divider={false}
           />
         </>
