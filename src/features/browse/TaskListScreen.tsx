@@ -20,7 +20,6 @@ import { ColorDot, listColor, Notice, Screen, Skeleton, SkeletonIcons, SkeletonR
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { useBrowseMenus } from './browseMenus';
-import { canInvite } from './browseSections';
 import { AddTaskButton } from './components/AddTaskButton';
 import { CompletedRow } from '@/shared/components/CompletedRow';
 import { useFoldedLists } from '@/shared/hooks/foldedListsStore';
@@ -40,8 +39,8 @@ type Item =
 /**
  * A list (M38), pushed from Browse or a team: its open tasks in its own sort mode. Add a task, docked at the bottom, empty
  * list or full, opens Quick add on this list (M103). The top (M64): the title,
- * then one line, "3 open · Shared · People" (Private · Share for its owner; a team's list just "3 open", M148; M130, M131): the
- * action opens People; ••• opens the list's menu as a sheet. After the open tasks,
+ * then one line, "3 open · Shared" (or Private; a team's list just "3 open", M148; M130, M160): People and Share are in •••,
+ * which opens the list's menu as a sheet. After the open tasks,
  * when the list has some (`completedTasks`), a **Completed** section that folds (M63): open by default, the fold kept per
  * list on the device, its tasks fetched only while open, newest first, paged (D54). Tasks on hold (D91, M80) wait in their own section between the open tasks and
  * Completed, open by default and folding from its heading, loaded only when the list has some (`onHoldTasks`).
@@ -160,12 +159,6 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
                     <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{kind}</Text>
                   </>
                 )}
-                {kind && (shared || canInvite(taskList)) && (
-                  <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
-                    <Text variant="subhead" color="ink3">·</Text>
-                    <Text variant="subhead" color="accent">{t(shared ? 'browse.peopleTitle' : 'browse.shareShort')}</Text>
-                  </Pressable>
-                )}
               </View>
             )}
             {tasks.error && (
@@ -242,7 +235,6 @@ const styles = StyleSheet.create({
   title: { flexDirection: 'row', alignItems: 'center' },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   line: { flexDirection: 'row', alignItems: 'center' },
-  who: { flexDirection: 'row', alignItems: 'center', flexShrink: 1, minHeight: 44 },
   shrink: { flexShrink: 1 },
   more: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -10 },
   empty: { alignItems: 'center' },
