@@ -1018,6 +1018,8 @@
     "link": {
       "row": "Invite link",
       "make": "Make a link",
+      "makeDetail": "Anyone who opens it joins as a Member",
+      "copyRow": "Copy invite link",
       "expires": "Expires {{date}}",
       "on": "On · expires {{date}}",
       "offDetail": "Off · tap to make one",
@@ -1027,8 +1029,6 @@
       "copied": "Link copied",
       "renew": "New link",
       "renewed": "New link: the old one stopped working",
-      "turnOff": "Turn off",
-      "off": "Invite link turned off",
       "shareMessage": "Join {{name}} on Azignia: {{url}}"
     }
   },

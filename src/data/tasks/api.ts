@@ -199,10 +199,9 @@ export const tasksApi = {
   /** GET /tasks/{id}/comments (D92): newest first; `cursor` for older ones. */
   comments: (taskId: Id, limit: number, cursor?: string) => http().get<CommentsPage>(`/tasks/${taskId}/comments`, { query: { limit, cursor } }),
 
-  /** A team's invite link (D95): see it, make a new one (the old stops), turn it off. Owners. */
+  /** A team's invite link (D95): see it, make a new one (the old stops at once). Owners. */
   inviteLink: (teamId: Id) => http().get<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
   newInviteLink: (teamId: Id) => http().post<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
-  turnOffInviteLink: (teamId: Id) => http().delete(`/teams/${teamId}/invite-link`),
 
   /** What a team's invite link or an invitation email's link opens (D95); anyone with the code, signed in or not. */
   previewLink: (kind: 'team' | 'invitation', code: string) =>

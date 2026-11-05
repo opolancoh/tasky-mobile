@@ -9,14 +9,14 @@ import { Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
 import { isApiError } from '@/core/http/problem';
-import { newIdempotencyKey, sameInvitation, useInviteLinkActions, useInvitePeople, useRevokeInvitation, useSendInvitation } from '@/data/tasks/mutations';
+import { newIdempotencyKey, sameInvitation, useNewInviteLink, useInvitePeople, useRevokeInvitation, useSendInvitation } from '@/data/tasks/mutations';
 import { useInviteLink, useMembersPreview, useOpenInvitations, useTaskLists, useTasks, useTeams, useTeamSummary } from '@/data/tasks/queries';
 import type { Member, MembersOf, OpenInvitation, Person, TeamRole, UserRef } from '@/data/tasks/types';
 import { useMe } from '@/data/tenancy/queries';
 import { Avatar, PeoplePicker } from '@/shared/components';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { errorMessage, toastError } from '@/shared/i18n/errors';
-import { chooseAction, CountPill, ListRow, Notice, Pill, Screen, SectionLabel, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
+import { chooseAction, CountPill, ListRow, Notice, Screen, SectionLabel, Segmented, SkeletonRow, Spinner, Text, useDelayedFlag, useTheme, useToast } from '@/shared/ui';
 import { usePullRefresh } from '@/shared/hooks/usePullRefresh';
 
 import { canInvite } from './browseSections';
@@ -208,9 +208,7 @@ export function InviteScreen({ route }: StaticScreenProps<MembersOf>) {
         {of.kind === 'team' && team && (
           <>
             <View style={[styles.divider, { backgroundColor: colors.line, marginTop: space.xxl }]} />
-            <SectionLabel>{t('browse.peoplePage.linkTitle')}</SectionLabel>
-            <Text variant="footnote" color="ink3" style={{ marginBottom: space.md }}>{t('browse.peoplePage.linkAbout')}</Text>
-            <InviteLinkRow teamId={of.id} teamName={team.name} />
+            <InviteLinkSection teamId={of.id} teamName={team.name} />
             <View style={[styles.divider, { backgroundColor: colors.line, marginTop: space.xxl }]} />
             <Text variant="footnote" color="ink3" style={{ marginTop: space.lg }}>{t('browse.peoplePage.guestsNote', { name: team.name })}</Text>
           </>
@@ -334,24 +332,22 @@ const styles = StyleSheet.create({
   section: { flexDirection: 'row', alignItems: 'center' },
   invite: { minHeight: 44, justifyContent: 'center' },
   send: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
-  linkOff: { flexDirection: 'row' },
-  linkCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
-  linkIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  tile: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   divider: { height: StyleSheet.hairlineWidth },
 });
 
 /**
- * A team's invite link (D95, M84), for its Owners: off, Make a link (it opens Share); on, the link with
- * "Expires Nov 12" and Copy by it, a tap opening Share, Copy, New link (the old one stops) and Turn off.
+ * A team's invite link (D95, M84, D126), for its Owners: "Or share a link" with ••• (Share, New link: the old one stops at
+ * once), what the link does, then a row like Invite luis@…: "Copy invite link", when it expires, a copy icon; a tap
+ * copies. Off: "Make an invite link" with +, which makes one and opens Share. The address isn't shown.
  */
-function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
+function InviteLinkSection({ teamId, teamName }: { teamId: Id; teamName: string }) {
   const { t } = useTranslation();
   const { colors, space } = useTheme();
   const labels = useDateLabels(undefined);
   const state = useInviteLink(teamId, true);
-  const { renew, turnOff } = useInviteLinkActions(teamId);
+  const renew = useNewInviteLink(teamId);
   const link = state.data?.link ?? null;
-  const until = link ? labels.day(link.expiresAt.slice(0, 10)) : '';
 
   const share = (url: string) => Share.share({ message: t('people.link.shareMessage', { name: teamName, url }) });
   const copy = async (url: string) => {
@@ -359,44 +355,51 @@ function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {
     useToast.getState().show({ message: t('people.link.copied') });
   };
   const make = () => renew.mutate(undefined, { onSuccess: (s) => s.link && share(s.link.url), onError: toastError });
-  const menu = async () => {
-    if (!link) return make();
+  const more = async () => {
+    if (!link) return;
     const actions = [
       { label: t('people.link.share'), icon: 'share' as const },
-      { label: t('people.link.copy'), icon: 'copy' as const },
       { label: t('people.link.renew'), icon: 'refresh-cw' as const },
-      { label: t('people.link.turnOff'), icon: 'x-circle' as const, destructive: true },
     ];
-    const i = await chooseAction({ title: t('people.link.title', { date: until }), actions, cancelLabel: t('common.cancel') });
+    const i = await chooseAction({ title: t('people.link.row'), actions, cancelLabel: t('common.cancel') });
     if (i === 0) share(link.url);
-    if (i === 1) await copy(link.url);
-    if (i === 2) renew.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.renewed') }), onError: toastError });
-    if (i === 3) turnOff.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.off') }), onError: toastError });
+    if (i === 1) renew.mutate(undefined, { onSuccess: () => useToast.getState().show({ message: t('people.link.renewed') }), onError: toastError });
   };
+  const tile = (
+    <View style={[styles.tile, { backgroundColor: colors.accentSoft }]}>
+      <Feather name="link-2" size={20} color={colors.accent} />
+    </View>
+  );
 
-  // Off: one button makes it and opens Share. On: the link itself, Share by it, a tap for Copy, New link, Turn off.
-  if (state.isPending) return <SkeletonRow width={40} />;
-  if (!link)
-    return (
-      <View style={styles.linkOff}>
-        <Pill label={t('people.link.make')} icon={<Feather name="link-2" size={15} color={colors.accent} />} onPress={make} busy={renew.isPending} />
-      </View>
-    );
   return (
-    <Pressable
-      onPress={menu}
-      accessibilityRole="button"
-      accessibilityHint={t('people.link.title', { date: until })}
-      style={({ pressed }) => [styles.linkCard, { gap: space.md, padding: space.md, backgroundColor: pressed ? colors.surface2 : colors.surface, borderColor: colors.line }]}
-    >
-      <View style={[styles.linkIcon, { backgroundColor: colors.accentSoft }]}>
-        <Feather name="link-2" size={18} color={colors.accent} />
-      </View>
-      <View style={styles.fill}>
-        <Text variant="body" numberOfLines={1} ellipsizeMode="middle">{link.url.replace(/^https?:\/\//, '')}</Text>
-        <Text variant="footnote" color="ink3">{t('people.link.expires', { date: until })}</Text>
-      </View>
-      <Pill label={t('people.link.copy')} onPress={() => void copy(link.url)} busy={renew.isPending || turnOff.isPending} />
-    </Pressable>
+    <>
+      <SectionLabel action={link ? { icon: 'more-horizontal', label: t('people.link.row'), onPress: more } : undefined}>{t('browse.peoplePage.linkTitle')}</SectionLabel>
+      <Text variant="footnote" color="ink3" style={{ marginBottom: space.sm }}>{t('browse.peoplePage.linkAbout')}</Text>
+      {state.isPending ? (
+        <SkeletonRow width={40} />
+      ) : link ? (
+        <ListRow
+          label={t('people.link.copyRow')}
+          detail={t('people.link.expires', { date: labels.day(link.expiresAt.slice(0, 10)) })}
+          icon={tile}
+          accessory={<Feather name="copy" size={20} color={colors.accent} />}
+          onPress={() => void copy(link.url)}
+          chevron={false}
+          busy={renew.isPending}
+          divider={false}
+        />
+      ) : (
+        <ListRow
+          label={t('people.link.make')}
+          detail={t('people.link.makeDetail')}
+          icon={tile}
+          accessory={<Feather name="plus" size={22} color={colors.accent} />}
+          onPress={make}
+          chevron={false}
+          busy={renew.isPending}
+          divider={false}
+        />
+      )}
+    </>
   );
 }

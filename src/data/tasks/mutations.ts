@@ -582,12 +582,9 @@ export function useCommentActions(taskId: Id) {
 }
 
 /** A team's invite link (D95): New link (the old stops working) or Turn off; the team's link refetches. */
-export function useInviteLinkActions(teamId: Id) {
+export function useNewInviteLink(teamId: Id) {
   const queryClient = useQueryClient();
-  const key = taskKeys.inviteLink(teamId);
-  const renew = useMutation({ mutationFn: () => tasksApi.newInviteLink(teamId), onSuccess: (state) => queryClient.setQueryData(key, state) });
-  const turnOff = useMutation({ mutationFn: () => tasksApi.turnOffInviteLink(teamId), onSuccess: () => queryClient.setQueryData(key, { link: null }) });
-  return { renew, turnOff };
+  return useMutation({ mutationFn: () => tasksApi.newInviteLink(teamId), onSuccess: (state) => queryClient.setQueryData(taskKeys.inviteLink(teamId), state) });
 }
 
 /** Join from a link (D95): afterwards Spaces, Home and the invitations refetch (a new team or list, a task to answer). */

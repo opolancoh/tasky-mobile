@@ -1018,6 +1018,8 @@
     "link": {
       "row": "Enlace de invitación",
       "make": "Crear un enlace",
+      "makeDetail": "Quien lo abra se une como miembro",
+      "copyRow": "Copiar enlace de invitación",
       "expires": "Vence el {{date}}",
       "on": "Activo · vence el {{date}}",
       "offDetail": "Apagado · toca para crear uno",
@@ -1027,8 +1029,6 @@
       "copied": "Enlace copiado",
       "renew": "Enlace nuevo",
       "renewed": "Enlace nuevo: el anterior dejó de funcionar",
-      "turnOff": "Apagar",
-      "off": "Enlace de invitación apagado",
       "shareMessage": "Únete a {{name}} en Azignia: {{url}}"
     }
   },
