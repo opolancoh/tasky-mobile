@@ -128,7 +128,8 @@ export function TaskRow({ task, today, showDue = false, showTime = false, showLi
  * A task's line under its title, the same in every list, parts joined by "·": where (its list, or "From Olga" for a task
  * the user sees only as its assignee, D70; off on a list's own screen, M57), when (today's reminder time on Today, else the
  * due date, red when late; on hold the "On hold · reason" chip, until when and who resumes it, never late, D91), the
- * user's reminder on it (a bell and when), progress (steps, comments M82), notes, repeat, its tags in their colors (M158),
+ * user's reminder on it (a bell and when; only the time on the due date's day), repeat, steps, notes, comments (M82), its
+ * tags (M158), Task detail's order; all grey but a late date (M159),
  * then the assignment (Pending, Declined and why, outside its list D88, Completed, Invited).
  * A reminder (D110, M114): a bell and its time ("Wed, Oct 7, 9:00 AM"), "Rang …" in amber once its day passed, or "Snoozed
  * until …"; never its list (Personal, where it doesn't show).
@@ -169,22 +170,22 @@ export function TaskMeta({ task, today, showDue = false, showTime = false, showL
     !held && !time && task.dueDate && (showDue || overdue) && note(labels.day(task.dueDate), overdue ? 'danger' : undefined),
     reminderOn && (
       <View style={[styles.count, { gap: 3 }]} accessible accessibilityLabel={t('taskRow.reminder', { when: `${labels.day(reminderOn.date)}, ${labels.time(reminderOn.time)}` })}>
-        <ReminderIcon size={12} color={colors.accent} />
-        <Text variant="footnote" style={{ color: colors.accent }} numberOfLines={1}>{`${reminderOn.date === today ? '' : `${labels.day(reminderOn.date)}, `}${labels.time(reminderOn.time)}`}</Text>
+        <ReminderIcon size={12} color={colors.ink3} />
+        <Text variant="footnote" color="ink3" numberOfLines={1}>{`${reminderOn.date === today || reminderOn.date === task.dueDate ? '' : `${labels.day(reminderOn.date)}, `}${labels.time(reminderOn.time)}`}</Text>
       </View>
     ),
+    task.repeats && <Feather name="repeat" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.repeats')} />,
     task.stepsTotal > 0 && note(t('taskRow.steps', { done: task.stepsDone, total: task.stepsTotal })),
+    task.hasNotes && <Feather name="align-left" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.notes')} />,
     !!task.commentCount && (
       <View style={[styles.count, { gap: 3 }]} accessible accessibilityLabel={t('taskRow.comments', { count: task.commentCount })}>
         <Feather name="message-circle" size={12} color={colors.ink3} />
         <Text variant="footnote" color="ink3">{task.commentCount}</Text>
       </View>
     ),
-    task.hasNotes && <Feather name="file-text" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.notes')} />,
-    task.repeats && <Feather name="repeat" size={12} color={colors.ink3} accessibilityLabel={t('taskRow.repeats')} />,
     task.tags.length > 0 && (
       <View style={[styles.count, { gap: space.xs }]}>
-        {task.tags.map((tag) => <Text key={tag.name} variant="footnote" numberOfLines={1} style={{ color: tag.color ?? colors.tagDefault, fontWeight: '600' }}>#{tag.name}</Text>)}
+        {task.tags.map((tag) => <Text key={tag.name} variant="footnote" color="ink3" numberOfLines={1}>#{tag.name}</Text>)}
       </View>
     ),
     showAssignment && task.assignmentStatus === 'pending' && <Text variant="footnote" style={{ color: colors.warn }}>{t('taskRow.pending')}</Text>,
