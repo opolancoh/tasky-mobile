@@ -5,8 +5,8 @@ export type SortMode = 'manual' | 'dueDate' | 'important' | 'alphabetical';
 
 /** `private`: only its owner; `shared`: its own members; `team`: in a team (D57). */
 export type Sharing = 'private' | 'shared' | 'team';
-/** The caller's rights: `admin` manages it through its team. */
-export type TaskListRole = 'owner' | 'admin' | 'member';
+/** The caller's role: `owner` (the list's, or in a team the team's, D125) or `member`. */
+export type TaskListRole = 'owner' | 'member';
 
 /** An item of GET /task-lists: every task list the caller can see, Inbox first, then their own order (D57, D61). */
 export interface TaskList {
@@ -388,7 +388,7 @@ export interface Home {
   next: { taskId: Id; title: string; time: string } | null;
 }
 
-export type TeamRole = 'owner' | 'admin' | 'member';
+export type TeamRole = 'owner' | 'member';
 
 /** An item of GET /teams: a team the caller is in; `role` is theirs, `members` how many people (D57). */
 export interface Team {
@@ -401,7 +401,7 @@ export interface Team {
 }
 
 /**
- * Someone who sees a team or a task list (GET …/members). `role`: owner, admin or member. `isGuest`: in a team's
+ * Someone who sees a team or a task list (GET …/members). `role`: owner or member. `isGuest`: in a team's
  * task list without being in the team; `isOutsider`: from another account.
  */
 /** Someone to pick without an email (GET /people, D89): `via` a list or team you share; `colleague` in your company. */
@@ -493,7 +493,7 @@ export interface Comment {
   canDelete: boolean;
 }
 
-/** A team's invite link (D95), for its owner and admins. */
+/** A team's invite link (D95), for its Owners. */
 export interface InviteLink {
   url: string;
   code: string;

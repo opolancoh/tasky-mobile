@@ -35,11 +35,11 @@ export function moveInOrder(all: Id[], group: Id[], id: Id, by: -1 | 1): Id[] {
 }
 
 /** Who may do what to a list (azignia-api/docs/roles-and-permissions.md). */
-export const canManage = (c: TaskList) => !c.isInbox && (c.role === 'owner' || c.role === 'admin');
-/** Invite: a list's owner outside a team; in a team, its owner and admins (read from the team). */
+/** Archive, delete, invite: Owners, the list's or in a team the team's (D125). */
+export const canManage = (c: TaskList) => !c.isInbox && c.role === 'owner';
 /** A list's sort modes, in the order the Sort menu and the Edit list sheet show them (M60). */
 export const SORT_MODES: SortMode[] = ['manual', 'dueDate', 'important', 'alphabetical'];
 
-export const canInvite = (c: TaskList, team: Team | undefined) => !c.isInbox && (c.team ? !!team && team.role !== 'member' : c.role === 'owner');
-/** Leave: someone else's list outside the user's teams (shared with them, or as a guest). */
-export const canLeave = (c: TaskList, team: Team | undefined, meId: Id | undefined) => !c.isInbox && !team && c.owner.id !== meId;
+export const canInvite = canManage;
+/** Leave: a shared list, or a team's list as a guest; the last Owner is told why not (D125). */
+export const canLeave = (c: TaskList, team: Team | undefined) => !c.isInbox && (c.team ? !team : c.sharing === 'shared');

@@ -61,7 +61,7 @@ export function TeamScreen({ route }: StaticScreenProps<{ teamId: Id }>) {
   const attentionLoading = late.isPending || nobody.isPending;
   const showSheet = useShowBrowseSheet();
   const { teamMenu, listMenu } = useBrowseMenus();
-  const manages = !!team && team.role !== 'member';
+  const manages = team?.role === 'owner';
   const people = () => navigation.navigate('People', { kind: 'team', id: teamId });
   const newList = () => showSheet({ kind: 'list', teamId });
   // Only a load with nothing to show; a failed refresh keeps the screen and shows Can't connect's capsule (M90).

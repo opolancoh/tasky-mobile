@@ -455,23 +455,14 @@ export function useRemoveMember() {
   });
 }
 
-/** Make someone in a team Admin or Member (the owner): its people refetch. */
-export function useChangeTeamRole(teamId: Id) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ userId, role }: { userId: Id; role: Exclude<TeamRole, 'owner'> }) => tasksApi.changeTeamRole(teamId, userId, role),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: taskKeys.members('team', teamId) }),
-  });
-}
-
-/** Hand a team to another member (the owner becomes Admin): its people and the user's teams refetch (the role changed). */
-export function useTransferTeam() {
+/** Make someone an Owner or a Member (Owners, D125): the people and the caller's teams and lists refetch (their role may change). */
+export function useChangeRole(of: MembersOf) {
   const queryClient = useQueryClient();
   const refetch = useRefetchBrowse();
   return useMutation({
-    mutationFn: ({ team, userId }: { team: Team; userId: Id }) => tasksApi.transferTeam(team, userId),
-    onSettled: (_r, _e, { team }) => {
-      queryClient.invalidateQueries({ queryKey: taskKeys.members('team', team.id) });
+    mutationFn: ({ userId, role }: { userId: Id; role: TeamRole }) => tasksApi.changeRole(of, userId, role),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: taskKeys.members(of.kind, of.id) });
       refetch();
     },
   });

@@ -57,11 +57,9 @@ export const tasksApi = {
   /** GET /teams/{id}/members or /task lists/{id}/members. */
   members: (of: MembersOf) => getAll<Member>(`${peopleOf(of)}/members`),
 
-  /** PATCH /teams/{id}/members/{userId}: make someone Admin or Member (owner; 204). */
-  changeTeamRole: (teamId: Id, userId: Id, role: Exclude<TeamRole, 'owner'>) => http().patch<void>(`/teams/${teamId}/members/${userId}`, { body: { role } }),
+  /** PATCH …/members/{userId}: make someone an Owner or a Member of a team or a list outside one (Owners; 204, D125). */
+  changeRole: (of: MembersOf, userId: Id, role: TeamRole) => http().patch<void>(`${peopleOf(of)}/members/${userId}`, { body: { role } }),
 
-  /** POST /teams/{id}:transfer-ownership with If-Match: another member becomes the owner, the caller Admin (owner). */
-  transferTeam: (team: Versioned, userId: Id) => http().post<Team>(`/teams/${team.id}:transfer-ownership`, { body: { userId }, ifMatch: team.version }),
 
   /** DELETE …/members/{userId}: remove someone; on yourself, leave (204). */
   removeMember: (of: MembersOf, userId: Id) => http().delete(`${peopleOf(of)}/members/${userId}`),
@@ -76,7 +74,7 @@ export const tasksApi = {
   /** GET /people: whom the caller can pick without an email (D89), the people they work with most first; `q` searches names (and the start of a known email); `exclude` is left out before the limit (D104). */
   people: (q: string, limit: number, exclude: readonly string[], within: MembersOf | undefined, signal?: AbortSignal) =>
     http().get<Person[]>('/people', { query: { q: q || undefined, limit, exclude: exclude.length ? exclude : undefined, [within?.kind === 'team' ? 'teamId' : 'taskListId']: within?.id }, signal }),
-  /** One page of a team's or list's people (D105): the owner, you, admins, then by when they joined; `q` searches names; `total` on the first page. */
+  /** One page of a team's or list's people (D105): you, the owners, then by when they joined; `q` searches names; `total` on the first page. */
   membersPage: (of: MembersOf, opts: { limit: number; cursor?: string; q?: string }, signal?: AbortSignal) =>
     http().get<Page<Member> & { total?: number | null }>(`${peopleOf(of)}/members`, { query: { limit: opts.limit, cursor: opts.cursor, q: opts.q || undefined }, signal }),
 
@@ -201,7 +199,7 @@ export const tasksApi = {
   /** GET /tasks/{id}/comments (D92): newest first; `cursor` for older ones. */
   comments: (taskId: Id, limit: number, cursor?: string) => http().get<CommentsPage>(`/tasks/${taskId}/comments`, { query: { limit, cursor } }),
 
-  /** A team's invite link (D95): see it, make a new one (the old stops), turn it off. Owner and admins. */
+  /** A team's invite link (D95): see it, make a new one (the old stops), turn it off. Owners. */
   inviteLink: (teamId: Id) => http().get<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
   newInviteLink: (teamId: Id) => http().post<{ link: InviteLink | null }>(`/teams/${teamId}/invite-link`),
   turnOffInviteLink: (teamId: Id) => http().delete(`/teams/${teamId}/invite-link`),

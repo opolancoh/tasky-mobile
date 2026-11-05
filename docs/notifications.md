@@ -54,7 +54,7 @@ Nobody is told about their own action.
 | Remove someone | The person removed | ✓ Removed | — | — | — |
 | Leave | Nobody | — | — | — | — |
 | Change someone's role (team) | That person | ✓ Role changed | — | — | — |
-| Transfer ownership, or the owner is deactivated | The new owner | ✓ Ownership received | — | — | — |
+| A deactivation leaves a team or list with no Owner (D125) | The new Owner | ✓ Ownership received | — | — | — |
 | Delete a shared list or team | Nobody | — | — | — | — |
 
 ### Assignment

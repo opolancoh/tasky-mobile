@@ -35,7 +35,7 @@ type Item =
  * /teams/{id}/summary), a list's people. In the team (or On the list) with a count pill: everyone and their role (Guest
  * for someone only in one of a team's lists); in a team each shows their open and late tasks there, and a tap opens those
  * tasks (M79); a manager long-presses someone for what their role allows (roles doc). Invited with Revoke. Invite in the
- * bar, for whoever invites (a list's owner; a team's owner and admins), opens Invite. Leaving is in the team's or list's •••.
+ * bar, for whoever invites (Owners, D125), opens Invite. Leaving is in the team's or list's •••.
  */
 export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
@@ -47,8 +47,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const taskList = of.kind === 'taskList' ? taskLists?.find((c) => c.id === of.id) : undefined;
   const team = of.kind === 'team' ? teams.find((x) => x.id === of.id) : taskList?.team ? teams.find((x) => x.id === taskList.team!.id) : undefined;
   const inTeam = of.kind === 'team';
-  const invites = inTeam ? !!team && team.role !== 'member' : !!taskList && canInvite(taskList, team);
-  // The first few (D105): the owner, you, admins, then by when they joined; everyone only from See all.
+  const invites = inTeam ? team?.role === 'owner' : !!taskList && canInvite(taskList);
+  // The first few (D105): you, the owners, then by when they joined; everyone only from See all.
   const members = useMembersPreview(of);
   const open = useOpenInvitations(of, invites);
   const revoke = useRevokeInvitation(of);
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
 });
 
 /**
- * A team's invite link (D95, M84, the hub's A), for its owner and admins, under Invite by email: "Invite link · Expires
+ * A team's invite link (D95, M84, the hub's A), for its Owners, under Invite by email: "Invite link · Expires
  * Oct 26" (or off); a tap opens Share, Copy, New link (the old one stops) and Turn off; off, Make a link.
  */
 function InviteLinkRow({ teamId, teamName }: { teamId: Id; teamName: string }) {

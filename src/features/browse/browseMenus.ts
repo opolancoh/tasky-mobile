@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import { useArchiveTaskList, useClearCompleted, useDeleteTaskList, useDeleteTag, useDeleteTeam, useRemoveMember, useUpdateTaskList } from '@/data/tasks/mutations';
 import { useTeams } from '@/data/tasks/queries';
-import type { TaskList, Tag, Team } from '@/data/tasks/types';
+import type { MembersOf, TaskList, Tag, Team } from '@/data/tasks/types';
+import { isApiError } from '@/core/http/problem';
 import { useMe } from '@/data/tenancy/queries';
 import { toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, useToast, type ActionChoice } from '@/shared/ui';
@@ -15,6 +16,8 @@ type Item = ActionChoice & { run(): void };
 
 
 /** Shows a menu of `items` (a sheet from the bottom, M64) and runs the one picked. */
+const isLastOwner = (error: unknown) => isApiError(error) && error.code === 'sharing.last_owner';
+
 async function open(title: string, items: (Item | false)[], cancelLabel: string) {
   const list = items.filter((x): x is Item => !!x);
   const i = await chooseAction({ title, actions: list, cancelLabel });
@@ -40,6 +43,11 @@ export function useBrowseMenus() {
   const update = useUpdateTaskList();
   const { clear, undo } = useClearCompleted();
   const cancel = t('common.cancel');
+  // The last Owner can't leave (D125): say so and offer People.
+  const lastOwner = async (name: string, of: MembersOf) => {
+    if (await confirm({ title: t('browse.ownerLeavesTitle', { name }), message: t('browse.ownerLeavesBody'), confirmLabel: t('browse.openPeople'), cancelLabel: cancel }))
+      navigation.navigate('People', of);
+  };
 
   const chooseSort = (c: TaskList) =>
     open(t('browse.menu.sort'), SORT_MODES.map((s) => ({
@@ -65,12 +73,12 @@ export function useBrowseMenus() {
     const clearDone: Item | false = done > 0 && { label: t('browse.menu.clearCompleted'), icon: { line: 'circleCheck' }, destructive: true, run: () => askClear(c, done) };
     if (c.isInbox) return open(t('browse.inbox'), [select, sort, clearDone], cancel);
     const team = c.team ? teams.find((x) => x.id === c.team!.id) : undefined;
-    const leave = canLeave(c, team, me?.id);
+    const leave = canLeave(c, team);
     return open(c.name, [
       select,
       { label: t('browse.menu.editList'), icon: 'edit-2', run: () => showSheet({ kind: 'list', id: c.id }) },
       sort,
-      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c, team) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
+      { label: t(c.sharing === 'private' ? 'browse.menu.share' : canInvite(c) ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: c.sharing === 'private' ? 'user-plus' : 'users', run: () => navigation.navigate('People', { kind: 'taskList', id: c.id }) },
       canManage(c) && {
         label: t('browse.menu.archive'),
         icon: 'archive',
@@ -98,7 +106,10 @@ export function useBrowseMenus() {
         destructive: true,
         run: async () => {
           const ok = await confirm({ title: t('browse.leaveTitle', { name: c.name }), message: t('browse.leaveListBody', { name: c.owner.displayName }), confirmLabel: t('browse.menu.leaveList'), cancelLabel: cancel });
-          if (ok) removeMember.mutate({ of: { kind: 'taskList', id: c.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: c.name }) }); }, onError: toastError });
+          if (ok) removeMember.mutate({ of: { kind: 'taskList', id: c.id }, userId: me.id }, {
+            onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: c.name }) }); },
+            onError: (error) => (isLastOwner(error) ? lastOwner(c.name, { kind: 'taskList', id: c.id }) : toastError(error)),
+          });
         },
       },
     ], cancel);
@@ -109,21 +120,19 @@ export function useBrowseMenus() {
     const owner = team.role === 'owner';
     return open(`${team.name} · ${t(`browse.role.${team.role}`)}`, [
       { label: t('browse.newList'), icon: 'plus', run: () => showSheet({ kind: 'list', teamId: team.id }) },
-      !onTeam && { label: t(owner || team.role === 'admin' ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: 'users', run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
+      !onTeam && { label: t(owner ? 'browse.menu.peopleInvite' : 'browse.menu.people'), icon: 'users', run: () => navigation.navigate('People', { kind: 'team', id: team.id }) },
       owner && { label: t('browse.menu.renameTeam'), icon: 'edit-2', run: () => showSheet({ kind: 'team', id: team.id }) },
-      // The owner leaves only once someone else owns it (API 409): Leave says so and opens People (M146).
+      // The last Owner can't leave (API 409, D125): Leave says so and opens People (M146).
       !!me && {
         label: t('browse.menu.leaveTeam'),
         icon: 'log-out',
         destructive: true,
         run: async () => {
-          if (owner) {
-            const go = await confirm({ title: t('browse.ownerLeavesTitle', { name: team.name }), message: t('browse.ownerLeavesBody'), confirmLabel: t('browse.openPeople'), cancelLabel: cancel });
-            if (go) navigation.navigate('People', { kind: 'team', id: team.id });
-            return;
-          }
           const ok = await confirm({ title: t('browse.leaveTitle', { name: team.name }), message: t('browse.leaveTeamBody'), confirmLabel: t('browse.menu.leaveTeam'), cancelLabel: cancel });
-          if (ok) removeMember.mutate({ of: { kind: 'team', id: team.id }, userId: me.id }, { onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: team.name }) }); }, onError: toastError });
+          if (ok) removeMember.mutate({ of: { kind: 'team', id: team.id }, userId: me.id }, {
+            onSuccess: () => { onGone?.(); useToast.getState().show({ message: t('browse.left', { name: team.name }) }); },
+            onError: (error) => (isLastOwner(error) ? lastOwner(team.name, { kind: 'team', id: team.id }) : toastError(error)),
+          });
         },
       },
       owner && {

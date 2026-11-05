@@ -180,8 +180,8 @@
       "onList": "On the list",
       "acrossTeam": "across the team"
     },
-    "ownerLeavesTitle": "You own {{name}}",
-    "ownerLeavesBody": "To leave it, make someone else the owner first. You can do that in People.",
+    "ownerLeavesTitle": "You’re the only owner of {{name}}",
+    "ownerLeavesBody": "To leave it, make someone else an owner first. You can do that in People.",
     "openPeople": "Open People",
     "teamPage": {
       "seeAll": "See all",
@@ -254,7 +254,6 @@
     "you": "{{name}} (you)",
     "role": {
       "owner": "Owner",
-      "admin": "Admin",
       "member": "Member",
       "guest": "Guest"
     },
@@ -405,15 +404,17 @@
     "teamEmptyAlone": "Lists made here are shared with everyone in {{name}}. Invite people to do them together.",
     "person": {
       "make": {
-        "admin": "Make admin",
+        "owner": "Make owner…",
         "member": "Make member"
       },
-      "makeOwner": "Make owner…",
-      "makeOwnerTitle": "Make {{name}} the owner?",
-      "makeOwnerBody": "You become an admin of {{team}}. Only the owner renames or deletes the team and changes roles.",
+      "makeOwnerTitle": "Make {{name}} an owner?",
+      "makeOwnerBody": "Owners invite and remove people, change roles, and can delete {{team}}.",
       "makeOwnerConfirm": "Make owner",
-      "ownerNow": "{{name}} is the owner now",
+      "ownerNow": "{{name}} is an owner now",
+      "memberNow": "{{name}} is a member now",
       "remove": "Remove from team",
+      "removeFromList": "Remove from list",
+      "removeListBody": "They stop seeing it; their tasks there are unassigned.",
       "removeTitle": "Remove {{name}} from {{team}}?",
       "removeBody": "They stop seeing its lists; their tasks there are unassigned.",
       "removed": "Removed {{name}}",
@@ -587,6 +588,7 @@
     "setTime": "Set time"
   },
   "errors": {
+    "sharing.last_owner": "Make someone else an owner first: there’s always one.",
     "auth.invalid_credentials": "The email or password is incorrect.",
     "email-not-verified": "Verify your email before signing in. We sent you a code when you signed up.",
     "auth.account_deactivated": "This account has been deactivated. Contact your administrator.",
@@ -752,7 +754,7 @@
   "notifications": {
     "someone": "Someone",
     "aTask": "a task",
-    "admin": "an Admin",
+    "owner": "an Owner",
     "member": "a Member",
     "assigned": "{{actor}} assigned you {{task}}",
     "reassigned": "{{actor}} reassigned {{task}} to {{other}}",

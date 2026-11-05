@@ -160,7 +160,7 @@ export function TaskListScreen({ route }: StaticScreenProps<{ taskListId: Id; ba
                     <Text variant="subhead" color="ink2" numberOfLines={1} style={styles.shrink}>{kind}</Text>
                   </>
                 )}
-                {kind && (shared || canInvite(taskList, team)) && (
+                {kind && (shared || canInvite(taskList)) && (
                   <Pressable onPress={() => navigation.navigate('People', { kind: 'taskList', id: taskListId })} accessibilityRole="button" style={[styles.who, { gap: space.xs }]}>
                     <Text variant="subhead" color="ink3">·</Text>
                     <Text variant="subhead" color="accent">{t(shared ? 'browse.peopleTitle' : 'browse.shareShort')}</Text>

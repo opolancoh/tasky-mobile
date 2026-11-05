@@ -180,7 +180,7 @@
       "onList": "En la lista",
       "acrossTeam": "en el equipo"
     },
-    "ownerLeavesTitle": "Eres el propietario de {{name}}",
+    "ownerLeavesTitle": "Eres el único propietario de {{name}}",
     "ownerLeavesBody": "Para salir, primero haz propietario a otra persona. Puedes hacerlo en Personas.",
     "openPeople": "Abrir Personas",
     "teamPage": {
@@ -254,7 +254,6 @@
     "you": "{{name}} (tú)",
     "role": {
       "owner": "Propietario",
-      "admin": "Administrador",
       "member": "Miembro",
       "guest": "Invitado"
     },
@@ -405,15 +404,17 @@
     "teamEmptyAlone": "Las listas que crees aquí se comparten con todos en {{name}}. Invita a personas para hacerlas juntos.",
     "person": {
       "make": {
-        "admin": "Hacer administrador",
+        "owner": "Hacer propietario…",
         "member": "Hacer miembro"
       },
-      "makeOwner": "Hacer propietario…",
       "makeOwnerTitle": "¿Hacer a {{name}} propietario?",
-      "makeOwnerBody": "Pasas a ser administrador de {{team}}. Solo el propietario cambia el nombre del equipo, lo elimina y cambia los roles.",
+      "makeOwnerBody": "Los propietarios invitan y quitan personas, cambian roles y pueden eliminar {{team}}.",
       "makeOwnerConfirm": "Hacer propietario",
-      "ownerNow": "{{name}} es ahora el propietario",
+      "ownerNow": "{{name}} ahora es propietario",
+      "memberNow": "{{name}} ahora es miembro",
       "remove": "Quitar del equipo",
+      "removeFromList": "Quitar de la lista",
+      "removeListBody": "Deja de verla; sus tareas allí quedan sin asignar.",
       "removeTitle": "¿Quitar a {{name}} de {{team}}?",
       "removeBody": "Deja de ver sus listas; sus tareas allí quedan sin asignar.",
       "removed": "Quitaste a {{name}}",
@@ -587,6 +588,7 @@
     "setTime": "Fijar hora"
   },
   "errors": {
+    "sharing.last_owner": "Primero haz propietario a otra persona: siempre debe haber uno.",
     "auth.invalid_credentials": "El correo o la contraseña no son correctos.",
     "email-not-verified": "Verifica tu correo antes de iniciar sesión. Te enviamos un código al registrarte.",
     "auth.account_deactivated": "Esta cuenta está desactivada. Contacta a tu administrador.",
@@ -752,7 +754,7 @@
   "notifications": {
     "someone": "Alguien",
     "aTask": "una tarea",
-    "admin": "Admin",
+    "owner": "Propietario",
     "member": "Miembro",
     "assigned": "{{actor}} te asignó {{task}}",
     "reassigned": "{{actor}} reasignó {{task}} a {{other}}",

@@ -37,7 +37,7 @@ export function useNotificationText() {
       : n.kind === 'taskRescheduled' ? (n.details ? t('notifications.taskRescheduled', { actor, task, date: labels.day(n.details) }) : t('notifications.dueRemoved', { actor, task }))
       : n.kind === 'taskHeld' && n.details ? t('notifications.taskHeldReason', { actor, task, reason: n.details })
       : n.kind === 'commented' || n.kind === 'mentioned' ? t(`notifications.${n.kind}`, { actor, task, text: n.details ?? '' })
-      : n.kind === 'roleChanged' ? t('notifications.roleChanged', { actor, subject, role: t(n.details === 'admin' ? 'notifications.admin' : 'notifications.member') })
+      : n.kind === 'roleChanged' ? t('notifications.roleChanged', { actor, subject, role: t(n.details === 'owner' ? 'notifications.owner' : 'notifications.member') })
       : t(`notifications.${n.kind}`, { actor, task, subject, other });
 
     let when = '';

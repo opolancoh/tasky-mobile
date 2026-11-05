@@ -26,7 +26,7 @@ export const usePeople = (q: string, exclude: readonly string[] = [], within?: M
     placeholderData: keepPreviousData,
   });
 
-/** People's first rows (D105, the hub's *Members on demand*, A): the owner, you, admins and a few more, with `total`. */
+/** People's first rows (D105, the hub's *Members on demand*, A): you, the owners and a few more, with `total`. */
 export const MEMBERS_PREVIEW = 6;
 export const MEMBERS_PAGE = 30;
 export const useMembersPreview = (of: MembersOf) =>
@@ -121,7 +121,7 @@ export const useComments = (taskId: Id, enabled = true) =>
     enabled,
   });
 
-/** A team's invite link (D95), for its owner and admins (`enabled`). */
+/** A team's invite link (D95), for its Owners (`enabled`). */
 export const useInviteLink = (teamId: Id, enabled: boolean) => useQuery({ queryKey: taskKeys.inviteLink(teamId), queryFn: () => tasksApi.inviteLink(teamId), enabled });
 
 /** What a link opens (D95), before joining. */
