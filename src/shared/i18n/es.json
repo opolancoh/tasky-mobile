@@ -635,6 +635,8 @@
     "sharing.outsider_team": "Las personas de fuera de la empresa pueden unirse a sus listas, no a sus equipos.",
     "sharing.inbox_private": "Tu lista Personal no se puede compartir.",
     "invitation.account_closed": "La cuenta de esta persona está cerrada.",
+    "invitation.not_found": "Esta invitación ya no está abierta: se respondió, quizá en otro dispositivo, o se retiró.",
+    "invitation.expired": "Esta invitación caducó. Pide una nueva.",
     "task.reminder_unsupported": "Un recordatorio solo tiene título, hora, notas y repetición."
   },
   "languages": {

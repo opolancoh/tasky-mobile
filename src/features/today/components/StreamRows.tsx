@@ -13,6 +13,7 @@ import { askDecline } from '@/shared/components';
 import { useHoldActions } from '@/shared/hold/useHoldActions';
 import { useDateLabels } from '@/shared/hooks/useDateLabels';
 import { useMe } from '@/data/tenancy/queries';
+import { toastError } from '@/shared/i18n/errors';
 import { chooseAction, confirm, Pill, Text, useTheme, useToast, type ActionChoice } from '@/shared/ui';
 
 
@@ -84,7 +85,7 @@ export function InvitationRow({ invitation }: { invitation: MyInvitation }) {
       const ok = await confirm({ title: t('invitation.declineTitle', { name: invitation.name }), message: t('invitation.declineMessage'), confirmLabel: t('invitation.decline'), cancelLabel: t('common.cancel') });
       if (!ok) return;
     }
-    answer.mutate({ id: invitation.id, join }, { onSuccess: () => useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') }) });
+    answer.mutate({ id: invitation.id, join }, { onSuccess: () => useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') }), onError: toastError });
   };
   return (
     <StreamRow

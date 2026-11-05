@@ -207,7 +207,8 @@ export function useAnswerAssignment() {
 
 /**
  * Join or decline an invitation (D68). Joining adds task lists (and maybe a team), so every list and the task lists
- * refetch; declining only drops it from Today and the invitations.
+ * refetch; declining only drops it from Today and the invitations. Also after an error, so one answered on another
+ * device leaves this one (`invitationGone`).
  */
 export function useAnswerInvitation() {
   const refetch = useRefetchTasks();
@@ -217,6 +218,9 @@ export function useAnswerInvitation() {
     onSettled: refetch,
   });
 }
+
+/** The invitation was answered elsewhere (another device), taken back or expired: there's nothing left to answer. */
+export const invitationGone = (error: unknown) => isApiError(error) && (error.code === 'invitation.not_found' || error.code === 'invitation.expired');
 
 /** A command on one task (complete, reopen, skip), for `useChangeTask`. */
 export interface TaskChange {

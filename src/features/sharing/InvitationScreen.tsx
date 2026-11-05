@@ -6,7 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { formatInstant } from '@/core/dates/localDate';
 import type { Id } from '@/core/types';
-import { useAnswerInvitation } from '@/data/tasks/mutations';
+import { invitationGone, useAnswerInvitation } from '@/data/tasks/mutations';
 import { useInvitations } from '@/data/tasks/queries';
 import { useMe } from '@/data/tenancy/queries';
 import { errorMessage } from '@/shared/i18n/errors';
@@ -42,6 +42,11 @@ export function InvitationScreen({ route }: StaticScreenProps<{ invitationId: Id
           else if (invitation.taskListId) navigation.dispatch(StackActions.replace('TaskList', { taskListId: invitation.taskListId }));
           else navigation.goBack();
           useToast.getState().show({ message: join ? t('today.joined', { name: invitation.name }) : t('today.declined') });
+        },
+        onError: (e) => {
+          if (!invitationGone(e)) return;
+          navigation.goBack();
+          useToast.getState().show({ message: errorMessage(e) });
         },
       },
     );

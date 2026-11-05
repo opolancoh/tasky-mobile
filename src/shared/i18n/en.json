@@ -635,6 +635,8 @@
     "sharing.outsider_team": "People from outside the company can join its lists, not its teams.",
     "sharing.inbox_private": "Your Personal list can't be shared.",
     "invitation.account_closed": "This person's account is closed.",
+    "invitation.not_found": "This invitation is no longer open: it was answered, maybe on another device, or taken back.",
+    "invitation.expired": "This invitation has expired. Ask for a new one.",
     "task.reminder_unsupported": "A reminder has a title, its time, notes and a repeat only."
   },
   "languages": {
