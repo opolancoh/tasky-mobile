@@ -62,6 +62,8 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      // ‹ Work, as desktop's back above the title: the team or list it came from (its screen has no title of its own).
+      headerBackTitle: name,
       headerRight: invites
         ? () => (
             <Pressable onPress={() => navigation.navigate('Invite', of)} accessibilityRole="button" hitSlop={8} style={styles.invite}>
@@ -101,7 +103,6 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
       case 'header':
         return (
           <View style={{ paddingBottom: space.sm, gap: space.xxs }}>
-            {name ? <Text variant="label" color="ink3">{name}</Text> : null}
             <Text variant="largeTitle" accessibilityRole="header">{t(guests ? 'browse.peoplePage.guestsTitle' : 'browse.peopleTitle')}</Text>
             {line}
             {members.error && (
