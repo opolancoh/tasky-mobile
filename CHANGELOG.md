@@ -2,6 +2,38 @@
 
 The app's releases, newest first (docs/releases.md).
 
+## 0.14.0 — 2026-11-05
+
+- Perf log (temporary): find what heats the phone
+- Fix the AndroidImportance import in push.ts for lint
+- Spaces filter: teams, lists and tags, in that order
+- A list's line: no Share or People link, they're in ••• (M160)
+- Quiet task rows: all grey but late, the reminder's time on the due day, Task detail's order, a notes icon of lines (M159)
+- Task rows: the reminder, notes and tags in the line (M158)
+- Invitation answered elsewhere, taken back or expired: a toast says so, Invitation closes (M157)
+- People: the back reads ‹ the team's or list's name (M156)
+- Invite link: the address in a field with Copy, its shape in grey while it loads (M155)
+- Invite's results like the email row, email or Your company, Invited and Already in (M153); faces in solid color (M154)
+- Sign-out: reminders leave the phone however the session ends
+- Invite link: Copy invite link row, ••• by the heading with New link; no Turn off
+- Invite: a toast when each invitation is sent
+- Invite: two parts, Invite as above the field, an email row with send, the link card with Copy (M151)
+- Roles in a team: a line per role, Done; invite link says how long it works
+- Roles in a team; Invite texts for guests and the invite link (M152)
+- Joins as in Invite, roles on invitations, guests note (M151)
+- Guests in a team's list (M150)
+- People by Owner and Member (M149, D125)
+- A team's list says only its count (M148)
+- Rename taskListColors to listColors, as on desktop
+- Three more list colors: Azure, Teal, Indigo (M147)
+- People: the people first, Invite in the bar; Leave team for every role; list icons on a team's lists (M146)
+- A list's color is optional, drawn in the first color when unset; the picked color ringed in its own (M145)
+- A team's screen at a glance: cards, Needs attention, lists with pills (M144)
+- Spaces: Join with a link in ••• once there's a team (M143)
+- BrowseRow: the shared mark sits by its count
+- Spaces: open counts on lists, a faint mark on shared ones (M142)
+- Home's Assignments as My stuff: no count at 0, a line saying why (M141)
+
 ## 0.13.0 — 2026-11-03
 
 - Titles start at the same height on Spaces, Calendar and Search; Search's placeholder names teams and tasks first
