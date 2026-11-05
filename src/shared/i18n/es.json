@@ -1,4 +1,19 @@
 {
+  "teamRoles": {
+    "title": "Roles en un equipo",
+    "open": "Roles y permisos",
+    "oneList": "Su lista",
+    "rows": {
+      "seeLists": "Ver las listas del equipo",
+      "tasks": "Agregar, editar y completar tareas; comentar",
+      "createLists": "Crear listas",
+      "invite": "Invitar y quitar personas",
+      "roles": "Cambiar roles",
+      "lists": "Archivar o eliminar listas",
+      "team": "Cambiar el nombre o eliminar el equipo"
+    },
+    "foot": "Siempre hay al menos un propietario. Los invitados trabajan solo en una lista; agrégalos desde ••• › Invitados de esa lista."
+  },
   "common": {
     "unreadable": "Añade una letra, un número o un emoji.",
     "show": "Mostrar",
@@ -175,9 +190,9 @@
   "browse": {
     "peoplePage": {
       "joinsAs": "Se une como",
-      "means": { "owner": "Además invita y quita personas, cambia roles y puede eliminar {{name}}.", "memberTeam": "Ve y trabaja en todas las listas de {{name}}.", "memberList": "Ve y trabaja en {{name}}." },
+      "means": { "owner": "Además invita y quita personas, cambia roles y puede eliminarlo.", "memberTeam": "Ve y trabaja en todas las listas de este equipo.", "memberList": "Ve y trabaja en esta lista." },
       "lasts": "Las invitaciones duran 14 días.",
-      "guestsNote": "¿Solo para una lista? Invítalo como invitado desde ••• › Invitados de esa lista: verá esa lista, no el resto de {{name}}.",
+      "guestsNote": "También puedes agregar invitados: personas fuera del equipo que trabajan contigo en una lista. Adminístralos en ••• › Invitados de la lista.",
       "guestsTitle": "Invitados",
       "guestsLine": "Personas fuera de {{team}}, solo en esta lista",
       "noGuests": "Aún no hay invitados. Los invitados trabajan solo en esta lista, no en todo el equipo.",
@@ -998,7 +1013,7 @@
     "link": {
       "row": "Enlace de invitación",
       "on": "Se une como miembro · vence el {{date}} · cualquiera con él puede unirse",
-      "offDetail": "Apagado · crea uno para compartir en un chat",
+      "offDetail": "Apagado · comparte un enlace en un chat: quien lo abra se une como miembro, durante 7 días",
       "title": "Enlace de invitación · vence el {{date}}",
       "share": "Compartir",
       "copy": "Copiar",

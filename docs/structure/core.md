@@ -21,6 +21,8 @@ src/core/
 │   ├── localDate.ts      Today in a time zone; formatting a date or time (cached formatters)
 │   ├── calendar.ts       Weeks from Monday, months: a month's weeks, its first and last day (Calendar, M72)
 │   └── reminders.ts      A reminder (date + time), the quick presets
+├── sharing/
+│   └── teamRoles.ts      TEAM_ROLES: what Owner, Member and Guest may do in a team (People's roles table, M152)
 ├── text/
 │   ├── collate.ts        One shared Intl.Collator, byName (sorting never builds one in render)
 │   ├── searchDelay.ts    SEARCH_DELAY: every search field waits 400 ms after the last keystroke

@@ -1,4 +1,19 @@
 {
+  "teamRoles": {
+    "title": "Roles in a team",
+    "open": "Roles and permissions",
+    "oneList": "Their list",
+    "rows": {
+      "seeLists": "See the team’s lists",
+      "tasks": "Add, edit and complete tasks; comment",
+      "createLists": "Create lists",
+      "invite": "Invite and remove people",
+      "roles": "Change roles",
+      "lists": "Archive or delete lists",
+      "team": "Rename or delete the team"
+    },
+    "foot": "There’s always at least one Owner. Guests work on one list only; add them from that list’s ••• › Guests."
+  },
   "common": {
     "unreadable": "Add a letter, number or emoji.",
     "show": "Show",
@@ -175,9 +190,9 @@
   "browse": {
     "peoplePage": {
       "joinsAs": "Joins as",
-      "means": { "owner": "Also invites and removes people, changes roles, and can delete {{name}}.", "memberTeam": "Sees and works on every list in {{name}}.", "memberList": "Sees and works on {{name}}." },
+      "means": { "owner": "Also invites and removes people, changes roles, and can delete it.", "memberTeam": "Sees and works on every list in this team.", "memberList": "Sees and works on this list." },
       "lasts": "Invitations last 14 days.",
-      "guestsNote": "Only for one list? Invite them as a guest from that list’s ••• › Guests: they see that list, not the rest of {{name}}.",
+      "guestsNote": "You can also add guests: people outside the team who work with you on a list. Manage them in the list’s ••• › Guests.",
       "guestsTitle": "Guests",
       "guestsLine": "People from outside {{team}}, on this list only",
       "noGuests": "No guests yet. Guests work on this list only, not the whole team.",
@@ -998,7 +1013,7 @@
     "link": {
       "row": "Invite link",
       "on": "Joins as Member · expires {{date}} · anyone with it can join",
-      "offDetail": "Off · make one to share in a chat",
+      "offDetail": "Off · share a link in a chat: anyone who opens it joins as a Member, for 7 days",
       "title": "Invite link · expires {{date}}",
       "share": "Share",
       "copy": "Copy",

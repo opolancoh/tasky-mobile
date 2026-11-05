@@ -41,7 +41,7 @@ type Item =
 export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
   const of: MembersOf = { kind: route.params.kind, id: route.params.id };
   const { t } = useTranslation();
-  const { space } = useTheme();
+  const { colors, space } = useTheme();
   const navigation = useNavigation();
   const teams = useTeams().data ?? [];
   const taskLists = useTaskLists().data;
@@ -116,6 +116,11 @@ export function PeopleScreen({ route }: StaticScreenProps<MembersOf>) {
           <View style={[styles.section, { gap: space.xs, marginTop: space.xl, marginBottom: space.xs }]}>
             <Text variant="label" color="ink2" accessibilityRole="header">{item.title}</Text>
             {item.count > 0 && <CountPill count={item.count} />}
+            {inTeam && item.key === 's-people' && (
+              <Pressable onPress={() => navigation.navigate('TeamRoles')} accessibilityRole="button" accessibilityLabel={t('teamRoles.open')} hitSlop={10}>
+                <Feather name="info" size={15} color={colors.ink3} />
+              </Pressable>
+            )}
           </View>
         );
       case 'member':
