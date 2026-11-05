@@ -12,7 +12,7 @@
       "lists": "Archive or delete lists",
       "team": "Rename or delete the team"
     },
-    "foot": "There’s always at least one Owner. Guests work on one list only; add them from that list’s ••• › Guests."
+    "about": { "owner": "runs the team: who’s in, their roles, and its lists.", "member": "does the work, on every list in the team.", "guest": "someone from outside who works on one list only." }
   },
   "common": {
     "unreadable": "Add a letter, number or emoji.",
@@ -1013,7 +1013,7 @@
     "link": {
       "row": "Invite link",
       "on": "Joins as Member · expires {{date}} · anyone with it can join",
-      "offDetail": "Off · share a link in a chat: anyone who opens it joins as a Member, for 7 days",
+      "offDetail": "Off · share a link in a chat: anyone who opens it joins as a Member. The link works for 7 days.",
       "title": "Invite link · expires {{date}}",
       "share": "Share",
       "copy": "Copy",

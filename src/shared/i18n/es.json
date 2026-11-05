@@ -12,7 +12,7 @@
       "lists": "Archivar o eliminar listas",
       "team": "Cambiar el nombre o eliminar el equipo"
     },
-    "foot": "Siempre hay al menos un propietario. Los invitados trabajan solo en una lista; agrégalos desde ••• › Invitados de esa lista."
+    "about": { "owner": "dirige el equipo: quién está, sus roles y sus listas.", "member": "hace el trabajo, en todas las listas del equipo.", "guest": "alguien de fuera que trabaja solo en una lista." }
   },
   "common": {
     "unreadable": "Añade una letra, un número o un emoji.",
@@ -1013,7 +1013,7 @@
     "link": {
       "row": "Enlace de invitación",
       "on": "Se une como miembro · vence el {{date}} · cualquiera con él puede unirse",
-      "offDetail": "Apagado · comparte un enlace en un chat: quien lo abra se une como miembro, durante 7 días",
+      "offDetail": "Apagado · comparte un enlace en un chat: quien lo abra se une como miembro. El enlace funciona 7 días.",
       "title": "Enlace de invitación · vence el {{date}}",
       "share": "Compartir",
       "copy": "Copiar",
